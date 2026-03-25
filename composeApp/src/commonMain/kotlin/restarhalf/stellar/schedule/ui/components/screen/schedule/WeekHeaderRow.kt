@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -31,7 +32,7 @@ fun WeekHeaderRow(
     Row(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.width(36.dp))
 
-        ui.days.forEachIndexed { index, day ->
+        ui.days.zip(ui.dates).forEachIndexed { index, (day, date) ->
             val isToday = ui.todayIndex == index
 
             Column(
@@ -42,7 +43,8 @@ fun WeekHeaderRow(
                     text = day,
                     fontSize = 12.sp,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isToday) primary else textSecondary
+                    color = if (isToday) primary else textSecondary,
+                    maxLines = 1
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -52,13 +54,15 @@ fun WeekHeaderRow(
                         Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (isToday) primary.copy(0.7f) else Color.Transparent)
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = ui.dates[index],
+                        text = date,
                         fontSize = 10.sp,
                         fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isToday) Color.White else textSecondary
+                        color = if (isToday) Color.White else textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }
