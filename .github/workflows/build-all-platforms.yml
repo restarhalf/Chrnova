@@ -128,7 +128,32 @@ jobs:
         run: |
           set -euo pipefail
           VERSION_FILE="iosApp/Configuration/AppVersion.xcconfig"
-          IOS_RELEASE_MARKETING_VERSION="$(grep -E '^APP_VERSION_NAME=' "${VERSION_FILE}" | head -n 1 | cut -d '=' -f 2- | tr -d '[:space:]')"
+          BASE_VERSION="$(grep -E '^APP_VERSION_NAME=' "${VERSION_FILE}" | head -n 1 | cut -d '=' -f 2- | tr -d '[:space:]')"
+          if [ -z "${BASE_VERSION}" ]; then
+            echo "Failed to resolve APP_VERSION_NAME from ${VERSION_FILE}"
+            exit 1
+          fi
+          TAG_VERSION=""
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME}"
+          elif [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+
+          HASH_CODE="${GITHUB_SHA:-}"
+          if [ -z "${HASH_CODE}" ]; then
+            HASH_CODE="$(git rev-parse --short HEAD 2>/dev/null || true)"
+          fi
+          HASH_CODE="$(echo "${HASH_CODE}" | tr -d '[:space:]' | cut -c1-7)"
+          if [ -z "${HASH_CODE}" ]; then
+            HASH_CODE="local"
+          fi
+
+          if [ -n "${TAG_VERSION}" ]; then
+            IOS_RELEASE_MARKETING_VERSION="${TAG_VERSION}"
+          else
+            IOS_RELEASE_MARKETING_VERSION="${BASE_VERSION}Alpha(${HASH_CODE})"
+          fi
           IOS_RELEASE_BUILD_NUMBER="$(grep -E '^APP_VERSION_CODE=' "${VERSION_FILE}" | head -n 1 | cut -d '=' -f 2- | tr -d '[:space:]')"
           if [ -z "${IOS_RELEASE_MARKETING_VERSION}" ] || [ -z "${IOS_RELEASE_BUILD_NUMBER}" ]; then
             echo "Failed to resolve APP_VERSION_NAME/APP_VERSION_CODE from ${VERSION_FILE}"
