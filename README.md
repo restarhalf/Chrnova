@@ -1,12 +1,12 @@
 ﻿# 大民课程表
 
-![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-18.2%2B-000000?style=flat-square&logo=apple&logoColor=white) ![Version](https://img.shields.io/badge/version-4.0.0-blue?style=flat-square)
+![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?style=flat-square&logo=apple&logoColor=white) ![Version](https://img.shields.io/badge/version-4.0.0-blue?style=flat-square)
 
 [Gitee](https://gitee.com/restarhalf/schedule.git)
 
 [Github](https://github.com/restarhalf/scheduleKMP.git)
 
-一个给大连民族大学同学用的课程表应用。
+一个给同学用的课程表应用。
 
 它把课表、成绩、考试安排和提醒放到同一个 App 里，尽量做到打开就能看、切学期方便、同步教务直接、界面也别太难看。
 
@@ -14,7 +14,7 @@
 
 ## 这是个什么应用
 
-- 适用于大连民族大学教务系统使用场景
+- 适用于DLNU教务系统使用场景
 - 支持 Android 和 iOS
 - 不是学校官方应用
 - 更偏向“日常真的会打开用”的课程表，而不只是一个查课工具
@@ -45,7 +45,7 @@
 
 ### iOS
 
-下载Release的app-release.ipa，需要自签安装到 iOS 18.2 及以上的设备上。
+下载Release的app-release.ipa，需要自签安装到 iOS 16.0 及以上的设备上。
 
 ## 使用前你需要知道
 
@@ -59,7 +59,7 @@
 | 平台      | 说明                     |
 |---------|------------------------|
 | Android | Android 11 及以上         |
-| iOS     | 当前工程目标版本为 iOS 18.2 及以上 |
+| iOS     | 当前工程目标版本为 iOS 16.0 及以上 |
 
 ## 功能亮点
 
@@ -158,11 +158,6 @@ KEY_PASSWORD=...
 版本配置在：
 
 - [AppVersion.xcconfig](iosApp/Configuration/AppVersion.xcconfig)
-
-当前版本：
-
-- `APP_VERSION_NAME=4.0.0`
-- `APP_VERSION_CODE=400`
 
 ### 自动构建
 

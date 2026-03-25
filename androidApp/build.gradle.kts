@@ -1,4 +1,5 @@
-﻿import java.util.Properties
+﻿
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -19,16 +20,57 @@ val releaseVersionCode =
         ?.trim()
         ?.toIntOrNull()
         ?: error("APP_VERSION_CODE missing or invalid in iosApp/Configuration/AppVersion.xcconfig")
-val forceBuildChannel = (findProperty("BUILD_CHANNEL") as? String)?.trim()?.uppercase()
-val ciRunNumberOverride = (findProperty("CI_RUN_NUMBER") as? String)?.trim()
-val ciRunNumberFromEnv = System.getenv("GITHUB_RUN_NUMBER")?.trim()
-val isCiBuild =
-    forceBuildChannel == "CI" ||
-            System.getenv("GITHUB_ACTIONS")?.equals("true", ignoreCase = true) == true
-val ciRunNumber = ciRunNumberOverride?.takeIf { it.isNotEmpty() }
-    ?: ciRunNumberFromEnv?.takeIf { it.isNotEmpty() }
-val resolvedVersionName =
-    if (isCiBuild) "$releaseVersionName-ci.${ciRunNumber ?: "local"}" else releaseVersionName
+val githubRef = System.getenv("GITHUB_REF")?.trim()
+val githubRefType = System.getenv("GITHUB_REF_TYPE")?.trim()?.lowercase()
+val githubRefName = System.getenv("GITHUB_REF_NAME")?.trim()
+val githubTagName =
+    when {
+        githubRefType == "tag" && !githubRefName.isNullOrBlank() -> githubRefName
+        githubRef?.startsWith("refs/tags/") == true ->
+            githubRef.removePrefix("refs/tags/").trim().ifEmpty { null }
+        else -> null
+    }
+fun resolveGitShortHash(): String? {
+    val head = rootProject.file(".git/HEAD").takeIf { it.isFile }?.readText()?.trim().orEmpty()
+    if (head.isBlank()) return null
+
+    val fullHash =
+        if (head.startsWith("ref:")) {
+            val refPath = head.removePrefix("ref:").trim()
+            val refFile = rootProject.file(".git/$refPath")
+            if (refFile.isFile) {
+                refFile.readText().trim()
+            } else {
+                rootProject.file(".git/packed-refs")
+                    .takeIf { it.isFile }
+                    ?.readLines()
+                    ?.firstOrNull { line ->
+                        line.isNotBlank() &&
+                            !line.startsWith("#") &&
+                            !line.startsWith("^") &&
+                            line.endsWith(" $refPath")
+                    }
+                    ?.substringBefore(' ')
+                    ?.trim()
+            }
+        } else {
+            head
+        }
+
+    return fullHash
+        ?.takeIf { it.matches(Regex("[0-9a-fA-F]{7,40}")) }
+        ?.take(7)
+        ?.lowercase()
+}
+val commitHashCode =
+    System.getenv("GITHUB_SHA")
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.take(7)
+        ?: resolveGitShortHash()
+        ?: "local"
+val alphaVersionName = "${releaseVersionName}Alpha($commitHashCode)"
+val resolvedVersionName = githubTagName ?: alphaVersionName
 val resolvedVersionCode = releaseVersionCode
 
 

@@ -8,6 +8,7 @@ import com.russhwolf.settings.ObservableSettings
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -17,7 +18,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSData
-import platform.Foundation.NSLog
 import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.Foundation.create
@@ -35,6 +35,9 @@ import platform.UIKit.UIAlertController
 import platform.UIKit.UIAlertControllerStyleAlert
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
+import platform.UIKit.UIGraphicsBeginImageContextWithOptions
+import platform.UIKit.UIGraphicsEndImageContext
+import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.UIKit.UIImagePNGRepresentation
 import platform.UIKit.UIViewController
@@ -89,10 +92,9 @@ fun AppRoot(): UIViewController {
                     showNativeMessage(hostViewController, message)
                 },
                 canSaveAwardPicture = true,
-                saveAwardPicture = { fileName, bytes ->
+                saveAwardPicture = { _, bytes ->
                     saveAwardPicture(
                         controller = hostViewController,
-                        fileName = fileName,
                         bytes = bytes,
                     )
                 },
@@ -267,12 +269,10 @@ private fun loadIosAppIcon(): ImageBitmap? {
 
 private suspend fun saveAwardPicture(
     controller: UIViewController,
-    fileName: String,
     bytes: ByteArray,
 ): Boolean =
-    withContext(Dispatchers.Default) {
-        NSLog("saveAwardPicture start: %@", fileName)
-        val image = bytes.toUIImage() ?: return@withContext false
+    withContext(Dispatchers.Main) {
+        val image = bytes.toUIImageForPhotoSave() ?: return@withContext false
         val status = ensurePhotoLibraryPermission()
         if (status != PHAuthorizationStatusAuthorized && status != PHAuthorizationStatusLimited) {
             runOnMain {
@@ -337,20 +337,22 @@ private suspend fun requestPhotoLibraryPermission(): PHAuthorizationStatus =
 
 private suspend fun saveImageToPhotoLibrary(image: UIImage): Boolean =
     suspendCancellableCoroutine { continuation ->
-        PHPhotoLibrary.sharedPhotoLibrary().performChanges(
-            {
-                PHAssetChangeRequest.creationRequestForAssetFromImage(image)
-            },
-            { success, _ ->
-                if (continuation.isActive) {
-                    continuation.resume(success)
-                }
-            },
-        )
+        runOnMain {
+            PHPhotoLibrary.sharedPhotoLibrary().performChanges(
+                {
+                    PHAssetChangeRequest.creationRequestForAssetFromImage(image)
+                },
+                { success, _ ->
+                    if (continuation.isActive) {
+                        continuation.resume(success)
+                    }
+                },
+            )
+        }
     }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun ByteArray.toUIImage(): UIImage? {
+private fun ByteArray.toUIImageForPhotoSave(): UIImage? {
     if (isEmpty()) return null
     val data =
         usePinned { pinned ->
@@ -359,7 +361,23 @@ private fun ByteArray.toUIImage(): UIImage? {
                 length = size.toULong(),
             )
         }
-    return UIImage(data = data)
+    val image = UIImage(data = data) ?: return null
+    return image.normalizeForPhotoSave() ?: image
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun UIImage.normalizeForPhotoSave(): UIImage? {
+    val imageSize = size
+    val width = imageSize.useContents { width }
+    val height = imageSize.useContents { height }
+    if (width <= 0.0 || height <= 0.0) return null
+    UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
+    return try {
+        drawInRect(platform.CoreGraphics.CGRectMake(0.0, 0.0, width, height))
+        UIGraphicsGetImageFromCurrentImageContext()
+    } finally {
+        UIGraphicsEndImageContext()
+    }
 }
 
 @OptIn(ExperimentalForeignApi::class)
