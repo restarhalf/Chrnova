@@ -75,6 +75,7 @@ fun AboutScreen(
     val scope = rememberCoroutineScope()
     val showUpdateConfirm = remember { mutableStateOf(false) }
     val showAward = remember { mutableStateOf(false) }
+    val showAwardPicture = remember { mutableStateOf(false) }
     val showJwxt = remember { mutableStateOf(false) }
     val awardImageTitle = remember { mutableStateOf<String?>(null) }
     val awardImage = remember { mutableStateOf<DrawableResource?>(null) }
@@ -147,66 +148,74 @@ fun AboutScreen(
                     onWxpay = {
                         if (isAndroidPlatform) {
                             vm.requestWxPayAward()
+                            showAward.value = false
                         } else {
                             awardImageTitle.value = "微信赞赏码"
                             awardImage.value = Res.drawable.wxpay
                             awardImagePath.value = "drawable/wxpay.webp"
+                            showAward.value = false
+                            showAwardPicture.value = true
                         }
-                        showAward.value = false
                     },
                     onAlipay = {
                         if (isAndroidPlatform) {
                             vm.requestOpenAlipayAward()
+                            showAward.value = false
                         } else {
                             awardImageTitle.value = "支付宝赞赏码"
                             awardImage.value = Res.drawable.alipay
                             awardImagePath.value = "drawable/alipay.webp"
+                            showAward.value = false
+                            showAwardPicture.value = true
                         }
-                        showAward.value = false
                     },
                 )
             }
-            awardImage.value?.let { image ->
-                AwardPictureDialog(
-                    show = true,
-                    title = awardImageTitle.value ?: "赞赏码",
-                    image = image,
-                    onDismissRequest = {
-                        awardImageTitle.value = null
-                        awardImage.value = null
-                        awardImagePath.value = null
-                    },
-                    onSavePicture =
-                        if (canSaveAwardPicture) {
-                            {
-                                val path = awardImagePath.value
-                                if (path == null) {
-                                    showMessage("读取图片失败，请重试")
-                                } else {
-                                    val fileName = path.substringAfterLast('/')
-                                    scope.launch {
-                                        val bytes = runCatching { Res.readBytes(path) }.getOrNull()
-                                        if (bytes == null) {
-                                            showMessage("读取图片失败，请重试")
-                                            return@launch
+            if(showAwardPicture.value) {
+                awardImage.value?.let { image ->
+                    AwardPictureDialog(
+                        show = showAwardPicture.value,
+                        title = awardImageTitle.value ?: "赞赏码",
+                        image = image,
+                        onDismissRequest = {
+                            awardImageTitle.value = null
+                            awardImage.value = null
+                            awardImagePath.value = null
+                        },
+                        onSavePicture =
+                            if (canSaveAwardPicture) {
+                                {
+                                    val path = awardImagePath.value
+                                    if (path == null) {
+                                        showMessage("读取图片失败，请重试")
+                                    } else {
+                                        val fileName = path.substringAfterLast('/')
+                                        scope.launch {
+                                            val bytes =
+                                                runCatching { Res.readBytes(path) }.getOrNull()
+                                            if (bytes == null) {
+                                                showMessage("读取图片失败，请重试")
+                                                return@launch
+                                            }
+                                            val saved =
+                                                runCatching {
+                                                    onSaveAwardPicture(
+                                                        fileName,
+                                                        bytes
+                                                    )
+                                                }.getOrDefault(false)
+                                            showAwardPicture.value = false
+                                            showMessage(
+                                                if (saved) "图片已保存" else "保存失败，请重试"
+                                            )
                                         }
-                                        val saved =
-                                            runCatching {
-                                                onSaveAwardPicture(
-                                                    fileName,
-                                                    bytes
-                                                )
-                                            }.getOrDefault(false)
-                                        showMessage(
-                                            if (saved) "图片已保存" else "保存失败，请重试"
-                                        )
                                     }
                                 }
-                            }
-                        } else {
-                            null
-                        },
-                )
+                            } else {
+                                null
+                            },
+                    )
+                }
             }
             if (showJwxt.value) {
                 JwxtWebDialog(
