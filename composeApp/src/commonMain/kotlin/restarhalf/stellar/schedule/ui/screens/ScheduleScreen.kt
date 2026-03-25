@@ -1,0 +1,671 @@
+package restarhalf.stellar.schedule.ui.screens
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.getPlatform
+import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseCard
+import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailItem
+import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
+import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
+import restarhalf.stellar.schedule.ui.icons.Add
+import restarhalf.stellar.schedule.ui.koin.koinViewModel
+import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
+import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
+import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.extra.BottomSheetDefaults
+import top.yukonga.miuix.kmp.extra.DialogDefaults
+import top.yukonga.miuix.kmp.extra.SuperBottomSheet
+import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+@Suppress("UNUSED_VALUE")
+fun ScheduleScreen(
+    onSync: suspend () -> Unit,
+    campus: Campus,
+    termStartMs: Long,
+    totalWeeks: Int,
+    onAddLabCourse: () -> Unit,
+    onEditLabCourse: (Long) -> Unit
+) {
+
+    val vm: ScheduleViewModel = koinViewModel()
+    val appScaffoldPadding = LocalAppScaffoldPadding.current
+    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
+    val pageBottomPadding =
+        appPageContentPadding(
+            innerPadding = PaddingValues(),
+            outerPadding = appScaffoldPadding,
+        )
+            .calculateBottomPadding()
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val isJvmPlatform = remember { getPlatform().name.startsWith("Java") }
+    val pagerDragThresholdPx = with(density) { 48.dp.toPx() }
+    var pagerDragAmount by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+
+    val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
+
+    val uiState =
+        remember(campus, termStartMs, totalWeeks) {
+            vm.buildScheduleUiState(
+                campus = campus,
+                totalWeeks = totalWeeks,
+                termStartMs = termStartMs
+            )
+        }
+
+    val pagerState =
+        rememberPagerState(initialPage = uiState.pagerInitialPage) { uiState.pagerPageCount }
+
+
+    val currentWeek =
+        vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
+
+    val showNonCurrentWeek by vm.showNonCurrentWeek.collectAsState()
+    val transDialogUi by vm.transDialogUiState.collectAsState()
+    val transConflictUi by vm.transConflictUiState.collectAsState()
+    val detailSheetUi by vm.detailSheetUiState.collectAsState()
+
+    val colors = MiuixTheme.colorScheme
+
+    val primary = colors.primary
+
+    val surfaceSoft = colors.surfaceContainerHigh
+
+    val textPrimary = colors.onBackground
+
+    val textSecondary = colors.onSurfaceVariantSummary
+
+    val textHint = colors.onSurfaceVariantActions
+
+    val isDarkMode = colors.background.luminance() < 0.5f
+
+    val mutedCourseColor = if (isDarkMode) colors.surfaceContainerHighest else Color(0xFFF5F5F5)
+
+    val mutedTitleColor = if (isDarkMode) colors.onSurface else Color(0xFF999999)
+
+    val mutedSubColor = if (isDarkMode) colors.onSurfaceVariantSummary else Color(0xFFB3B3B3)
+
+    val contentCardAlpha = 1f
+
+    val dayCount = 7
+
+    val rowHeight = 64.dp
+
+    val rowGap = 2.dp
+
+    val restHeight = 24.dp
+
+    val cellInset = 0.5.dp
+    val restBarTextMeasurer = rememberTextMeasurer()
+
+    fun yForSection(section: Int): Dp {
+
+        val base = (rowHeight + rowGap) * (section - 1)
+
+        val rest = (if (section > 4) restHeight else 0.dp) + (if (section > 8) restHeight else 0.dp)
+
+        return base + rest
+    }
+
+    fun heightForSections(sectionCount: Int): Dp {
+
+        if (sectionCount <= 0) return 0.dp
+
+        return rowHeight * sectionCount + rowGap * (sectionCount - 1)
+    }
+
+    val totalHeight =
+        remember(rowHeight, rowGap, restHeight) { rowHeight * 12 + rowGap * 11 + restHeight * 2 }
+
+    val timetable: List<TimetableSlot> = uiState.timetable
+
+    LaunchedEffect(Unit) {
+        if (vm.shouldAutoSync()) onSync()
+        vm.refreshCourseRemindersIfEnabled(
+            campus = campus,
+            termStartMs = termStartMs,
+            totalWeeks = totalWeeks
+        )
+    }
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            AppPageTopBar(
+                title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
+                scrollBehavior = topAppBarScrollBehavior,
+                actions = {
+                    IconButton(onClick = onAddLabCourse) {
+                        Icon(imageVector = Add, contentDescription = "添加实验课")
+                    }
+                },
+            )
+        },
+        popupHost = {
+            val tc = transDialogUi.course
+            if (transDialogUi.show && tc != null) {
+                TransClassDialog(
+                    show = transDialogUi.show,
+                    onDismiss = { vm.dismissTransDialog() },
+                    totalWeeks = transDialogUi.targetWeek,
+                    onTotalWeeksChange = vm::updateTransTargetWeek,
+                    newClassRoom = transDialogUi.newClassRoom,
+                    onNewClassRoomChange = vm::updateTransNewClassRoom,
+                    dayOfWeek = transDialogUi.dayOfWeek,
+                    onDayOfWeekChange = vm::updateTransDayOfWeek,
+                    startSection = transDialogUi.startSection,
+                    endSection = transDialogUi.endSection,
+                    onSectionRangeChange = vm::updateTransSectionRange,
+                    onTrans = {
+                        val input = vm.buildTransOperationInput() ?: return@TransClassDialog
+
+                        scope.launch {
+                            val result =
+                                vm.buildTransCourseAndConflicts(
+                                    originCourse = input.course,
+                                    originWeek = input.originWeek,
+                                    targetWeek = input.targetWeek,
+                                    newRoom = input.newRoom,
+                                    dayOfWeek = input.dayOfWeek,
+                                    startSection = input.startSection,
+                                    endSection = input.endSection
+                                )
+
+                            if (result.conflicts.isNotEmpty()) {
+                                vm.dismissTransDialog()
+                                vm.showTransConflict(result.conflicts, result.overrideCourse)
+                                return@launch
+                            }
+
+                            vm.saveTransCourse(result.overrideCourse)
+                            vm.closeTransDialogAndClear()
+                        }
+                    }
+                )
+            }
+            val conflicts = transConflictUi.conflicts
+            if (transConflictUi.show) {
+                SuperDialog(
+                    show = transConflictUi.show,
+                    modifier = Modifier,
+                    title = "调课冲突",
+                    titleColor = DialogDefaults.titleColor(),
+                    summary = "目标时间段已有课程",
+                    summaryColor = DialogDefaults.summaryColor(),
+                    backgroundColor = DialogDefaults.backgroundColor(),
+                    enableWindowDim = true,
+                    onDismissRequest = {
+                        vm.dismissTransConflict(reopenTransDialog = true)
+                    },
+                    onDismissFinished = null,
+                    outsideMargin = DialogDefaults.outsideMargin,
+                    insideMargin = DialogDefaults.insideMargin,
+                    defaultWindowInsetsPadding = true,
+                    renderInRootScaffold = true,
+                    content = {
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                start = 8.dp,
+                                end = 8.dp,
+                                top = 8.dp,
+                                bottom = 0.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(conflicts.size) { idx ->
+                                val c = conflicts[idx]
+                                Text(
+                                    text = "${c.name} \n@${c.location}   |   第${c.startSection}-${c.startSection + c.sectionCount - 1}节",
+                                    fontSize = 16.sp
+                                )
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            vm.clearTransConflict()
+                                            vm.dismissTransConflict(reopenTransDialog = true)
+                                        }) {
+                                        Text(text = "取消")
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Button(
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            val pending = vm.consumePendingOverride()
+                                            if (pending != null) {
+                                                vm.saveTransCourse(pending)
+                                            } else {
+                                                vm.clearTransConflict()
+                                            }
+                                            vm.closeTransDialogAndClear()
+                                        },
+                                        colors = ButtonDefaults.buttonColorsPrimary()
+                                    ) {
+                                        Text(
+                                            text = "强制保存",
+                                            color = MiuixTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    })
+            }
+
+            val dc = detailSheetUi.courses
+            if (detailSheetUi.show && dc.isNotEmpty()) {
+
+                SuperBottomSheet(
+                    show = detailSheetUi.show,
+                    modifier = Modifier,
+                    title = "课程详情",
+                    startAction = null,
+                    endAction = null,
+                    backgroundColor = BottomSheetDefaults.backgroundColor(),
+                    enableWindowDim = true,
+                    cornerRadius = BottomSheetDefaults.cornerRadius,
+                    sheetMaxWidth = BottomSheetDefaults.maxWidth,
+                    onDismissRequest = {
+                        vm.closeDetailSheet()
+                    },
+                    onDismissFinished = null,
+                    outsideMargin = BottomSheetDefaults.outsideMargin,
+                    insideMargin = BottomSheetDefaults.insideMargin,
+                    defaultWindowInsetsPadding = true,
+                    dragHandleColor = MiuixTheme.colorScheme.background,
+                    allowDismiss = true,
+                    enableNestedScroll = true,
+                    renderInRootScaffold = true,
+                    content = {
+                        LazyColumn {
+                            items(dc.size, key = { dc[it].id }) { index ->
+                                val c = dc[index]
+
+                                val isCurrent = isCourseActiveInWeek(c, currentWeek)
+                                val detailUi = remember(c.id, currentWeek, timetable) {
+                                    vm.buildCourseDetailUi(c, currentWeek, timetable)
+                                }
+
+                                CourseDetailItem(
+                                    modifier =
+                                        Modifier.animateItem(
+                                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        ),
+                                    course = c,
+                                    surfaceSoft = surfaceSoft,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary,
+                                    detailUi = detailUi,
+                                    isCurrent = isCurrent,
+                                    onEditLabCourse = { id ->
+                                        vm.closeDetailSheet()
+                                        onEditLabCourse(id)
+                                    },
+                                    onTransCourse = { courseToTrans ->
+                                        vm.openTransDialog(courseToTrans, currentWeek)
+                                        vm.closeDetailSheet()
+                                    },
+                                    onRevertTrans = { id ->
+                                        vm.closeDetailSheet()
+                                        val toDelete = courses.firstOrNull { it.id == id }
+                                        if (toDelete != null) {
+                                            vm.deleteCourse(toDelete)
+                                        }
+                                    })
+                            }
+                        }
+
+                        Spacer(Modifier.height(25.dp))
+                    })
+            }
+        }) { padding ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(
+                        PaddingValues(
+                            top = padding.calculateTopPadding(),
+                            start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                            end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                            bottom = 0.dp,
+                        )
+                    )
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                val weekHeaderUi =
+                    remember(
+                        currentWeek,
+                        uiState.detectedWeekInfo.diffDays,
+                        uiState.detectedWeekInfo.week,
+                        termStartMs,
+                        dayCount
+                    ) {
+                        vm.buildWeekHeaderUi(
+                            currentWeek = currentWeek,
+                            detectedDiffDays = uiState.detectedWeekInfo.diffDays,
+                            detectedWeek = uiState.detectedWeekInfo.week,
+                            termStartMs = termStartMs,
+                            dayCount = dayCount
+                        )
+                    }
+
+                Box(
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .padding(vertical = 4.dp)
+                ) {
+                    WeekHeaderRow(
+                        ui = weekHeaderUi, primary = primary, textSecondary = textSecondary
+                    )
+                }
+
+
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp)
+                        .then(
+                            if (isJvmPlatform) {
+                                Modifier.pointerInput(
+                                    pagerState.currentPage,
+                                    pagerState.pageCount
+                                ) {
+                                    detectHorizontalDragGestures(
+                                        onDragStart = { pagerDragAmount = 0f },
+                                        onHorizontalDrag = { change, dragAmount ->
+                                            pagerDragAmount += dragAmount
+                                            change.consume()
+                                        },
+                                        onDragCancel = { pagerDragAmount = 0f },
+                                        onDragEnd = {
+                                            val targetPage =
+                                                when {
+                                                    pagerDragAmount <= -pagerDragThresholdPx &&
+                                                            pagerState.currentPage < pagerState.pageCount - 1 ->
+                                                        pagerState.currentPage + 1
+
+                                                    pagerDragAmount >= pagerDragThresholdPx &&
+                                                            pagerState.currentPage > 0 ->
+                                                        pagerState.currentPage - 1
+
+                                                    else -> null
+                                                }
+                                            pagerDragAmount = 0f
+                                            if (targetPage != null) {
+                                                scope.launch {
+                                                    pagerState.animateScrollToPage(
+                                                        targetPage
+                                                    )
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
+                            } else {
+                                Modifier
+                            }
+                        )) { page: Int ->
+
+                    val pageRenderUi =
+                        remember(
+                            courses,
+                            page,
+                            uiState.includeWeek0,
+                            dayCount,
+                            showNonCurrentWeek,
+                            isDarkMode,
+                            mutedCourseColor,
+                            mutedTitleColor,
+                            mutedSubColor,
+                            cellInset,
+                            contentCardAlpha
+                        ) {
+                            vm.buildPageRenderUi(
+                                courses = courses,
+                                page = page,
+                                includeWeek0 = uiState.includeWeek0,
+                                dayCount = dayCount,
+                                showNonCurrentWeek = showNonCurrentWeek,
+                                isDarkMode = isDarkMode,
+                                mutedCourseColor = mutedCourseColor,
+                                mutedTitleColor = mutedTitleColor,
+                                mutedSubColor = mutedSubColor,
+                                yForSection = ::yForSection,
+                                heightForSections = ::heightForSections,
+                                cellInset = cellInset,
+                                contentCardAlpha = contentCardAlpha
+                            )
+                        }
+                    pageRenderUi.actualWeek
+
+                    val pageScrollState =
+                        remember(page) { androidx.compose.foundation.ScrollState(0) }
+
+                    val pageRenderData = pageRenderUi.dayRenderData
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior)
+                            .verticalScroll(pageScrollState)
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = pageBottomPadding)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(totalHeight)
+                            ) {
+
+
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    val sectionHeight = rowHeight.toPx()
+
+                                    val gapPx = rowGap.toPx()
+
+                                    val restPx = restHeight.toPx()
+
+                                    val barHeight = restHeight.toPx()
+
+                                    fun drawRestBar(afterSection: Int, label: String) {
+
+                                        val y =
+                                            afterSection * (sectionHeight + gapPx) +
+                                                    (if (afterSection > 4) restPx else 0f)
+
+                                        drawRect(
+                                            color = surfaceSoft.copy(alpha = contentCardAlpha),
+                                            topLeft = Offset(0f, y),
+                                            size = androidx.compose.ui.geometry.Size(
+                                                size.width,
+                                                barHeight
+                                            )
+                                        )
+
+                                        val textLayout =
+                                            restBarTextMeasurer.measure(
+                                                text = label,
+                                                style = TextStyle(
+                                                    fontSize = 12.sp,
+                                                    color = textSecondary,
+                                                ),
+                                            )
+
+                                        drawText(
+                                            textLayoutResult = textLayout,
+                                            topLeft = Offset(
+                                                x = (size.width - textLayout.size.width) / 2f,
+                                                y = y + (barHeight - textLayout.size.height) / 2f,
+                                            ),
+                                        )
+                                    }
+
+                                    drawRestBar(afterSection = 4, label = "午休")
+
+                                    drawRestBar(afterSection = 8, label = "晚休")
+                                }
+
+                                Row(modifier = Modifier.fillMaxWidth()) {
+
+
+                                    Column(
+                                        modifier = Modifier.width(36.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        (1..12).forEach { section ->
+                                            val slot = timetable.getOrNull(section - 1)
+
+                                            Box(
+                                                modifier = Modifier.height(rowHeight),
+                                                contentAlignment = Alignment.TopCenter
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.padding(top = 6.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Text(
+                                                        text = section.toString(),
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = textSecondary
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                                    Text(
+                                                        text = slot?.start ?: "",
+                                                        fontSize = 9.sp,
+                                                        color = textHint
+                                                    )
+
+                                                    Text(
+                                                        text = slot?.end ?: "",
+                                                        fontSize = 9.sp,
+                                                        color = textHint
+                                                    )
+                                                }
+                                            }
+
+                                            if (section == 4 || section == 8) {
+
+                                                Spacer(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(restHeight)
+                                                )
+                                            }
+
+                                            if (section != 12) {
+
+                                                Spacer(modifier = Modifier.height(rowGap))
+                                            }
+                                        }
+                                    }
+
+
+
+                                    Row(modifier = Modifier.weight(1f)) {
+                                        (1..dayCount).forEach { day ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .fillMaxHeight()
+                                            ) {
+                                                val dayData = pageRenderData[day]
+
+                                                val renderItems = dayData?.items.orEmpty()
+                                                renderItems.forEach { item ->
+                                                    CourseCard(
+                                                        model = item.model,
+                                                        onClick = {
+                                                            vm.openDetailSheet(item.overlaps)
+                                                        })
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

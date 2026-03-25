@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+
+    <color name="widget_bg">#FFF7F7F7</color>
+    <color name="widget_divider">#FFFFFFFF</color>
+    <color name="widget_header_text">#7A7D84</color>
+    <color name="widget_empty_text">#8A8D94</color>
+    <color name="widget_time_text">#666A72</color>
+    <color name="widget_time_sub_text">#A0A4AD</color>
+    <color name="widget_title_text">#111318</color>
+    <color name="widget_subtitle_text">#9A9EA6</color>
+    <color name="widget_subtle_text">#B0B4BB</color>
+    <color name="widget_dot">#5B8BFF</color>
+    <color name="widget_status_ongoing">#2B84E0</color>
+    <color name="widget_status_upcoming">#EA5F73</color>
+    <color name="widget_status_done">#9AA0A6</color>
+    <color name="widget_bar_default">#4D6BFE</color>
+    <color name="widget_row_bg_neutral">#F5F6F8</color>
+    <color name="widget_row_bg_upcoming">#FCECEE</color>
+    <color name="widget_row_bg_ongoing">#EAF3FF</color>
+</resources>

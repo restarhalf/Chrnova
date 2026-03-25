@@ -1,0 +1,10 @@
+package restarhalf.stellar.schedule.domain.usecase
+
+import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
+
+class SaveLabCourseUseCase(private val courseRepository: CourseRepository) {
+    suspend operator fun invoke(course: Course): Long {
+        return courseRepository.insertCourse(course)
+    }
+}

@@ -1,0 +1,151 @@
+package restarhalf.stellar.schedule.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.koin.compose.koinInject
+import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
+import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
+import restarhalf.stellar.schedule.ui.koin.koinViewModel
+import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+
+@Composable
+@OptIn(ExperimentalTime::class)
+fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
+    val bgVm: BackgroundViewModel = koinInject()
+    val vm: HomeViewModel = koinViewModel()
+    val appScaffoldPadding = LocalAppScaffoldPadding.current
+    val backgroundImageUri by bgVm.backgroundImageUri.collectAsState()
+    val hasBackground = backgroundImageUri != null
+    val colors = MiuixTheme.colorScheme
+    val textPrimary = colors.onBackground
+    val textSecondary = colors.onSurfaceVariantSummary
+    val dividerColor = colors.surfaceContainerHigh
+
+    val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
+    val renderState =
+        remember(courses, campus, termStartMs, totalWeeks) {
+            vm.buildHomeRenderState(
+                courses = courses,
+                campus = campus,
+                termStartMs = termStartMs,
+                totalWeeks = totalWeeks,
+                hasBackground = hasBackground,
+                nowMs = Clock.System.now().toEpochMilliseconds()
+            )
+        }
+    val headerUi = renderState.headerUi
+    val surfaceUi = renderState.surfaceUi
+    val sectionRenders = renderState.sectionRenders
+    Scaffold(containerColor = Color.Transparent) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 0.dp)
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(220.dp + padding.calculateTopPadding())
+                        .background(
+                            if (surfaceUi.headerBackgroundMode ==
+                                BuildHomeSurfaceUiUseCase.HeaderBackgroundMode.IMAGE_OVERLAY
+                            ) {
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.3f),
+                                        Color.Transparent
+                                    )
+                                )
+                            } else {
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            MiuixTheme.colorScheme.primary.copy(0.8f),
+                                            MiuixTheme.colorScheme.primary.copy(0.8f)
+                                        )
+                                )
+                            }
+                        )
+            ) {
+                Column(
+                    modifier =
+                        Modifier.padding(top = padding.calculateTopPadding() + 32.dp, start = 32.dp)
+                ) {
+                    Text(
+                        text = headerUi.dateLabel,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = headerUi.greeting,
+                        color = MiuixTheme.colorScheme.onPrimary,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(top = padding.calculateTopPadding() + 140.dp)
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
+            ) {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 24.dp, vertical = 32.dp)
+                            .padding(bottom = appScaffoldPadding.calculateBottomPadding()),
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    sectionRenders.forEach { section ->
+                        HomePeriodSection(
+                            title = section.title,
+                            rows = section.rows,
+                            textPrimary = textPrimary,
+                            textSecondary = textSecondary,
+                            dividerColor = dividerColor,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(0.dp))
+                }
+            }
+        }
+    }
+}
+

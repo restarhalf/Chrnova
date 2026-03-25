@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="widget_bg">#1C1C1E</color>
+    <color name="widget_divider">#2C2C2E</color>
+    <color name="widget_header_text">#BAC2CF</color>
+    <color name="widget_empty_text">#9FA8B6</color>
+    <color name="widget_time_text">#B3BCC8</color>
+    <color name="widget_time_sub_text">#8D96A3</color>
+    <color name="widget_title_text">#EDF2FA</color>
+    <color name="widget_subtitle_text">#9EA8B7</color>
+    <color name="widget_subtle_text">#98A2B0</color>
+    <color name="widget_dot">#6F97FF</color>
+    <color name="widget_status_ongoing">#89C4FF</color>
+    <color name="widget_status_upcoming">#FF8EA0</color>
+    <color name="widget_status_done">#919BAA</color>
+    <color name="widget_bar_default">#5F89FF</color>
+    <color name="widget_row_bg_neutral">#2A2B2E</color>
+    <color name="widget_row_bg_upcoming">#3C2B30</color>
+    <color name="widget_row_bg_ongoing">#1F2C3B</color>
+</resources>

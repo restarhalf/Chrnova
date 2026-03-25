@@ -1,0 +1,442 @@
+package restarhalf.stellar.schedule.ui.screens
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
+import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
+import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
+import restarhalf.stellar.schedule.ui.icons.Logout
+import restarhalf.stellar.schedule.ui.koin.koinViewModel
+import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
+import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
+import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.sync.SyncUiState
+import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.extra.DialogDefaults
+import top.yukonga.miuix.kmp.extra.SuperArrow
+import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.extra.SuperDropdown
+import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+
+data class SettingsScreenState(
+    val syncUiState: SyncUiState,
+    val campus: Campus,
+    val termStartMs: Long,
+    val totalWeeks: Int,
+)
+
+data class SettingsScreenActions(
+    val onSync: suspend () -> Unit,
+    val onLogout: () -> Unit,
+    val onLogin: suspend (userNo: String, password: String) -> Unit,
+    val ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    val ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    val onCampusChange: (Campus) -> Unit,
+    val onTermStartChange: (Long) -> Unit,
+    val onTotalWeeksChange: (Int) -> Unit,
+    val onChangeBackground: () -> Unit,
+    val onAbout: () -> Unit,
+)
+
+@OptIn(ExperimentalTime::class)
+@Composable
+fun SettingsScreen(
+    state: SettingsScreenState,
+    actions: SettingsScreenActions,
+) {
+    val appScaffoldPadding = LocalAppScaffoldPadding.current
+    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
+    val vm: SettingsViewModel = koinViewModel()
+
+    val showNonCurrentWeek by vm.showNonCurrentWeek.collectAsState()
+    val reminderEnabled by vm.reminderEnabled.collectAsState()
+    val examReminderEnabled by vm.examReminderEnabled.collectAsState()
+    val themeMode by vm.themeMode.collectAsState()
+    val floatingBar by vm.floatingBar.collectAsState()
+    val selectedTerm by vm.selectedTerm.collectAsState()
+    val loginUiState by vm.loginUiState.collectAsState()
+
+    val scope = rememberCoroutineScope()
+
+    val authToken by vm.authToken.collectAsState()
+    val profile by vm.profile.collectAsState()
+    val remoteTermItems by vm.remoteTermItems.collectAsState()
+    val screenUi =
+        remember(state.syncUiState, state.campus, state.termStartMs) {
+            vm.buildScreenUi(
+                syncUiState = state.syncUiState,
+                campus = state.campus,
+                termStartMs = state.termStartMs
+            )
+        }
+
+    val showTermStartPicker = remember { mutableStateOf(false) }
+    val showTotalWeeksPicker = remember { mutableStateOf(false) }
+
+    LaunchedEffect(loginUiState.authVersion) {
+        vm.refreshAuth()
+        vm.refreshRemoteTerms()
+    }
+
+    val termSelectionUi =
+        remember(remoteTermItems, authToken, selectedTerm) {
+            vm.buildTermSelectionUi(
+                authToken = authToken,
+                remoteTermItems = remoteTermItems,
+                selectedTerm = selectedTerm
+            )
+        }
+    val accountUi = remember(authToken, profile) { vm.buildAccountUi(authToken, profile) }
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            AppPageTopBar(title = "课程表设置", scrollBehavior = topAppBarScrollBehavior)
+        },
+        popupHost = {
+            if (loginUiState.showLoginSheet) {
+                SuperDialog(
+                    show = loginUiState.showLoginSheet,
+                    modifier = Modifier,
+                    title = "登录",
+                    titleColor = DialogDefaults.titleColor(),
+                    summary = null,
+                    summaryColor = DialogDefaults.summaryColor(),
+                    backgroundColor = DialogDefaults.backgroundColor(),
+                    enableWindowDim = true,
+                    onDismissRequest = {
+                        vm.dismissLoginSheet()
+                    },
+                    onDismissFinished = null,
+                    outsideMargin = DialogDefaults.outsideMargin,
+                    insideMargin = DialogDefaults.insideMargin,
+                    defaultWindowInsetsPadding = true,
+                    renderInRootScaffold = true,
+                    content = {
+                        LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            item {
+                                Column {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    TextField(
+                                        label = "账号",
+                                        value = loginUiState.userNo,
+                                        onValueChange = {
+                                            vm.onLoginUserNoChange(it)
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                            item {
+                                Column {
+                                    TextField(
+                                        label = "密码",
+                                        value = loginUiState.password,
+                                        onValueChange = {
+                                            vm.onLoginPasswordChange(it)
+                                        },
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                            if (loginUiState.error.isNotBlank()) {
+                                item { Text(text = loginUiState.error) }
+                            }
+                            item {
+                                Button(
+                                    enabled =
+                                        !loginUiState.loading &&
+                                                loginUiState.userNo.isNotBlank() &&
+                                                loginUiState.password.isNotBlank(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColorsPrimary(),
+                                    onClick = {
+                                        vm.submitLogin(actions.onLogin)
+                                    }) {
+                                    Text(
+                                        text = if (loginUiState.loading) "登录中..." else "登录",
+                                        color = MiuixTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            }
+                        }
+                    })
+            }
+
+            if (loginUiState.showLogoutConfirm) {
+                SuperDialog(
+                    show = loginUiState.showLogoutConfirm,
+                    modifier = Modifier,
+                    title = "确认退出登录",
+                    titleColor = DialogDefaults.titleColor(),
+                    summary = null,
+                    summaryColor = DialogDefaults.summaryColor(),
+                    backgroundColor = DialogDefaults.backgroundColor(),
+                    enableWindowDim = true,
+                    onDismissRequest = { vm.dismissLogoutConfirm() },
+                    onDismissFinished = null,
+                    outsideMargin = DialogDefaults.outsideMargin,
+                    insideMargin = DialogDefaults.insideMargin,
+                    defaultWindowInsetsPadding = true,
+                    renderInRootScaffold = true,
+                    content = {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = { vm.dismissLogoutConfirm() }) {
+                                Text(text = "取消")
+                            }
+
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColorsPrimary(),
+                                onClick = {
+                                    vm.confirmLogout(actions.onLogout)
+                                }) {
+                                Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
+                            }
+                        }
+                    })
+            }
+            if (showTermStartPicker.value) {
+                DatePickerBottomSheet(
+                    show = showTermStartPicker,
+                    title = "选择开始上课时间",
+                    initialDate =
+                        Instant.fromEpochMilliseconds(state.termStartMs)
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                            .date,
+                    onConfirm = { date: LocalDate ->
+                        val ms = date.atStartOfDayIn(TimeZone.currentSystemDefault())
+                            .toEpochMilliseconds()
+                        actions.onTermStartChange(ms)
+                        showTermStartPicker.value = false
+                    },
+                )
+            }
+            if (showTotalWeeksPicker.value) {
+                WeekPickerBottomSheet(
+                    show = showTotalWeeksPicker,
+                    title = "本学期总周数",
+                    initialWeek = state.totalWeeks,
+                    weekRange = 1..20,
+                    onConfirm = { week: Int ->
+                        actions.onTotalWeeksChange(week)
+                        showTotalWeeksPicker.value = false
+                    },
+                )
+            }
+        }) { paddingValues ->
+        LazyColumn(
+            modifier =
+                Modifier.fillMaxSize()
+                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+            contentPadding =
+                appPageContentPadding(
+                    innerPadding = paddingValues,
+                    outerPadding = appScaffoldPadding,
+                    extraTop = 12.dp,
+                    extraStart = 16.dp,
+                    extraEnd = 16.dp,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
+            overscrollEffect = null
+        ) {
+            item {
+                SmallTitle(text = "账号")
+                if (accountUi.loggedIn) {
+                    AppCard {
+                        BasicComponent(
+                            title = accountUi.title,
+                            summary = accountUi.summary,
+                            endActions = {
+                                IconButton(onClick = { vm.requestLogoutConfirm() }) {
+                                    Icon(
+                                        imageVector = Logout,
+                                        contentDescription = "退出",
+                                    )
+                                }
+                            })
+                    }
+                } else {
+                    AppCard {
+                        SuperArrow(
+                            title = "登录",
+                            summary = "用于获取课表",
+                            onClick = { vm.showLoginSheet() })
+                    }
+                }
+            }
+            item {
+                SmallTitle(text = "基本设置")
+                AppCard {
+                    SuperDropdown(
+                        title = "学期",
+                        summary = "用于查询课表和成绩",
+                        items = termSelectionUi.items,
+                        selectedIndex = termSelectionUi.selectedIndex,
+                        onSelectedIndexChange = { index: Int ->
+                            vm.setSelectedTerm(
+                                vm.selectedTermValueFromIndex(termSelectionUi.items, index)
+                            )
+                            scope.launch { runCatching { actions.onSync() } }
+                        })
+                    SuperDropdown(
+                        title = "上课校区",
+                        summary = "用于课表时间与作息展示",
+                        items = screenUi.campusOptions,
+                        selectedIndex = screenUi.campusSelectedIndex,
+                        onSelectedIndexChange = { index: Int ->
+                            actions.onCampusChange(vm.campusFromIndex(index))
+                            scope.launch { runCatching { actions.onSync() } }
+                        })
+                    SuperArrow(
+                        title = "开始上课时间",
+                        summary = screenUi.termStartSummary,
+                        onClick = { showTermStartPicker.value = true })
+
+                    SuperArrow(
+                        title = "本学期总周数",
+                        summary = state.totalWeeks.toString(),
+                        onClick = { showTotalWeeksPicker.value = true })
+                    SuperSwitch(
+                        title = "是否显示非本周课程",
+                        summary = "开启后单双周课程都可以看见哦",
+                        checked = showNonCurrentWeek,
+                        onCheckedChange = {
+                            vm.setShowNonCurrentWeek(it)
+                        })
+                }
+            }
+
+            item {
+                SmallTitle(text = "外观")
+                AppCard {
+                    SuperDropdown(
+                        title = "主题模式",
+                        summary = "深色/浅色可跟随系统",
+                        items = screenUi.themeOptions,
+                        selectedIndex = themeMode.coerceIn(0, 2),
+                        onSelectedIndexChange = { index: Int ->
+                            vm.setThemeMode(index)
+                        })
+                    SuperDropdown(
+                        title = "底栏形式",
+                        summary = "选择底栏的状态",
+                        items = screenUi.floatingBarOptions,
+                        selectedIndex = floatingBar.coerceIn(0, 1),
+                        onSelectedIndexChange = { index: Int ->
+                            vm.setFloatingBar(index)
+                        }
+                    )
+                    SuperArrow(
+                        title = "更换背景",
+                        summary = "设置背景图片、模糊度与透明度",
+                        onClick = actions.onChangeBackground
+                    )
+                }
+            }
+
+            item {
+                SmallTitle(text = "杂项")
+                AppCard {
+                    SuperArrow(
+                        title = "手动刷新课表",
+                        summary = screenUi.syncSummary,
+                        onClick = { scope.launch { runCatching { actions.onSync() } } })
+                    SuperSwitch(
+                        title = "课程提醒",
+                        summary = "上课前15分钟推送通知提醒",
+                        checked = reminderEnabled,
+                        onCheckedChange = { newValue ->
+                            if (newValue) {
+                                actions.ensureCourseReminderPermission {
+                                    vm.setReminderEnabled(true)
+                                    vm.scheduleCourseReminder(
+                                        campus = state.campus,
+                                        termStartMs = state.termStartMs,
+                                        totalWeeks = state.totalWeeks
+                                    )
+                                }
+                            } else {
+                                vm.setReminderEnabled(false)
+                            }
+                        })
+                    SuperSwitch(
+                        title = "考试提醒",
+                        summary = "考试前15分钟推送通知提醒",
+                        checked = examReminderEnabled,
+                        onCheckedChange = { newValue ->
+                            if (newValue) {
+                                actions.ensureExamReminderPermission {
+                                    vm.setExamReminderEnabled(true)
+                                    vm.scheduleExamReminder(selectedTerm = selectedTerm)
+                                }
+                            } else {
+                                vm.setExamReminderEnabled(false)
+                            }
+                        })
+                }
+            }
+            item {
+                SmallTitle(text = "关于")
+                AppCard {
+                    SuperArrow(
+                        title = "关于",
+                        summary = "版本信息及更新",
+                        onClick = actions.onAbout
+                    )
+                }
+            }
+        }
+    }
+}
