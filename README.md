@@ -1,10 +1,8 @@
 ﻿# 大民课程表
 
-![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?style=flat-square&logo=apple&logoColor=white) ![Version](https://img.shields.io/badge/version-4.0.0-blue?style=flat-square)
-
-[Gitee](https://gitee.com/restarhalf/schedule.git)
-
-[Github](https://github.com/restarhalf/scheduleKMP.git)
+![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?style=flat-square&logo=apple&logoColor=white)
+[![Gitee](https://img.shields.io/badge/dynamic/json?url=https://gitee.com/api/v5/repos/restarhalf/schedule/tags%3Fsort%3Dupdated%26direction%3Ddesc&query=%24%5B0%5D.name&label=Gitee&style=flat-square&logo=gitee)](https://gitee.com/restarhalf/schedule/tags)
+[![GitHub](https://img.shields.io/github/v/tag/restarhalf/scheduleKMP?label=GitHub&sort=semver&style=flat-square&logo=github)](https://github.com/restarhalf/scheduleKMP/tags)
 
 一个给同学用的课程表应用。
 
