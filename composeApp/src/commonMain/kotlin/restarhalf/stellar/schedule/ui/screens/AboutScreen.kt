@@ -257,7 +257,6 @@ fun AboutScreen(
             verticalArrangement = Arrangement.Top,
             overscrollEffect = null,
         ) {
-            item { Spacer(modifier = Modifier.height(20.dp)) }
             item {
                 DetailHeader(
                     appIcon = appIcon,
