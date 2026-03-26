@@ -13,4 +13,8 @@ interface CourseRepository {
     suspend fun deleteCourse(course: Course)
 
     suspend fun getAllCoursesOnce(): List<Course>
+
+    suspend fun replaceSyncedCourses(courses: List<Course>)
+
+    suspend fun clearAllCourses()
 }

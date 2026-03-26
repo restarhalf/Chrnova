@@ -1,16 +1,16 @@
 package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.withContext
-import restarhalf.stellar.schedule.data.local.CourseDao
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 class AuthWorkflowPortImpl(
     private val gateway: JwxtGateway,
     private val authStore: JwxtAuthStore,
-    private val courseDao: CourseDao,
+    private val courseRepository: CourseRepository,
 ) : AuthWorkflowPort {
 
     override suspend fun ensureLoggedIn() {
@@ -49,7 +49,7 @@ class AuthWorkflowPortImpl(
 
         val newUserNo = resp.data?.userNo.orEmpty().trim().ifBlank { userNo.trim() }
         if (oldUserNo.isNotBlank() && newUserNo.isNotBlank() && oldUserNo != newUserNo) {
-            withContext(AppIoDispatcher) { courseDao.deleteAll() }
+            withContext(AppIoDispatcher) { courseRepository.clearAllCourses() }
         }
 
         authStore.setLastUserNo(newUserNo)

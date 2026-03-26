@@ -23,4 +23,15 @@ class RoomCourseRepository(private val courseDao: CourseDao) : CourseRepository 
 
     override suspend fun getAllCoursesOnce(): List<Course> =
         courseDao.getAllCoursesOnce().map { it.toDomain() }
+
+    override suspend fun replaceSyncedCourses(courses: List<Course>) {
+        courseDao.deleteSyncedCourses()
+        if (courses.isNotEmpty()) {
+            courseDao.insertCourses(courses.map { it.toEntity() })
+        }
+    }
+
+    override suspend fun clearAllCourses() {
+        courseDao.deleteAll()
+    }
 }

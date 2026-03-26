@@ -147,11 +147,11 @@ val commonAppModule = module {
         AuthWorkflowPortImpl(
             gateway = get(),
             authStore = get(),
-            courseDao = get()
+            courseRepository = get()
         )
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
-    single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseDao = get()) }
+    single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get()) }
 
     single {
         RunSyncUseCase(
