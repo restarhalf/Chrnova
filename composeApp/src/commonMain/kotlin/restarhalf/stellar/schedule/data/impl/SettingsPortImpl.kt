@@ -36,7 +36,7 @@ class SettingsPortImpl(
     }
 
     override fun setFloatingBar(mode: Int) {
-        settings[SettingsKeys.FLOATING_BAR] = mode.coerceIn(0, 1)
+        settings[SettingsKeys.FLOATING_BAR] = mode.coerceIn(0,2)
     }
 
     override fun observeSelectedTerm(): Flow<String> {

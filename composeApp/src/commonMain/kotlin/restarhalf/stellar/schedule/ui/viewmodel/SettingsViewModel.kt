@@ -98,7 +98,7 @@ class SettingsViewModel(
     private companion object {
         val CAMPUS_OPTIONS = listOf("开发区", "金石滩")
         val THEME_OPTIONS = listOf("跟随系统", "浅色", "深色")
-        val FLOATING_BAR_OPTIONS = listOf("固定", "悬浮")
+        val FLOATING_BAR_OPTIONS = listOf("固定", "悬浮","液态玻璃")
     }
 
     private val _showNonCurrentWeek = MutableStateFlow(true)

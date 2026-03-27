@@ -373,7 +373,7 @@ fun SettingsScreen(
                         title = "底栏形式",
                         summary = "选择底栏的状态",
                         items = screenUi.floatingBarOptions,
-                        selectedIndex = floatingBar.coerceIn(0, 1),
+                        selectedIndex = floatingBar.coerceIn(0, 2),
                         onSelectedIndexChange = { index: Int ->
                             vm.setFloatingBar(index)
                         }

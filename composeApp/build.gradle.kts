@@ -132,6 +132,8 @@ kotlin {
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.ui)
+                implementation(libs.backdrop)
+                implementation(libs.shapes)
                 implementation(libs.compose.components.resources)
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.kotlinx.coroutines.core)

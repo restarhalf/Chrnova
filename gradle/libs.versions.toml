@@ -6,7 +6,8 @@ android-targetSdk = "36"
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.18.0"
-composeMultiplatform = "1.10.2"
+backdrop = "2.0.0-alpha03"
+composeMultiplatform = "1.10.3"
 kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 coilCompose = "3.4.0"
@@ -19,6 +20,7 @@ kotlinx-serialization = "1.10.0"
 kotlin-serialization = "2.3.20"
 ksp = "2.3.6"
 koin = "4.2.0"
+shape = "1.2.0"
 work = "2.11.1"
 sqlite = "2.6.2"
 profileinstaller = "1.4.1"
@@ -29,6 +31,7 @@ lifecycle = "2.10.0"
 exifinterface = "1.4.2"
 
 [libraries]
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -71,6 +74,7 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+shapes = { module = "io.github.kyant0:shapes", version.ref = "shape" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

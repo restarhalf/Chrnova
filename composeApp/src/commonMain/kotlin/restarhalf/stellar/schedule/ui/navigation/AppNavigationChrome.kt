@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -33,6 +34,7 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
@@ -69,26 +71,41 @@ fun AppBottomBar(
             slideOutVertically(targetOffsetY = { it }) +
                     fadeOut(animationSpec = tween(200)),
     ) {
-        if (shellState.barMode == 0) {
-            NavigationBar {
-                appTabSpecs.forEach { tab ->
-                    NavigationBarItem(
-                        selected = shellState.currentScreen == tab.screen,
-                        onClick = { onSwitchTab(tab.screen) },
-                        icon = tab.icon,
-                        label = tab.label,
-                    )
+        when (shellState.barMode) {
+            0 -> {
+                NavigationBar {
+                    appTabSpecs.forEach { tab ->
+                        NavigationBarItem(
+                            selected = shellState.currentScreen == tab.screen,
+                            onClick = { onSwitchTab(tab.screen) },
+                            icon = tab.icon,
+                            label = tab.label,
+                        )
+                    }
                 }
             }
-        } else {
-            FloatingNavigationBar {
-                appTabSpecs.forEach { tab ->
-                    FloatingNavigationBarItem(
-                        selected = shellState.currentScreen == tab.screen,
-                        onClick = { onSwitchTab(tab.screen) },
-                        icon = tab.icon,
-                        label = tab.label,
-                    )
+            1 -> {
+                FloatingNavigationBar {
+                    appTabSpecs.forEach { tab ->
+                        FloatingNavigationBarItem(
+                            selected = shellState.currentScreen == tab.screen,
+                            onClick = { onSwitchTab(tab.screen) },
+                            icon = tab.icon,
+                            label = tab.label,
+                        )
+                    }
+                }
+            }
+            else -> {
+                GlassNavigationBar {
+                    appTabSpecs.forEach { tab ->
+                        GlassNavigationBarItem(
+                            selected = shellState.currentScreen == tab.screen,
+                            onClick = { onSwitchTab(tab.screen) },
+                            icon = tab.icon,
+                            label = tab.label,
+                        )
+                    }
                 }
             }
         }
