@@ -3,8 +3,6 @@ name: Build All Platforms
 on:
   workflow_dispatch:
   push:
-    tags:
-      - "*"
 
 permissions:
   contents: write
