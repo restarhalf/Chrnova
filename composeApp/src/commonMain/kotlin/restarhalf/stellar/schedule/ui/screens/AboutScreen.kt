@@ -285,7 +285,7 @@ fun AboutScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(6.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
                     SuperArrow(
@@ -295,7 +295,7 @@ fun AboutScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(6.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
                     SuperArrow(
@@ -305,7 +305,7 @@ fun AboutScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(6.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
                     SuperArrow(
@@ -315,7 +315,7 @@ fun AboutScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(6.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
                     SuperArrow(
@@ -325,7 +325,7 @@ fun AboutScreen(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(6.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
                     SuperArrow(

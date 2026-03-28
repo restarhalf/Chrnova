@@ -86,12 +86,11 @@ jobs:
           cp "${APK_PATH}" build/release-artifacts/app-release.apk
 
       - name: Upload Android artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: android-release
+          archive: false
           if-no-files-found: error
-          path: |
-            build/release-artifacts/app-release.apk
+          path: build/release-artifacts/app-release.apk
 
 
   ios-release:
@@ -194,12 +193,11 @@ jobs:
 
       - name: Upload unsigned iOS IPA
         if: ${{ env.IOS_CERTIFICATE_P12_BASE64 == '' || env.IOS_CERTIFICATE_PASSWORD == '' || env.IOS_MOBILEPROVISION_BASE64 == '' || env.IOS_TEAM_ID == '' || env.IOS_BUNDLE_ID == '' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: ios-ipa
+          archive: false
           if-no-files-found: error
-          path: |
-            build/ios/app-release.ipa
+          path: build/ios/app-release.ipa
 
       - name: Import iOS signing assets
         if: ${{ env.IOS_CERTIFICATE_P12_BASE64 != '' && env.IOS_CERTIFICATE_PASSWORD != '' && env.IOS_MOBILEPROVISION_BASE64 != '' && env.IOS_TEAM_ID != '' && env.IOS_BUNDLE_ID != '' }}
@@ -279,12 +277,11 @@ jobs:
 
       - name: Upload signed iOS IPA
         if: ${{ env.IOS_CERTIFICATE_P12_BASE64 != '' && env.IOS_CERTIFICATE_PASSWORD != '' && env.IOS_MOBILEPROVISION_BASE64 != '' && env.IOS_TEAM_ID != '' && env.IOS_BUNDLE_ID != '' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: ios-ipa
+          archive: false
           if-no-files-found: error
-          path: |
-            build/ios/app-release.ipa
+          path: build/ios/app-release.ipa
 
   publish-release:
     name: Publish GitHub Release
