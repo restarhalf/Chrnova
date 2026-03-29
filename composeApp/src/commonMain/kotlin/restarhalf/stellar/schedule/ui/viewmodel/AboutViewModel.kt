@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
@@ -86,7 +88,9 @@ class AboutViewModel(
                     _updateSummary.value = "发现新版本 ${latest.latestVersion}"
                 }
             }
-                .onFailure { _updateSummary.value = it.message ?: "检查更新失败" }
+                .onFailure {
+                    _updateSummary.value = it.toUserFacingMessage(UserFacingErrorKind.CheckUpdate)
+                }
 
             _updateChecking.value = false
         }

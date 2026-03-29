@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -60,7 +62,7 @@ class GradeViewModel : ViewModel() {
         val cards = courses.map { buildGradeCardUi(it) }
         val statusText =
             when {
-                error.isNotBlank() -> "加载失败：$error"
+                error.isNotBlank() -> error
                 !loading && cards.isEmpty() -> "暂无成绩数据"
                 else -> null
             }
@@ -136,7 +138,7 @@ class GradeViewModel : ViewModel() {
                 .onSuccess { _report.value = it }
                 .onFailure {
                     _report.value = TermGradeReport()
-                    _error.value = it.message ?: "加载失败"
+                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }
             _loading.value = false
         }

@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -41,7 +43,9 @@ class AppViewModel(
                             campusName = it.campusName
                         )
                     },
-                    onFailure = { SyncUiState.Error(it.message ?: "同步失败") },
+                    onFailure = {
+                        SyncUiState.Error(it.toUserFacingMessage(UserFacingErrorKind.Sync))
+                    },
                 )
 
         updateState(uiState)

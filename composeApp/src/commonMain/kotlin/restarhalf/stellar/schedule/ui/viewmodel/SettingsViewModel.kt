@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
@@ -233,7 +235,7 @@ class SettingsViewModel(
                 is SyncUiState.Idle -> "立即从教务拉取最新课表"
                 is SyncUiState.Loading -> "同步中..."
                 is SyncUiState.Success -> "同步成功：${syncUiState.inserted} 门（${syncUiState.campusName}）"
-                is SyncUiState.Error -> "同步失败"
+                is SyncUiState.Error -> syncUiState.message
             }
         return ScreenUi(
             campusOptions = CAMPUS_OPTIONS,
@@ -313,7 +315,10 @@ class SettingsViewModel(
                 .onFailure {
                     val latest = _loginUiState.value
                     _loginUiState.value =
-                        latest.copy(loading = false, error = it.message ?: "登录失败")
+                        latest.copy(
+                            loading = false,
+                            error = it.toUserFacingMessage(UserFacingErrorKind.Login)
+                        )
                 }
         }
     }

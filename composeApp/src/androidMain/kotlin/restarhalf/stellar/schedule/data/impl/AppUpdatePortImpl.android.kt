@@ -29,6 +29,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.R
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.update.ANDROID_RELEASE_APK_FILE_NAME
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
@@ -150,7 +152,9 @@ class AppUpdatePortImpl(
                 .onFailure { error ->
                     runCatching { target.delete() }
                     _apkDownloadState.value =
-                        ApkDownloadState.Error(error.message ?: "Download failed")
+                        ApkDownloadState.Error(
+                            error.toUserFacingMessage(UserFacingErrorKind.DownloadUpdate)
+                        )
                 }
         }
     }

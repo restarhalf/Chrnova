@@ -9,7 +9,7 @@ class AppInfoPortImpl(
 
     override val appName: String
         get() = context.applicationInfo.loadLabel(context.packageManager).toString()
-            .ifBlank { "\u5927\u6c11\u8bfe\u7a0b\u8868" }
+            .ifBlank { "大民课程表" }
 
     override val versionName: String
         get() =

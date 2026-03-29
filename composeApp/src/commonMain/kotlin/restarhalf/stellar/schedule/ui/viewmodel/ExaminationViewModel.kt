@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
+import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Examination
 import kotlin.time.ExperimentalTime
 
@@ -55,7 +57,7 @@ class ExaminationViewModel : ViewModel() {
         val cards = visibleItems.map { exam -> buildExamCardUi(exam) }
         val statusText =
             when {
-                error.isNotBlank() -> "加载失败：$error"
+                error.isNotBlank() -> error
                 !loading && cards.isEmpty() -> "暂无考试安排"
                 else -> null
             }
@@ -72,7 +74,9 @@ class ExaminationViewModel : ViewModel() {
         viewModelScope.launch {
             runCatching { loader() }
                 .onSuccess { _items.value = it }
-                .onFailure { _error.value = it.message ?: "加载失败" }
+                .onFailure {
+                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
+                }
             _loading.value = false
         }
     }

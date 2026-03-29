@@ -11,7 +11,7 @@ class AppInfoPortImpl : AppInfoPort {
             ?.takeIf { it.isNotBlank() }
             ?: (bundle.objectForInfoDictionaryKey("CFBundleName") as? String)
                 ?.takeIf { it.isNotBlank() }
-            ?: "\u5927\u6c11\u8bfe\u7a0b\u8868"
+            ?: "大民课程表"
 
     override val versionName: String =
         (bundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String)

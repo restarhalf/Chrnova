@@ -218,7 +218,7 @@ private fun showNativeMessage(controller: UIViewController, message: String) {
             )
         alert.addAction(
             UIAlertAction.actionWithTitle(
-                title = "\u786e\u5b9a",
+                title = "确定",
                 style = UIAlertActionStyleDefault,
                 handler = null,
             ),
