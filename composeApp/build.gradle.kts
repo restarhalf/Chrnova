@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.androidx.room)
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
@@ -109,24 +109,8 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.appcompat)
-            implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.work.runtime.ktx)
-            implementation(libs.androidx.glance.appwidget)
-            implementation(libs.androidx.glance)
-            implementation(libs.androidx.profileinstaller)
-            implementation(libs.koin.androidx.compose)
-            implementation(libs.androidx.room.sqlite.wrapper)
-            implementation(libs.androidx.exifinterface)
-            implementation(libs.ktor.client.okhttp)
-        }
         commonMain {
             kotlin.srcDir(generatedLocalSecretsDir)
-
             dependencies {
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.animation)
@@ -156,9 +140,21 @@ kotlin {
                 api(libs.lifecycle.viewmodel)
             }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        androidMain.dependencies {
+            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.compose.uiTooling)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.appcompat)
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.androidx.glance.appwidget)
+            implementation(libs.androidx.glance)
+            implementation(libs.androidx.profileinstaller)
+            implementation(libs.koin.androidx.compose)
+            implementation(libs.androidx.exifinterface)
+            implementation(libs.ktor.client.okhttp)
         }
+
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }

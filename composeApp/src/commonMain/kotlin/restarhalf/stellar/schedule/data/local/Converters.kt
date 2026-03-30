@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.local
 
-import androidx.room.TypeConverter
+import androidx.room3.TypeConverter
 import kotlinx.serialization.json.Json
 
 class Converters {

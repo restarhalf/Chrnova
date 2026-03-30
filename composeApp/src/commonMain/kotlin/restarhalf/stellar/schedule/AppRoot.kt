@@ -68,6 +68,8 @@ import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.Platform
+import top.yukonga.miuix.kmp.utils.platform
 
 @Composable
 fun AppRoot(
@@ -90,7 +92,6 @@ fun AppRoot(
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val isWideScreen = shouldShowSplitPane()
-    val isAndroidPlatform = remember { getPlatform().name.startsWith("Android") }
 
     var pendingUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
     val showUpdateDialog = remember { mutableStateOf(false) }
@@ -348,7 +349,7 @@ fun AppRoot(
             show = showUpdateDialog,
             pendingUpdate = pendingUpdate,
             onStartDownload = { info ->
-                if (!isAndroidPlatform) {
+                if (platform()!= Platform.Android) {
                     val openedDownload =
                         runCatching { appUpdate.launchInstaller(info.downloadUrl) }.getOrDefault(
                             false
@@ -372,8 +373,8 @@ fun AppRoot(
     val apkDownloadState by appUpdate.apkDownloadState.collectAsState()
     val showApkDownloadDialog = remember { mutableStateOf(false) }
 
-    LaunchedEffect(apkDownloadState, isAndroidPlatform) {
-        if (!isAndroidPlatform) return@LaunchedEffect
+    LaunchedEffect(apkDownloadState) {
+        if (platform()!= Platform.Android) return@LaunchedEffect
         when (val state = apkDownloadState) {
             is ApkDownloadState.Downloading -> {
                 showApkDownloadDialog.value = true
@@ -404,7 +405,7 @@ fun AppRoot(
         }
     }
 
-    if (isAndroidPlatform && showApkDownloadDialog.value) {
+    if (platform() == Platform.Android && showApkDownloadDialog.value) {
         val progress =
             (apkDownloadState as? ApkDownloadState.Downloading)?.progress
                 ?: if (apkDownloadState is ApkDownloadState.Completed) 100f else 0f

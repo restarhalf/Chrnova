@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
-import restarhalf.stellar.schedule.getPlatform
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.about.AwardDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.AwardPictureDialog
@@ -56,6 +55,8 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.Platform
+import top.yukonga.miuix.kmp.utils.platform
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -81,7 +82,6 @@ fun AboutScreen(
     val awardImage = remember { mutableStateOf<DrawableResource?>(null) }
     val awardImagePath = remember { mutableStateOf<String?>(null) }
     val isInPreview = LocalInspectionMode.current
-    val isAndroidPlatform = remember { getPlatform().name.startsWith("Android") }
     val handleEvent by rememberUpdatedState(onHandleEvent)
 
     val pendingUpdate by vm.pendingUpdate.collectAsState()
@@ -146,7 +146,7 @@ fun AboutScreen(
                 AwardDialog(
                     show = showAward,
                     onWxpay = {
-                        if (isAndroidPlatform) {
+                        if (platform()== Platform.Android) {
                             vm.requestWxPayAward()
                             showAward.value = false
                         } else {
@@ -158,7 +158,7 @@ fun AboutScreen(
                         }
                     },
                     onAlipay = {
-                        if (isAndroidPlatform) {
+                        if (platform()== Platform.Android) {
                             vm.requestOpenAlipayAward()
                             showAward.value = false
                         } else {

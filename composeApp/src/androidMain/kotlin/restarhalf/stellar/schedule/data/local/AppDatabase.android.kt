@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.data.local
 
 import android.content.Context
-import androidx.room.Room
+import androidx.room3.Room
 
 fun buildPlatformAppDatabase(context: Context): AppDatabase =
     buildAppDatabase(

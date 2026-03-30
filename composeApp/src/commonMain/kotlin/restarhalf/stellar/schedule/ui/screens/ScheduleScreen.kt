@@ -49,7 +49,6 @@ import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.getPlatform
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseCard
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailItem
 import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
@@ -97,7 +96,6 @@ fun ScheduleScreen(
             .calculateBottomPadding()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val isJvmPlatform = remember { getPlatform().name.startsWith("Java") }
     val pagerDragThresholdPx = with(density) { 48.dp.toPx() }
     var pagerDragAmount by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
@@ -435,48 +433,8 @@ fun ScheduleScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 8.dp)
-                        .then(
-                            if (isJvmPlatform) {
-                                Modifier.pointerInput(
-                                    pagerState.currentPage,
-                                    pagerState.pageCount
-                                ) {
-                                    detectHorizontalDragGestures(
-                                        onDragStart = { pagerDragAmount = 0f },
-                                        onHorizontalDrag = { change, dragAmount ->
-                                            pagerDragAmount += dragAmount
-                                            change.consume()
-                                        },
-                                        onDragCancel = { pagerDragAmount = 0f },
-                                        onDragEnd = {
-                                            val targetPage =
-                                                when {
-                                                    pagerDragAmount <= -pagerDragThresholdPx &&
-                                                            pagerState.currentPage < pagerState.pageCount - 1 ->
-                                                        pagerState.currentPage + 1
-
-                                                    pagerDragAmount >= pagerDragThresholdPx &&
-                                                            pagerState.currentPage > 0 ->
-                                                        pagerState.currentPage - 1
-
-                                                    else -> null
-                                                }
-                                            pagerDragAmount = 0f
-                                            if (targetPage != null) {
-                                                scope.launch {
-                                                    pagerState.animateScrollToPage(
-                                                        targetPage
-                                                    )
-                                                }
-                                            }
-                                        },
-                                    )
-                                }
-                            } else {
-                                Modifier
-                            }
-                        )) { page: Int ->
-
+                        .then(Modifier)
+                ) { page: Int ->
                     val pageRenderUi =
                         remember(
                             courses,
