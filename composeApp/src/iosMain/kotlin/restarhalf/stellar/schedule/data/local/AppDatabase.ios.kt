@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.local
 
-import androidx.room.Room
+import androidx.room3.Room
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
