@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,6 +33,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.miuixUnevenShape
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -121,7 +121,7 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
                     Modifier
                         .fillMaxSize()
                         .padding(top = padding.calculateTopPadding() + 140.dp)
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .clip(miuixUnevenShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
             ) {
                 Column(

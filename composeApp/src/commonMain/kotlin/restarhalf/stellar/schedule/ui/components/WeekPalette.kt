@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.miuixShape
 
 @Composable
 fun WeekPalette(
@@ -77,7 +77,7 @@ fun WeekPalette(
                         modifier =
                             Modifier.weight(1f)
                                 .height(itemHeight)
-                                .clip(RoundedCornerShape(cornerRadius))
+                                .clip(miuixShape(cornerRadius))
                                 .background(bg)
                                 .clickable(enabled = enabled) { onToggleWeek(week) },
                         contentAlignment = Alignment.Center,

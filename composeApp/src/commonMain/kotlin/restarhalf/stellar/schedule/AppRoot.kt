@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,8 +28,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.ui.NavDisplay
 import coil3.compose.AsyncImage
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 import org.koin.compose.koinInject
@@ -47,7 +44,6 @@ import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
 import restarhalf.stellar.schedule.ui.navigation.AppNavigator
 import restarhalf.stellar.schedule.ui.navigation.AppScaffoldBody
 import restarhalf.stellar.schedule.ui.navigation.FirstOpenNoticeDialog
-import restarhalf.stellar.schedule.ui.navigation.LocalGlassNavigationBackdrop
 import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.navigation.rememberAppShellState
 import restarhalf.stellar.schedule.ui.navigation.shouldShowSplitPane
@@ -67,6 +63,8 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
@@ -101,12 +99,7 @@ fun AppRoot(
     val backgroundAlpha by bgVm.backgroundAlpha.collectAsState()
     val backgroundBlur by bgVm.backgroundBlur.collectAsState()
     val componentsAlpha by bgVm.componentsAlpha.collectAsState()
-    val surfaceColor = MiuixTheme.colorScheme.surface
-    val appBackdrop = rememberLayerBackdrop {
-        drawRect(surfaceColor)
-        drawContent()
-    }
-
+    val backdrop = rememberLayerBackdrop()
     var campus by remember { mutableStateOf(vm.getCampus()) }
     var termStartMs by remember { mutableLongStateOf(vm.getTermStartMs()) }
     var totalWeeks by remember { mutableIntStateOf(vm.getTotalWeeks()) }
@@ -287,7 +280,6 @@ fun AppRoot(
             settings = settings,
         )
 
-    CompositionLocalProvider(LocalGlassNavigationBackdrop provides appBackdrop) {
         Box(
             modifier =
                 Modifier
@@ -297,14 +289,14 @@ fun AppRoot(
             Scaffold(
                 containerColor = MiuixTheme.colorScheme.background.copy(alpha = 0f),
                 bottomBar = {
-                    AppBottomBar(shellState = shellState, onSwitchTab = ::switchTab)
+                    AppBottomBar(shellState = shellState, onSwitchTab = ::switchTab,backdrop=backdrop)
                 },
             ) { innerPadding ->
                 Box(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .layerBackdrop(appBackdrop)
+                            .layerBackdrop(backdrop)
                             .background(MiuixTheme.colorScheme.surface),
                 ) {
                     backgroundImageUri?.let { uri ->
@@ -342,7 +334,6 @@ fun AppRoot(
                 }
             }
         }
-    }
 
     if (showUpdateDialog.value) {
         UpdateConfirmDialog(

@@ -20,9 +20,9 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.extra.DialogDefaults
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.layout.DialogDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -59,7 +59,7 @@ fun TransClassDialog(
             }
         }
 
-    SuperDialog(
+    OverlayDialog(
         show = show,
         modifier = Modifier,
         title = "调课",
@@ -134,21 +134,21 @@ fun TransClassDialog(
                 }
 
                 item {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "调课星期",
                         summary = weekdayText,
                         onClick = { showWeekdayPicker.value = true })
                 }
 
                 item {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "调课周数",
                         summary = "第${totalWeeks}周",
                         onClick = { showWeekPicker.value = true })
                 }
 
                 item {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "调课节数",
                         summary = "第${startSection}-${endSection}节",
                         onClick = { showSectionPicker.value = true },

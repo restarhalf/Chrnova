@@ -77,8 +77,8 @@ kotlin {
 
     android {
         namespace = "restarhalf.stellar.schedule"
-        compileSdk { version = release(36) }
-        minSdk = 30
+        compileSdk { version = release(37) }
+        minSdk = 31
 
         androidResources {
             enable = true
@@ -116,15 +116,15 @@ kotlin {
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.ui)
-                implementation(libs.backdrop)
-                implementation(libs.shapes)
                 implementation(libs.compose.components.resources)
                 implementation(libs.compose.uiToolingPreview)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.androidx.navigation3.runtime)
-                implementation(libs.miuix)
+                implementation(libs.miuix.ui)
+                implementation(libs.miuix.preference)
+                implementation(libs.miuix.blur)
                 implementation(libs.miuix.navigation3.ui)
                 implementation(libs.coil.compose)
                 implementation(libs.koin.core)

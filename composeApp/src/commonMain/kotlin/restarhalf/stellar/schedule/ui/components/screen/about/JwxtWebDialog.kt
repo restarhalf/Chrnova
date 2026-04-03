@@ -11,12 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.extra.DialogDefaults
-import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.layout.DialogDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun JwxtWebDialog(show: MutableState<Boolean>, onPc: () -> Unit, onMobile: () -> Unit) {
-    SuperDialog(
+    OverlayDialog(
         show = show.value,
         modifier = Modifier,
         title = "打开教务系统",

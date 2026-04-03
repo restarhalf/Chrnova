@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.miuixShape
 
 @Composable
 fun CourseDetailItem(
@@ -88,7 +88,7 @@ fun CourseDetailItem(
                     modifier =
                         Modifier
                             .padding(top = 2.dp)
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(miuixShape(6.dp))
                             .background(tagBackground)
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {

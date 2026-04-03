@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -30,6 +29,8 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
+import top.yukonga.miuix.kmp.theme.miuixShape
 
 @Composable
 fun GradeItemCard(
@@ -63,7 +64,7 @@ fun GradeItemCard(
             ) {
                 Box(
                     modifier =
-                        Modifier.clip(RoundedCornerShape(16.dp))
+                        Modifier.clip(miuixCapsuleShape())
                             .background(accentColor)
                             .width(4.dp)
                             .height(30.dp)
@@ -81,7 +82,7 @@ fun GradeItemCard(
                             Box(
                                 modifier =
                                     Modifier.padding(top = 2.dp)
-                                        .clip(RoundedCornerShape(6.dp))
+                                        .clip(miuixShape(6.dp))
                                         .background(Color(0xFFFCB065).copy(0.8f))
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {

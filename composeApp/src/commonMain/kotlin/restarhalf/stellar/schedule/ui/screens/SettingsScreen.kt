@@ -53,11 +53,11 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.extra.DialogDefaults
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperDialog
-import top.yukonga.miuix.kmp.extra.SuperDropdown
-import top.yukonga.miuix.kmp.extra.SuperSwitch
+import top.yukonga.miuix.kmp.layout.DialogDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -139,7 +139,7 @@ fun SettingsScreen(
         },
         popupHost = {
             if (loginUiState.showLoginSheet) {
-                SuperDialog(
+                OverlayDialog(
                     show = loginUiState.showLoginSheet,
                     modifier = Modifier,
                     title = "登录",
@@ -212,7 +212,7 @@ fun SettingsScreen(
             }
 
             if (loginUiState.showLogoutConfirm) {
-                SuperDialog(
+                OverlayDialog(
                     show = loginUiState.showLogoutConfirm,
                     modifier = Modifier,
                     title = "确认退出登录",
@@ -322,7 +322,7 @@ fun SettingsScreen(
                     }
                 } else {
                     AppCard {
-                        SuperArrow(
+                        ArrowPreference(
                             title = "登录",
                             summary = "用于获取课表",
                             onClick = { vm.showLoginSheet() })
@@ -332,7 +332,7 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "基本设置")
                 AppCard {
-                    SuperDropdown(
+                    OverlayDropdownPreference(
                         title = "学期",
                         summary = "用于查询课表和成绩",
                         items = termSelectionUi.items,
@@ -343,7 +343,7 @@ fun SettingsScreen(
                             )
                             scope.launch { runCatching { actions.onSync() } }
                         })
-                    SuperDropdown(
+                    OverlayDropdownPreference(
                         title = "上课校区",
                         summary = "用于课表时间与作息展示",
                         items = screenUi.campusOptions,
@@ -352,16 +352,16 @@ fun SettingsScreen(
                             actions.onCampusChange(vm.campusFromIndex(index))
                             scope.launch { runCatching { actions.onSync() } }
                         })
-                    SuperArrow(
+                    ArrowPreference(
                         title = "开始上课时间",
                         summary = screenUi.termStartSummary,
                         onClick = { showTermStartPicker.value = true })
 
-                    SuperArrow(
+                    ArrowPreference(
                         title = "本学期总周数",
                         summary = state.totalWeeks.toString(),
                         onClick = { showTotalWeeksPicker.value = true })
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "是否显示非本周课程",
                         summary = "开启后单双周课程都可以看见哦",
                         checked = showNonCurrentWeek,
@@ -374,7 +374,7 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "外观")
                 AppCard {
-                    SuperDropdown(
+                    OverlayDropdownPreference(
                         title = "主题模式",
                         summary = "深色/浅色可跟随系统",
                         items = screenUi.themeOptions,
@@ -382,7 +382,7 @@ fun SettingsScreen(
                         onSelectedIndexChange = { index: Int ->
                             vm.setThemeMode(index)
                         })
-                    SuperDropdown(
+                    OverlayDropdownPreference(
                         title = "底栏形式",
                         summary = "选择底栏的状态",
                         items = screenUi.floatingBarOptions,
@@ -391,7 +391,7 @@ fun SettingsScreen(
                             vm.setFloatingBar(index)
                         }
                     )
-                    SuperArrow(
+                    ArrowPreference(
                         title = "更换背景",
                         summary = "设置背景图片、模糊度与透明度",
                         onClick = actions.onChangeBackground
@@ -402,11 +402,11 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "杂项")
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "手动刷新课表",
                         summary = screenUi.syncSummary,
                         onClick = { scope.launch { runCatching { actions.onSync() } } })
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",
                         checked = reminderEnabled,
@@ -424,7 +424,7 @@ fun SettingsScreen(
                                 vm.setReminderEnabled(false)
                             }
                         })
-                    SuperSwitch(
+                    SwitchPreference(
                         title = "考试提醒",
                         summary = "考试前15分钟推送通知提醒",
                         checked = examReminderEnabled,
@@ -443,7 +443,7 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "关于")
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "关于",
                         summary = "版本信息及更新",
                         onClick = actions.onAbout

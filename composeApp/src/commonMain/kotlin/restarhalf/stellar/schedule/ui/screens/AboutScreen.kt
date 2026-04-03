@@ -53,7 +53,7 @@ import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.extra.SuperArrow
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
@@ -275,11 +275,11 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(6.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "检查更新",
                         summary = screenUi.updateActionSummary,
                         onClick = {
-                            if (!screenUi.canCheckUpdate) return@SuperArrow
+                            if (!screenUi.canCheckUpdate) return@ArrowPreference
                             vm.checkUpdate(currentVersionName = screenUi.currentVersionForCheck)
                         },
                     )
@@ -288,7 +288,7 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "加入 QQ 群",
                         summary = "加入 QQ 群反馈 bug",
                         onClick = { vm.requestJoinDefaultQqGroup() },
@@ -298,7 +298,7 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "打开教务系统",
                         summary = "按需跳转到移动端或 PC 端",
                         onClick = { showJwxt.value = true },
@@ -308,7 +308,7 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "查看Github仓库",
                         summary = "给我点个星吧求求你们了",
                         onClick = { vm.requestOpenGithub() }
@@ -318,7 +318,7 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "进入发布页",
                         summary = "快安利给其他人吧",
                         onClick = { vm.requestPublishPage() }
@@ -328,7 +328,7 @@ fun AboutScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "赞赏作者",
                         summary = "赞赏以支持继续更新",
                         onClick = { showAward.value = true },

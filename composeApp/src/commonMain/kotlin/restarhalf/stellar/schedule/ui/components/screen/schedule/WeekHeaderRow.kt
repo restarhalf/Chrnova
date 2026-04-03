@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
 
 @Composable
 fun WeekHeaderRow(
@@ -52,7 +52,7 @@ fun WeekHeaderRow(
                 Box(
                     modifier =
                         Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(miuixCapsuleShape())
                             .background(if (isToday) primary.copy(0.7f) else Color.Transparent)
                             .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {

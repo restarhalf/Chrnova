@@ -23,3 +23,6 @@ node_modules/
 **/profile/
 dlnusche.jks
 example/
+.github/skills
+.github/agents
+.vscode

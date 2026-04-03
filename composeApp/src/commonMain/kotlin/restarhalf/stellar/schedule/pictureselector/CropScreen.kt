@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +40,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.miuixShape
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -247,7 +247,7 @@ private fun CropViewport(
             modifier =
                 Modifier
                     .size(frameWidthDp, frameHeightDp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .clip(miuixShape(2.dp))
                     .background(Color.Black)
                     .pointerInput(
                         sourceSize,

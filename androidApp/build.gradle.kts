@@ -92,7 +92,7 @@ android {
         }
     }
     namespace = "restarhalf.stellar.schedule.androidapp"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = 37
 
     buildFeatures {
         buildConfig = true
@@ -100,8 +100,8 @@ android {
 
     defaultConfig {
         applicationId = "restarhalf.stellar.schedule"
-        minSdk = 30
-        targetSdk = 36
+        minSdk = 31
+        targetSdk = 37
         versionCode = resolvedVersionCode
         versionName = resolvedVersionName
 

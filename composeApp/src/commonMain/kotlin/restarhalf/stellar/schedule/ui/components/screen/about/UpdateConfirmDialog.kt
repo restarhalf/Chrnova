@@ -14,8 +14,9 @@ import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.extra.DialogDefaults
-import top.yukonga.miuix.kmp.extra.WindowDialog
+import top.yukonga.miuix.kmp.layout.DialogDefaults
+import top.yukonga.miuix.kmp.window.WindowDialog
+
 
 @Composable
 fun UpdateConfirmDialog(

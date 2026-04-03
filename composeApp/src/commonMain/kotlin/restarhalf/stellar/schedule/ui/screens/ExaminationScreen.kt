@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,6 +46,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -96,7 +96,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
                     ) {
                         Box(
                             modifier =
-                                Modifier.clip(RoundedCornerShape(26.dp))
+                                Modifier.clip(miuixCapsuleShape())
                                     .background(surfaceSoft)
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {

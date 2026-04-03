@@ -41,8 +41,8 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperDropdown
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -197,7 +197,7 @@ fun CourseEditScreen(
         ) {
             item {
                 AppCard {
-                    SuperDropdown(
+                    OverlayDropdownPreference(
                         title = "课程名",
                         summary = "选择是哪门课的实验课",
                         items = courseNames,
@@ -221,7 +221,7 @@ fun CourseEditScreen(
             item { Spacer(Modifier.height(12.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "上课星期",
                         summary = weekdayText,
                         onClick = { showWeekdayPicker.value = true })
@@ -230,7 +230,7 @@ fun CourseEditScreen(
             item { Spacer(Modifier.height(12.dp)) }
             item {
                 AppCard {
-                    SuperArrow(
+                    ArrowPreference(
                         title = "上课时间",
                         summary = vm.sectionSummary(startSection, endSection),
                         onClick = { showSectionPicker.value = true })

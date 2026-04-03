@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -34,13 +33,13 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.extra.WindowDialog
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -63,6 +62,7 @@ private val appTabSpecs =
 fun AppBottomBar(
     shellState: AppShellState,
     onSwitchTab: (Screen) -> Unit,
+    backdrop: Backdrop
 ) {
     AnimatedVisibility(
         visible = !shellState.isWideScreen && shellState.showBottomBar,
@@ -97,7 +97,7 @@ fun AppBottomBar(
                 }
             }
             else -> {
-                GlassNavigationBar {
+                GlassNavigationBar(backdrop = backdrop) {
                     appTabSpecs.forEach { tab ->
                         GlassNavigationBarItem(
                             selected = shellState.currentScreen == tab.screen,

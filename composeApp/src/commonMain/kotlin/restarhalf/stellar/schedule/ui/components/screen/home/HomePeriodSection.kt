@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRenderRowsUseCase
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
 
 private typealias PeriodRowRenderUi = BuildHomePeriodRenderRowsUseCase.RowRenderUi
 
@@ -57,7 +57,7 @@ fun HomePeriodSection(
                         Modifier
                             .width(4.dp)
                             .height(36.dp)
-                            .background(currentDividerColor, RoundedCornerShape(16.dp))
+                            .background(currentDividerColor, miuixCapsuleShape())
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(
