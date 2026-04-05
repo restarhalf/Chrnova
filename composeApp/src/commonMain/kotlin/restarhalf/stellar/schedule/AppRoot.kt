@@ -28,6 +28,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.ui.NavDisplay
 import coil3.compose.AsyncImage
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 import org.koin.compose.koinInject
@@ -63,8 +65,6 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
@@ -273,8 +273,8 @@ fun AppRoot(
         )
 
     val currentScreen = navigator.current() as? Screen
-    val shellState =
-        rememberAppShellState(
+
+    val shellState = rememberAppShellState(
             currentScreen = if (navigator.backStackSize() == 1) currentScreen else null,
             isWideScreen = isWideScreen,
             settings = settings,

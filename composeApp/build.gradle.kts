@@ -112,6 +112,8 @@ kotlin {
         commonMain {
             kotlin.srcDir(generatedLocalSecretsDir)
             dependencies {
+                implementation (libs.backdrop)
+                implementation(libs.shapes)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)
@@ -124,7 +126,6 @@ kotlin {
                 implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.miuix.ui)
                 implementation(libs.miuix.preference)
-                implementation(libs.miuix.blur)
                 implementation(libs.miuix.navigation3.ui)
                 implementation(libs.coil.compose)
                 implementation(libs.koin.core)

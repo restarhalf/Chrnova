@@ -1,5 +1,4 @@
-﻿
-import java.util.Properties
+﻿import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -141,6 +140,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+    compileSdkMinor = 0
 }
 dependencies {
     implementation(project(":composeApp"))

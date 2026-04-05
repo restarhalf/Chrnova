@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.ui.modifier.inspectDragGestures
 import kotlin.math.abs
 import kotlin.time.Clock
 

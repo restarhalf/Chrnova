@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.0-alpha04"
+agp = "9.2.0-alpha07"
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.18.0"
@@ -24,8 +24,11 @@ ktor = "3.4.2"
 kotlinx-datetime = "0.7.1"
 lifecycle = "2.10.0"
 exifinterface = "1.4.2"
-
+backdrop = "2.0.0-alpha03"
+shapes = "1.2.0"
 [libraries]
+backdrop ={module="io.github.kyant0:backdrop", version.ref = "backdrop"}
+shapes = { module = "io.github.kyant0:shapes", version.ref = "shapes" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -49,7 +52,6 @@ lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", versi
 
 miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
-miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur", version.ref = "miuix" }
 miuix-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui", version.ref = "miuix" }
 
 

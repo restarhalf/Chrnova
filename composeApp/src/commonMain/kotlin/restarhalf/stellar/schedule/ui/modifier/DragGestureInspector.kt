@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.animation
+package restarhalf.stellar.schedule.ui.modifier
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown

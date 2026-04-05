@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -22,7 +26,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.Backdrop
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.icons.Examination
 import restarhalf.stellar.schedule.ui.icons.Grade
@@ -33,15 +40,15 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 private data class TabSpec(
     val screen: Screen,
@@ -84,6 +91,7 @@ fun AppBottomBar(
                     }
                 }
             }
+
             1 -> {
                 FloatingNavigationBar {
                     appTabSpecs.forEach { tab ->
@@ -96,116 +104,153 @@ fun AppBottomBar(
                     }
                 }
             }
+
             else -> {
-                GlassNavigationBar(backdrop = backdrop) {
-                    appTabSpecs.forEach { tab ->
-                        GlassNavigationBarItem(
-                            selected = shellState.currentScreen == tab.screen,
-                            onClick = { onSwitchTab(tab.screen) },
-                            icon = tab.icon,
-                            label = tab.label,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AppNavigationRail(
-    currentScreen: Screen?,
-    onSwitchTab: (Screen) -> Unit,
-) {
-    NavigationRail {
-        appTabSpecs.forEach { tab ->
-            NavigationRailItem(
-                selected = currentScreen == tab.screen,
-                onClick = { onSwitchTab(tab.screen) },
-                icon = tab.icon,
-                label = tab.label,
-            )
-        }
-    }
-}
-
-@Composable
-fun FirstOpenNoticeDialog(
-    show: Boolean,
-    onDismiss: () -> Unit,
-    onExit: () -> Unit,
-) {
-    WindowDialog(
-        show = show,
-        title = "温馨提示",
-        summary = "此应用并非大连民族大学官方应用，仅为自娱自乐",
-        onDismissRequest = onDismiss,
-        content = {
-            val dismissState = LocalDismissState.current
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        dismissState?.invoke()
-                        onExit()
-                    },
-                ) {
-                    Text(text = "退出应用")
-                }
-
-                Spacer(modifier = Modifier.size(16.dp))
-
-                Button(
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColorsPrimary(),
-                    onClick = { dismissState?.invoke() },
-                ) {
-                    Text(text = "我已知晓", color = MiuixTheme.colorScheme.onPrimary)
-                }
-            }
-        },
-    )
-}
-
-@Composable
-fun AppScaffoldBody(
-    shellState: AppShellState,
-    innerPadding: PaddingValues,
-    componentsAlpha: Float,
-    onSwitchTab: (Screen) -> Unit,
-    content: @Composable () -> Unit,
-) {
-    CompositionLocalProvider(
-        LocalComponentsAlpha provides componentsAlpha,
-        LocalAppScaffoldPadding provides innerPadding,
-        LocalIsWideScreen provides shellState.isWideScreen,
-    ) {
-        if (shellState.isWideScreen && shellState.showBottomBar) {
-            val layoutDirection = LocalLayoutDirection.current
-            val startPadding = innerPadding.calculateStartPadding(layoutDirection)
-            val endPadding = innerPadding.calculateEndPadding(layoutDirection)
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(start = startPadding, end = endPadding),
-            ) {
-                AppNavigationRail(
-                    currentScreen = shellState.currentScreen,
-                    onSwitchTab = onSwitchTab,
+                val layoutDirection = LocalLayoutDirection.current
+                val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
+                val horizontalInset = maxOf(
+                    navigationBarPadding.calculateStartPadding(layoutDirection),
+                    navigationBarPadding.calculateEndPadding(layoutDirection)
                 )
 
+                GlassNavigationBar(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp + horizontalInset)
+                        .padding(
+                            bottom = 12.dp + navigationBarPadding.calculateBottomPadding()
+                        ),
+                    selectedIndex = shellState.currentScreen
+                        ?.let { screen -> appTabSpecs.indexOfFirst { it.screen == screen } }
+                        ?.takeIf { it >= 0 }
+                        ?: 0,
+                    onSelected = { index -> onSwitchTab(appTabSpecs[index].screen) },
+                    backdrop = backdrop,
+                    tabsCount = appTabSpecs.size,
+                ) {
+                    appTabSpecs.forEach { tab ->
+                        GlassNavigationBarItem(
+                            onClick = {
+                                onSwitchTab(tab.screen)
+                            },
+                            modifier = Modifier.defaultMinSize(minWidth = 76.dp)
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = MiuixTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = tab.label,
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp,
+                                color = MiuixTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Visible
+                            )
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+    }
+
+    @Composable
+    fun AppNavigationRail(
+        currentScreen: Screen?,
+        onSwitchTab: (Screen) -> Unit,
+    ) {
+        NavigationRail {
+            appTabSpecs.forEach { tab ->
+                NavigationRailItem(
+                    selected = currentScreen == tab.screen,
+                    onClick = { onSwitchTab(tab.screen) },
+                    icon = tab.icon,
+                    label = tab.label,
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun FirstOpenNoticeDialog(
+        show: Boolean,
+        onDismiss: () -> Unit,
+        onExit: () -> Unit,
+    ) {
+        WindowDialog(
+            show = show,
+            title = "温馨提示",
+            summary = "此应用并非大连民族大学官方应用，仅为自娱自乐",
+            onDismissRequest = onDismiss,
+            content = {
+                val dismissState = LocalDismissState.current
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            dismissState?.invoke()
+                            onExit()
+                        },
+                    ) {
+                        Text(text = "退出应用")
+                    }
+
+                    Spacer(modifier = Modifier.size(16.dp))
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                        onClick = { dismissState?.invoke() },
+                    ) {
+                        Text(text = "我已知晓", color = MiuixTheme.colorScheme.onPrimary)
+                    }
+                }
+            },
+        )
+    }
+
+    @Composable
+    fun AppScaffoldBody(
+        shellState: AppShellState,
+        innerPadding: PaddingValues,
+        componentsAlpha: Float,
+        onSwitchTab: (Screen) -> Unit,
+        content: @Composable () -> Unit,
+    ) {
+        CompositionLocalProvider(
+            LocalComponentsAlpha provides componentsAlpha,
+            LocalAppScaffoldPadding provides innerPadding,
+            LocalIsWideScreen provides shellState.isWideScreen,
+        ) {
+            if (shellState.isWideScreen && shellState.showBottomBar) {
+                val layoutDirection = LocalLayoutDirection.current
+                val startPadding = innerPadding.calculateStartPadding(layoutDirection)
+                val endPadding = innerPadding.calculateEndPadding(layoutDirection)
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(start = startPadding, end = endPadding),
+                ) {
+                    AppNavigationRail(
+                        currentScreen = shellState.currentScreen,
+                        onSwitchTab = onSwitchTab,
+                    )
+
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        content()
+                    }
+                }
+            } else {
                 Box(modifier = Modifier.fillMaxSize()) {
                     content()
                 }
             }
-        } else {
-            Box(modifier = Modifier.fillMaxSize()) {
-                content()
-            }
         }
     }
-}

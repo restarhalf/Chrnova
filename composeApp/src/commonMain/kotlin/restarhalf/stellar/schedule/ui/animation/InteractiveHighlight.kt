@@ -9,13 +9,13 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.fastCoerceIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.blur.RuntimeShader
-import top.yukonga.miuix.kmp.blur.asBrush
+import restarhalf.stellar.schedule.ui.modifier.inspectDragGestures
 
 class InteractiveHighlight(
     val animationScope: CoroutineScope,
@@ -35,21 +35,6 @@ class InteractiveHighlight(
     private var startPosition = Offset.Zero
     val offset: Offset get() = positionAnimation.value - startPosition
 
-    private val shader =
-        RuntimeShader(
-            """  
-    uniform float2 size;  
-    uniform half4 color;  
-    uniform float radius;  
-    uniform float2 position;  
-      
-    half4 main(float2 coord) {  
-        float dist = distance(coord, position);  
-        float intensity = smoothstep(radius, radius * 0.5, dist);  
-        return color * intensity;  
-    }"""
-        )
-
     val modifier: Modifier =
         Modifier.drawWithContent {
             val progress = pressProgressAnimation.value
@@ -58,22 +43,24 @@ class InteractiveHighlight(
                     Color.White.copy(0.06f * progress),
                     blendMode = BlendMode.Plus
                 )
-                shader.apply {
-                    val position = position(size, positionAnimation.value)
-                    setFloatUniform("size", size.width, size.height)
-                    // 用 setFloatUniform 传递预乘 alpha 颜色
-                    val alpha = 0.12f * progress
-                    setFloatUniform("color", alpha, alpha, alpha, alpha) // White 预乘后 r=g=b=a
-                    setFloatUniform("radius", size.minDimension * 1.2f)
-                    setFloatUniform(
-                        "position",
-                        position.x.fastCoerceIn(0f, size.width),
-                        position.y.fastCoerceIn(0f, size.height)
+                val center = position(size, positionAnimation.value)
+                val clampedCenter =
+                    Offset(
+                        x = center.x.fastCoerceIn(0f, size.width),
+                        y = center.y.fastCoerceIn(0f, size.height),
                     )
-                }
                 drawRect(
-                    shader.asBrush(),
-                    blendMode = BlendMode.Plus
+                    brush =
+                        Brush.radialGradient(
+                            colors =
+                                listOf(
+                                    Color.White.copy(alpha = 0.12f * progress),
+                                    Color.Transparent,
+                                ),
+                            center = clampedCenter,
+                            radius = size.minDimension * 1.2f,
+                        ),
+                    blendMode = BlendMode.Plus,
                 )
             }
 
