@@ -21,7 +21,7 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-val RootTabs =
+val RootTabs: List<Screen> =
     listOf(
         Screen.Home,
         Screen.Schedule,
@@ -32,7 +32,7 @@ val RootTabs =
 
 fun Screen.rootTabIndex(): Int = RootTabs.indexOf(this).takeIf { it >= 0 } ?: 0
 
-fun rootTabAt(index: Int): Screen = RootTabs.getOrElse(index) { Screen.Home }
+fun rootTabAt(index: Int): Screen = RootTabs.getOrNull(index) ?: Screen.Home
 
 val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {
     error("No MainPagerState provided!")
