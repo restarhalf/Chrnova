@@ -67,24 +67,25 @@ private val appTabSpecs =
 
 @Composable
 fun AppBottomBar(
-    shellState: AppShellState,
-    onSwitchTab: (Screen) -> Unit,
-    backdrop: Backdrop
+    backdrop: Backdrop,
 ) {
+    val chromeState = LocalAppChromeState.current
+    val mainPagerState = LocalMainPagerState.current
+
     AnimatedVisibility(
-        visible = !shellState.isWideScreen && shellState.showBottomBar,
+        visible = !chromeState.isWideScreen && chromeState.showNavigationChrome,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(animationSpec = tween(200)),
         exit =
             slideOutVertically(targetOffsetY = { it }) +
-                    fadeOut(animationSpec = tween(200)),
+                fadeOut(animationSpec = tween(200)),
     ) {
-        when (shellState.barMode) {
+        when (chromeState.barMode) {
             0 -> {
                 NavigationBar {
                     appTabSpecs.forEach { tab ->
                         NavigationBarItem(
-                            selected = shellState.currentScreen == tab.screen,
-                            onClick = { onSwitchTab(tab.screen) },
+                            selected = chromeState.currentScreen == tab.screen,
+                            onClick = { mainPagerState.animateTo(tab.screen) },
                             icon = tab.icon,
                             label = tab.label,
                         )
@@ -96,8 +97,8 @@ fun AppBottomBar(
                 FloatingNavigationBar {
                     appTabSpecs.forEach { tab ->
                         FloatingNavigationBarItem(
-                            selected = shellState.currentScreen == tab.screen,
-                            onClick = { onSwitchTab(tab.screen) },
+                            selected = chromeState.currentScreen == tab.screen,
+                            onClick = { mainPagerState.animateTo(tab.screen) },
                             icon = tab.icon,
                             label = tab.label,
                         )
@@ -108,36 +109,36 @@ fun AppBottomBar(
             else -> {
                 val layoutDirection = LocalLayoutDirection.current
                 val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
-                val horizontalInset = maxOf(
-                    navigationBarPadding.calculateStartPadding(layoutDirection),
-                    navigationBarPadding.calculateEndPadding(layoutDirection)
-                )
+                val horizontalInset =
+                    maxOf(
+                        navigationBarPadding.calculateStartPadding(layoutDirection),
+                        navigationBarPadding.calculateEndPadding(layoutDirection),
+                    )
 
                 GlassNavigationBar(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp + horizontalInset)
-                        .padding(
-                            bottom = 12.dp + navigationBarPadding.calculateBottomPadding()
-                        ),
-                    selectedIndex = shellState.currentScreen
-                        ?.let { screen -> appTabSpecs.indexOfFirst { it.screen == screen } }
-                        ?.takeIf { it >= 0 }
-                        ?: 0,
-                    onSelected = { index -> onSwitchTab(appTabSpecs[index].screen) },
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 16.dp + horizontalInset)
+                            .padding(
+                                bottom = 36.dp + navigationBarPadding.calculateBottomPadding(),
+                            ),
+                    selectedIndex =
+                        appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }
+                            .takeIf { it >= 0 }
+                            ?: 0,
+                    onSelected = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
                     backdrop = backdrop,
                     tabsCount = appTabSpecs.size,
                 ) {
                     appTabSpecs.forEach { tab ->
                         GlassNavigationBarItem(
-                            onClick = {
-                                onSwitchTab(tab.screen)
-                            },
-                            modifier = Modifier.defaultMinSize(minWidth = 76.dp)
+                            onClick = { mainPagerState.animateTo(tab.screen) },
+                            modifier = Modifier.defaultMinSize(minWidth = 76.dp),
                         ) {
                             Icon(
                                 imageVector = tab.icon,
                                 contentDescription = tab.label,
-                                tint = MiuixTheme.colorScheme.onSurface
+                                tint = MiuixTheme.colorScheme.onSurface,
                             )
                             Text(
                                 text = tab.label,
@@ -146,111 +147,107 @@ fun AppBottomBar(
                                 color = MiuixTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 softWrap = false,
-                                overflow = TextOverflow.Visible
+                                overflow = TextOverflow.Visible,
                             )
                         }
                     }
-
                 }
             }
         }
     }
-    }
+}
 
-    @Composable
-    fun AppNavigationRail(
-        currentScreen: Screen?,
-        onSwitchTab: (Screen) -> Unit,
-    ) {
-        NavigationRail {
-            appTabSpecs.forEach { tab ->
-                NavigationRailItem(
-                    selected = currentScreen == tab.screen,
-                    onClick = { onSwitchTab(tab.screen) },
-                    icon = tab.icon,
-                    label = tab.label,
-                )
-            }
+@Composable
+fun AppNavigationRail() {
+    val chromeState = LocalAppChromeState.current
+    val mainPagerState = LocalMainPagerState.current
+
+    NavigationRail {
+        appTabSpecs.forEach { tab ->
+            NavigationRailItem(
+                selected = chromeState.currentScreen == tab.screen,
+                onClick = { mainPagerState.animateTo(tab.screen) },
+                icon = tab.icon,
+                label = tab.label,
+            )
         }
     }
+}
 
-    @Composable
-    fun FirstOpenNoticeDialog(
-        show: Boolean,
-        onDismiss: () -> Unit,
-        onExit: () -> Unit,
-    ) {
-        WindowDialog(
-            show = show,
-            title = "温馨提示",
-            summary = "此应用并非大连民族大学官方应用，仅为自娱自乐",
-            onDismissRequest = onDismiss,
-            content = {
-                val dismissState = LocalDismissState.current
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(),
+@Composable
+fun FirstOpenNoticeDialog(
+    show: Boolean,
+    onDismiss: () -> Unit,
+    onExit: () -> Unit,
+) {
+    WindowDialog(
+        show = show,
+        title = "温馨提示",
+        summary = "此应用并非大连民族大学官方应用，仅为自娱自乐",
+        onDismissRequest = onDismiss,
+        content = {
+            val dismissState = LocalDismissState.current
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        dismissState?.invoke()
+                        onExit()
+                    },
                 ) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            dismissState?.invoke()
-                            onExit()
-                        },
-                    ) {
-                        Text(text = "退出应用")
-                    }
-
-                    Spacer(modifier = Modifier.size(16.dp))
-
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColorsPrimary(),
-                        onClick = { dismissState?.invoke() },
-                    ) {
-                        Text(text = "我已知晓", color = MiuixTheme.colorScheme.onPrimary)
-                    }
+                    Text(text = "退出应用")
                 }
-            },
-        )
-    }
 
-    @Composable
-    fun AppScaffoldBody(
-        shellState: AppShellState,
-        innerPadding: PaddingValues,
-        componentsAlpha: Float,
-        onSwitchTab: (Screen) -> Unit,
-        content: @Composable () -> Unit,
-    ) {
-        CompositionLocalProvider(
-            LocalComponentsAlpha provides componentsAlpha,
-            LocalAppScaffoldPadding provides innerPadding,
-            LocalIsWideScreen provides shellState.isWideScreen,
-        ) {
-            if (shellState.isWideScreen && shellState.showBottomBar) {
-                val layoutDirection = LocalLayoutDirection.current
-                val startPadding = innerPadding.calculateStartPadding(layoutDirection)
-                val endPadding = innerPadding.calculateEndPadding(layoutDirection)
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(start = startPadding, end = endPadding),
+                Spacer(modifier = Modifier.size(16.dp))
+
+                Button(
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                    onClick = { dismissState?.invoke() },
                 ) {
-                    AppNavigationRail(
-                        currentScreen = shellState.currentScreen,
-                        onSwitchTab = onSwitchTab,
-                    )
-
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        content()
-                    }
+                    Text(text = "我已知晓", color = MiuixTheme.colorScheme.onPrimary)
                 }
-            } else {
+            }
+        },
+    )
+}
+
+@Composable
+fun AppScaffoldBody(
+    innerPadding: PaddingValues,
+    componentsAlpha: Float,
+    content: @Composable () -> Unit,
+) {
+    val chromeState = LocalAppChromeState.current
+
+    CompositionLocalProvider(
+        LocalComponentsAlpha provides componentsAlpha,
+        LocalAppScaffoldPadding provides innerPadding,
+        LocalIsWideScreen provides chromeState.isWideScreen,
+    ) {
+        if (chromeState.isWideScreen && chromeState.showNavigationChrome) {
+            val layoutDirection = LocalLayoutDirection.current
+            val startPadding = innerPadding.calculateStartPadding(layoutDirection)
+            val endPadding = innerPadding.calculateEndPadding(layoutDirection)
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(start = startPadding, end = endPadding),
+            ) {
+                AppNavigationRail()
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     content()
                 }
             }
+        } else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                content()
+            }
         }
     }
+}

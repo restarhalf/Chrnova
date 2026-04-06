@@ -1,10 +1,14 @@
 package restarhalf.stellar.schedule.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 class AppNavigator(
-    val backStack: MutableList<NavKey>
+    val backStack: MutableList<NavKey>,
 ) {
+    private val resultBus = mutableMapOf<String, MutableSharedFlow<Any>>()
 
     fun current(): NavKey? = backStack.lastOrNull()
 
@@ -14,9 +18,17 @@ class AppNavigator(
         backStack.add(key)
     }
 
+    fun replace(key: NavKey) {
+        if (backStack.isNotEmpty()) {
+            backStack[backStack.lastIndex] = key
+        } else {
+            backStack.add(key)
+        }
+    }
+
     fun pop() {
         if (backStack.size > 1) {
-            backStack.removeAt(backStack.lastIndex)
+            backStack.removeLastOrNull()
         }
     }
 
@@ -31,4 +43,26 @@ class AppNavigator(
             backStack.removeAt(backStack.lastIndex)
         }
     }
+
+    fun navigateForResult(key: NavKey, requestKey: String) {
+        ensureChannel(requestKey)
+        push(key)
+    }
+
+    fun <T : Any> setResult(requestKey: String, value: T) {
+        ensureChannel(requestKey).tryEmit(value)
+        pop()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> observeResult(requestKey: String): SharedFlow<T> =
+        ensureChannel(requestKey) as SharedFlow<T>
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun clearResult(requestKey: String) {
+        ensureChannel(requestKey).resetReplayCache()
+    }
+
+    private fun ensureChannel(key: String): MutableSharedFlow<Any> =
+        resultBus.getOrPut(key) { MutableSharedFlow(replay = 1, extraBufferCapacity = 0) }
 }
