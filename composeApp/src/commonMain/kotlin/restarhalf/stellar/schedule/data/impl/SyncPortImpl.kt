@@ -15,6 +15,7 @@ class SyncPortImpl(
     private fun JwxtTimeParser.ParsedCourse.toDomain(): Course {
         return Course(
             name = name,
+            semesterId = "",
             location = location,
             teacher = teacher,
             dayOfWeek = dayOfWeek,
@@ -32,9 +33,9 @@ class SyncPortImpl(
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
         val courses =
             jwxtSync.fetchCourses(semesterId = semesterId, campusId = campusId, week = week).map {
-                it.toDomain()
+                it.toDomain().copy(semesterId = semesterId)
             }
-        courseRepository.replaceSyncedCourses(courses)
+        courseRepository.replaceSyncedCourses(courses = courses, semesterId = semesterId)
         return SyncResult(
             inserted = courses.size,
             semesterId = semesterId,

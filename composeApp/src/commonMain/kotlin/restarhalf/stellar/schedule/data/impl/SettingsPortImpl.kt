@@ -47,6 +47,14 @@ class SettingsPortImpl(
         settings[SettingsKeys.SELECTED_TERM] = term
     }
 
+    override fun observeActiveScheduleTerm(): Flow<String> {
+        return settings.getStringFlow(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
+    }
+
+    override fun setActiveScheduleTerm(term: String) {
+        settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] = term
+    }
+
     override fun observeCourseReminderEnabled(): Flow<Boolean> {
         return settings.getBooleanFlow(SettingsKeys.REMINDER_ENABLED, false)
     }

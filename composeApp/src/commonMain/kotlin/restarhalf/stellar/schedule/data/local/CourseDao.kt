@@ -35,6 +35,9 @@ interface CourseDao {
     @Query("DELETE FROM courses WHERE type = 0")
     suspend fun deleteSyncedCourses()
 
+    @Query("UPDATE courses SET semesterId = :semesterId WHERE type != 0 AND semesterId = ''")
+    suspend fun bindManualCoursesWithoutSemester(semesterId: String)
+
     @Query("SELECT * FROM courses")
     suspend fun getAllCoursesOnce(): List<Course>
 }

@@ -7,6 +7,7 @@ fun CourseEntity.toDomain(): CourseDomain {
     return CourseDomain(
         id = id,
         name = name,
+        semesterId = semesterId,
         location = location,
         teacher = teacher,
         dayOfWeek = dayOfWeek,
@@ -25,6 +26,7 @@ fun CourseDomain.toEntity(): CourseEntity {
     return CourseEntity(
         id = id,
         name = name,
+        semesterId = semesterId,
         location = location,
         teacher = teacher,
         dayOfWeek = dayOfWeek,

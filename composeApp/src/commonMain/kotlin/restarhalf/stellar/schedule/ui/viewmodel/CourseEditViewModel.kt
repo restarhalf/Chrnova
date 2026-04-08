@@ -84,10 +84,15 @@ class CourseEditViewModel(
                 .firstOrNull { it.type == 0 && it.name == selectedName && it.teacher.isNotBlank() }
                 ?.teacher
                 .orEmpty()
+        val semesterId =
+            existing?.semesterId
+                ?: courses.firstOrNull { it.type == 0 && it.name == selectedName }?.semesterId
+                .orEmpty()
 
         return Course(
             id = existing?.id ?: 0,
             name = selectedName,
+            semesterId = semesterId,
             location = classRoom,
             teacher = teacherFromSyncedCourse.ifBlank { existing?.teacher.orEmpty() },
             dayOfWeek = dayOfWeek,

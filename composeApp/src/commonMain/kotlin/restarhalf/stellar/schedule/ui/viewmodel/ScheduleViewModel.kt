@@ -325,12 +325,24 @@ class ScheduleViewModel(
         return pending
     }
 
+    private fun buildCourseWeekText(course: Course): String {
+        val weekText = WeeksFormatter.format(course.weeks)
+        if (course.type != 2 || course.targetWeek <= 0) return weekText
+
+        val targetWeekText = "第${course.targetWeek}周"
+        return if (weekText.isBlank()) {
+            targetWeekText
+        } else {
+            "$targetWeekText（原$weekText）"
+        }
+    }
+
     fun buildCourseDetailUi(
         course: Course,
         currentWeek: Int,
         timetable: List<TimetableSlot>,
     ): CourseDetailUi {
-        val weekItem = WeeksFormatter.format(course.weeks)
+        val weekItem = buildCourseWeekText(course)
         val startSection = course.startSection
         val endSection = course.startSection + course.sectionCount - 1
         val startTime = timetable.getOrNull(startSection - 1)?.start ?: "--"

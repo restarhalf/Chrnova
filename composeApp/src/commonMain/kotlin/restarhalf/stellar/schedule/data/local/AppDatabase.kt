@@ -11,7 +11,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-@Database(entities = [Course::class], version = 6, exportSchema = true)
+@Database(entities = [Course::class], version = 7, exportSchema = true)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -52,10 +52,16 @@ private val migration5To6 = object : Migration(5, 6) {
     }
 }
 
+private val migration6To7 = object : Migration(6, 7) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE courses ADD COLUMN semesterId TEXT NOT NULL DEFAULT ''")
+    }
+}
+
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(AppIoDispatcher)
         .fallbackToDestructiveMigration(false)
-        .addMigrations(migration2To3, migration3To4, migration4To5, migration5To6)
+        .addMigrations(migration2To3, migration3To4, migration4To5, migration5To6, migration6To7)
         .build()

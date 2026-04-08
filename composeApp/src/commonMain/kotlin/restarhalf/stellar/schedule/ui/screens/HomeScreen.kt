@@ -44,6 +44,7 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
     val vm: HomeViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val backgroundImageUri by bgVm.backgroundImageUri.collectAsState()
+    val componentsAlpha by bgVm.componentsAlpha.collectAsState()
     val hasBackground = backgroundImageUri != null
     val colors = MiuixTheme.colorScheme
     val textPrimary = colors.onBackground
@@ -52,13 +53,14 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
 
     val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
     val renderState =
-        remember(courses, campus, termStartMs, totalWeeks) {
+        remember(courses, campus, termStartMs, totalWeeks, hasBackground, componentsAlpha) {
             vm.buildHomeRenderState(
                 courses = courses,
                 campus = campus,
                 termStartMs = termStartMs,
                 totalWeeks = totalWeeks,
                 hasBackground = hasBackground,
+                componentsAlpha = componentsAlpha,
                 nowMs = Clock.System.now().toEpochMilliseconds()
             )
         }

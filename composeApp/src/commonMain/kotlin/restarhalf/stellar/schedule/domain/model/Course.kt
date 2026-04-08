@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.model
 data class Course(
     val id: Long = 0,
     val name: String,
+    val semesterId: String = "",
     val location: String,
     val teacher: String,
     val dayOfWeek: Int,

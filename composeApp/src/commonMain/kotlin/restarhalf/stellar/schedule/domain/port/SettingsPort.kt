@@ -12,6 +12,9 @@ interface SettingsPort {
     fun observeSelectedTerm(): Flow<String>
     fun setSelectedTerm(term: String)
 
+    fun observeActiveScheduleTerm(): Flow<String>
+    fun setActiveScheduleTerm(term: String)
+
     fun observeCourseReminderEnabled(): Flow<Boolean>
     fun setCourseReminderEnabled(enabled: Boolean)
 

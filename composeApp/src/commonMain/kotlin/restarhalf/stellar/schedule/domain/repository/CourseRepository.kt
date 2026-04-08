@@ -14,7 +14,7 @@ interface CourseRepository {
 
     suspend fun getAllCoursesOnce(): List<Course>
 
-    suspend fun replaceSyncedCourses(courses: List<Course>)
+    suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String)
 
     suspend fun clearAllCourses()
 }

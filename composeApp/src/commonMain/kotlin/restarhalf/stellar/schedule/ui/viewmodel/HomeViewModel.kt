@@ -90,6 +90,7 @@ class HomeViewModel(
         termStartMs: Long,
         totalWeeks: Int,
         hasBackground: Boolean,
+        componentsAlpha: Float,
         nowMs: Long,
     ): HomeRenderState {
         val clockSnapshot = buildClockSnapshot(nowMs = nowMs)
@@ -116,7 +117,7 @@ class HomeViewModel(
             headerUi = headerUi,
             todaySchedule = todaySchedule,
             sectionRenders = sectionRenders,
-            surfaceUi = buildSurfaceUi(hasBackground),
+            surfaceUi = buildSurfaceUi(hasBackground = hasBackground, componentsAlpha = componentsAlpha),
             nowMinutes = nowMinutes
         )
     }
@@ -127,8 +128,14 @@ class HomeViewModel(
         return buildHomePeriodSectionsUseCase(schedule)
     }
 
-    fun buildSurfaceUi(hasBackground: Boolean): BuildHomeSurfaceUiUseCase.SurfaceUi {
-        return buildHomeSurfaceUiUseCase(hasBackground)
+    fun buildSurfaceUi(
+        hasBackground: Boolean,
+        componentsAlpha: Float,
+    ): BuildHomeSurfaceUiUseCase.SurfaceUi {
+        return buildHomeSurfaceUiUseCase(
+            hasBackground = hasBackground,
+            componentsAlpha = componentsAlpha
+        )
     }
 
     fun buildPeriodRenderRows(

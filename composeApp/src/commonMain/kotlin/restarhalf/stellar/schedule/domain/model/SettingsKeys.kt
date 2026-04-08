@@ -7,6 +7,7 @@ object SettingsKeys {
     const val EXAM_REMINDER_ENABLED = "exam_reminder_enabled"
     const val THEME_MODE = "theme_mode"
     const val SELECTED_TERM = "selected_term"
+    const val ACTIVE_SCHEDULE_TERM = "active_schedule_term"
     const val LAST_AUTO_SYNC_MS = "last_auto_sync_ms"
     const val LAST_UPDATE_CHECK_MS = "last_update_check_ms"
     const val HAS_SHOWN_FIRST_OPEN_DIALOG = "has_shown_first_open_dialog"

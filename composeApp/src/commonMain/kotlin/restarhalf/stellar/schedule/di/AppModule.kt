@@ -135,7 +135,7 @@ val commonAppModule = module {
 
     single { TimetableSettings(get(named("timetable_prefs"))) }
 
-    single<CourseRepository> { RoomCourseRepository(courseDao = get()) }
+    single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
 
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<BackgroundSettingsPort> {
