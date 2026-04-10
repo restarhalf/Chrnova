@@ -1,12 +1,5 @@
 ﻿# 大民课程表
-
-![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?style=flat-square&logo=apple&logoColor=white) ![License](https://img.shields.io/github/license/restarhalf/scheduleKMP?style=flat-square)
-
-[![Gitee](https://img.shields.io/badge/dynamic/json?url=https://gitee.com/api/v5/repos/restarhalf/schedule/tags%3Fsort%3Dupdated%26direction%3Ddesc&query=%24%5B0%5D.name&label=Gitee&style=flat-square&logo=gitee)](https://gitee.com/restarhalf/schedule/releases)
-
-[![GitHub](https://img.shields.io/github/v/tag/restarhalf/scheduleKMP?label=GitHub&sort=semver&style=flat-square&logo=github)](https://github.com/restarhalf/scheduleKMP/releases)
-
-[![QQGroup](https://img.shields.io/badge/QQ%E7%BE%A4-1084761691-blue?style=flat-square&logo=qq&logoColor=white)](https://qm.qq.com/cgi-bin/qm/qr?k=r3OzOC1jNUiLGm_ppUC3a3q0Bb3HPGxl&jump_from=webapi&authKey=XbHnq3HpTWDKTys0xW0E2i5wroL/LwmkqRZR5d1guNPhQL4VUawULXpgYtlCOv93)
+![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-16.0%2B-000000?style=flat-square&logo=apple&logoColor=white) ![License](https://img.shields.io/github/license/restarhalf/scheduleKMP?style=flat-square) [![Gitee](https://img.shields.io/badge/dynamic/json?url=https://gitee.com/api/v5/repos/restarhalf/schedule/tags%3Fsort%3Dupdated%26direction%3Ddesc&query=%24%5B0%5D.name&label=Gitee&style=flat-square&logo=gitee)](https://gitee.com/restarhalf/schedule/releases) [![GitHub](https://img.shields.io/github/v/tag/restarhalf/scheduleKMP?label=GitHub&sort=semver&style=flat-square&logo=github)](https://github.com/restarhalf/scheduleKMP/releases) [![QQGroup](https://img.shields.io/badge/QQ%E7%BE%A4-1084761691-blue?style=flat-square&logo=qq&logoColor=white)](https://qm.qq.com/cgi-bin/qm/qr?k=r3OzOC1jNUiLGm_ppUC3a3q0Bb3HPGxl&jump_from=webapi&authKey=XbHnq3HpTWDKTys0xW0E2i5wroL/LwmkqRZR5d1guNPhQL4VUawULXpgYtlCOv93)
 
 一个给同学用的课程表应用。
 

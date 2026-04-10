@@ -71,7 +71,7 @@ jobs:
           fi
 
       - name: Build Android release APK
-        run: ./gradlew :androidApp:assembleRelease --stacktrace --no-daemon
+        run: ./gradlew :androidApp:assembleRelease --stacktrace
 
       - name: Normalize Android artifact name
         run: |

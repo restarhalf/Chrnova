@@ -116,7 +116,7 @@ android {
     }
 
     lint {
-        checkReleaseBuilds = false
+        checkReleaseBuilds = true
         abortOnError = false
     }
     testOptions {
