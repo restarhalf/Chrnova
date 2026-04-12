@@ -1,5 +1,7 @@
+@file:SuppressLint("RestrictedApi")
 package restarhalf.stellar.schedule.only.widget
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
@@ -32,7 +34,6 @@ import androidx.glance.unit.ColorProvider
 import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import kotlin.math.min
-
 private val widgetBg = ColorProvider(R.color.widget_bg)
 
 private val cardBg = ColorProvider(R.color.widget_divider)

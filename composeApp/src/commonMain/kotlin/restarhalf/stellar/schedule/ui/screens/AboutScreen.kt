@@ -319,16 +319,6 @@ fun AboutScreen(
             item {
                 AppCard {
                     ArrowPreference(
-                        title = "进入发布页",
-                        summary = "快安利给其他人吧",
-                        onClick = { vm.requestPublishPage() }
-                    )
-                }
-            }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-            item {
-                AppCard {
-                    ArrowPreference(
                         title = "赞赏作者",
                         summary = "赞赏以支持继续更新",
                         onClick = { showAward.value = true },

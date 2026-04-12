@@ -116,10 +116,6 @@ class AboutViewModel(
         _events.tryEmit(AboutUiEvent.OpenUri("https://github.com/restarhalf/scheduleKMP"))
     }
 
-    fun requestPublishPage() {
-        _events.tryEmit(AboutUiEvent.OpenUri("https://schedule.restarhalf.dpdns.org"))
-    }
-
     fun requestOpenAlipayAward() {
         _events.tryEmit(
             AboutUiEvent.OpenUri(

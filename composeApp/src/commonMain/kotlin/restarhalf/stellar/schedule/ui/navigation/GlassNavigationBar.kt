@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -58,7 +59,6 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
-import com.kyant.shapes.Capsule
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -110,7 +110,7 @@ fun GlassNavigationBar(
     isBlurEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
-    val ContinuousCapsule = Capsule()
+    val ContinuousCapsule = CircleShape
     val isInLightTheme = MiuixTheme.colorScheme.background.luminance()>0.5f
     val accentColor = MiuixTheme.colorScheme.primary
     val containerColor = if (isBlurEnabled) {

@@ -5,7 +5,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.annotation.RequiresPermission
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
@@ -243,7 +242,7 @@ class CourseReminderScheduler(
     ): Boolean {
         return try {
             val canExact =
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
+                alarmManager.canScheduleExactAlarms()
             if (canExact) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,

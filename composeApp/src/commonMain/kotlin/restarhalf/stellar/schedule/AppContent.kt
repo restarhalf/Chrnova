@@ -31,6 +31,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.NavDisplayTransitionEffects
 import coil3.compose.AsyncImage
@@ -197,7 +198,11 @@ fun AppContent(
     val entries =
         rememberDecoratedNavEntries(
             backStack = backStack,
-            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            entryDecorators =
+                listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
             entryProvider = entryProvider,
         )
     val transitionEffects =

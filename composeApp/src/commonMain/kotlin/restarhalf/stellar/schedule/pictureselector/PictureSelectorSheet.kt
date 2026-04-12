@@ -52,7 +52,7 @@ import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
+import top.yukonga.miuix.kmp.theme.miuixShape
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import androidx.compose.foundation.lazy.items as lazyItems
 
@@ -267,7 +267,7 @@ private fun AlbumBreadcrumb(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(miuixCapsuleShape())
+                .clip(miuixShape(8.dp))
                 .background(MiuixTheme.colorScheme.surface)
                 .clickable(onClick = onBack)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -331,7 +331,7 @@ private fun AlbumRow(
                 modifier =
                     Modifier
                         .size(64.dp)
-                        .clip(miuixCapsuleShape())
+                        .clip(miuixShape(6.dp))
                         .background(MiuixTheme.colorScheme.surface),
                 maxSidePx = 192,
             )
@@ -391,7 +391,7 @@ private fun ImageGrid(
                             Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(1f)
-                                .clip(miuixCapsuleShape())
+                                .clip(miuixShape(8.dp))
                                 .background(MiuixTheme.colorScheme.surface)
                                 .clickable { onImageClick(image) },
                         maxSidePx = 360,

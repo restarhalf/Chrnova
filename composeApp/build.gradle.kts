@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.androidx.room3)
 }
 
 room3 {
@@ -99,6 +99,7 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             export(libs.lifecycle.viewmodel)
+            export(libs.lifecycle.viewmodel.navigation3)
             baseName = "ComposeApp"
             isStatic = true
             binaryOption("bundleId", "restarhalf.stellar.schedule.composeapp")
@@ -113,13 +114,11 @@ kotlin {
             kotlin.srcDir(generatedLocalSecretsDir)
             dependencies {
                 implementation (libs.backdrop)
-                implementation(libs.shapes)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.ui)
                 implementation(libs.compose.components.resources)
-                implementation(libs.compose.uiToolingPreview)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
@@ -136,22 +135,16 @@ kotlin {
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.logging)
-                implementation(libs.room.runtime)
+                implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 api(libs.lifecycle.viewmodel)
+                api(libs.lifecycle.viewmodel.navigation3)
             }
         }
         androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.appcompat)
-            implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.glance.appwidget)
             implementation(libs.androidx.glance)
-            implementation(libs.androidx.profileinstaller)
-            implementation(libs.koin.androidx.compose)
             implementation(libs.androidx.exifinterface)
             implementation(libs.ktor.client.okhttp)
         }
@@ -163,8 +156,8 @@ kotlin {
 }
 
 dependencies {
-    add("kspAndroid", libs.room.compiler)
-    add("kspIosArm64", libs.room.compiler)
-    add("kspIosSimulatorArm64", libs.room.compiler)
+    add("kspAndroid", libs.room3.compiler)
+    add("kspIosArm64", libs.room3.compiler)
+    add("kspIosSimulatorArm64", libs.room3.compiler)
 }
 

@@ -1,82 +1,69 @@
 [versions]
-agp = "9.2.0-alpha07"
-androidx-activity = "1.13.0"
-androidx-appcompat = "1.7.1"
-androidx-core = "1.18.0"
-composeMultiplatform = "1.10.3"
+agp = "9.2.0-alpha08"
+composeMultiplatform = "1.11.0-beta02"
 kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 coilCompose = "3.4.0"
-glance = "1.1.1"
+glance = "1.2.0-rc01"
 miuix = "0.9.0"
-navigation3Runtime = "1.0.1"
-room = "3.0.0-alpha03"
+navigation3 = "1.2.0-alpha01"
+room3 = "3.0.0-alpha03"
 multiplatformSettings = "1.3.0"
 kotlinx-serialization = "1.11.0"
-kotlin-serialization = "2.3.20"
 ksp = "2.3.6"
 koin = "4.2.1"
 work = "2.11.2"
 sqlite = "2.7.0-alpha03"
-profileinstaller = "1.4.1"
-glanceAppwidget = "1.1.1"
 ktor = "3.4.2"
 kotlinx-datetime = "0.7.1"
-lifecycle = "2.10.0"
+lifecycle = "2.11.0-alpha03"
 exifinterface = "1.4.2"
 backdrop = "2.0.0-alpha03"
-shapes = "1.2.0"
 
 [libraries]
+# LiquidGlass
 backdrop ={module="io.github.kyant0:backdrop", version.ref = "backdrop"}
-shapes = { module = "io.github.kyant0:shapes", version.ref = "shapes" }
-androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+# AndroidX
+androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance"}
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+# Compose Multiplatform
 compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "composeMultiplatform" }
-compose-uiTooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
-compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
-androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3Runtime" }
-
+# Coil
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
-
+# Koin/ViewModel
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
-
+lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
+# Miuix
 miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
 miuix-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui", version.ref = "miuix" }
-
-
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+# Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
-
-room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room" }
-room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room" }
+# Room
+room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3" }
+room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
-
+# Multiplatform Settings
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
-
+# Kotlinx
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
-androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
-androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glanceAppwidget" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
-
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -84,6 +71,6 @@ androidMultiplatform = { id = "com.android.kotlin.multiplatform.library", versio
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-serialization" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-androidx-room = { id = "androidx.room3", version.ref = "room" }
+androidx-room3 = { id = "androidx.room3", version.ref = "room3" }
