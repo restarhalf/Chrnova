@@ -113,43 +113,58 @@ kotlin {
         commonMain {
             kotlin.srcDir(generatedLocalSecretsDir)
             dependencies {
+                //LiquidGlass
                 implementation (libs.backdrop)
+                //Compose Multiplatform
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)
                 implementation(libs.compose.ui)
                 implementation(libs.compose.components.resources)
+                //KotlinX
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.androidx.navigation3.runtime)
+                //miuix
                 implementation(libs.miuix.ui)
                 implementation(libs.miuix.preference)
                 implementation(libs.miuix.navigation3.ui)
+                implementation(libs.androidx.navigation3.runtime)
+                //coil
                 implementation(libs.coil.compose)
+                //Koin
                 implementation(libs.koin.core)
                 implementation(libs.koin.compose)
+                //Persistence
                 implementation(libs.multiplatform.settings)
                 implementation(libs.multiplatform.settings.coroutines)
+                //Ktor
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.logging)
+                //Room
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                //ViewModel
                 api(libs.lifecycle.viewmodel)
                 api(libs.lifecycle.viewmodel.navigation3)
             }
         }
         androidMain.dependencies {
+            //WorkManager
             implementation(libs.androidx.work.runtime.ktx)
+            //Glance
             implementation(libs.androidx.glance.appwidget)
             implementation(libs.androidx.glance)
+            //ExifInterface
             implementation(libs.androidx.exifinterface)
+            //Ktor
             implementation(libs.ktor.client.okhttp)
         }
 
         iosMain.dependencies {
+            //Ktor
             implementation(libs.ktor.client.darwin)
         }
     }

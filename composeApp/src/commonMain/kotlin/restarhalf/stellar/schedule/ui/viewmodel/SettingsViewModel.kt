@@ -97,6 +97,11 @@ class SettingsViewModel(
         Exam,
     }
 
+    private data class LoginSubmitPayload(
+        val userNo: String,
+        val password: String,
+    )
+
     private companion object {
         val CAMPUS_OPTIONS = listOf("开发区", "金石滩")
         val THEME_OPTIONS = listOf("跟随系统", "浅色", "深色")
@@ -270,11 +275,27 @@ class SettingsViewModel(
     }
 
     fun onLoginUserNoChange(value: String) {
-        _loginUiState.value = _loginUiState.value.copy(userNo = value, error = "")
+        _loginUiState.value = _loginUiState.value.copy(userNo = value.trim(), error = "")
     }
 
     fun onLoginPasswordChange(value: String) {
-        _loginUiState.value = _loginUiState.value.copy(password = value, error = "")
+        _loginUiState.value = _loginUiState.value.copy(password = value.trim(), error = "")
+    }
+
+    fun loginButtonEnabled(state: LoginUiState): Boolean {
+        return !state.loading && state.userNo.isNotBlank() && state.password.isNotBlank()
+    }
+
+    fun loginHintMessage(state: LoginUiState): String {
+        if (state.error.isNotBlank()) return ""
+
+        val fields = buildList {
+            if (state.userNo.containsCjkOrFullWidthChars()) add("账号")
+            if (state.password.containsCjkOrFullWidthChars()) add("密码")
+        }
+
+        if (fields.isEmpty()) return ""
+        return "${fields.joinToString("、")}里有中文字符"
     }
 
     fun requestLogoutConfirm() {
@@ -295,13 +316,16 @@ class SettingsViewModel(
     fun submitLogin(onLogin: suspend (userNo: String, password: String) -> Unit) {
         val current = _loginUiState.value
         if (current.loading) return
-        val userNo = current.userNo.trim()
-        val password = current.password
-        if (userNo.isBlank() || password.isBlank()) return
+        val payload = validateLoginInput(current) ?: return
 
-        _loginUiState.value = current.copy(loading = true, error = "")
+        _loginUiState.value =
+            current.copy(
+                userNo = payload.userNo,
+                loading = true,
+                error = "",
+            )
         viewModelScope.launch {
-            runCatching { onLogin(userNo, password) }
+            runCatching { onLogin(payload.userNo, payload.password) }
                 .onSuccess {
                     val latest = _loginUiState.value
                     _loginUiState.value =
@@ -321,6 +345,24 @@ class SettingsViewModel(
                         )
                 }
         }
+    }
+
+    private fun validateLoginInput(current: LoginUiState): LoginSubmitPayload? {
+        val userNo = current.userNo.trim()
+        val password = current.password.trim()
+        val error =
+            when {
+                userNo.isBlank() -> "请输入账号"
+                password.isBlank() -> "请输入密码"
+                else -> null
+            }
+
+        if (error != null) {
+            _loginUiState.value = current.copy(error = error)
+            return null
+        }
+
+        return LoginSubmitPayload(userNo = userNo, password = password)
     }
 
     fun setThemeMode(mode: Int) {
@@ -425,3 +467,12 @@ class SettingsViewModel(
         return "${date.year}/$month/$day"
     }
 }
+
+private fun String.containsCjkOrFullWidthChars(): Boolean =
+    any { char ->
+        val code = char.code
+        code in 0x2E80..0x9FFF ||
+            code in 0xF900..0xFAFF ||
+            code in 0xFF01..0xFF60 ||
+            code in 0xFFE0..0xFFEE
+    }
