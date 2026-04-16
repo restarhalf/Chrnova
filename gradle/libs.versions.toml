@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.0-alpha08"
-composeMultiplatform = "1.11.0-beta02"
+composeMultiplatform = "1.10.3"
 kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 coilCompose = "3.4.0"
