@@ -101,11 +101,10 @@ fun SettingsScreen(
     val loginUiState by vm.loginUiState.collectAsState()
 
     val scope = rememberCoroutineScope()
+
     val authToken by vm.authToken.collectAsState()
     val profile by vm.profile.collectAsState()
     val remoteTermItems by vm.remoteTermItems.collectAsState()
-    val loginSubmitEnabled = remember(loginUiState) { vm.loginButtonEnabled(loginUiState) }
-    val loginHintMessage = remember(loginUiState) { vm.loginHintMessage(loginUiState) }
     val screenUi =
         remember(state.syncUiState, state.campus, state.termStartMs) {
             vm.buildScreenUi(
@@ -145,8 +144,8 @@ fun SettingsScreen(
                     modifier = Modifier,
                     title = "登录",
                     titleColor = DialogDefaults.titleColor(),
-                    summary = loginUiState.error.ifBlank { loginHintMessage.ifBlank { "输入新教务的账号密码" } },
-                    summaryColor = if(loginUiState.error.isNotBlank() || loginHintMessage.isNotBlank() )MiuixTheme.colorScheme.error else DialogDefaults.summaryColor(),
+                    summary = null,
+                    summaryColor = DialogDefaults.summaryColor(),
                     backgroundColor = DialogDefaults.backgroundColor(),
                     enableWindowDim = true,
                     onDismissRequest = {
@@ -164,14 +163,14 @@ fun SettingsScreen(
                         ) {
                             item {
                                 Column {
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     TextField(
                                         label = "账号",
                                         value = loginUiState.userNo,
                                         onValueChange = {
                                             vm.onLoginUserNoChange(it)
                                         },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        borderColor = if(loginUiState.error.isNotBlank()) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -184,14 +183,19 @@ fun SettingsScreen(
                                             vm.onLoginPasswordChange(it)
                                         },
                                         visualTransformation = PasswordVisualTransformation(),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        borderColor = if(loginUiState.error.isNotBlank()) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
+                            if (loginUiState.error.isNotBlank()) {
+                                item { Text(text = loginUiState.error) }
+                            }
                             item {
                                 Button(
-                                    enabled = loginSubmitEnabled,
+                                    enabled =
+                                        !loginUiState.loading &&
+                                                loginUiState.userNo.isNotBlank() &&
+                                                loginUiState.password.isNotBlank(),
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColorsPrimary(),
                                     onClick = {
