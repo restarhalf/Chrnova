@@ -137,6 +137,7 @@ kotlin {
                 implementation(libs.ktor.client.logging)
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                implementation(libs.multiplatform.markdown.renderer)
                 api(libs.lifecycle.viewmodel)
                 api(libs.lifecycle.viewmodel.navigation3)
             }
