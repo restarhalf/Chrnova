@@ -306,8 +306,34 @@ class SettingsViewModel(
         return if (index == 0) Campus.Development else Campus.Jinshitan
     }
 
-    fun setSelectedTerm(value: String) {
+    fun onSelectedTermChanged(value: String) {
         setSelectedTermUseCase.invoke(value)
+    }
+
+    fun onThemeModeChanged(mode: Int) {
+        setThemeModeUseCase.invoke(mode)
+    }
+
+    fun onFloatingBarChanged(mode: Int) {
+        setFloatingBarUseCase.invoke(mode)
+    }
+
+    fun onShowNonCurrentWeekChanged(show: Boolean) {
+        setShowNonCurrentWeekUseCase.invoke(show)
+    }
+
+    fun onReminderEnabledChanged(enabled: Boolean) {
+        setCourseReminderEnabled.invoke(enabled)
+        if (!enabled) {
+            cancelAllCourseReminders()
+        }
+    }
+
+    fun onExamReminderEnabledChanged(enabled: Boolean) {
+        setExamReminderEnabled.invoke(enabled)
+        if (!enabled) {
+            cancelAllExamReminders()
+        }
     }
 
     fun showLoginSheet() {
@@ -373,32 +399,6 @@ class SettingsViewModel(
         }
     }
 
-    fun setThemeMode(mode: Int) {
-        setThemeModeUseCase.invoke(mode)
-    }
-
-    fun setFloatingBar(mode: Int) {
-        setFloatingBarUseCase.invoke(mode)
-    }
-
-    fun setShowNonCurrentWeek(show: Boolean) {
-        setShowNonCurrentWeekUseCase.invoke(show)
-    }
-
-    fun setReminderEnabled(enabled: Boolean) {
-        setCourseReminderEnabled.invoke(enabled)
-        if (!enabled) {
-            cancelAllCourseReminders()
-        }
-    }
-
-    fun setExamReminderEnabled(enabled: Boolean) {
-        setExamReminderEnabled.invoke(enabled)
-        if (!enabled) {
-            cancelAllExamReminders()
-        }
-    }
-
     fun requestNotificationPermission(target: NotificationTarget) {
         _pendingNotificationTarget.value = target
     }
@@ -419,7 +419,7 @@ class SettingsViewModel(
         if (!granted) return
         when (target) {
             NotificationTarget.Course -> {
-                setReminderEnabled(true)
+                onReminderEnabledChanged(true)
                 scheduleCourseReminder(
                     campus = campus,
                     termStartMs = termStartMs,
@@ -428,7 +428,7 @@ class SettingsViewModel(
             }
 
             NotificationTarget.Exam -> {
-                setExamReminderEnabled(true)
+                onExamReminderEnabledChanged(true)
                 scheduleExamReminder(selectedTerm = selectedTerm)
             }
 
@@ -449,19 +449,21 @@ class SettingsViewModel(
                     }.isSuccess
                 }
             if (!success) {
-                setReminderEnabled(false)
+                onReminderEnabledChanged(false)
             }
         }
     }
 
     fun scheduleExamReminder(selectedTerm: String) {
         viewModelScope.launch {
-            val result =
+            val success =
                 withContext(AppIoDispatcher) {
-                    runCatching { scheduleNextExamReminder(selectedTerm) }
+                    runCatching {
+                        scheduleNextExamReminder(selectedTerm = selectedTerm)
+                    }.isSuccess
                 }
-            if (result.isFailure && uiState.value.authToken.isBlank()) {
-                showLoginSheet()
+            if (!success) {
+                onExamReminderEnabledChanged(false)
             }
         }
     }

@@ -338,7 +338,7 @@ fun SettingsScreen(
                         items = termSelectionUi.items,
                         selectedIndex = termSelectionUi.selectedIndex,
                         onSelectedIndexChange = { index: Int ->
-                            vm.setSelectedTerm(
+                            vm.onSelectedTermChanged(
                                 vm.selectedTermValueFromIndex(termSelectionUi.items, index)
                             )
                             scope.launch { runCatching { actions.onSync() } }
@@ -366,7 +366,7 @@ fun SettingsScreen(
                         summary = "开启后单双周课程都可以看见哦",
                         checked = settingsUiState.showNonCurrentWeek,
                         onCheckedChange = {
-                            vm.setShowNonCurrentWeek(it)
+                            vm.onShowNonCurrentWeekChanged(it)
                         })
                 }
             }
@@ -380,7 +380,7 @@ fun SettingsScreen(
                         items = screenUi.themeOptions,
                         selectedIndex = settingsUiState.themeMode.coerceIn(0, 2),
                         onSelectedIndexChange = { index: Int ->
-                            vm.setThemeMode(index)
+                            vm.onThemeModeChanged(index)
                         })
                     OverlayDropdownPreference(
                         title = "底栏形式",
@@ -388,7 +388,7 @@ fun SettingsScreen(
                         items = screenUi.floatingBarOptions,
                         selectedIndex = settingsUiState.floatingBar.coerceIn(0, 2),
                         onSelectedIndexChange = { index: Int ->
-                            vm.setFloatingBar(index)
+                            vm.onFloatingBarChanged(index)
                         }
                     )
                     ArrowPreference(
@@ -413,7 +413,7 @@ fun SettingsScreen(
                         onCheckedChange = { newValue ->
                             if (newValue) {
                                 actions.ensureCourseReminderPermission {
-                                    vm.setReminderEnabled(true)
+                                    vm.onReminderEnabledChanged(true)
                                     vm.scheduleCourseReminder(
                                         campus = state.campus,
                                         termStartMs = state.termStartMs,
@@ -421,7 +421,7 @@ fun SettingsScreen(
                                     )
                                 }
                             } else {
-                                vm.setReminderEnabled(false)
+                                vm.onReminderEnabledChanged(false)
                             }
                         })
                     SwitchPreference(
@@ -431,13 +431,13 @@ fun SettingsScreen(
                         onCheckedChange = { newValue ->
                             if (newValue) {
                                 actions.ensureExamReminderPermission {
-                                    vm.setExamReminderEnabled(true)
+                                    vm.onExamReminderEnabledChanged(true)
                                     vm.scheduleExamReminder(
                                         selectedTerm = settingsUiState.selectedTerm
                                     )
                                 }
                             } else {
-                                vm.setExamReminderEnabled(false)
+                                vm.onExamReminderEnabledChanged(false)
                             }
                         })
                 }
