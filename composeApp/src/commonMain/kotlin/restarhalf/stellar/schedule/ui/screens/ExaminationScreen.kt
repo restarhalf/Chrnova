@@ -66,8 +66,8 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
 
     LaunchedEffect(Unit) { vm.load() }
 
-    val screenState = remember(examUiState) {
-        vm.buildScreenState(
+    val screenUi = remember(examUiState) {
+        vm.buildScreenUi(
             items = examUiState.items,
             loading = examUiState.loading,
             error = examUiState.error,
@@ -75,7 +75,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
         )
     }
 
-    val statusText = screenState.statusText
+    val statusText = screenUi.statusText
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -136,7 +136,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 overscrollEffect = null
             ) {
-                items(screenState.cards, key = { it.idKey }) { card ->
+                items(screenUi.cards, key = { it.idKey }) { card ->
                     ExamItemCard(
                         modifier =
                             Modifier.animateItem(

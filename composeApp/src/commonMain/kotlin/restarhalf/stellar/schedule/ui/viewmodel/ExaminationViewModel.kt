@@ -28,7 +28,7 @@ class ExaminationViewModel(
         val remarkText: String?,
     )
 
-    data class ScreenState(
+    data class ExaminationScreenUi(
         val cards: List<ExamCardUi>,
         val statusText: String?,
     )
@@ -68,12 +68,12 @@ class ExaminationViewModel(
         this.loader = loader
     }
 
-    fun buildScreenState(
+    fun buildScreenUi(
         items: List<Examination>,
         loading: Boolean,
         error: String,
         nowMs: Long,
-    ): ScreenState {
+    ): ExaminationScreenUi {
         val visibleItems = items.filter { isExamNotEnded(it.time, nowMs) }
         val cards = visibleItems.map { exam -> buildExamCardUi(exam) }
         val statusText =
@@ -82,7 +82,7 @@ class ExaminationViewModel(
                 !loading && cards.isEmpty() -> "暂无考试安排"
                 else -> null
             }
-        return ScreenState(cards = cards, statusText = statusText)
+        return ExaminationScreenUi(cards = cards, statusText = statusText)
     }
 
     fun load() {

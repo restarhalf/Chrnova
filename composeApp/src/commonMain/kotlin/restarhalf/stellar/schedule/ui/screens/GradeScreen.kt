@@ -62,18 +62,17 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
     val surfaceSoft = colors.surfaceContainerHigh
-    val screenState =
+    val screenUi =
         remember(gradeUiState) {
-            vm.buildScreenState(
+            vm.buildScreenUi(
                 gradeUiState.report,
                 gradeUiState.loading,
                 gradeUiState.error
             )
         }
-    val cards = screenState.cards
     val showGradeDetailsDialog = remember { mutableStateOf(false) }
     var selectedGrade by remember { mutableStateOf<GradeCourse?>(null) }
-    val statusText = screenState.statusText
+    val statusText = screenUi.statusText
     LaunchedEffect(onLoadGrades) { vm.bindLoader(onLoadGrades) }
     LaunchedEffect(Unit) { vm.load() }
     LaunchedEffect(showGradeDetailsDialog.value) {
@@ -149,14 +148,14 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 overscrollEffect = null
             ) {
-                screenState.summary?.let { summary ->
+                screenUi.summary?.let { summary ->
                     item(key = "summary") {
                         GradeSummaryCard(
                             summary = summary
                         )
                     }
                 }
-                items(cards, key = { it.idKey }) { card ->
+                items(screenUi.cards, key = { it.idKey }) { card ->
                     GradeItemCard(
                         modifier =
                             Modifier.animateItem(

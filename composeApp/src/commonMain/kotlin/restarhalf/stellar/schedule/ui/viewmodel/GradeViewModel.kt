@@ -33,7 +33,7 @@ class GradeViewModel(
         val totalGradePointsText: String,
     )
 
-    data class ScreenState(
+    data class GradeScreenUi(
         val cards: List<GradeCardUi>,
         val statusText: String?,
         val summary: GradeSummaryUi?,
@@ -78,11 +78,11 @@ class GradeViewModel(
         this.loader = loader
     }
 
-    fun buildScreenState(
+    fun buildScreenUi(
         report: TermGradeReport,
         loading: Boolean,
         error: String,
-    ): ScreenState {
+    ): GradeScreenUi {
         val courses = report.achievements
         val cards = courses.map { buildGradeCardUi(it) }
         val statusText =
@@ -103,7 +103,7 @@ class GradeViewModel(
             } else {
                 null
             }
-        return ScreenState(cards = cards, statusText = statusText, summary = summary)
+        return GradeScreenUi(cards = cards, statusText = statusText, summary = summary)
     }
 
     fun buildGradeTitle(grade: GradeCourse): String = grade.courseName.ifBlank { "未命名课程" }
