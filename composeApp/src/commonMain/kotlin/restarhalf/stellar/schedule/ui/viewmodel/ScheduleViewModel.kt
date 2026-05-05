@@ -145,7 +145,7 @@ class ScheduleViewModel(
 
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
-    fun setShowNonCurrentWeek(show: Boolean) {
+    fun onShowNonCurrentWeekChanged(show: Boolean) {
         setShowNonCurrentWeekUseCase.invoke(show)
     }
 
