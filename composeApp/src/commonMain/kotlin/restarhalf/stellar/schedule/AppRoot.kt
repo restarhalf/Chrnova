@@ -51,12 +51,13 @@ fun AppRoot(
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val isWideScreen = shouldShowSplitPane()
 
-    var appState by remember(vm, settings) {
+    val appUiState by vm.uiState.collectAsState()
+    var appState by remember(appUiState) {
         mutableStateOf(
             AppState(
-                campus = vm.getCampus(),
-                termStartMs = vm.getTermStartMs(),
-                totalWeeks = vm.getTotalWeeks(),
+                campus = appUiState.campus,
+                termStartMs = appUiState.termStartMs,
+                totalWeeks = appUiState.totalWeeks,
                 isWideScreen = isWideScreen,
                 barMode = settings.getInt(SettingsKeys.FLOATING_BAR, 0),
             ),

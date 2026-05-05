@@ -357,15 +357,15 @@ private fun MainRouteContent(
                             ensureExamReminderPermission = ensureNotificationPermission,
                             onCampusChange = { campus ->
                                 updateAppState { current -> current.copy(campus = campus) }
-                                vm.setCampus(campus)
+                                vm.onCampusChanged(campus)
                             },
                             onTermStartChange = { termStartMs ->
                                 updateAppState { current -> current.copy(termStartMs = termStartMs) }
-                                vm.setTermStartMs(termStartMs)
+                                vm.onTermStartMsChanged(termStartMs)
                             },
                             onTotalWeeksChange = { totalWeeks ->
                                 updateAppState { current -> current.copy(totalWeeks = totalWeeks) }
-                                vm.setTotalWeeks(totalWeeks)
+                                vm.onTotalWeeksChanged(totalWeeks)
                             },
                             onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                             onAbout = { navigator.push(Screen.About) },

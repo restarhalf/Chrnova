@@ -92,21 +92,15 @@ class AppViewModel(
         clearAuth()
     }
 
-    fun getCampus(): Campus = getCampusUseCase()
-
-    fun setCampus(campus: Campus) {
+    fun onCampusChanged(campus: Campus) {
         setCampusUseCase(campus)
     }
 
-    fun getTermStartMs(): Long = getTermStartMsUseCase()
-
-    fun setTermStartMs(ms: Long) {
+    fun onTermStartMsChanged(ms: Long) {
         setTermStartMsUseCase(ms)
     }
 
-    fun getTotalWeeks(): Int = getTotalWeeksUseCase()
-
-    fun setTotalWeeks(weeks: Int) {
+    fun onTotalWeeksChanged(weeks: Int) {
         setTotalWeeksUseCase(weeks)
     }
 
