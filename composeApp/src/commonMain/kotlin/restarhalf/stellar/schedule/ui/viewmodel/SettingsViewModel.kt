@@ -3,8 +3,10 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
@@ -60,6 +62,19 @@ class SettingsViewModel(
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
 ) : ViewModel() {
+    private data class SettingsPrefsState(
+        val showNonCurrentWeek: Boolean,
+        val reminderEnabled: Boolean,
+        val examReminderEnabled: Boolean,
+        val themeMode: Int,
+        val floatingBar: Int,
+        val selectedTerm: String,
+    )
+
+    private data class SettingsAuthState(
+        val authToken: String,
+        val profile: AuthProfile,
+    )
 
     data class ScreenUi(
         val campusOptions: List<String>,
@@ -91,6 +106,20 @@ class SettingsViewModel(
         val authVersion: Int = 0,
     )
 
+    data class SettingsUiState(
+        val showNonCurrentWeek: Boolean,
+        val reminderEnabled: Boolean,
+        val examReminderEnabled: Boolean,
+        val themeMode: Int,
+        val floatingBar: Int,
+        val selectedTerm: String,
+        val authToken: String,
+        val profile: AuthProfile,
+        val remoteTermItems: List<String>,
+        val loginUiState: LoginUiState,
+        val pendingNotificationTarget: NotificationTarget,
+    )
+
     enum class NotificationTarget {
         None,
         Course,
@@ -103,64 +132,85 @@ class SettingsViewModel(
         val FLOATING_BAR_OPTIONS = listOf("固定", "悬浮","液态玻璃")
     }
 
-    private val _showNonCurrentWeek = MutableStateFlow(true)
-    val showNonCurrentWeek: StateFlow<Boolean> = _showNonCurrentWeek.asStateFlow()
-
-    private val _reminderEnabled = MutableStateFlow(false)
-    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled.asStateFlow()
-
-    private val _examReminderEnabled = MutableStateFlow(false)
-    val examReminderEnabled: StateFlow<Boolean> = _examReminderEnabled.asStateFlow()
-
-    private val _themeMode = MutableStateFlow(0)
-    val themeMode: StateFlow<Int> = _themeMode.asStateFlow()
-
-    private val _floatingBar = MutableStateFlow(0)
-    val floatingBar: StateFlow<Int> = _floatingBar.asStateFlow()
-
-    private val _selectedTerm = MutableStateFlow("")
-    val selectedTerm: StateFlow<String> = _selectedTerm.asStateFlow()
-
-    private val _authToken = MutableStateFlow("")
-    val authToken: StateFlow<String> = _authToken.asStateFlow()
-
-    private val _profile = MutableStateFlow(AuthProfile())
-    val profile: StateFlow<AuthProfile> = _profile.asStateFlow()
-
     private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
-    val remoteTermItems: StateFlow<List<String>> = _remoteTermItems.asStateFlow()
-
     private val _loginUiState = MutableStateFlow(LoginUiState())
-    val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
-
     private val _pendingNotificationTarget = MutableStateFlow(NotificationTarget.None)
-    val pendingNotificationTarget: StateFlow<NotificationTarget> =
-        _pendingNotificationTarget.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            observeShowNonCurrentWeek().collect { _showNonCurrentWeek.value = it }
+    private val prefsFlow =
+        combine(
+            observeShowNonCurrentWeek(),
+            observeCourseReminderEnabled(),
+            observeExamReminderEnabled(),
+            observeThemeMode(),
+            observeFloatingBar(),
+        ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
+            SettingsPrefsState(
+                showNonCurrentWeek = showNonCurrentWeek,
+                reminderEnabled = reminderEnabled,
+                examReminderEnabled = examReminderEnabled,
+                themeMode = themeMode,
+                floatingBar = floatingBar,
+                selectedTerm = "",
+            )
         }
-        viewModelScope.launch {
-            observeCourseReminderEnabled().collect {
-                _reminderEnabled.value = it
+            .combine(observeSelectedTerm()) { prefs, selectedTerm ->
+                prefs.copy(selectedTerm = selectedTerm)
             }
-        }
-        viewModelScope.launch {
-            observeExamReminderEnabled().collect {
-                _examReminderEnabled.value = it
-            }
-        }
-        viewModelScope.launch { observeThemeMode().collect { _themeMode.value = it } }
-        viewModelScope.launch { observeFloatingBar().collect { _floatingBar.value = it } }
-        viewModelScope.launch { observeSelectedTerm().collect { _selectedTerm.value = it } }
 
-        viewModelScope.launch { observeAuthToken().collect { _authToken.value = it } }
-        viewModelScope.launch { observeAuthProfile().collect { _profile.value = it } }
-    }
+    private val authFlow =
+        combine(observeAuthToken(), observeAuthProfile()) { authToken, profile ->
+            SettingsAuthState(authToken = authToken, profile = profile)
+        }
+
+    private val _uiState: StateFlow<SettingsUiState> =
+        prefsFlow
+            .combine(authFlow) { prefs, auth -> prefs to auth }
+            .combine(_remoteTermItems) { prefsAuth, remoteTermItems ->
+                Triple(prefsAuth.first, prefsAuth.second, remoteTermItems)
+            }
+            .combine(_loginUiState) { prefsAuthRemote, loginUiState ->
+                prefsAuthRemote to loginUiState
+            }
+            .combine(_pendingNotificationTarget) { prefsBundle, pendingNotificationTarget ->
+                val (prefsAuthRemote, loginUiState) = prefsBundle
+                val (prefs, auth, remoteTermItems) = prefsAuthRemote
+                SettingsUiState(
+                    showNonCurrentWeek = prefs.showNonCurrentWeek,
+                    reminderEnabled = prefs.reminderEnabled,
+                    examReminderEnabled = prefs.examReminderEnabled,
+                    themeMode = prefs.themeMode,
+                    floatingBar = prefs.floatingBar,
+                    selectedTerm = prefs.selectedTerm,
+                    authToken = auth.authToken,
+                    profile = auth.profile,
+                    remoteTermItems = remoteTermItems,
+                    loginUiState = loginUiState,
+                    pendingNotificationTarget = pendingNotificationTarget,
+                )
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue =
+                    SettingsUiState(
+                        showNonCurrentWeek = true,
+                        reminderEnabled = false,
+                        examReminderEnabled = false,
+                        themeMode = 0,
+                        floatingBar = 0,
+                        selectedTerm = "",
+                        authToken = "",
+                        profile = AuthProfile(),
+                        remoteTermItems = emptyList(),
+                        loginUiState = LoginUiState(),
+                        pendingNotificationTarget = NotificationTarget.None,
+                    ),
+            )
+
+    val uiState: StateFlow<SettingsUiState> = _uiState
 
     fun refreshAuth() {
-        if (_authToken.value.isBlank()) return
+        if (uiState.value.authToken.isBlank()) return
 
         viewModelScope.launch {
             withContext(AppIoDispatcher) {
@@ -170,7 +220,7 @@ class SettingsViewModel(
     }
 
     fun refreshRemoteTerms() {
-        if (_authToken.value.isBlank()) {
+        if (uiState.value.authToken.isBlank()) {
             _remoteTermItems.value = emptyList()
             return
         }
@@ -410,7 +460,7 @@ class SettingsViewModel(
                 withContext(AppIoDispatcher) {
                     runCatching { scheduleNextExamReminder(selectedTerm) }
                 }
-            if (result.isFailure && _authToken.value.isBlank()) {
+            if (result.isFailure && uiState.value.authToken.isBlank()) {
                 showLoginSheet()
             }
         }

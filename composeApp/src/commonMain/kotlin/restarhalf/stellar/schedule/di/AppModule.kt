@@ -38,6 +38,7 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
+import restarhalf.stellar.schedule.domain.usecase.CalculateGradeSummaryUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
@@ -54,11 +55,15 @@ import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
@@ -106,7 +111,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 
-val commonAppModule = module {
+val portModule = module {
     single { Json { ignoreUnknownKeys = true } }
 
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
@@ -152,7 +157,9 @@ val commonAppModule = module {
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
     single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get()) }
+}
 
+val useCaseModule = module {
     single {
         RunSyncUseCase(
             authWorkflow = get(),
@@ -167,6 +174,7 @@ val commonAppModule = module {
     single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
     single { FetchGradesUseCase(authWorkflow = get(), academic = get(), settings = get()) }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
+    single { CalculateGradeSummaryUseCase() }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
@@ -179,6 +187,9 @@ val commonAppModule = module {
     single { EnsureLoggedInUseCase(authWorkflow = get()) }
     single { ObserveAuthTokenUseCase(auth = get()) }
     single { ObserveAuthProfileUseCase(auth = get()) }
+    single { ObserveCampusUseCase(timetable = get()) }
+    single { ObserveTermStartMsUseCase(timetable = get()) }
+    single { ObserveTotalWeeksUseCase(timetable = get()) }
     single { ObserveShowNonCurrentWeekUseCase(settings = get()) }
     single { SetShowNonCurrentWeekUseCase(settings = get()) }
     single { ObserveThemeModeUseCase(settings = get()) }
@@ -221,6 +232,7 @@ val commonAppModule = module {
     single { CancelAllCourseRemindersUseCase(courseReminder = get()) }
     single { CancelAllExamRemindersUseCase(examReminder = get()) }
     single { IsAnyReminderEnabledUseCase(settings = get()) }
+    single { IsExamNotEndedUseCase() }
     single {
         RescheduleNextCourseReminderIfEnabledUseCase(
             settings = get(),
@@ -264,15 +276,20 @@ val commonAppModule = module {
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
     single { TransCourseUseCase() }
     single { TransCourseWithConflictsUseCase(getAllCoursesOnce = get(), transCourse = get()) }
+}
 
+val viewModelModule = module {
     factory {
         AppViewModel(
             clearAuth = get(),
             getCampusUseCase = get(),
+            observeCampusUseCase = get(),
             setCampusUseCase = get(),
             getTermStartMsUseCase = get(),
+            observeTermStartMsUseCase = get(),
             setTermStartMsUseCase = get(),
             getTotalWeeksUseCase = get(),
+            observeTotalWeeksUseCase = get(),
             setTotalWeeksUseCase = get(),
             fetchExaminations = get(),
             fetchGrades = get(),
@@ -337,8 +354,8 @@ val commonAppModule = module {
             scheduleNextExamReminder = get(),
         )
     }
-    factory { ExaminationViewModel() }
-    factory { GradeViewModel() }
+    factory { ExaminationViewModel(isExamNotEnded = get()) }
+    factory { GradeViewModel(calculateGradeSummary = get()) }
     factory {
         HomeViewModel(
             observeAllCoursesUseCase = get(),
@@ -353,4 +370,8 @@ val commonAppModule = module {
     }
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
+}
+
+val commonAppModule = module {
+    includes(portModule, useCaseModule, viewModelModule)
 }

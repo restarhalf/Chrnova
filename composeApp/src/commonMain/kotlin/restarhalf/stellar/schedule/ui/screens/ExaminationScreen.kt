@@ -56,9 +56,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
     val vm: ExaminationViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val loading by vm.loading.collectAsState()
-    val error by vm.error.collectAsState()
-    val items by vm.items.collectAsState()
+    val examUiState by vm.uiState.collectAsState()
     val colors = MiuixTheme.colorScheme
     val surfaceSoft = colors.surfaceContainerHigh
     val pullToRefreshState = rememberPullToRefreshState()
@@ -68,11 +66,11 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
 
     LaunchedEffect(Unit) { vm.load() }
 
-    val screenState = remember(items, loading, error) {
+    val screenState = remember(examUiState) {
         vm.buildScreenState(
-            items = items,
-            loading = loading,
-            error = error,
+            items = examUiState.items,
+            loading = examUiState.loading,
+            error = examUiState.error,
             nowMs = Clock.System.now().toEpochMilliseconds(),
         )
     }
@@ -107,7 +105,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
             }
         }) { paddingValues ->
         PullToRefresh(
-            isRefreshing = loading,
+            isRefreshing = examUiState.loading,
             onRefresh = { vm.load() },
             pullToRefreshState = pullToRefreshState,
             modifier =

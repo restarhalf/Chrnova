@@ -87,10 +87,7 @@ fun AppContent(
 ) {
     val appState = LocalAppState.current
 
-    val backgroundImageUri by bgVm.backgroundImageUri.collectAsState()
-    val backgroundAlpha by bgVm.backgroundAlpha.collectAsState()
-    val backgroundBlur by bgVm.backgroundBlur.collectAsState()
-    val componentsAlpha by bgVm.componentsAlpha.collectAsState()
+    val backgroundUiState by bgVm.uiState.collectAsState()
     val backdrop = rememberLayerBackdrop()
 
     val pagerState = rememberPagerState(pageCount = { RootTabs.size })
@@ -243,7 +240,7 @@ fun AppContent(
                             .layerBackdrop(backdrop)
                             .background(MiuixTheme.colorScheme.surface),
                 ) {
-                    backgroundImageUri?.let { uri ->
+                    backgroundUiState.backgroundImageUri?.let { uri ->
                         AsyncImage(
                             model = toAsyncImageModel(uri),
                             contentDescription = null,
@@ -251,14 +248,14 @@ fun AppContent(
                             modifier =
                                 Modifier
                                     .fillMaxSize()
-                                    .blur(25.dp * backgroundBlur)
-                                    .alpha(backgroundAlpha),
+                                    .blur(25.dp * backgroundUiState.backgroundBlur)
+                                    .alpha(backgroundUiState.backgroundAlpha),
                         )
                     }
 
                     AppScaffoldBody(
                         innerPadding = innerPadding,
-                        componentsAlpha = componentsAlpha,
+                        componentsAlpha = backgroundUiState.componentsAlpha,
                     ) {
                         NavDisplay(
                             entries = entries,

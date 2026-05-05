@@ -1,7 +1,11 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.Flow
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
@@ -24,6 +28,9 @@ class HomeViewModel(
     private val buildHomePeriodRenderRowsUseCase: BuildHomePeriodRenderRowsUseCase,
     private val buildHomeSurfaceUiUseCase: BuildHomeSurfaceUiUseCase,
 ) : ViewModel() {
+    data class HomeUiState(
+        val courses: List<Course>,
+    )
     data class SectionRenderUi(
         val title: String,
         val rows: List<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
@@ -37,7 +44,16 @@ class HomeViewModel(
         val nowMinutes: Int,
     )
 
-    fun observeAllCourses(): Flow<List<Course>> = observeAllCoursesUseCase()
+    private val _uiState: StateFlow<HomeUiState> =
+        observeAllCoursesUseCase()
+            .map { courses -> HomeUiState(courses = courses) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = HomeUiState(courses = emptyList()),
+            )
+
+    val uiState: StateFlow<HomeUiState> = _uiState
 
     fun getCampusTimetable(campus: Campus): List<TimetableSlot> = getCampusTimetableUseCase(campus)
 

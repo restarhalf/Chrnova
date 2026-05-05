@@ -3,17 +3,28 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.usecase.CalculateGradeSummaryUseCase
 import kotlin.math.roundToInt
 
-class GradeViewModel : ViewModel() {
+class GradeViewModel(
+    private val calculateGradeSummary: CalculateGradeSummaryUseCase,
+) : ViewModel() {
+
+    data class GradeUiState(
+        val loading: Boolean,
+        val error: String,
+        val report: TermGradeReport,
+    )
 
     data class GradeSummaryUi(
         val averageScoreText: String,
@@ -39,13 +50,27 @@ class GradeViewModel : ViewModel() {
     )
 
     private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
     private val _error = MutableStateFlow("")
-    val error: StateFlow<String> = _error.asStateFlow()
 
     private val _report = MutableStateFlow(TermGradeReport())
-    val report: StateFlow<TermGradeReport> = _report.asStateFlow()
+
+    private val _uiState: StateFlow<GradeUiState> =
+        combine(_loading, _error, _report) { loading, error, report ->
+            GradeUiState(loading = loading, error = error, report = report)
+        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue =
+                    GradeUiState(
+                        loading = false,
+                        error = "",
+                        report = TermGradeReport(),
+                    ),
+            )
+
+    val uiState: StateFlow<GradeUiState> = _uiState
 
     private var loader: (suspend () -> TermGradeReport)? = null
 
@@ -68,11 +93,12 @@ class GradeViewModel : ViewModel() {
             }
         val summary =
             if (courses.isNotEmpty()) {
+                val calculatedSummary = calculateGradeSummary(report)
                 GradeSummaryUi(
-                    averageScoreText = report.averageScoreText(),
-                    averageGradePointText = report.averageGradePointText(),
-                    earnedCreditsText = report.earnedCredits.ifBlank { "--" },
-                    totalGradePointsText = report.totalGradePoints.ifBlank { "--" },
+                    averageScoreText = calculatedSummary.averageScoreText,
+                    averageGradePointText = calculatedSummary.averageGradePointText,
+                    earnedCreditsText = calculatedSummary.earnedCreditsText,
+                    totalGradePointsText = calculatedSummary.totalGradePointsText,
                 )
             } else {
                 null
@@ -148,34 +174,6 @@ class GradeViewModel : ViewModel() {
         return if (this <= 0.0) "0" else formatDouble(this)
     }
 
-    private fun TermGradeReport.averageScoreText(): String {
-        averageScore.toDoubleOrNull()?.takeIf { !it.isNaN() && it > 0 }
-            ?.let { return formatDouble(it) }
-
-        val weighted =
-            achievements.mapNotNull { grade ->
-                val scoreValue = grade.score.toDoubleOrNull() ?: return@mapNotNull null
-                if (grade.credit <= 0.0) return@mapNotNull null
-                scoreValue to grade.credit
-            }
-
-        val creditSum = weighted.sumOf { it.second }
-        if (creditSum <= 0.0) return "--"
-        val total = weighted.sumOf { it.first * it.second }
-        return formatDouble(total / creditSum)
-    }
-
-    private fun TermGradeReport.averageGradePointText(): String {
-        averageCreditGradePoint.toDoubleOrNull()?.takeIf { !it.isNaN() && it > 0 }?.let {
-            return formatDouble(it)
-        }
-
-        val total = totalGradePoints.toDoubleOrNull()
-        val credits = earnedCredits.toDoubleOrNull()
-        if (total == null || credits == null || credits <= 0.0) return "--"
-        return formatDouble(total / credits)
-    }
-
     private fun formatDouble(value: Double): String {
         val scaled = (value * 100).roundToInt() / 100.0
         return if (scaled % 1.0 == 0.0) scaled.toInt().toString() else DecimalFormatter.format(
@@ -183,4 +181,5 @@ class GradeViewModel : ViewModel() {
             2
         )
     }
+
 }

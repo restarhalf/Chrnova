@@ -3,6 +3,11 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.model.Course
@@ -19,6 +24,11 @@ class CourseEditViewModel(
     private val deleteCourseUseCase: DeleteCourseUseCase,
 ) : ViewModel() {
 
+    data class CourseEditUiState(
+        val courses: List<Course>,
+        val courseNames: List<String>,
+    )
+
     data class EditingFormState(
         val isEdit: Boolean,
         val selectedIndex: Int,
@@ -28,6 +38,19 @@ class CourseEditViewModel(
         val endSection: Int,
         val selectedWeeks: Set<Int>,
     )
+
+    private val _uiState: StateFlow<CourseEditUiState> =
+        observeAllCoursesUseCase()
+            .combine(MutableStateFlow(Unit)) { courses, _ ->
+                CourseEditUiState(courses = courses, courseNames = buildCourseNames(courses))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = CourseEditUiState(courses = emptyList(), courseNames = emptyList()),
+            )
+
+    val uiState: StateFlow<CourseEditUiState> = _uiState
 
     fun buildCourseNames(courses: List<Course>): List<String> {
         return courses.filter { it.type == 0 }.map { it.name }.distinct()

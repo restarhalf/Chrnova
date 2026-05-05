@@ -58,14 +58,18 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
     val vm: GradeViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val loading by vm.loading.collectAsState()
-    val error by vm.error.collectAsState()
-    val report by vm.report.collectAsState()
+    val gradeUiState by vm.uiState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
     val surfaceSoft = colors.surfaceContainerHigh
     val screenState =
-        remember(report, loading, error) { vm.buildScreenState(report, loading, error) }
+        remember(gradeUiState) {
+            vm.buildScreenState(
+                gradeUiState.report,
+                gradeUiState.loading,
+                gradeUiState.error
+            )
+        }
     val cards = screenState.cards
     val showGradeDetailsDialog = remember { mutableStateOf(false) }
     var selectedGrade by remember { mutableStateOf<GradeCourse?>(null) }
@@ -114,7 +118,7 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
             }
         }) { paddingValues ->
         PullToRefresh(
-            isRefreshing = loading,
+            isRefreshing = gradeUiState.loading,
             onRefresh = { vm.load() },
             pullToRefreshState = pullToRefreshState,
             modifier =

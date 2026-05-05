@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
@@ -28,6 +30,12 @@ class AboutViewModel(
     private val appUpdate: AppUpdatePort,
 ) : ViewModel() {
 
+    data class AboutUiState(
+        val updateChecking: Boolean,
+        val updateSummary: String,
+        val pendingUpdate: AppUpdateInfo?,
+    )
+
     data class ScreenUi(
         val versionDisplay: String,
         val currentVersionForCheck: String,
@@ -39,13 +47,26 @@ class AboutViewModel(
     val events: SharedFlow<AboutUiEvent> = _events
 
     private val _updateChecking = MutableStateFlow(false)
-    val updateChecking: StateFlow<Boolean> = _updateChecking.asStateFlow()
 
     private val _updateSummary = MutableStateFlow("检查")
-    val updateSummary: StateFlow<String> = _updateSummary.asStateFlow()
 
     private val _pendingUpdate = MutableStateFlow<AppUpdateInfo?>(null)
-    val pendingUpdate: StateFlow<AppUpdateInfo?> = _pendingUpdate.asStateFlow()
+
+    private val _uiState: StateFlow<AboutUiState> =
+        combine(_updateChecking, _updateSummary, _pendingUpdate) { updateChecking, updateSummary, pendingUpdate ->
+            AboutUiState(
+                updateChecking = updateChecking,
+                updateSummary = updateSummary,
+                pendingUpdate = pendingUpdate,
+            )
+        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = AboutUiState(updateChecking = false, updateSummary = "检查", pendingUpdate = null),
+            )
+
+    val uiState: StateFlow<AboutUiState> = _uiState
 
     fun buildScreenUi(
         isInPreview: Boolean,

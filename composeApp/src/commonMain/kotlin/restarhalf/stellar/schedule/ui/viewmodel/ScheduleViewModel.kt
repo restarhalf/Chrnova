@@ -6,8 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
@@ -52,6 +55,13 @@ class ScheduleViewModel(
     data class PageRenderUi(
         val actualWeek: Int,
         val dayRenderData: Map<Int, DayRenderData>,
+    )
+
+    data class ScheduleUiState(
+        val showNonCurrentWeek: Boolean,
+        val transDialogUiState: TransDialogUiState,
+        val transConflictUiState: TransConflictUiState,
+        val detailSheetUiState: DetailSheetUiState,
     )
 
     enum class CourseDetailTagStyle {
@@ -103,23 +113,37 @@ class ScheduleViewModel(
         val WEEKDAYS = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
     }
 
-    private val _showNonCurrentWeek = MutableStateFlow(true)
-    val showNonCurrentWeek: StateFlow<Boolean> = _showNonCurrentWeek.asStateFlow()
-
     private val _transDialogUiState = MutableStateFlow(TransDialogUiState())
-    val transDialogUiState: StateFlow<TransDialogUiState> = _transDialogUiState.asStateFlow()
-
     private val _transConflictUiState = MutableStateFlow(TransConflictUiState())
-    val transConflictUiState: StateFlow<TransConflictUiState> = _transConflictUiState.asStateFlow()
-
     private val _detailSheetUiState = MutableStateFlow(DetailSheetUiState())
-    val detailSheetUiState: StateFlow<DetailSheetUiState> = _detailSheetUiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            observeShowNonCurrentWeek().collect { _showNonCurrentWeek.value = it }
+    private val _uiState: StateFlow<ScheduleUiState> =
+        combine(
+            observeShowNonCurrentWeek(),
+            _transDialogUiState,
+            _transConflictUiState,
+            _detailSheetUiState,
+        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState ->
+            ScheduleUiState(
+                showNonCurrentWeek = showNonCurrentWeek,
+                transDialogUiState = transDialogUiState,
+                transConflictUiState = transConflictUiState,
+                detailSheetUiState = detailSheetUiState,
+            )
         }
-    }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue =
+                    ScheduleUiState(
+                        showNonCurrentWeek = true,
+                        transDialogUiState = TransDialogUiState(),
+                        transConflictUiState = TransConflictUiState(),
+                        detailSheetUiState = DetailSheetUiState(),
+                    ),
+            )
+
+    val uiState: StateFlow<ScheduleUiState> = _uiState
 
     fun setShowNonCurrentWeek(show: Boolean) {
         setShowNonCurrentWeekUseCase.invoke(show)

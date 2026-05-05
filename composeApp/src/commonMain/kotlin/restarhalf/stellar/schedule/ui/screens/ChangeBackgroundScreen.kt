@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,20 +46,17 @@ fun ChangeBackgroundScreen(
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val showPictureSelector = remember { mutableStateOf(false) }
 
-    val backgroundImageUri by vm.backgroundImageUri.collectAsState()
-    val backgroundAlpha by vm.backgroundAlpha.collectAsState()
-    val backgroundBlur by vm.backgroundBlur.collectAsState()
-    val componentsAlpha by vm.componentsAlpha.collectAsState()
+    val backgroundUiState by vm.uiState.collectAsState()
 
-    val screenUi =
-        remember(backgroundImageUri, backgroundAlpha, backgroundBlur, componentsAlpha) {
-            previewVm.buildScreenUi(
-                backgroundImageUri = backgroundImageUri,
-                backgroundAlpha = backgroundAlpha,
-                backgroundBlur = backgroundBlur,
-                componentsAlpha = componentsAlpha
-            )
-        }
+    LaunchedEffect(backgroundUiState) {
+        previewVm.updateBackground(
+            backgroundImageUri = backgroundUiState.backgroundImageUri,
+            backgroundAlpha = backgroundUiState.backgroundAlpha,
+            backgroundBlur = backgroundUiState.backgroundBlur,
+            componentsAlpha = backgroundUiState.componentsAlpha,
+        )
+    }
+    val screenUi by previewVm.uiState.collectAsState()
 
 
     Scaffold(
@@ -120,17 +118,17 @@ fun ChangeBackgroundScreen(
                     TitleSlider(
                         title = "背景透明度",
                         summary = screenUi.backgroundAlphaPercent,
-                        value = backgroundAlpha,
+                        value = backgroundUiState.backgroundAlpha,
                         onValueChange = { vm.setBackgroundAlpha(it) })
                     TitleSlider(
                         title = "背景模糊度",
                         summary = screenUi.backgroundBlurPercent,
-                        value = backgroundBlur,
+                        value = backgroundUiState.backgroundBlur,
                         onValueChange = { vm.setBackgroundBlur(it) })
                     TitleSlider(
                         title = "组件透明度",
                         summary = screenUi.componentsAlphaPercent,
-                        value = componentsAlpha,
+                        value = backgroundUiState.componentsAlpha,
                         onValueChange = { vm.setComponentsAlpha(it) })
                 }
             }

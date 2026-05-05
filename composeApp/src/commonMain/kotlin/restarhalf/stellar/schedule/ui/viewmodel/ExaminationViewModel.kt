@@ -3,18 +3,19 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Examination
-import kotlin.time.ExperimentalTime
+import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 
-class ExaminationViewModel : ViewModel() {
+class ExaminationViewModel(
+    private val isExamNotEnded: IsExamNotEndedUseCase,
+) : ViewModel() {
 
     data class ExamCardUi(
         val idKey: String,
@@ -32,14 +33,34 @@ class ExaminationViewModel : ViewModel() {
         val statusText: String?,
     )
 
+    data class ExaminationUiState(
+        val loading: Boolean,
+        val error: String,
+        val items: List<Examination>,
+    )
+
     private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
     private val _error = MutableStateFlow("")
-    val error: StateFlow<String> = _error.asStateFlow()
 
     private val _items = MutableStateFlow<List<Examination>>(emptyList())
-    val items: StateFlow<List<Examination>> = _items.asStateFlow()
+
+    private val _uiState: StateFlow<ExaminationUiState> =
+        combine(_loading, _error, _items) { loading, error, items ->
+            ExaminationUiState(loading = loading, error = error, items = items)
+        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue =
+                    ExaminationUiState(
+                        loading = false,
+                        error = "",
+                        items = emptyList(),
+                    ),
+            )
+
+    val uiState: StateFlow<ExaminationUiState> = _uiState
 
     private var loader: (suspend () -> List<Examination>)? = null
 
@@ -53,7 +74,7 @@ class ExaminationViewModel : ViewModel() {
         error: String,
         nowMs: Long,
     ): ScreenState {
-        val visibleItems = items.filter { isNotEnded(it.time, nowMs) }
+        val visibleItems = items.filter { isExamNotEnded(it.time, nowMs) }
         val cards = visibleItems.map { exam -> buildExamCardUi(exam) }
         val statusText =
             when {
@@ -79,18 +100,6 @@ class ExaminationViewModel : ViewModel() {
                 }
             _loading.value = false
         }
-    }
-
-    @OptIn(ExperimentalTime::class)
-    private fun isNotEnded(rawTime: String, nowMs: Long): Boolean {
-        val date =
-            Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawTime)?.groupValues?.getOrNull(1) ?: return true
-        val end =
-            Regex("~\\s*(\\d{1,2}:\\d{2})").find(rawTime)?.groupValues?.getOrNull(1) ?: return true
-        val normalized = "${date}T${end.padStart(5, '0')}"
-        val endDateTime = runCatching { LocalDateTime.parse(normalized) }.getOrNull() ?: return true
-        val endMs = endDateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-        return nowMs <= endMs
     }
 
     private fun buildExamCardUi(exam: Examination): ExamCardUi {

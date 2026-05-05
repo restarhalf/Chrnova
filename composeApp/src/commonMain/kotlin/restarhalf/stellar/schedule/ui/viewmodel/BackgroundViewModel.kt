@@ -2,10 +2,10 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
@@ -26,26 +26,40 @@ class BackgroundViewModel(
     private val setComponentsAlphaUseCase: SetComponentsAlphaUseCase,
 ) : ViewModel() {
 
-    private val _backgroundImageUri = MutableStateFlow<String?>(null)
-    val backgroundImageUri: StateFlow<String?> = _backgroundImageUri.asStateFlow()
+    data class BackgroundUiState(
+        val backgroundImageUri: String?,
+        val backgroundAlpha: Float,
+        val backgroundBlur: Float,
+        val componentsAlpha: Float,
+    )
 
-    private val _backgroundAlpha = MutableStateFlow(1f)
-    val backgroundAlpha: StateFlow<Float> = _backgroundAlpha.asStateFlow()
-
-    private val _backgroundBlur = MutableStateFlow(0f)
-    val backgroundBlur: StateFlow<Float> = _backgroundBlur.asStateFlow()
-
-    private val _componentsAlpha = MutableStateFlow(1f)
-    val componentsAlpha: StateFlow<Float> = _componentsAlpha.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            observeBackgroundImageUri().collect { _backgroundImageUri.value = it }
+    private val _uiState: StateFlow<BackgroundUiState> =
+        combine(
+            observeBackgroundImageUri(),
+            observeBackgroundAlpha(),
+            observeBackgroundBlur(),
+            observeComponentsAlpha(),
+        ) { backgroundImageUri, backgroundAlpha, backgroundBlur, componentsAlpha ->
+            BackgroundUiState(
+                backgroundImageUri = backgroundImageUri,
+                backgroundAlpha = backgroundAlpha,
+                backgroundBlur = backgroundBlur,
+                componentsAlpha = componentsAlpha,
+            )
         }
-        viewModelScope.launch { observeBackgroundAlpha().collect { _backgroundAlpha.value = it } }
-        viewModelScope.launch { observeBackgroundBlur().collect { _backgroundBlur.value = it } }
-        viewModelScope.launch { observeComponentsAlpha().collect { _componentsAlpha.value = it } }
-    }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue =
+                    BackgroundUiState(
+                        backgroundImageUri = null,
+                        backgroundAlpha = 1f,
+                        backgroundBlur = 0f,
+                        componentsAlpha = 1f,
+                    ),
+            )
+
+    val uiState: StateFlow<BackgroundUiState> = _uiState
 
     fun setBackgroundImageUri(uri: String?) {
         setBackgroundImageUriUseCase.invoke(uri)

@@ -115,10 +115,7 @@ fun ScheduleScreen(
     val currentWeek =
         vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
 
-    val showNonCurrentWeek by vm.showNonCurrentWeek.collectAsState()
-    val transDialogUi by vm.transDialogUiState.collectAsState()
-    val transConflictUi by vm.transConflictUiState.collectAsState()
-    val detailSheetUi by vm.detailSheetUiState.collectAsState()
+    val scheduleUiState by vm.uiState.collectAsState()
 
     val colors = MiuixTheme.colorScheme
 
@@ -197,19 +194,19 @@ fun ScheduleScreen(
             )
         },
         popupHost = {
-            val tc = transDialogUi.course
-            if (transDialogUi.show && tc != null) {
+            val tc = scheduleUiState.transDialogUiState.course
+            if (scheduleUiState.transDialogUiState.show && tc != null) {
                 TransClassDialog(
-                    show = transDialogUi.show,
+                    show = scheduleUiState.transDialogUiState.show,
                     onDismiss = { vm.dismissTransDialog() },
-                    totalWeeks = transDialogUi.targetWeek,
+                    totalWeeks = scheduleUiState.transDialogUiState.targetWeek,
                     onTotalWeeksChange = vm::updateTransTargetWeek,
-                    newClassRoom = transDialogUi.newClassRoom,
+                    newClassRoom = scheduleUiState.transDialogUiState.newClassRoom,
                     onNewClassRoomChange = vm::updateTransNewClassRoom,
-                    dayOfWeek = transDialogUi.dayOfWeek,
+                    dayOfWeek = scheduleUiState.transDialogUiState.dayOfWeek,
                     onDayOfWeekChange = vm::updateTransDayOfWeek,
-                    startSection = transDialogUi.startSection,
-                    endSection = transDialogUi.endSection,
+                    startSection = scheduleUiState.transDialogUiState.startSection,
+                    endSection = scheduleUiState.transDialogUiState.endSection,
                     onSectionRangeChange = vm::updateTransSectionRange,
                     onTrans = {
                         val input = vm.buildTransOperationInput() ?: return@TransClassDialog
@@ -238,10 +235,10 @@ fun ScheduleScreen(
                     }
                 )
             }
-            val conflicts = transConflictUi.conflicts
-            if (transConflictUi.show) {
+            val conflicts = scheduleUiState.transConflictUiState.conflicts
+            if (scheduleUiState.transConflictUiState.show) {
                 OverlayDialog(
-                    show = transConflictUi.show,
+                    show = scheduleUiState.transConflictUiState.show,
                     modifier = Modifier,
                     title = "调课冲突",
                     titleColor = DialogDefaults.titleColor(),
@@ -315,11 +312,11 @@ fun ScheduleScreen(
                     })
             }
 
-            val dc = detailSheetUi.courses
-            if (detailSheetUi.show && dc.isNotEmpty()) {
+            val dc = scheduleUiState.detailSheetUiState.courses
+            if (scheduleUiState.detailSheetUiState.show && dc.isNotEmpty()) {
 
                 OverlayBottomSheet(
-                    show = detailSheetUi.show,
+                    show = scheduleUiState.detailSheetUiState.show,
                     modifier = Modifier,
                     title = "课程详情",
                     startAction = null,
@@ -439,7 +436,7 @@ fun ScheduleScreen(
                             page,
                             uiState.includeWeek0,
                             dayCount,
-                            showNonCurrentWeek,
+                            scheduleUiState.showNonCurrentWeek,
                             isDarkMode,
                             mutedCourseColor,
                             mutedTitleColor,
@@ -452,7 +449,7 @@ fun ScheduleScreen(
                                 page = page,
                                 includeWeek0 = uiState.includeWeek0,
                                 dayCount = dayCount,
-                                showNonCurrentWeek = showNonCurrentWeek,
+                                showNonCurrentWeek = scheduleUiState.showNonCurrentWeek,
                                 isDarkMode = isDarkMode,
                                 mutedCourseColor = mutedCourseColor,
                                 mutedTitleColor = mutedTitleColor,

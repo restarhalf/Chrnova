@@ -54,13 +54,13 @@ fun CourseEditScreen(
     val vm: CourseEditViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
+    val courseEditUiState by vm.uiState.collectAsState()
 
     val editingCourse by
     remember(courseId) { vm.observeEditingCourse(courseId) }
         .collectAsState(initial = null)
 
-    val courseNames = remember(courses) { vm.buildCourseNames(courses) }
+    val courseNames = courseEditUiState.courseNames
     var selectedIndex by remember { mutableIntStateOf(0) }
     val classRoomValue = remember { mutableStateOf("") }
     val showWeekdayPicker = remember { mutableStateOf(false) }
@@ -84,9 +84,9 @@ fun CourseEditScreen(
     val weekdayText = remember(dayOfWeek) { vm.weekdayText(dayOfWeek) }
 
     val disabledWeeks =
-        remember(courses, dayOfWeek, startSection, endSection, courseId, editingCourse?.id) {
+        remember(courseEditUiState.courses, dayOfWeek, startSection, endSection, courseId, editingCourse?.id) {
             vm.buildDisabledWeeks(
-                courses = courses,
+                courses = courseEditUiState.courses,
                 dayOfWeek = dayOfWeek,
                 startSection = startSection,
                 endSection = endSection,
@@ -112,7 +112,7 @@ fun CourseEditScreen(
                                     startSection = startSection,
                                     endSection = endSection,
                                     existing = editingCourse,
-                                    courses = courses
+                                    courses = courseEditUiState.courses
                                 )
                             if (toSave != null) {
                                 vm.saveLabCourse(toSave, onSaved = onBack)

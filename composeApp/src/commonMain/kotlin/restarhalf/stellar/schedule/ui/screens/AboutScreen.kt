@@ -84,9 +84,7 @@ fun AboutScreen(
     val isInPreview = LocalInspectionMode.current
     val handleEvent by rememberUpdatedState(onHandleEvent)
 
-    val pendingUpdate by vm.pendingUpdate.collectAsState()
-    val updateChecking by vm.updateChecking.collectAsState()
-    val updateSummary by vm.updateSummary.collectAsState()
+    val aboutUiState by vm.uiState.collectAsState()
 
     val appName = remember(appInfo.appName) { appInfo.appName.ifBlank { "Schedule" } }
     val versionName = appInfo.versionName
@@ -97,19 +95,19 @@ fun AboutScreen(
         }
     }
 
-    LaunchedEffect(pendingUpdate) {
-        if (pendingUpdate != null) {
+    LaunchedEffect(aboutUiState.pendingUpdate) {
+        if (aboutUiState.pendingUpdate != null) {
             showUpdateConfirm.value = true
         }
     }
 
     val screenUi =
-        remember(isInPreview, versionName, updateChecking, updateSummary) {
+        remember(isInPreview, versionName, aboutUiState.updateChecking, aboutUiState.updateSummary) {
             vm.buildScreenUi(
                 isInPreview = isInPreview,
                 versionName = versionName,
-                updateChecking = updateChecking,
-                updateSummary = updateSummary,
+                updateChecking = aboutUiState.updateChecking,
+                updateSummary = aboutUiState.updateSummary,
             )
         }
 
@@ -131,10 +129,10 @@ fun AboutScreen(
         },
         containerColor = Color.Transparent,
         popupHost = {
-            if (showUpdateConfirm.value && pendingUpdate != null) {
+            if (showUpdateConfirm.value && aboutUiState.pendingUpdate != null) {
                 UpdateConfirmDialog(
                     show = showUpdateConfirm,
-                    pendingUpdate = pendingUpdate,
+                    pendingUpdate = aboutUiState.pendingUpdate,
                     onStartDownload = { info ->
                         onStartDownload(info)
                         vm.clearPendingUpdate()

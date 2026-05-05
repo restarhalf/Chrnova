@@ -92,19 +92,10 @@ fun SettingsScreen(
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val vm: SettingsViewModel = koinViewModel()
 
-    val showNonCurrentWeek by vm.showNonCurrentWeek.collectAsState()
-    val reminderEnabled by vm.reminderEnabled.collectAsState()
-    val examReminderEnabled by vm.examReminderEnabled.collectAsState()
-    val themeMode by vm.themeMode.collectAsState()
-    val floatingBar by vm.floatingBar.collectAsState()
-    val selectedTerm by vm.selectedTerm.collectAsState()
-    val loginUiState by vm.loginUiState.collectAsState()
+    val settingsUiState by vm.uiState.collectAsState()
 
     val scope = rememberCoroutineScope()
 
-    val authToken by vm.authToken.collectAsState()
-    val profile by vm.profile.collectAsState()
-    val remoteTermItems by vm.remoteTermItems.collectAsState()
     val screenUi =
         remember(state.syncUiState, state.campus, state.termStartMs) {
             vm.buildScreenUi(
@@ -117,20 +108,27 @@ fun SettingsScreen(
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
 
-    LaunchedEffect(loginUiState.authVersion) {
+    LaunchedEffect(settingsUiState.loginUiState.authVersion) {
         vm.refreshAuth()
         vm.refreshRemoteTerms()
     }
 
     val termSelectionUi =
-        remember(remoteTermItems, authToken, selectedTerm) {
+        remember(
+            settingsUiState.remoteTermItems,
+            settingsUiState.authToken,
+            settingsUiState.selectedTerm,
+        ) {
             vm.buildTermSelectionUi(
-                authToken = authToken,
-                remoteTermItems = remoteTermItems,
-                selectedTerm = selectedTerm
+                authToken = settingsUiState.authToken,
+                remoteTermItems = settingsUiState.remoteTermItems,
+                selectedTerm = settingsUiState.selectedTerm
             )
         }
-    val accountUi = remember(authToken, profile) { vm.buildAccountUi(authToken, profile) }
+    val accountUi =
+        remember(settingsUiState.authToken, settingsUiState.profile) {
+            vm.buildAccountUi(settingsUiState.authToken, settingsUiState.profile)
+        }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -138,9 +136,9 @@ fun SettingsScreen(
             AppPageTopBar(title = "课程表设置", scrollBehavior = topAppBarScrollBehavior)
         },
         popupHost = {
-            if (loginUiState.showLoginSheet) {
+            if (settingsUiState.loginUiState.showLoginSheet) {
                 OverlayDialog(
-                    show = loginUiState.showLoginSheet,
+                    show = settingsUiState.loginUiState.showLoginSheet,
                     modifier = Modifier,
                     title = "登录",
                     titleColor = DialogDefaults.titleColor(),
@@ -166,7 +164,7 @@ fun SettingsScreen(
                                     Spacer(modifier = Modifier.height(6.dp))
                                     TextField(
                                         label = "账号",
-                                        value = loginUiState.userNo,
+                                        value = settingsUiState.loginUiState.userNo,
                                         onValueChange = {
                                             vm.onLoginUserNoChange(it)
                                         },
@@ -178,7 +176,7 @@ fun SettingsScreen(
                                 Column {
                                     TextField(
                                         label = "密码",
-                                        value = loginUiState.password,
+                                        value = settingsUiState.loginUiState.password,
                                         onValueChange = {
                                             vm.onLoginPasswordChange(it)
                                         },
@@ -187,22 +185,24 @@ fun SettingsScreen(
                                     )
                                 }
                             }
-                            if (loginUiState.error.isNotBlank()) {
-                                item { Text(text = loginUiState.error) }
+                            if (settingsUiState.loginUiState.error.isNotBlank()) {
+                                item { Text(text = settingsUiState.loginUiState.error) }
                             }
                             item {
                                 Button(
                                     enabled =
-                                        !loginUiState.loading &&
-                                                loginUiState.userNo.isNotBlank() &&
-                                                loginUiState.password.isNotBlank(),
+                                        !settingsUiState.loginUiState.loading &&
+                                                settingsUiState.loginUiState.userNo.isNotBlank() &&
+                                                settingsUiState.loginUiState.password.isNotBlank(),
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColorsPrimary(),
                                     onClick = {
                                         vm.submitLogin(actions.onLogin)
                                     }) {
                                     Text(
-                                        text = if (loginUiState.loading) "登录中..." else "登录",
+                                        text =
+                                            if (settingsUiState.loginUiState.loading) "登录中..."
+                                            else "登录",
                                         color = MiuixTheme.colorScheme.onPrimary
                                     )
                                 }
@@ -211,9 +211,9 @@ fun SettingsScreen(
                     })
             }
 
-            if (loginUiState.showLogoutConfirm) {
+            if (settingsUiState.loginUiState.showLogoutConfirm) {
                 OverlayDialog(
-                    show = loginUiState.showLogoutConfirm,
+                    show = settingsUiState.loginUiState.showLogoutConfirm,
                     modifier = Modifier,
                     title = "确认退出登录",
                     titleColor = DialogDefaults.titleColor(),
@@ -364,7 +364,7 @@ fun SettingsScreen(
                     SwitchPreference(
                         title = "是否显示非本周课程",
                         summary = "开启后单双周课程都可以看见哦",
-                        checked = showNonCurrentWeek,
+                        checked = settingsUiState.showNonCurrentWeek,
                         onCheckedChange = {
                             vm.setShowNonCurrentWeek(it)
                         })
@@ -378,7 +378,7 @@ fun SettingsScreen(
                         title = "主题模式",
                         summary = "深色/浅色可跟随系统",
                         items = screenUi.themeOptions,
-                        selectedIndex = themeMode.coerceIn(0, 2),
+                        selectedIndex = settingsUiState.themeMode.coerceIn(0, 2),
                         onSelectedIndexChange = { index: Int ->
                             vm.setThemeMode(index)
                         })
@@ -386,7 +386,7 @@ fun SettingsScreen(
                         title = "底栏形式",
                         summary = "选择底栏的状态",
                         items = screenUi.floatingBarOptions,
-                        selectedIndex = floatingBar.coerceIn(0, 2),
+                        selectedIndex = settingsUiState.floatingBar.coerceIn(0, 2),
                         onSelectedIndexChange = { index: Int ->
                             vm.setFloatingBar(index)
                         }
@@ -409,7 +409,7 @@ fun SettingsScreen(
                     SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",
-                        checked = reminderEnabled,
+                        checked = settingsUiState.reminderEnabled,
                         onCheckedChange = { newValue ->
                             if (newValue) {
                                 actions.ensureCourseReminderPermission {
@@ -427,12 +427,14 @@ fun SettingsScreen(
                     SwitchPreference(
                         title = "考试提醒",
                         summary = "考试前15分钟推送通知提醒",
-                        checked = examReminderEnabled,
+                        checked = settingsUiState.examReminderEnabled,
                         onCheckedChange = { newValue ->
                             if (newValue) {
                                 actions.ensureExamReminderPermission {
                                     vm.setExamReminderEnabled(true)
-                                    vm.scheduleExamReminder(selectedTerm = selectedTerm)
+                                    vm.scheduleExamReminder(
+                                        selectedTerm = settingsUiState.selectedTerm
+                                    )
                                 }
                             } else {
                                 vm.setExamReminderEnabled(false)

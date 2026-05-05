@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.data.impl
 
 import restarhalf.stellar.schedule.data.local.TimetableSettings
 import restarhalf.stellar.schedule.data.local.getCampusTimetable
+import kotlinx.coroutines.flow.map
 import restarhalf.stellar.schedule.data.mapper.toData
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -18,6 +19,8 @@ class TimetablePortImpl(
         prefs.setCampus(campus.toData())
     }
 
+    override fun observeCampus() = prefs.observeCampus().map { it.toDomain() }
+
     override fun getCampusTimetable(campus: Campus): List<TimetableSlot> {
         return getCampusTimetable(campus.toData()).map { slot ->
             TimetableSlot(num = slot.num, start = slot.start, end = slot.end)
@@ -30,9 +33,13 @@ class TimetablePortImpl(
         prefs.setTermStartMs(ms)
     }
 
+    override fun observeTermStartMs() = prefs.observeTermStartMs()
+
     override fun getTotalWeeks(): Int = prefs.getTotalWeeks()
 
     override fun setTotalWeeks(weeks: Int) {
         prefs.setTotalWeeks(weeks)
     }
+
+    override fun observeTotalWeeks() = prefs.observeTotalWeeks()
 }
