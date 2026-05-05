@@ -61,19 +61,19 @@ class BackgroundViewModel(
 
     val uiState: StateFlow<BackgroundUiState> = _uiState
 
-    fun setBackgroundImageUri(uri: String?) {
+    fun onBackgroundImageUriChanged(uri: String?) {
         setBackgroundImageUriUseCase.invoke(uri)
     }
 
-    fun setBackgroundAlpha(value: Float) {
+    fun onBackgroundAlphaChanged(value: Float) {
         setBackgroundAlphaUseCase.invoke(value)
     }
 
-    fun setBackgroundBlur(value: Float) {
+    fun onBackgroundBlurChanged(value: Float) {
         setBackgroundBlurUseCase.invoke(value)
     }
 
-    fun setComponentsAlpha(value: Float) {
+    fun onComponentsAlphaChanged(value: Float) {
         setComponentsAlphaUseCase.invoke(value)
     }
 }

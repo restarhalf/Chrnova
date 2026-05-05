@@ -104,7 +104,7 @@ fun ChangeBackgroundScreen(
                         BasicComponent(
                             title = "清除图片",
                             summary = "恢复为纯色背景",
-                            onClick = { vm.setBackgroundImageUri(null) })
+                            onClick = { vm.onBackgroundImageUriChanged(null) })
                     }
                 }
             }
@@ -119,17 +119,17 @@ fun ChangeBackgroundScreen(
                         title = "背景透明度",
                         summary = screenUi.backgroundAlphaPercent,
                         value = backgroundUiState.backgroundAlpha,
-                        onValueChange = { vm.setBackgroundAlpha(it) })
+                        onValueChange = { vm.onBackgroundAlphaChanged(it) })
                     TitleSlider(
                         title = "背景模糊度",
                         summary = screenUi.backgroundBlurPercent,
                         value = backgroundUiState.backgroundBlur,
-                        onValueChange = { vm.setBackgroundBlur(it) })
+                        onValueChange = { vm.onBackgroundBlurChanged(it) })
                     TitleSlider(
                         title = "组件透明度",
                         summary = screenUi.componentsAlphaPercent,
                         value = backgroundUiState.componentsAlpha,
-                        onValueChange = { vm.setComponentsAlpha(it) })
+                        onValueChange = { vm.onComponentsAlphaChanged(it) })
                 }
             }
             item { Spacer(Modifier.height(12.dp)) }
@@ -140,7 +140,7 @@ fun ChangeBackgroundScreen(
         showPictureSelector.value,
         { showPictureSelector.value = false },
         { croppedUri ->
-            vm.setBackgroundImageUri(croppedUri)
+            vm.onBackgroundImageUriChanged(croppedUri)
             showPictureSelector.value = false
         },
     )
