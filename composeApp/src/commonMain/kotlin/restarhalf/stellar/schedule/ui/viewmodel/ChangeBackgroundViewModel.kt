@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class ChangeBackgroundViewModel : ViewModel() {
 
-    data class ScreenUi(
+    data class ChangeBackgroundUiState(
         val hasCustomImage: Boolean,
         val imageSummary: String,
         val backgroundAlphaPercent: String,
@@ -23,7 +23,7 @@ class ChangeBackgroundViewModel : ViewModel() {
     private val _backgroundBlur = MutableStateFlow(0f)
     private val _componentsAlpha = MutableStateFlow(1f)
 
-    private val _uiState: StateFlow<ScreenUi> =
+    private val _uiState: StateFlow<ChangeBackgroundUiState> =
         combine(
             _backgroundImageUri,
             _backgroundAlpha,
@@ -49,7 +49,7 @@ class ChangeBackgroundViewModel : ViewModel() {
                     ),
             )
 
-    val uiState: StateFlow<ScreenUi> = _uiState
+    val uiState: StateFlow<ChangeBackgroundUiState> = _uiState
 
     fun updateBackground(
         backgroundImageUri: String?,
@@ -68,9 +68,9 @@ class ChangeBackgroundViewModel : ViewModel() {
         backgroundAlpha: Float,
         backgroundBlur: Float,
         componentsAlpha: Float,
-    ): ScreenUi {
+    ): ChangeBackgroundUiState {
         val hasCustomImage = !backgroundImageUri.isNullOrBlank()
-        return ScreenUi(
+        return ChangeBackgroundUiState(
             hasCustomImage = hasCustomImage,
             imageSummary = if (hasCustomImage) "当前：自定义背景" else "当前：纯色背景",
             backgroundAlphaPercent = "${(backgroundAlpha * 100).toInt()}%",

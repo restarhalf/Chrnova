@@ -76,7 +76,7 @@ class SettingsViewModel(
         val profile: AuthProfile,
     )
 
-    data class ScreenUi(
+    data class SettingsScreenUi(
         val campusOptions: List<String>,
         val campusSelectedIndex: Int,
         val themeOptions: List<String>,
@@ -273,7 +273,7 @@ class SettingsViewModel(
         syncUiState: SyncUiState,
         campus: Campus,
         termStartMs: Long,
-    ): ScreenUi {
+    ): SettingsScreenUi {
         val campusSelectedIndex =
             when (campus) {
                 Campus.Development -> 0
@@ -287,7 +287,7 @@ class SettingsViewModel(
                 is SyncUiState.Success -> "同步成功：${syncUiState.inserted} 门（${syncUiState.campusName}）"
                 is SyncUiState.Error -> syncUiState.message
             }
-        return ScreenUi(
+        return SettingsScreenUi(
             campusOptions = CAMPUS_OPTIONS,
             campusSelectedIndex = campusSelectedIndex,
             themeOptions = THEME_OPTIONS,

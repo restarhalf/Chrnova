@@ -36,7 +36,7 @@ class AboutViewModel(
         val pendingUpdate: AppUpdateInfo?,
     )
 
-    data class ScreenUi(
+    data class AboutScreenUi(
         val versionDisplay: String,
         val currentVersionForCheck: String,
         val updateActionSummary: String,
@@ -73,9 +73,9 @@ class AboutViewModel(
         versionName: String,
         updateChecking: Boolean,
         updateSummary: String,
-    ): ScreenUi {
+    ): AboutScreenUi {
         val versionDisplay = if (isInPreview) "预览版" else versionName.ifBlank { "未知版本" }
-        return ScreenUi(
+        return AboutScreenUi(
             versionDisplay = versionDisplay,
             currentVersionForCheck = if (isInPreview) "" else versionDisplay,
             updateActionSummary = if (updateChecking) "检查中..." else updateSummary,
