@@ -52,7 +52,7 @@ fun AppRoot(
     val isWideScreen = shouldShowSplitPane()
 
     val appUiState by vm.uiState.collectAsState()
-    var appState by remember(appUiState) {
+    var appState by remember {
         mutableStateOf(
             AppState(
                 campus = appUiState.campus,
@@ -81,6 +81,16 @@ fun AppRoot(
 
     LaunchedEffect(isWideScreen) {
         updateAppState { current -> current.copy(isWideScreen = isWideScreen) }
+    }
+
+    LaunchedEffect(appUiState) {
+        updateAppState { current ->
+            current.copy(
+                campus = appUiState.campus,
+                termStartMs = appUiState.termStartMs,
+                totalWeeks = appUiState.totalWeeks,
+            )
+        }
     }
 
     val runSync = remember(vm, updateAppState) {

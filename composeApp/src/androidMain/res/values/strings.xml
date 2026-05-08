@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">大民课程表</string>
+    <string name="app_name">Chrnova</string>
     <string name="widget_label_today">今日课程</string>
     <string name="widget_desc_today_large">今日课程（大卡）</string>
     <string name="widget_desc_today_small">今日课程（小卡）</string>
