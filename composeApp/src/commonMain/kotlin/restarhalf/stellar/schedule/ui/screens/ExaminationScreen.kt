@@ -47,6 +47,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
+import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -76,7 +77,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
     }
 
     val statusText = screenUi.statusText
-
+    val overscrollEffect= MiuixOverscrollEffect()
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -108,6 +109,12 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
             isRefreshing = examUiState.loading,
             onRefresh = { vm.load() },
             pullToRefreshState = pullToRefreshState,
+            refreshTexts = listOf(
+                "下拉刷新",
+                "释放刷新",
+                "正在刷新...",
+                "刷新成功"
+            ),
             modifier =
                 Modifier.fillMaxSize()
                     .padding(
@@ -134,7 +141,7 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                overscrollEffect = null
+                overscrollEffect = overscrollEffect
             ) {
                 items(screenUi.cards, key = { it.idKey }) { card ->
                     ExamItemCard(

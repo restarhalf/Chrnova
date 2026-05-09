@@ -30,4 +30,6 @@ sealed interface Screen : NavKey {
 
     @Serializable
     data object Grade : Screen
+    @Serializable
+    data object Agent : Screen
 }

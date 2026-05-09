@@ -28,13 +28,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -93,9 +91,6 @@ fun ScheduleScreen(
         )
             .calculateBottomPadding()
     val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val pagerDragThresholdPx = with(density) { 48.dp.toPx() }
-    var pagerDragAmount by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
 
     val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
 
@@ -378,16 +373,16 @@ fun ScheduleScreen(
                         Spacer(Modifier.height(25.dp))
                     })
             }
-        }) { padding ->
+        }) { paddingValues ->
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .padding(
                         PaddingValues(
-                            top = padding.calculateTopPadding(),
-                            start = padding.calculateStartPadding(LocalLayoutDirection.current),
-                            end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                            top = paddingValues.calculateTopPadding(),
+                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
                             bottom = 0.dp,
                         )
                     )

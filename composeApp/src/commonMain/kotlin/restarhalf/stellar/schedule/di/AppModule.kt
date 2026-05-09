@@ -2,7 +2,9 @@ package restarhalf.stellar.schedule.di
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.sse.SSE
 import io.ktor.serialization.kotlinx.json.json
+import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -14,7 +16,9 @@ import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.TimetableSettings
+import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
+import restarhalf.stellar.schedule.data.remote.agent.AgentClient
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
@@ -22,6 +26,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AgentPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
@@ -101,6 +106,7 @@ import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.AgentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ChangeBackgroundViewModel
@@ -137,8 +143,42 @@ val portModule = module {
     }
 
     single { JwxtSync(get()) }
+    single(named("agent")) {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(get<Json>())
+            }
+            install(SSE)
+        }
+    }
+
+    single<AgentPort> {
+        AgentClient(
+            httpClient = get(named("agent")),
+            json = get(),
+            baseUrl = LocalSecrets.AGENT_BASE_URL,
+        )
+    }
 
     single { TimetableSettings(get(named("timetable_prefs"))) }
+
+    single {
+        ClientCommandExecutor(
+            courseRepository = get(),
+            fetchGrades = get(),
+            fetchExaminations = get(),
+            insertCourse = get(),
+            runSync = get(),
+            setThemeMode = get(),
+            setFloatingBar = get(),
+            setShowNonCurrentWeek = get(),
+            setCourseReminderEnabled = get(),
+            setExamReminderEnabled = get(),
+            setTermStartMs = get(),
+            setTotalWeeks = get(),
+            json = get(),
+        )
+    }
 
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
 
@@ -370,8 +410,14 @@ val viewModelModule = module {
     }
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
+    factory { AgentViewModel(agentPort = get(), clientCommandExecutor = get()) }
 }
 
 val commonAppModule = module {
     includes(portModule, useCaseModule, viewModelModule)
 }
+
+
+
+
+

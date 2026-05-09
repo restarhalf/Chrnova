@@ -1,14 +1,12 @@
 package restarhalf.stellar.schedule.ui.components.screen.about
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,7 +15,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
 import top.yukonga.miuix.kmp.theme.miuixShape
 
 @Composable
@@ -26,7 +23,6 @@ fun DetailHeader(
     appName: String,
     version: String?
 ) {
-    val appBadgeText = remember(appName) { appName.firstOrNull()?.toString()?.uppercase() ?: "S" }
     Box(
         modifier =
             Modifier
@@ -41,20 +37,6 @@ fun DetailHeader(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-        } else {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.9f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = appBadgeText,
-                    color = MiuixTheme.colorScheme.onPrimary,
-                    style = MiuixTheme.textStyles.title1,
-                )
-            }
         }
     }
     Spacer(modifier = Modifier.height(16.dp))

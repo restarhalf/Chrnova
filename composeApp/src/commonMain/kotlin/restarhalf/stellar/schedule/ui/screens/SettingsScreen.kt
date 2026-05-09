@@ -59,6 +59,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -91,6 +92,7 @@ fun SettingsScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val vm: SettingsViewModel = koinViewModel()
+    val overscrollEffect = MiuixOverscrollEffect()
 
     val settingsUiState by vm.uiState.collectAsState()
 
@@ -302,7 +304,7 @@ fun SettingsScreen(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-            overscrollEffect = null
+            overscrollEffect = overscrollEffect
         ) {
             item {
                 SmallTitle(text = "账号")

@@ -25,6 +25,12 @@ val localSecretsAesKey =
         ?.takeIf { it.isNotEmpty() }
         ?: error("AES_KEY missing in local.properties or environment")
 
+val localAgentBaseUrl =
+    (localProps.getProperty("AGENT_BASE_URL") ?: System.getenv("AGENT_BASE_URL"))
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: "http://10.0.2.2:8080"
+
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
 }
@@ -34,6 +40,9 @@ val generatedLocalSecretsDir = layout.buildDirectory.dir("generated/source/local
 abstract class GenerateLocalSecretsTask : DefaultTask() {
     @get:Input
     abstract val aesKey: Property<String>
+
+    @get:Input
+    abstract val agentBaseUrl: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -46,22 +55,29 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
             aesKey.get()
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
-                .replace("$", "\\$")
+                .replace("$", "\$")
+        val escapedAgentBaseUrl =
+            agentBaseUrl.get()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("$", "\$")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
-			package restarhalf.stellar.schedule.config
+            package restarhalf.stellar.schedule.config
 
-			internal object LocalSecrets {
-				const val AES_KEY = "$escapedAesKey"
-			}
-			""".trimIndent()
+            internal object LocalSecrets {
+                const val AES_KEY = "$escapedAesKey"
+                const val AGENT_BASE_URL = "$escapedAgentBaseUrl"
+            }
+            """.trimIndent()
         )
     }
 }
 
 val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
     aesKey.set(localSecretsAesKey)
+    agentBaseUrl.set(localAgentBaseUrl)
     outputDir.set(generatedLocalSecretsDir)
 }
 
@@ -124,6 +140,7 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.miuix.ui)
+                implementation(libs.miuix.blur)
                 implementation(libs.miuix.preference)
                 implementation(libs.miuix.navigation3.ui)
                 implementation(libs.coil.compose)
@@ -161,4 +178,3 @@ dependencies {
     add("kspIosArm64", libs.room3.compiler)
     add("kspIosSimulatorArm64", libs.room3.compiler)
 }
-

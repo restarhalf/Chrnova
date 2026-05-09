@@ -51,6 +51,7 @@ import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.navigation.rememberMainPagerState
 import restarhalf.stellar.schedule.ui.navigation.rootTabAt
 import restarhalf.stellar.schedule.ui.screens.AboutScreen
+import restarhalf.stellar.schedule.ui.screens.AgentScreen
 import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.ExaminationScreen
@@ -189,6 +190,11 @@ fun AppContent(
                         courseId = screen.courseId,
                     )
                 }
+                entry<Screen.Agent> {
+                    AgentScreen(
+                        onBack = { navigator.pop() },
+                    )
+                }
             }
         }
 
@@ -313,6 +319,7 @@ private fun MainRouteContent(
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
                     totalWeeks = appState.totalWeeks,
+                    onAgent = { navigator.push(Screen.Agent) },
                 )
             }
 

@@ -1,14 +1,17 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -26,12 +29,16 @@ import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
+import restarhalf.stellar.schedule.ui.icons.Bot
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.miuixUnevenShape
 import kotlin.time.Clock
@@ -39,7 +46,11 @@ import kotlin.time.ExperimentalTime
 
 @Composable
 @OptIn(ExperimentalTime::class)
-fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
+fun HomeScreen(
+    campus: Campus,
+    termStartMs: Long,
+    totalWeeks: Int,
+    onAgent:()->Unit) {
     val bgVm: BackgroundViewModel = koinInject()
     val vm: HomeViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -66,7 +77,34 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
     val headerUi = renderState.headerUi
     val surfaceUi = renderState.surfaceUi
     val sectionRenders = renderState.sectionRenders
-    Scaffold(containerColor = Color.Transparent) { padding ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        floatingToolbar = {
+            FloatingToolbar(
+                color = MiuixTheme.colorScheme.secondaryContainer,
+                cornerRadius = 16.dp,
+            ){
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
+                        .clickable(onClick = onAgent)
+                ) {
+                        Icon(
+                            imageVector = Bot,
+                            contentDescription = "Chrnova Helper",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    Text(
+                        text = "Chrnova Helper",
+                        color = MiuixTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            }
+        },
+        floatingToolbarPosition = ToolbarPosition.TopEnd
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,7 +114,7 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(220.dp + padding.calculateTopPadding())
+                        .height(220.dp + paddingValues.calculateTopPadding())
                         .background(
                             if (surfaceUi.headerBackgroundMode ==
                                 BuildHomeSurfaceUiUseCase.HeaderBackgroundMode.IMAGE_OVERLAY
@@ -100,7 +138,7 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
             ) {
                 Column(
                     modifier =
-                        Modifier.padding(top = padding.calculateTopPadding() + 32.dp, start = 32.dp)
+                        Modifier.padding(top = paddingValues.calculateTopPadding() + 32.dp, start = 32.dp)
                 ) {
                     Text(
                         text = headerUi.dateLabel,
@@ -121,7 +159,7 @@ fun HomeScreen(campus: Campus, termStartMs: Long, totalWeeks: Int) {
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(top = padding.calculateTopPadding() + 140.dp)
+                        .padding(top = paddingValues.calculateTopPadding() + 140.dp)
                         .clip(miuixUnevenShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
             ) {

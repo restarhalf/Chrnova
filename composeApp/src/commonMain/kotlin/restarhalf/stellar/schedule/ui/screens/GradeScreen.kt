@@ -52,6 +52,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
+import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 @Composable
 fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
@@ -78,6 +79,7 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
     LaunchedEffect(showGradeDetailsDialog.value) {
         if (!showGradeDetailsDialog.value) selectedGrade = null
     }
+    val overScrollEffect = MiuixOverscrollEffect()
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -120,6 +122,12 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
             isRefreshing = gradeUiState.loading,
             onRefresh = { vm.load() },
             pullToRefreshState = pullToRefreshState,
+            refreshTexts = listOf(
+                "下拉刷新",
+                "释放刷新",
+                "正在刷新...",
+                "刷新成功"
+            ),
             modifier =
                 Modifier.fillMaxSize()
                     .padding(
@@ -146,7 +154,7 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                overscrollEffect = null
+                overscrollEffect = overScrollEffect
             ) {
                 screenUi.summary?.let { summary ->
                     item(key = "summary") {
