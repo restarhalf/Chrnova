@@ -86,7 +86,7 @@ fun AboutScreen(
 
     val aboutUiState by vm.uiState.collectAsState()
 
-    val appName = remember(appInfo.appName) { appInfo.appName.ifBlank { "Schedule" } }
+    val appName = remember(appInfo.appName) { appInfo.appName }
     val versionName = appInfo.versionName
 
     LaunchedEffect(vm) {

@@ -18,6 +18,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSData
+import platform.Foundation.NSSelectorFromString
 import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.Foundation.create
@@ -60,6 +61,7 @@ import restarhalf.stellar.schedule.ui.theme.rememberAppThemeController
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.coroutines.resume
 
+@OptIn(ExperimentalForeignApi::class)
 fun AppRoot(): UIViewController {
     ensureKoinStarted()
     lateinit var hostViewController: UIViewController
@@ -98,6 +100,10 @@ fun AppRoot(): UIViewController {
                         bytes = bytes,
                     )
                 },
+                exitApp = {
+                    UIApplication.sharedApplication.performSelector(
+                        NSSelectorFromString("suspend")
+                    ) },
             )
         }
     }

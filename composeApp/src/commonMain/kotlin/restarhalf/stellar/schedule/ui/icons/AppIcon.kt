@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val Bot: ImageVector
+val AppIcon: ImageVector
     get() {
-        val current = _bot
+        val current = _appicon
         if (current != null) return current
 
         return ImageVector.Builder(
@@ -2368,9 +2368,9 @@ val Bot: ImageVector
                     dy2 = -2.75f,
                 )
             }
-        }.build().also { _bot = it }
+        }.build().also { _appicon = it }
     }
 
 
 @Suppress("ObjectPropertyName")
-private var _bot: ImageVector? = null
+private var _appicon: ImageVector? = null

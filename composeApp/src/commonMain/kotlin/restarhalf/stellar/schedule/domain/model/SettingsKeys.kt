@@ -10,7 +10,7 @@ object SettingsKeys {
     const val ACTIVE_SCHEDULE_TERM = "active_schedule_term"
     const val LAST_AUTO_SYNC_MS = "last_auto_sync_ms"
     const val LAST_UPDATE_CHECK_MS = "last_update_check_ms"
-    const val HAS_SHOWN_FIRST_OPEN_DIALOG = "has_shown_first_open_dialog"
+    const val CONFIRM_PRIVACY = "confirm_privacy"
     const val BACKGROUND_IMAGE_URI = "background_image_uri"
     const val BACKGROUND_ALPHA = "background_alpha"
     const val BACKGROUND_BLUR = "background_blur"

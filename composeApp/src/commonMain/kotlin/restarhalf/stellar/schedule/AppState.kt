@@ -17,7 +17,7 @@ data class AppState(
     val barMode: Int = 0,
     val pendingUpdate: AppUpdateInfo? = null,
     val showUpdateDialog: Boolean = false,
-    val showFirstOpenDialog: Boolean = false,
+    val confirmPrivacy: Boolean = false,
     val showApkDownloadDialog: Boolean = false,
     val enablePageUserScroll: Boolean = true,
     val enableCornerClip: Boolean = true,

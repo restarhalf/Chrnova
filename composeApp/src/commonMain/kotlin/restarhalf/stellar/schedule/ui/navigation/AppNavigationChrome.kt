@@ -6,21 +6,17 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -36,8 +32,6 @@ import restarhalf.stellar.schedule.ui.icons.Grade
 import restarhalf.stellar.schedule.ui.icons.Home
 import restarhalf.stellar.schedule.ui.icons.Schedule
 import restarhalf.stellar.schedule.ui.icons.Settings
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.Icon
@@ -46,9 +40,7 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
 
 private data class TabSpec(
     val screen: Screen,
@@ -172,47 +164,6 @@ fun AppNavigationRail() {
             )
         }
     }
-}
-
-@Composable
-fun FirstOpenNoticeDialog(
-    show: Boolean,
-    onDismiss: () -> Unit,
-    onExit: () -> Unit,
-) {
-    WindowDialog(
-        show = show,
-        title = "温馨提示",
-        summary = "此应用并非大连民族大学官方应用，仅为自娱自乐",
-        onDismissRequest = onDismiss,
-        content = {
-            val dismissState = LocalDismissState.current
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        dismissState?.invoke()
-                        onExit()
-                    },
-                ) {
-                    Text(text = "退出应用")
-                }
-
-                Spacer(modifier = Modifier.size(16.dp))
-
-                Button(
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColorsPrimary(),
-                    onClick = { dismissState?.invoke() },
-                ) {
-                    Text(text = "我已知晓", color = MiuixTheme.colorScheme.onPrimary)
-                }
-            }
-        },
-    )
 }
 
 @Composable

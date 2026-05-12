@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule
 
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -21,9 +22,9 @@ import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.components.screen.about.DownloadDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
-import restarhalf.stellar.schedule.ui.navigation.FirstOpenNoticeDialog
 import restarhalf.stellar.schedule.ui.navigation.shouldShowSplitPane
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomePage
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.utils.Platform
@@ -102,10 +103,9 @@ fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        val hasShown = settings.getBoolean(SettingsKeys.HAS_SHOWN_FIRST_OPEN_DIALOG, false)
+        val hasShown = settings.getBoolean(SettingsKeys.CONFIRM_PRIVACY, false)
         if (!hasShown) {
-            settings[SettingsKeys.HAS_SHOWN_FIRST_OPEN_DIALOG] = true
-            updateAppState { current -> current.copy(showFirstOpenDialog = true) }
+            updateAppState { current -> current.copy(confirmPrivacy = true) }
         }
     }
 
@@ -178,6 +178,13 @@ fun AppRoot(
                 updateAppState { current -> current.copy(showApkDownloadDialog = visible) }
             },
         )
+    val confirmPrivacyState =
+        linkedMutableState(
+            valueProvider = { appState.confirmPrivacy },
+            onValueChange = { visible ->
+                updateAppState { current -> current.copy(confirmPrivacy = visible) }
+            },
+        )
 
     CompositionLocalProvider(
         LocalAppState provides appState,
@@ -239,17 +246,12 @@ fun AppRoot(
             )
         }
 
-        if (appState.showFirstOpenDialog) {
-            FirstOpenNoticeDialog(
-                show = appState.showFirstOpenDialog,
-                onDismiss = {
-                    updateAppState { current -> current.copy(showFirstOpenDialog = false) }
-                },
-                onExit = {
-                    settings[SettingsKeys.HAS_SHOWN_FIRST_OPEN_DIALOG] = false
-                    updateAppState { current -> current.copy(showFirstOpenDialog = false) }
-                    exitApp()
-                },
+        if (appState.confirmPrivacy) {
+            val welcomePagerState = rememberPagerState(pageCount = { 3 })
+            WelcomePage(
+                show = confirmPrivacyState,
+                pagerState = welcomePagerState,
+                exitApp = exitApp,
             )
         }
     }

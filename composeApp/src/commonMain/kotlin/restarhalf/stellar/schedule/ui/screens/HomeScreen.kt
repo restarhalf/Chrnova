@@ -29,7 +29,7 @@ import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
-import restarhalf.stellar.schedule.ui.icons.Bot
+import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
@@ -90,7 +90,7 @@ fun HomeScreen(
                         .clickable(onClick = onAgent)
                 ) {
                         Icon(
-                            imageVector = Bot,
+                            imageVector = AppIcon,
                             contentDescription = "Chrnova Helper",
                             modifier = Modifier.size(20.dp)
                         )
