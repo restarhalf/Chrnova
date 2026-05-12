@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,8 +31,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -103,7 +106,15 @@ fun AgentScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val overscrollEffect = MiuixOverscrollEffect()
+    val listState = rememberLazyListState()
     val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(agentUiState.messages.size, agentUiState.streaming) {
+        if (agentUiState.messages.isNotEmpty()) {
+            listState.animateScrollToItem(agentUiState.messages.size - 1)
+        }
+    }
+
     LaunchedEffect(agentUiState.errorMessage) {
         agentUiState.errorMessage?.let {
             snackBarHostState.showSnackbar(
@@ -160,7 +171,13 @@ fun AgentScreen(
                 )
             },
         ) { paddingValues ->
+            LaunchedEffect(paddingValues.calculateBottomPadding()) {
+                if (agentUiState.messages.isNotEmpty()) {
+                    listState.animateScrollToItem(agentUiState.messages.size - 1)
+                }
+            }
             LazyColumn(
+                state = listState,
                 modifier =
                     Modifier.fillMaxSize()
                         .padding(
@@ -289,7 +306,7 @@ fun MessageBubble(
     modifier: Modifier = Modifier,
 ) {
     val bigRadius = 18.dp
-    val smallRadius = 4.dp
+    val tailRadius = 6.dp
 
     val bubbleColor = if (fromUser) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.surfaceContainer
     val textColor = if (fromUser) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurfaceContainer
@@ -297,73 +314,77 @@ fun MessageBubble(
     val shape = if (fromUser) {
         miuixUnevenShape(
             topStart = bigRadius, topEnd = bigRadius,
-            bottomEnd = smallRadius, bottomStart = bigRadius,
+            bottomEnd = tailRadius, bottomStart = bigRadius,
         )
     } else {
         miuixUnevenShape(
             topStart = bigRadius, topEnd = bigRadius,
-            bottomEnd = bigRadius, bottomStart = smallRadius,
+            bottomEnd = bigRadius, bottomStart = tailRadius,
         )
     }
 
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = if (fromUser) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom,
     ) {
-        if (fromUser) Spacer(Modifier.weight(0.25f))
-
         Surface(
-            modifier = Modifier.weight(0.75f, fill = false),
+            modifier = Modifier
+                .wrapContentWidth()
+                .widthIn(max = 320.dp),
             shape = shape,
             color = bubbleColor,
             contentColor = textColor,
         ) {
-            Markdown(
-                content = text,
-                colors = if (fromUser) {
-                    DefaultMarkdownColors(
-                        text = MiuixTheme.colorScheme.onPrimary,
-                        codeBackground = MiuixTheme.colorScheme.primaryContainer,
-                        inlineCodeBackground = MiuixTheme.colorScheme.primaryContainer,
-                        dividerColor = MiuixTheme.colorScheme.onPrimaryVariant,
-                        tableBackground = MiuixTheme.colorScheme.primaryContainer,
-                    )
-                } else {
-                    DefaultMarkdownColors(
-                        text = MiuixTheme.colorScheme.onSurfaceContainer,
-                        codeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        inlineCodeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        dividerColor = MiuixTheme.colorScheme.dividerLine,
-                        tableBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    )
-                },
-                typography = DefaultMarkdownTypography(
-                    h1 = MiuixTheme.textStyles.title1.copy(fontWeight = FontWeight.Bold),
-                    h2 = MiuixTheme.textStyles.title2.copy(fontWeight = FontWeight.Bold),
-                    h3 = MiuixTheme.textStyles.title3.copy(fontWeight = FontWeight.Bold),
-                    h4 = MiuixTheme.textStyles.title4.copy(fontWeight = FontWeight.Bold),
-                    h5 = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Bold),
-                    h6 = MiuixTheme.textStyles.headline2.copy(fontWeight = FontWeight.Bold),
-                    text = MiuixTheme.textStyles.body1,
-                    code = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
-                    inlineCode = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
-                    quote = MiuixTheme.textStyles.body1.copy(fontStyle = FontStyle.Italic),
-                    paragraph = MiuixTheme.textStyles.paragraph,
-                    ordered = MiuixTheme.textStyles.body1,
-                    bullet = MiuixTheme.textStyles.body1,
-                    list = MiuixTheme.textStyles.body1,
-                    textLink = TextLinkStyles(
-                        style = SpanStyle(
-                            color = MiuixTheme.colorScheme.primary,
-                            textDecoration = TextDecoration.Underline,
+            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                Markdown(
+                    modifier = Modifier.wrapContentWidth(),
+                    content = text,
+                    colors = if (fromUser) {
+                        DefaultMarkdownColors(
+                            text = MiuixTheme.colorScheme.onPrimary,
+                            codeBackground = MiuixTheme.colorScheme.primaryContainer,
+                            inlineCodeBackground = MiuixTheme.colorScheme.primaryContainer,
+                            dividerColor = MiuixTheme.colorScheme.onPrimaryVariant,
+                            tableBackground = MiuixTheme.colorScheme.primaryContainer,
+                        )
+                    } else {
+                        DefaultMarkdownColors(
+                            text = MiuixTheme.colorScheme.onSurfaceContainer,
+                            codeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                            inlineCodeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                            dividerColor = MiuixTheme.colorScheme.dividerLine,
+                            tableBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                        )
+                    },
+                    typography = DefaultMarkdownTypography(
+                        h1 = MiuixTheme.textStyles.title1.copy(fontWeight = FontWeight.Bold),
+                        h2 = MiuixTheme.textStyles.title2.copy(fontWeight = FontWeight.Bold),
+                        h3 = MiuixTheme.textStyles.title3.copy(fontWeight = FontWeight.Bold),
+                        h4 = MiuixTheme.textStyles.title4.copy(fontWeight = FontWeight.Bold),
+                        h5 = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Bold),
+                        h6 = MiuixTheme.textStyles.headline2.copy(fontWeight = FontWeight.Bold),
+                        text = MiuixTheme.textStyles.body1,
+                        code = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
+                        inlineCode = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
+                        quote = MiuixTheme.textStyles.body1.copy(fontStyle = FontStyle.Italic),
+                        paragraph = MiuixTheme.textStyles.paragraph,
+                        ordered = MiuixTheme.textStyles.body1,
+                        bullet = MiuixTheme.textStyles.body1,
+                        list = MiuixTheme.textStyles.body1,
+                        textLink = TextLinkStyles(
+                            style = SpanStyle(
+                                color = MiuixTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline,
+                            ),
                         ),
+                        table = MiuixTheme.textStyles.body2,
                     ),
-                    table = MiuixTheme.textStyles.body2,
-                ),
-            )
+                )
+            }
         }
-
-        if (!fromUser) Spacer(Modifier.weight(0.25f))
     }
 }
 
