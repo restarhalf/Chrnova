@@ -17,9 +17,6 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,9 +25,11 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,12 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontFamily
@@ -63,9 +63,11 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.compose.Markdown
 import com.mikepenz.markdown.model.DefaultMarkdownColors
 import com.mikepenz.markdown.model.DefaultMarkdownTypography
+import restarhalf.stellar.schedule.ui.icons.Add
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Send
 import restarhalf.stellar.schedule.ui.icons.Stop
@@ -77,7 +79,10 @@ import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.AgentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AgentViewModel.Conversation
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownImpl
+import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -109,9 +114,14 @@ fun AgentScreen(
     val listState = rememberLazyListState()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(agentUiState.messages.size, agentUiState.streaming) {
+    val lastMessageText = agentUiState.messages.lastOrNull()?.text
+    val lastMessageStreaming = agentUiState.messages.lastOrNull()?.streaming ?: false
+    @Suppress("Deprecation")
+    val clipboardManager = LocalClipboardManager.current
+
+    LaunchedEffect(agentUiState.messages.size, lastMessageText, lastMessageStreaming) {
         if (agentUiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(agentUiState.messages.size - 1)
+            listState.scrollToItem(agentUiState.messages.size - 1)
         }
     }
 
@@ -130,8 +140,8 @@ fun AgentScreen(
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures { _, dragAmount ->
-                        if (dragAmount > 40f) vm.setDrawerOpen(true)
-                        if (dragAmount < -40f) vm.setDrawerOpen(false)
+                        if (dragAmount > 40f) vm.onDrawerOpenChange(true)
+                        if (dragAmount < -40f) vm.onDrawerOpenChange(false)
                     }
                 },
     ) {
@@ -201,20 +211,42 @@ fun AgentScreen(
                 overscrollEffect = overscrollEffect,
             ) {
                 items(agentUiState.messages, { it.id }) { message ->
-                    Menu(
-                        menuItems = listOf("复制", "回溯"),
-                        onMenuItemClick = { index ->
-                            when (index) {
-                                0 -> vm.copyMessage(message.id)
-                                1 -> vm.revertMessage(message.id)
-                            }
-                        },
-                    ) {
-                        MessageBubble(
-                            text = message.text,
-                            fromUser = message.fromUser,
-                        )
+                    if(message.fromUser)
+                    {
+                        Menu(
+                            menuItems = listOf("复制", "回溯"),
+                            onMenuItemClick = { index ->
+                                when (index) {
+                                    0 -> {
+                                        clipboardManager.setText(AnnotatedString(message.text))
+                                    }
+                                    1 -> vm.revertMessage(message.id)
+                                }
+                            },
+                        ) {
+                            MessageBubble(
+                                text = message.text,
+                                fromUser = message.fromUser,
+                                streaming = message.streaming,
+                            )
+                        }
+                    }else{
+                        Menu(
+                            menuItems = listOf("复制"),
+                            onMenuItemClick = { index ->
+                                when (index) {
+                                    0-> clipboardManager.setText(AnnotatedString(message.text))
+                                }
+                            },
+                        ) {
+                            MessageBubble(
+                                text = message.text,
+                                fromUser = message.fromUser,
+                                streaming = message.streaming,
+                            )
+                        }
                     }
+
                 }
             }
         }
@@ -237,12 +269,6 @@ fun AgentScreen(
             ),
         ) {
             Box(Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.28f))
-                        .clickable { vm.setDrawerOpen(false) },
-                )
                 ConversationsDrawer(
                     paddingValues = PaddingValues(top = appScaffoldPadding.calculateTopPadding()),
                     conversations = agentUiState.conversations,
@@ -303,6 +329,7 @@ private fun BottomInputField(
 fun MessageBubble(
     text: String,
     fromUser: Boolean,
+    streaming: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val bigRadius = 18.dp
@@ -339,52 +366,56 @@ fun MessageBubble(
             contentColor = textColor,
         ) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                Markdown(
-                    modifier = Modifier.wrapContentWidth(),
-                    content = text,
-                    colors = if (fromUser) {
-                        DefaultMarkdownColors(
-                            text = MiuixTheme.colorScheme.onPrimary,
-                            codeBackground = MiuixTheme.colorScheme.primaryContainer,
-                            inlineCodeBackground = MiuixTheme.colorScheme.primaryContainer,
-                            dividerColor = MiuixTheme.colorScheme.onPrimaryVariant,
-                            tableBackground = MiuixTheme.colorScheme.primaryContainer,
-                        )
-                    } else {
-                        DefaultMarkdownColors(
-                            text = MiuixTheme.colorScheme.onSurfaceContainer,
-                            codeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                            inlineCodeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                            dividerColor = MiuixTheme.colorScheme.dividerLine,
-                            tableBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        )
-                    },
-                    typography = DefaultMarkdownTypography(
-                        h1 = MiuixTheme.textStyles.title1.copy(fontWeight = FontWeight.Bold),
-                        h2 = MiuixTheme.textStyles.title2.copy(fontWeight = FontWeight.Bold),
-                        h3 = MiuixTheme.textStyles.title3.copy(fontWeight = FontWeight.Bold),
-                        h4 = MiuixTheme.textStyles.title4.copy(fontWeight = FontWeight.Bold),
-                        h5 = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Bold),
-                        h6 = MiuixTheme.textStyles.headline2.copy(fontWeight = FontWeight.Bold),
-                        text = MiuixTheme.textStyles.body1,
-                        code = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
-                        inlineCode = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
-                        quote = MiuixTheme.textStyles.body1.copy(fontStyle = FontStyle.Italic),
-                        paragraph = MiuixTheme.textStyles.paragraph,
-                        ordered = MiuixTheme.textStyles.body1,
-                        bullet = MiuixTheme.textStyles.body1,
-                        list = MiuixTheme.textStyles.body1,
-                        textLink = TextLinkStyles(
-                            style = SpanStyle(
-                                color = MiuixTheme.colorScheme.primary,
-                                textDecoration = TextDecoration.Underline,
+                val notEmptyText = text.trim()
+                val showText = remember(notEmptyText, streaming) {
+                    notEmptyText.ifBlank { "thinking..." }
+                }
+                    Markdown(
+                        modifier = Modifier.wrapContentWidth(),
+                        content = showText,
+                        colors = if (fromUser) {
+                            DefaultMarkdownColors(
+                                text = MiuixTheme.colorScheme.onPrimary,
+                                codeBackground = MiuixTheme.colorScheme.primaryContainer,
+                                inlineCodeBackground = MiuixTheme.colorScheme.primaryContainer,
+                                dividerColor = MiuixTheme.colorScheme.onPrimaryVariant,
+                                tableBackground = MiuixTheme.colorScheme.primaryContainer,
+                            )
+                        } else {
+                            DefaultMarkdownColors(
+                                text = MiuixTheme.colorScheme.onSurfaceContainer,
+                                codeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                                inlineCodeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                                dividerColor = MiuixTheme.colorScheme.dividerLine,
+                                tableBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                            )
+                        },
+                        typography = DefaultMarkdownTypography(
+                            h1 = MiuixTheme.textStyles.title1.copy(fontWeight = FontWeight.Bold),
+                            h2 = MiuixTheme.textStyles.title2.copy(fontWeight = FontWeight.Bold),
+                            h3 = MiuixTheme.textStyles.title3.copy(fontWeight = FontWeight.Bold),
+                            h4 = MiuixTheme.textStyles.title4.copy(fontWeight = FontWeight.Bold),
+                            h5 = MiuixTheme.textStyles.headline1.copy(fontWeight = FontWeight.Bold),
+                            h6 = MiuixTheme.textStyles.headline2.copy(fontWeight = FontWeight.Bold),
+                            text = MiuixTheme.textStyles.body1,
+                            code = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
+                            inlineCode = MiuixTheme.textStyles.body2.copy(fontFamily = FontFamily.Monospace),
+                            quote = MiuixTheme.textStyles.body1.copy(fontStyle = FontStyle.Italic),
+                            paragraph = MiuixTheme.textStyles.paragraph,
+                            ordered = MiuixTheme.textStyles.body1,
+                            bullet = MiuixTheme.textStyles.body1,
+                            list = MiuixTheme.textStyles.body1,
+                            textLink = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MiuixTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline,
+                                ),
                             ),
+                            table = MiuixTheme.textStyles.body2,
                         ),
-                        table = MiuixTheme.textStyles.body2,
-                    ),
-                )
+                    )
+                }
             }
-        }
     }
 }
 
@@ -399,71 +430,83 @@ private fun ConversationsDrawer(
     newConversation: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier
-            .width(304.dp)
-            .fillMaxHeight()
-            .shadow(18.dp, miuixUnevenShape(topEnd = 24.dp, bottomEnd = 24.dp)),
-        shape = miuixUnevenShape(topEnd = 24.dp, bottomEnd = 24.dp),
+        modifier = Modifier.fillMaxHeight(),
         color = MiuixTheme.colorScheme.background,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
-                .padding(start = 14.dp, end = 14.dp),
-        ) {
-            Text(
-                text = "Chrnova Agent",
-                style = MiuixTheme.textStyles.title2,
-                modifier = Modifier.padding(top = 18.dp, bottom = 6.dp),
-                textAlign = TextAlign.Start,
-            )
-            Text(
-                text = "对话、记忆和工具执行",
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                modifier = Modifier.padding(bottom = 14.dp),
-            )
-            BasicComponent(onClick = newConversation) {
-                Text(
-                    text = "+ 新建对话",
-                    style = MiuixTheme.textStyles.subtitle,
-                    modifier = Modifier.padding(start = 6.dp),
-                    textAlign = TextAlign.Start,
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f),
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding())
+                    .padding(start = 14.dp, end = 14.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(conversations, { it.id }) { conversation ->
-                    val selected = conversation.id == activeConversationId
-                    Menu(
-                        menuItems = listOf("重命名", "删除"),
-                        onMenuItemClick = { index ->
-                            when (index) {
-                                0 -> rename(conversation.id)
-                                1 -> delete(conversation.id)
-                            }
-                        },
-                        onClick = { trans(conversation.id) },
-                    ) {
-                        Surface(
-                            color = if (selected) MiuixTheme.colorScheme.primaryContainer else MiuixTheme.colorScheme.surfaceContainer,
-                            shape = miuixShape(14.dp),
-                            modifier = Modifier.padding(vertical = 3.dp),
+                Text(
+                    text = "对话列表",
+                    style = MiuixTheme.textStyles.title2,
+                    modifier = Modifier.padding(top = 18.dp, bottom = 6.dp),
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(12.dp))
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                ) {
+                    items(conversations, { it.id }) { conversation ->
+                        val selected = conversation.id == activeConversationId
+                        Menu(
+                            menuItems = listOf("重命名", "删除"),
+                            onMenuItemClick = { index ->
+                                when (index) {
+                                    0 -> rename(conversation.id)
+                                    1 -> delete(conversation.id)
+                                }
+                            },
+                            onClick = { trans(conversation.id) },
                         ) {
-                            BasicComponent {
-                                Text(
-                                    text = conversation.summary,
-                                    style = MiuixTheme.textStyles.subtitle,
-                                    modifier = Modifier.padding(start = 6.dp),
-                                    textAlign = TextAlign.Start,
-                                )
+                            Surface(
+                                color = if (selected) MiuixTheme.colorScheme.primaryContainer else MiuixTheme.colorScheme.surfaceContainer,
+                                shape = miuixShape(14.dp),
+                                modifier = Modifier.padding(vertical = 3.dp),
+                            ) {
+                                BasicComponent {
+                                    Text(
+                                        text = conversation.summary,
+                                        style = MiuixTheme.textStyles.subtitle,
+                                        modifier = Modifier.padding(start = 6.dp),
+                                        textAlign = TextAlign.Start,
+                                    )
+                                }
                             }
                         }
-                }
                     }
+                }
+            }
+
+            Button(
+                onClick = newConversation,
+                colors = ButtonDefaults.buttonColorsPrimary(),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 32.dp, end = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 3.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Add,
+                        contentDescription = "Add",
+                        modifier = Modifier.size(25.dp),
+                        tint = MiuixTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = "新建对话",
+                        color = MiuixTheme.colorScheme.onPrimary,
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
             }
         }
     }

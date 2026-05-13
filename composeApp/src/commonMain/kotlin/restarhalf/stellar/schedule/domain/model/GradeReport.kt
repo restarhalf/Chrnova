@@ -1,5 +1,8 @@
 package restarhalf.stellar.schedule.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class GradeCourse(
     val courseCode: String = "",
     val courseName: String = "",
@@ -18,6 +21,7 @@ data class GradeCourse(
     val semester: String = "",
 )
 
+@Serializable
 data class TermGradeReport(
     val studentId: String = "",
     val studentName: String = "",

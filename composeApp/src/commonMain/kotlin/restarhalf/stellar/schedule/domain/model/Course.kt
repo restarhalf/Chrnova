@@ -1,5 +1,8 @@
 package restarhalf.stellar.schedule.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Course(
     val id: Long = 0,
     val name: String,

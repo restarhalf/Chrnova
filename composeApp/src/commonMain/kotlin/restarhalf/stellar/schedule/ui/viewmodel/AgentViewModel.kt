@@ -140,17 +140,34 @@ class AgentViewModel(
 
     fun revertMessage(id: String) {
         val conversationId = _activeConversationId.value ?: return
+        if (_streaming.value) stopMessage()
+        val currentMessages = _messages.value
+        val clickedIndex = currentMessages.indexOfFirst { it.id == id }
+        if (clickedIndex == -1) return
+
+        var userIndex = -1
+        for (i in clickedIndex downTo 0) {
+            if (currentMessages[i].fromUser) {
+                userIndex = i
+                break
+            }
+        }
+
+        if (userIndex == -1) return
+
+        val userMessage = currentMessages[userIndex]
+        val targetId = if (userIndex > 0) currentMessages[userIndex - 1].id else ""
+
         viewModelScope.launch {
-            runCatching { agentPort.revertConversation(conversationId, id) }
-                .onSuccess { _messages.value = it.map(::toUiMessage) }
+            runCatching { agentPort.revertConversation(conversationId, targetId) }
+                .onSuccess {
+                    _messages.value = it.map(::toUiMessage)
+                    _userInput.value = userMessage.text
+                }
                 .onFailure { _errorMessage.value = it.message ?: "回溯失败" }
         }
     }
 
-    fun copyMessage(id: String) {
-        val text = _messages.value.firstOrNull { it.id == id }?.text.orEmpty()
-        if (text.isNotBlank()) _errorMessage.value = "已复制：$text"
-    }
 
     fun loadConversations() {
         viewModelScope.launch {
@@ -215,7 +232,7 @@ class AgentViewModel(
         _userInput.value = value
     }
 
-    fun setDrawerOpen(open: Boolean) {
+    fun onDrawerOpenChange(open: Boolean) {
         _drawerOpen.value = open
     }
 

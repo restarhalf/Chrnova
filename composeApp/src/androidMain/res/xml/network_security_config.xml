@@ -4,6 +4,6 @@
         <domain includeSubdomains="true">jwyd.dlnu.edu.cn</domain>
         <domain includeSubdomains="true">jwxt.dlnu.edu.cn</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
-        <domain includeSubdomains="true">10.88.195.158</domain>
+        <domain includeSubdomains="true">10.144.47.158</domain>
     </domain-config>
 </network-security-config>
