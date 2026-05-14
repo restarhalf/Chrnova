@@ -6,7 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,7 +51,7 @@ fun ExamItemCard(
                 translationY = 50f * (1f - animProgress.value)
             }) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
@@ -58,7 +60,7 @@ fun ExamItemCard(
                         .clip(miuixCapsuleShape())
                         .background(accentColor)
                         .width(4.dp)
-                        .height(50.dp)
+                        .fillMaxHeight(0.9f)
             )
 
             Column(
@@ -72,9 +74,6 @@ fun ExamItemCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
                     Text(
                         text = card.dateText,
                         fontSize = 12.sp,
@@ -89,10 +88,6 @@ fun ExamItemCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
                     Text(
                         text = card.locationText,
                         fontSize = 12.sp,
@@ -105,9 +100,6 @@ fun ExamItemCard(
                         fontSize = 12.sp,
                         color = summary
                     )
-                }
-
-
                 val remarkText = card.remarkText
                 if (remarkText != null) {
                     Box(

@@ -79,31 +79,31 @@ fun HomeScreen(
     val sectionRenders = renderState.sectionRenders
     Scaffold(
         containerColor = Color.Transparent,
-        floatingToolbar = {
-            FloatingToolbar(
-                color = MiuixTheme.colorScheme.secondaryContainer,
-                cornerRadius = 16.dp,
-            ){
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 8.dp)
-                        .clickable(onClick = onAgent)
-                ) {
-                        Icon(
-                            imageVector = AppIcon,
-                            contentDescription = "Chrnova Helper",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    Text(
-                        text = "Chrnova Helper",
-                        color = MiuixTheme.colorScheme.onSecondaryContainer,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-            }
-        },
-        floatingToolbarPosition = ToolbarPosition.TopEnd
+//        floatingToolbar = {
+//            FloatingToolbar(
+//                color = MiuixTheme.colorScheme.secondaryContainer,
+//                cornerRadius = 16.dp,
+//            ){
+//                Row(
+//                    modifier = Modifier
+//                        .padding(horizontal = 8.dp, vertical = 8.dp)
+//                        .clickable(onClick = onAgent)
+//                ) {
+//                        Icon(
+//                            imageVector = AppIcon,
+//                            contentDescription = "Chrnova Helper",
+//                            modifier = Modifier.size(20.dp)
+//                        )
+//                    Text(
+//                        text = "Chrnova Helper",
+//                        color = MiuixTheme.colorScheme.onSecondaryContainer,
+//                        fontSize = 14.sp,
+//                        modifier = Modifier.padding(start = 4.dp)
+//                    )
+//                }
+//            }
+//        },
+//        floatingToolbarPosition = ToolbarPosition.TopEnd
     ) { paddingValues ->
         Box(
             modifier = Modifier

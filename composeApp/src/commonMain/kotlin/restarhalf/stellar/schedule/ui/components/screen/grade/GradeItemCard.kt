@@ -7,7 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -54,21 +56,18 @@ fun GradeItemCard(
                 translationY = 50f * (1f - animProgress.value)
             }.clickable(onClick = onClick)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
                     modifier =
-                        Modifier.clip(miuixCapsuleShape())
+                        Modifier.align(Alignment.CenterVertically)
+                            .clip(miuixCapsuleShape())
                             .background(accentColor)
                             .width(4.dp)
-                            .height(30.dp)
-                            .align(Alignment.CenterVertically)
+                            .fillMaxHeight(0.8f)
+
                 )
                 Column(
                     modifier = Modifier.weight(1f),
@@ -123,5 +122,4 @@ fun GradeItemCard(
                 }
             }
         }
-    }
 }
