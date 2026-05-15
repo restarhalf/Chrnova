@@ -71,7 +71,7 @@
         </provider>
 
         <receiver
-            android:name="restarhalf.stellar.schedule.only.widget.TodaySmallWidgetReceiver"
+            android:name="restarhalf.stellar.schedule.widget.TodaySmallWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -82,7 +82,7 @@
         </receiver>
 
         <receiver
-            android:name="restarhalf.stellar.schedule.only.widget.TodayLargeWidgetReceiver"
+            android:name="restarhalf.stellar.schedule.widget.TodayLargeWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -93,7 +93,7 @@
         </receiver>
 
         <receiver
-            android:name="restarhalf.stellar.schedule.only.widget.WidgetRefreshReceiver"
+            android:name="restarhalf.stellar.schedule.widget.WidgetRefreshReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.TIME_SET" />

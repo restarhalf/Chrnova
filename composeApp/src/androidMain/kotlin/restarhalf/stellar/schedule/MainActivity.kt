@@ -7,7 +7,7 @@ import com.russhwolf.settings.ObservableSettings
 import org.koin.android.ext.android.inject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
-import restarhalf.stellar.schedule.only.widget.WidgetOnStartRefresher
+import restarhalf.stellar.schedule.widget.WidgetOnStartRefresher
 
 class MainActivity : ComponentActivity() {
 

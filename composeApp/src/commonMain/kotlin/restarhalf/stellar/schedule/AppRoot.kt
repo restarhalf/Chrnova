@@ -24,7 +24,7 @@ import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialo
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.shouldShowSplitPane
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
-import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomePage
+import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.utils.Platform
@@ -248,7 +248,7 @@ fun AppRoot(
 
         if (appState.confirmPrivacy) {
             val welcomePagerState = rememberPagerState(pageCount = { 3 })
-            WelcomePage(
+            WelcomeScreen(
                 show = confirmPrivacyState,
                 pagerState = welcomePagerState,
                 exitApp = exitApp,

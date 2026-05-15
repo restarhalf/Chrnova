@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import restarhalf.stellar.schedule.di.appModule
-import restarhalf.stellar.schedule.only.widget.ScreenStateReceiver
+import restarhalf.stellar.schedule.widget.ScreenStateReceiver
 import restarhalf.stellar.schedule.reminder.NotificationChannels
 import restarhalf.stellar.schedule.reminder.ReminderWorkScheduler
 

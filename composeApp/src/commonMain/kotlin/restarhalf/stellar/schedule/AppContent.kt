@@ -35,8 +35,6 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.NavDisplayTransitionEffects
 import coil3.compose.AsyncImage
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
@@ -65,6 +63,8 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -89,7 +89,11 @@ fun AppContent(
     val appState = LocalAppState.current
 
     val backgroundUiState by bgVm.uiState.collectAsState()
-    val backdrop = rememberLayerBackdrop()
+    val surfaceColor = MiuixTheme.colorScheme.surface
+    val backdrop = rememberLayerBackdrop{
+        drawRect(surfaceColor)
+        drawContent()
+    }
 
     val pagerState = rememberPagerState(pageCount = { RootTabs.size })
     val mainPagerState = rememberMainPagerState(pagerState)

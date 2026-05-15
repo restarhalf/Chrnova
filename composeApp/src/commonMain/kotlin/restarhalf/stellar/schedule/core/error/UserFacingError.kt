@@ -43,6 +43,8 @@ fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
 
     return when {
         isTimeoutHint(hints) -> "网络超时，请稍后重试"
+        hints.contains("502") || hints.contains("503") || hints.contains("504") ->
+            "教务系统暂时不可用 (HTTP 502/503/504)，请稍后重试"
         isNetworkHint(hints) ->
             "网络连接异常，请检查网络后重试"
         isInvalidDataHint(hints) -> kind.invalidDataMessage
@@ -108,6 +110,7 @@ private val BUSINESS_MESSAGE_HINTS =
         "用户名",
         "密码",
         "验证码",
+        "登录",
     )
 
 private val STACK_TRACE_HINTS =

@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.only.widget
+package restarhalf.stellar.schedule.widget
 
 import android.content.BroadcastReceiver
 import android.content.Context

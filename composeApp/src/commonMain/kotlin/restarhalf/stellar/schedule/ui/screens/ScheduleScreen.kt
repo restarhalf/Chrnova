@@ -80,7 +80,6 @@ fun ScheduleScreen(
     onAddLabCourse: () -> Unit,
     onEditLabCourse: (Long) -> Unit
 ) {
-
     val vm: ScheduleViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -91,9 +90,7 @@ fun ScheduleScreen(
         )
             .calculateBottomPadding()
     val scope = rememberCoroutineScope()
-
     val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
-
     val uiState =
         remember(campus, termStartMs, totalWeeks) {
             vm.buildScheduleUiState(
@@ -105,59 +102,34 @@ fun ScheduleScreen(
 
     val pagerState =
         rememberPagerState(initialPage = uiState.pagerInitialPage) { uiState.pagerPageCount }
-
-
     val currentWeek =
         vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
-
     val scheduleUiState by vm.uiState.collectAsState()
-
     val colors = MiuixTheme.colorScheme
-
     val primary = colors.primary
-
     val surfaceSoft = colors.surfaceContainerHigh
-
     val textPrimary = colors.onBackground
-
     val textSecondary = colors.onSurfaceVariantSummary
-
     val textHint = colors.onSurfaceVariantActions
-
     val isDarkMode = colors.background.luminance() < 0.5f
-
     val mutedCourseColor = if (isDarkMode) colors.surfaceContainerHighest else Color(0xFFF5F5F5)
-
     val mutedTitleColor = if (isDarkMode) colors.onSurface else Color(0xFF999999)
-
     val mutedSubColor = if (isDarkMode) colors.onSurfaceVariantSummary else Color(0xFFB3B3B3)
-
     val contentCardAlpha = 1f
-
     val dayCount = 7
-
     val rowHeight = 64.dp
-
     val rowGap = 2.dp
-
     val restHeight = 24.dp
-
     val cellInset = 0.5.dp
     val restBarTextMeasurer = rememberTextMeasurer()
 
     fun yForSection(section: Int): Dp {
-
         val base = (rowHeight + rowGap) * (section - 1)
-
         val rest = (if (section > 4) restHeight else 0.dp) + (if (section > 8) restHeight else 0.dp)
-
         return base + rest
     }
-
     fun heightForSections(sectionCount: Int): Dp {
-
         if (sectionCount <= 0) return 0.dp
-
         return rowHeight * sectionCount + rowGap * (sectionCount - 1)
     }
 
@@ -223,7 +195,6 @@ fun ScheduleScreen(
                                 vm.showTransConflict(result.conflicts, result.overrideCourse)
                                 return@launch
                             }
-
                             vm.saveTransCourse(result.overrideCourse)
                             vm.closeTransDialogAndClear()
                         }

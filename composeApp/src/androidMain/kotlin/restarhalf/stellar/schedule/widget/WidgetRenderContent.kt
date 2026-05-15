@@ -1,5 +1,6 @@
 @file:SuppressLint("RestrictedApi")
-package restarhalf.stellar.schedule.only.widget
+
+package restarhalf.stellar.schedule.widget
 
 import android.annotation.SuppressLint
 import android.content.Intent

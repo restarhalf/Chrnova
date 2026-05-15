@@ -21,9 +21,9 @@
 -keep class restarhalf.stellar.schedule.only.receiver.BootReceiver { *; }
 -keep class restarhalf.stellar.schedule.only.receiver.CourseReminderReceiver { *; }
 -keep class restarhalf.stellar.schedule.only.receiver.ExamReminderReceiver { *; }
--keep class restarhalf.stellar.schedule.only.widget.TodaySmallWidgetReceiver { *; }
--keep class restarhalf.stellar.schedule.only.widget.TodayLargeWidgetReceiver { *; }
--keep class restarhalf.stellar.schedule.only.widget.WidgetRefreshReceiver { *; }
+-keep class restarhalf.stellar.schedule.widget.TodaySmallWidgetReceiver { *; }
+-keep class restarhalf.stellar.schedule.widget.TodayLargeWidgetReceiver { *; }
+-keep class restarhalf.stellar.schedule.widget.WidgetRefreshReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.** { *; }
 
 # Ktor content-negotiation and kotlinx.serialization.

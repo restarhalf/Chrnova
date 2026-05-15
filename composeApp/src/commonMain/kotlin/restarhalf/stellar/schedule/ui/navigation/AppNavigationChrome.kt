@@ -9,23 +9,15 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.Backdrop
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.icons.Examination
 import restarhalf.stellar.schedule.ui.icons.Grade
@@ -34,13 +26,12 @@ import restarhalf.stellar.schedule.ui.icons.Schedule
 import restarhalf.stellar.schedule.ui.icons.Settings
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 private data class TabSpec(
     val screen: Screen,
@@ -59,7 +50,7 @@ private val appTabSpecs =
 
 @Composable
 fun AppBottomBar(
-    backdrop: Backdrop,
+    backdrop: LayerBackdrop?,
 ) {
     val chromeState = LocalAppChromeState.current
     val mainPagerState = LocalMainPagerState.current
@@ -99,51 +90,18 @@ fun AppBottomBar(
             }
 
             else -> {
-                val layoutDirection = LocalLayoutDirection.current
-                val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
-                val horizontalInset =
-                    maxOf(
-                        navigationBarPadding.calculateStartPadding(layoutDirection),
-                        navigationBarPadding.calculateEndPadding(layoutDirection),
-                    )
-
                 GlassNavigationBar(
-                    modifier =
-                        Modifier
-                            .padding(horizontal = 16.dp + horizontalInset)
-                            .padding(
-                                bottom = 36.dp + navigationBarPadding.calculateBottomPadding(),
-                            ),
-                    selectedIndex =
-                        appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }
-                            .takeIf { it >= 0 }
-                            ?: 0,
-                    onSelected = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
+                    items = appTabSpecs.map { tab ->
+                        NavigationItem(
+                            icon = tab.icon,
+                            label = tab.label,
+                        ) }
+                    ,
+                    selectedIndex = appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }.coerceAtLeast(0),
+                    onItemClick = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
                     backdrop = backdrop,
-                    tabsCount = appTabSpecs.size,
-                ) {
-                    appTabSpecs.forEach { tab ->
-                        GlassNavigationBarItem(
-                            onClick = { mainPagerState.animateTo(tab.screen) },
-                            modifier = Modifier.defaultMinSize(minWidth = 76.dp),
-                        ) {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.label,
-                                tint = MiuixTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                text = tab.label,
-                                fontSize = 11.sp,
-                                lineHeight = 14.sp,
-                                color = MiuixTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Visible,
-                            )
-                        }
-                    }
-                }
+                    isBlurActive = true,
+                )
             }
         }
     }

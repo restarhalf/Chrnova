@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -29,8 +31,6 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
-import top.yukonga.miuix.kmp.theme.miuixShape
 
 @Composable
 fun ExamItemCard(
@@ -57,7 +57,7 @@ fun ExamItemCard(
             Box(
                 modifier =
                     Modifier.align(Alignment.CenterVertically)
-                        .clip(miuixCapsuleShape())
+                        .clip(CircleShape)
                         .background(accentColor)
                         .width(4.dp)
                         .fillMaxHeight(0.9f)
@@ -104,7 +104,7 @@ fun ExamItemCard(
                 if (remarkText != null) {
                     Box(
                         modifier =
-                            Modifier.clip(miuixShape(6.dp))
+                            Modifier.clip(RoundedCornerShape(6.dp))
                                 .background(MiuixTheme.colorScheme.surfaceContainerHigh)
                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                                 .align(Alignment.End)
