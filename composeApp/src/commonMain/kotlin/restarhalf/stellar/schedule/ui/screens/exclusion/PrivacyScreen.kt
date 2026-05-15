@@ -38,7 +38,7 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun PrivacyPage(
+fun PrivacyScreen(
     pagerState: PagerState,
     onExit: ()-> Unit,
 ) {

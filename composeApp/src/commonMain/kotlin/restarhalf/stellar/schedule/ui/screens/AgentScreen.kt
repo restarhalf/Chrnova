@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -95,8 +96,6 @@ import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixShape
-import top.yukonga.miuix.kmp.theme.miuixUnevenShape
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
@@ -293,7 +292,7 @@ private fun BottomInputField(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(color = MiuixTheme.colorScheme.background, shape = miuixShape(16.dp))
+                .background(color = MiuixTheme.colorScheme.background, shape = RoundedCornerShape(16.dp))
                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 10.dp)
                 .imePadding(),
         verticalAlignment = Alignment.CenterVertically,
@@ -337,12 +336,12 @@ fun MessageBubble(
     val textColor = if (fromUser) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurfaceContainer
 
     val shape = if (fromUser) {
-        miuixUnevenShape(
+        RoundedCornerShape(
             topStart = bigRadius, topEnd = bigRadius,
             bottomEnd = tailRadius, bottomStart = bigRadius,
         )
     } else {
-        miuixUnevenShape(
+        RoundedCornerShape(
             topStart = bigRadius, topEnd = bigRadius,
             bottomEnd = bigRadius, bottomStart = tailRadius,
         )
@@ -464,7 +463,7 @@ private fun ConversationsDrawer(
                         ) {
                             Surface(
                                 color = if (selected) MiuixTheme.colorScheme.primaryContainer else MiuixTheme.colorScheme.surfaceContainer,
-                                shape = miuixShape(14.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier.padding(vertical = 3.dp),
                             ) {
                                 BasicComponent {

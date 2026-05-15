@@ -50,58 +50,36 @@ fun buildDayRenderData(
 
     val shown =
         if (page == 0) {
-
             filterNonOverlappingForPreview(dayCourses)
         } else {
-
             val current = dayCourses.filter { isCourseActiveInWeek(it, page) }
-
             if (!showNonCurrentWeek) {
-
                 filterNonOverlapping(current)
             } else {
-
                 val nonCurrent = dayCourses.filter { !isCourseActiveInWeek(it, page) }
-
                 val nonCurrentNoConflict = nonCurrent.filter { !hasOverlapWith(it, current) }
-
                 filterNonOverlapping(current + nonCurrentNoConflict)
             }
         }
 
     fun splitCourseSections(course: Course): List<Pair<Int, Int>> {
-
         val start = course.startSection
-
         val end = course.startSection + course.sectionCount - 1
-
         if (course.sectionCount <= 0) return emptyList()
-
         val boundaries = listOf(4, 8)
-
         val segments = ArrayList<Pair<Int, Int>>()
-
         var cursorStart = start
-
         val cursorEnd = end
-
         for (b in boundaries) {
-
             val crosses = cursorStart <= b && cursorEnd >= (b + 1)
-
             if (crosses) {
-
                 segments.add(cursorStart to b)
-
                 cursorStart = b + 1
             }
         }
-
         if (cursorStart <= cursorEnd) {
-
             segments.add(cursorStart to cursorEnd)
         }
-
         return segments
     }
 
@@ -114,37 +92,27 @@ fun buildDayRenderData(
                     week = page,
                     includeNonCurrent = showNonCurrentWeek
                 )
-
             val isCurrentWeekCourse = page != 0 && isCourseActiveInWeek(course, page)
-
             val visual =
                 if (isCurrentWeekCourse) {
-
                     CourseVisual(
                         cardColor = pickCourseColor(course.name, isDarkMode),
                         titleColor = pickCourseTitleColor(course.name, isDarkMode),
                         subColor = pickCourseSubColor(course.name, isDarkMode)
                     )
                 } else {
-
                     CourseVisual(
                         cardColor = mutedCourseColor,
                         titleColor = mutedTitleColor,
                         subColor = mutedSubColor
                     )
                 }
-
             val overlapCount = overlappingCourses.size
-
             val badgeCount = if (overlapCount > 1) overlapCount else null
-
             splitCourseSections(course).map { (segStart, segEnd) ->
                 val segCount = (segEnd - segStart + 1).coerceAtLeast(0)
-
                 val topOffsetY = yForSection(segStart) + cellInset
-
                 val cardHeight = (heightForSections(segCount) - cellInset * 2).coerceAtLeast(1.dp)
-
                 val model =
                     CourseCardModel(
                         name = course.name,
@@ -158,10 +126,8 @@ fun buildDayRenderData(
                         subTextColor = visual.subColor,
                         cardAlpha = contentCardAlpha
                     )
-
                 CourseRenderItem(model = model, overlaps = overlappingCourses)
             }
         }
-
     return DayRenderData(items = items)
 }

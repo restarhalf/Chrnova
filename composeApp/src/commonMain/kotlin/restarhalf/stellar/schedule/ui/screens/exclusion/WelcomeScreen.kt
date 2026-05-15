@@ -38,7 +38,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 @Composable
-fun WelcomePage(
+fun WelcomeScreen(
     show: MutableState<Boolean>,
     pagerState: PagerState,
     exitApp : () -> Unit,
@@ -108,12 +108,12 @@ fun WelcomePage(
             userScrollEnabled = false,
             pageContent = { page ->
                 when (page) {
-                    0 -> WelcomeEnterPager(pagerState = pagerState)
-                    1 -> PrivacyPage(pagerState = pagerState, onExit = {
+                    0 -> WelcomeEnterScreen(pagerState = pagerState)
+                    1 -> PrivacyScreen(pagerState = pagerState, onExit = {
                         settings[SettingsKeys.CONFIRM_PRIVACY] = false
                         exitApp()
                     })
-                    2 -> EnterPager(show = show, pagerState = pagerState)
+                    2 -> EnterScreen(show = show, pagerState = pagerState)
                 }
             }
         )

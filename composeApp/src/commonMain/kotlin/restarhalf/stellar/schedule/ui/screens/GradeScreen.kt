@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +52,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixCapsuleShape
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 @Composable
@@ -97,7 +97,7 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
                     ) {
                         Box(
                             modifier =
-                                Modifier.clip(miuixCapsuleShape())
+                                Modifier.clip(CircleShape)
                                     .background(surfaceSoft)
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {

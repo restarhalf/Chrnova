@@ -19,7 +19,7 @@ import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 
 class HomeViewModel(
-    private val observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
     private val getCampusTimetableUseCase: GetCampusTimetableUseCase,
     private val buildHomeClockSnapshotUseCase: BuildHomeClockSnapshotUseCase,
     private val buildHomeTodayScheduleUseCase: BuildHomeTodayScheduleUseCase,

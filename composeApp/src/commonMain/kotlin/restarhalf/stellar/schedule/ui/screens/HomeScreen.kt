@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,7 +41,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixUnevenShape
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -50,7 +50,8 @@ fun HomeScreen(
     campus: Campus,
     termStartMs: Long,
     totalWeeks: Int,
-    onAgent:()->Unit) {
+    onAgent:()->Unit
+) {
     val bgVm: BackgroundViewModel = koinInject()
     val vm: HomeViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -79,31 +80,31 @@ fun HomeScreen(
     val sectionRenders = renderState.sectionRenders
     Scaffold(
         containerColor = Color.Transparent,
-//        floatingToolbar = {
-//            FloatingToolbar(
-//                color = MiuixTheme.colorScheme.secondaryContainer,
-//                cornerRadius = 16.dp,
-//            ){
-//                Row(
-//                    modifier = Modifier
-//                        .padding(horizontal = 8.dp, vertical = 8.dp)
-//                        .clickable(onClick = onAgent)
-//                ) {
-//                        Icon(
-//                            imageVector = AppIcon,
-//                            contentDescription = "Chrnova Helper",
-//                            modifier = Modifier.size(20.dp)
-//                        )
-//                    Text(
-//                        text = "Chrnova Helper",
-//                        color = MiuixTheme.colorScheme.onSecondaryContainer,
-//                        fontSize = 14.sp,
-//                        modifier = Modifier.padding(start = 4.dp)
-//                    )
-//                }
-//            }
-//        },
-//        floatingToolbarPosition = ToolbarPosition.TopEnd
+        floatingToolbar = {
+            FloatingToolbar(
+                color = MiuixTheme.colorScheme.secondaryContainer,
+                cornerRadius = 16.dp,
+            ){
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
+                        .clickable(onClick = onAgent)
+                ) {
+                        Icon(
+                            imageVector = AppIcon,
+                            contentDescription = "Chrnova Helper",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    Text(
+                        text = "Chrnova Helper",
+                        color = MiuixTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+            }
+        },
+        floatingToolbarPosition = ToolbarPosition.TopEnd
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -160,7 +161,7 @@ fun HomeScreen(
                     Modifier
                         .fillMaxSize()
                         .padding(top = paddingValues.calculateTopPadding() + 140.dp)
-                        .clip(miuixUnevenShape(topStart = 24.dp, topEnd = 24.dp))
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                         .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
             ) {
                 Column(

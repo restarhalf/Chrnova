@@ -16,10 +16,10 @@ import restarhalf.stellar.schedule.domain.usecase.SetBackgroundImageUriUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
 
 class BackgroundViewModel(
-    private val observeBackgroundImageUri: ObserveBackgroundImageUriUseCase,
-    private val observeBackgroundAlpha: ObserveBackgroundAlphaUseCase,
-    private val observeBackgroundBlur: ObserveBackgroundBlurUseCase,
-    private val observeComponentsAlpha: ObserveComponentsAlphaUseCase,
+    observeBackgroundImageUri: ObserveBackgroundImageUriUseCase,
+    observeBackgroundAlpha: ObserveBackgroundAlphaUseCase,
+    observeBackgroundBlur: ObserveBackgroundBlurUseCase,
+    observeComponentsAlpha: ObserveComponentsAlphaUseCase,
     private val setBackgroundImageUriUseCase: SetBackgroundImageUriUseCase,
     private val setBackgroundAlphaUseCase: SetBackgroundAlphaUseCase,
     private val setBackgroundBlurUseCase: SetBackgroundBlurUseCase,

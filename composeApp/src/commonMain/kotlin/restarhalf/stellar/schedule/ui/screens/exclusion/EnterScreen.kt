@@ -36,7 +36,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun EnterPager(
+fun EnterScreen(
     show: MutableState<Boolean>,
     pagerState: PagerState
 ) {

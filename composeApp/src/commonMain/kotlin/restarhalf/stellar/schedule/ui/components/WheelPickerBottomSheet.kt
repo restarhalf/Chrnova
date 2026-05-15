@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -133,6 +135,7 @@ fun WheelPickerColumn(
     listState: LazyListState,
 ) {
     val paddingItemCount = visibleCount / 2
+    val haptic = LocalHapticFeedback.current
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val onSelectedIndexChangeState by rememberUpdatedState(onSelectedIndexChange)
 
@@ -157,7 +160,10 @@ fun WheelPickerColumn(
     LaunchedEffect(listState, items.size, paddingItemCount) {
         snapshotFlow { centerIndex }
             .distinctUntilChanged()
-            .collect { idx -> onSelectedIndexChangeState(idx) }
+            .collect { idx ->
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onSelectedIndexChangeState(idx)
+            }
     }
 
     Box(

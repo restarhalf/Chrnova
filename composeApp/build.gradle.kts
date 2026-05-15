@@ -94,7 +94,7 @@ kotlin {
     android {
         namespace = "restarhalf.stellar.schedule"
         compileSdk { version = release(37) }
-        minSdk = 31
+        minSdk = 32
 
         androidResources {
             enable = true
@@ -129,7 +129,6 @@ kotlin {
         commonMain {
             kotlin.srcDir(generatedLocalSecretsDir)
             dependencies {
-                implementation (libs.backdrop)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.animation)
                 implementation(libs.compose.foundation)

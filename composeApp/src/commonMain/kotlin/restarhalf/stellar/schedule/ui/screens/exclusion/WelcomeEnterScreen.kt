@@ -38,7 +38,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun WelcomeEnterPager(pagerState: PagerState) {
+fun WelcomeEnterScreen(pagerState: PagerState) {
     val coroutineScope = rememberCoroutineScope()
     val go = remember { mutableStateOf(false) }
     val easing = CubicBezierEasing(.42f, 0f, 0.26f, .85f)

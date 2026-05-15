@@ -2,7 +2,10 @@ package restarhalf.stellar.schedule.di
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
 import kotlinx.serialization.json.Json
@@ -129,6 +132,10 @@ val portModule = module {
             }
             install(JwxtAuthPlugin) {
                 authStore = get()
+            }
+            defaultRequest {
+                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                header("Referer", "http://jwyd.dlnu.edu.cn/sjd/")
             }
         }
     }

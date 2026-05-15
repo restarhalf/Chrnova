@@ -28,15 +28,16 @@ import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
 class AppViewModel(
-    private val clearAuth: ClearAuthUseCase,
-    private val getCampusUseCase: GetCampusUseCase,
-    private val observeCampusUseCase: ObserveCampusUseCase,
+
+    getCampusUseCase: GetCampusUseCase,
+    observeCampusUseCase: ObserveCampusUseCase,
+    getTotalWeeksUseCase: GetTotalWeeksUseCase,
+    observeTotalWeeksUseCase: ObserveTotalWeeksUseCase,
+    getTermStartMsUseCase: GetTermStartMsUseCase,
+    observeTermStartMsUseCase: ObserveTermStartMsUseCase,
     private val setCampusUseCase: SetCampusUseCase,
-    private val getTermStartMsUseCase: GetTermStartMsUseCase,
-    private val observeTermStartMsUseCase: ObserveTermStartMsUseCase,
     private val setTermStartMsUseCase: SetTermStartMsUseCase,
-    private val getTotalWeeksUseCase: GetTotalWeeksUseCase,
-    private val observeTotalWeeksUseCase: ObserveTotalWeeksUseCase,
+    private val clearAuth: ClearAuthUseCase,
     private val setTotalWeeksUseCase: SetTotalWeeksUseCase,
     private val fetchExaminations: FetchExaminationsSimpleUseCase,
     private val fetchGrades: FetchGradesSimpleUseCase,
