@@ -13,12 +13,9 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
-import restarhalf.stellar.schedule.domain.usecase.CalculateGradeSummaryUseCase
 import kotlin.math.roundToInt
 
-class GradeViewModel(
-    private val calculateGradeSummary: CalculateGradeSummaryUseCase,
-) : ViewModel() {
+class GradeViewModel : ViewModel() {
 
     data class GradeUiState(
         val loading: Boolean,
@@ -26,17 +23,9 @@ class GradeViewModel(
         val report: TermGradeReport,
     )
 
-    data class GradeSummaryUi(
-        val averageScoreText: String,
-        val averageGradePointText: String,
-        val earnedCreditsText: String,
-        val totalGradePointsText: String,
-    )
-
     data class GradeScreenUi(
         val cards: List<GradeCardUi>,
         val statusText: String?,
-        val summary: GradeSummaryUi?,
     )
 
     data class GradeCardUi(
@@ -91,19 +80,7 @@ class GradeViewModel(
                 !loading && cards.isEmpty() -> "暂无成绩数据"
                 else -> null
             }
-        val summary =
-            if (courses.isNotEmpty()) {
-                val calculatedSummary = calculateGradeSummary(report)
-                GradeSummaryUi(
-                    averageScoreText = calculatedSummary.averageScoreText,
-                    averageGradePointText = calculatedSummary.averageGradePointText,
-                    earnedCreditsText = calculatedSummary.earnedCreditsText,
-                    totalGradePointsText = calculatedSummary.totalGradePointsText,
-                )
-            } else {
-                null
-            }
-        return GradeScreenUi(cards = cards, statusText = statusText, summary = summary)
+        return GradeScreenUi(cards = cards, statusText = statusText)
     }
 
     fun buildGradeTitle(grade: GradeCourse): String = grade.courseName.ifBlank { "未命名课程" }

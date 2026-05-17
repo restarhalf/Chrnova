@@ -161,7 +161,7 @@ fun HomeScreen(
                     Modifier
                         .fillMaxSize()
                         .padding(top = paddingValues.calculateTopPadding() + 140.dp)
-                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                        .clip(RoundedCornerShape(24.dp))
                         .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
             ) {
                 Column(
@@ -182,7 +182,6 @@ fun HomeScreen(
                             dividerColor = dividerColor,
                         )
                     }
-                    Spacer(modifier = Modifier.height(0.dp))
                 }
             }
         }

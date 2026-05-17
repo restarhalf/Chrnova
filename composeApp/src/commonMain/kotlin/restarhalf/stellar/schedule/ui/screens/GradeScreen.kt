@@ -39,7 +39,6 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.ui.components.screen.grade.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.grade.GradeItemCard
-import restarhalf.stellar.schedule.ui.components.screen.grade.GradeSummaryCard
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
@@ -152,17 +151,10 @@ fun GradeScreen(onLoadGrades: suspend () -> TermGradeReport) {
                         extraStart = 16.dp,
                         extraEnd = 16.dp,
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 overscrollEffect = overScrollEffect
             ) {
-                screenUi.summary?.let { summary ->
-                    item(key = "summary") {
-                        GradeSummaryCard(
-                            summary = summary
-                        )
-                    }
-                }
                 items(screenUi.cards, key = { it.idKey }) { card ->
                     GradeItemCard(
                         modifier =

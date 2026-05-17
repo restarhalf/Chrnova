@@ -191,7 +191,7 @@ fun CourseEditScreen(
                     extraStart = 16.dp,
                     extraEnd = 16.dp,
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
             overscrollEffect = null
         ) {

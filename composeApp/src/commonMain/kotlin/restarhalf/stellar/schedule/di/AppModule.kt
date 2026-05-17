@@ -7,10 +7,11 @@ import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
+import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
@@ -19,13 +20,12 @@ import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.TimetableSettings
-import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
-import restarhalf.stellar.schedule.data.remote.agent.AgentClient
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
+import restarhalf.stellar.schedule.data.remote.agent.AgentClient
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -46,7 +46,6 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.CalculateGradeSummaryUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
@@ -63,18 +62,16 @@ import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
-import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveComponentsAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
@@ -82,7 +79,9 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseC
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveThemeModeUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
@@ -135,7 +134,7 @@ val portModule = module {
             }
             defaultRequest {
                 header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
-                header("Referer", "http://jwyd.dlnu.edu.cn/sjd/")
+                header("Referer", "http://jwyd.dlnu.edu.cn/sjd/#/login")
             }
         }
     }
@@ -221,7 +220,6 @@ val useCaseModule = module {
     single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
     single { FetchGradesUseCase(authWorkflow = get(), academic = get(), settings = get()) }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
-    single { CalculateGradeSummaryUseCase() }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
@@ -402,7 +400,7 @@ val viewModelModule = module {
         )
     }
     factory { ExaminationViewModel(isExamNotEnded = get()) }
-    factory { GradeViewModel(calculateGradeSummary = get()) }
+    factory { GradeViewModel() }
     factory {
         HomeViewModel(
             observeAllCoursesUseCase = get(),

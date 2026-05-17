@@ -139,8 +139,8 @@ fun ExaminationScreen(onLoadExaminations: suspend () -> List<Examination>) {
                         extraStart = 16.dp,
                         extraEnd = 16.dp,
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 overscrollEffect = overscrollEffect
             ) {
                 items(screenUi.cards, key = { it.idKey }) { card ->
