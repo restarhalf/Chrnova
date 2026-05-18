@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.domain.model.agent.AgentConversationDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentStreamEventDto
-import restarhalf.stellar.schedule.domain.model.agent.ClientCommandResultRequest
 
 interface AgentPort {
     suspend fun listConversations(): List<AgentConversationDto>
@@ -14,6 +13,6 @@ interface AgentPort {
     suspend fun deleteConversation(conversationId: String)
     suspend fun revertConversation(conversationId: String, messageId: String): List<AgentMessageDto>
     fun streamMessage(conversationId: String, message: String): Flow<AgentStreamEventDto>
+    fun confirmToolCall(conversationId: String, toolCallId: String, approved: Boolean): Flow<AgentStreamEventDto>
     suspend fun stopConversation(conversationId: String)
-    suspend fun postClientCommandResult(request: ClientCommandResultRequest)
 }

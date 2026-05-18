@@ -10,16 +10,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
 import restarhalf.stellar.schedule.domain.model.agent.AgentConversationDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageRoleDto
 import restarhalf.stellar.schedule.domain.port.AgentPort
+import restarhalf.stellar.schedule.mcp.McpRuntime
 import kotlin.random.Random
 
 class AgentViewModel(
     private val agentPort: AgentPort,
-    private val clientCommandExecutor: ClientCommandExecutor,
+    private val mcpRuntime: McpRuntime,
 ) : ViewModel() {
     data class Message(
         val id: String,
@@ -33,6 +33,14 @@ class AgentViewModel(
         val summary: String,
     )
 
+    data class PendingConfirmation(
+        val toolCallId: String,
+        val toolName: String,
+        val policy: String,
+        val arguments: Map<String, String>,
+        val submitting: Boolean = false,
+    )
+
     data class AgentUiState(
         val streaming: Boolean,
         val userInput: String,
@@ -41,6 +49,7 @@ class AgentViewModel(
         val activeConversationId: String?,
         val drawerOpen: Boolean,
         val errorMessage: String?,
+        val pendingConfirmation: PendingConfirmation?,
     )
 
     private val _streaming = MutableStateFlow(false)
@@ -50,6 +59,7 @@ class AgentViewModel(
     private val _activeConversationId = MutableStateFlow<String?>(null)
     private val _drawerOpen = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _pendingConfirmation = MutableStateFlow<PendingConfirmation?>(null)
     private var streamJob: Job? = null
 
     private val baseUiState = combine(_streaming, _userInput, _messages, _conversations) { streaming, userInput, messages, conversations ->
@@ -61,14 +71,16 @@ class AgentViewModel(
             activeConversationId = null,
             drawerOpen = false,
             errorMessage = null,
+            pendingConfirmation = null,
         )
     }
 
-    private val _uiState: StateFlow<AgentUiState> = combine(baseUiState, _activeConversationId, _drawerOpen, _errorMessage) { base, activeConversationId, drawerOpen, errorMessage ->
+    private val _uiState: StateFlow<AgentUiState> = combine(baseUiState, _activeConversationId, _drawerOpen, _errorMessage, _pendingConfirmation) { base, activeConversationId, drawerOpen, errorMessage, pendingConfirmation ->
         base.copy(
             activeConversationId = activeConversationId,
             drawerOpen = drawerOpen,
             errorMessage = errorMessage,
+            pendingConfirmation = pendingConfirmation,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -81,12 +93,14 @@ class AgentViewModel(
             activeConversationId = null,
             drawerOpen = false,
             errorMessage = null,
+            pendingConfirmation = null,
         ),
     )
 
     val uiState: StateFlow<AgentUiState> = _uiState
 
     init {
+        mcpRuntime.initialize(viewModelScope)
         loadConversations()
     }
 
@@ -109,11 +123,17 @@ class AgentViewModel(
                         "message_started" -> Unit
                         "delta" -> event.delta?.let { appendAssistantDelta(assistantMessage.id, it) }
                         "message_completed" -> completeAssistantMessage(assistantMessage.id, event.content)
-                        "error" -> _errorMessage.value = event.error ?: "AI 响应失败"
-                        "client_command" -> event.command?.let { command ->
-                            val result = clientCommandExecutor.execute(command)
-                            agentPort.postClientCommandResult(result)
+                        "confirmation_required" -> {
+                            _pendingConfirmation.value = PendingConfirmation(
+                                toolCallId = event.toolCallId.orEmpty(),
+                                toolName = event.toolName.orEmpty(),
+                                policy = event.policy.orEmpty(),
+                                arguments = event.arguments.orEmpty(),
+                            )
+                            completeAssistantMessage(assistantMessage.id, null)
+                            _streaming.value = false
                         }
+                        "error" -> _errorMessage.value = event.error ?: "AI 响应失败"
                     }
                 }
                 completeAssistantMessage(assistantMessage.id, null)
@@ -121,6 +141,37 @@ class AgentViewModel(
                 loadConversations()
             }.onFailure { throwable ->
                 _errorMessage.value = throwable.message ?: "AI 服务连接失败"
+                _messages.update { messages -> messages.map { if (it.streaming) it.copy(streaming = false) else it } }
+            }
+            _streaming.value = false
+        }
+    }
+
+    fun decidePendingConfirmation(approved: Boolean) {
+        val pending = _pendingConfirmation.value ?: return
+        val conversationId = _activeConversationId.value ?: return
+        if (pending.submitting) return
+        _pendingConfirmation.value = pending.copy(submitting = true)
+        streamJob?.cancel()
+        streamJob = viewModelScope.launch {
+            runCatching {
+                _streaming.value = true
+                val assistantMessage = Message(id = localId("assistant"), text = "", fromUser = false, streaming = true)
+                _messages.update { it + assistantMessage }
+                agentPort.confirmToolCall(conversationId, pending.toolCallId, approved).collect { event ->
+                    when (event.type) {
+                        "message_started" -> Unit
+                        "delta" -> event.delta?.let { appendAssistantDelta(assistantMessage.id, it) }
+                        "message_completed" -> completeAssistantMessage(assistantMessage.id, event.content)
+                        "error" -> _errorMessage.value = event.error ?: "确认执行失败"
+                    }
+                }
+                completeAssistantMessage(assistantMessage.id, null)
+                refreshMessages(conversationId)
+                _pendingConfirmation.value = null
+            }.onFailure { throwable ->
+                _errorMessage.value = throwable.message ?: "确认执行失败"
+                _pendingConfirmation.value = pending.copy(submitting = false)
                 _messages.update { messages -> messages.map { if (it.streaming) it.copy(streaming = false) else it } }
             }
             _streaming.value = false

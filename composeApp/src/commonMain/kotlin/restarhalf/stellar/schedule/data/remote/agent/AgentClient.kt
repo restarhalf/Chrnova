@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.agent.AgentConversationDto
+import restarhalf.stellar.schedule.domain.model.agent.AgentConfirmationDecisionRequest
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentStreamEventDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentStreamRequest
-import restarhalf.stellar.schedule.domain.model.agent.ClientCommandResultRequest
 import restarhalf.stellar.schedule.domain.model.agent.CreateAgentConversationRequest
 import restarhalf.stellar.schedule.domain.model.agent.RenameAgentConversationRequest
 import restarhalf.stellar.schedule.domain.model.agent.RevertAgentConversationRequest
@@ -89,19 +89,25 @@ class AgentClient(
         }
     }
 
-    override suspend fun stopConversation(conversationId: String) {
-        request("stopConversation") {
-            httpClient.post("$apiBase/conversations/$conversationId/stop")
-            Unit
+    override fun confirmToolCall(conversationId: String, toolCallId: String, approved: Boolean): Flow<AgentStreamEventDto> = flow {
+        httpClient.sse(
+            urlString = "$apiBase/conversations/$conversationId/tools/$toolCallId/confirmation",
+            request = {
+                method = io.ktor.http.HttpMethod.Post
+                contentType(ContentType.Application.Json)
+                setBody(AgentConfirmationDecisionRequest(approved))
+            },
+        ) {
+            incoming.collect { event ->
+                val data = event.data ?: return@collect
+                emit(json.decodeFromString(AgentStreamEventDto.serializer(), data))
+            }
         }
     }
 
-    override suspend fun postClientCommandResult(request: ClientCommandResultRequest) {
-        request("postClientCommandResult") {
-            httpClient.post("$apiBase/client-events") {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }
+    override suspend fun stopConversation(conversationId: String) {
+        request("stopConversation") {
+            httpClient.post("$apiBase/conversations/$conversationId/stop")
             Unit
         }
     }

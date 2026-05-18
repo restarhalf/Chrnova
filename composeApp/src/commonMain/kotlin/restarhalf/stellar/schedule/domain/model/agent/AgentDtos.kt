@@ -48,6 +48,11 @@ data class AgentStreamRequest(
 )
 
 @Serializable
+data class AgentConfirmationDecisionRequest(
+    val approved: Boolean,
+)
+
+@Serializable
 data class AgentStreamEventDto(
     val type: String,
     val messageId: String? = null,
@@ -55,6 +60,10 @@ data class AgentStreamEventDto(
     val content: String? = null,
     val error: String? = null,
     val command: ClientCommandDto? = null,
+    val toolCallId: String? = null,
+    val toolName: String? = null,
+    val policy: String? = null,
+    val arguments: Map<String, String>? = null,
 )
 
 @Serializable

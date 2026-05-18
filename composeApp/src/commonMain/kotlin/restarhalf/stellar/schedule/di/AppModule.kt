@@ -4,9 +4,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import com.russhwolf.settings.ObservableSettings
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -107,6 +109,12 @@ import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
+import restarhalf.stellar.schedule.mcp.McpRuntime
+import restarhalf.stellar.schedule.mcp.McpAuthTokenProvider
+import restarhalf.stellar.schedule.mcp.McpRuntimeIdProvider
+import restarhalf.stellar.schedule.mcp.McpTransport
+import restarhalf.stellar.schedule.mcp.RuntimeContextProvider
+import restarhalf.stellar.schedule.mcp.ToolsRegistry
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AgentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -155,6 +163,7 @@ val portModule = module {
                 json(get<Json>())
             }
             install(SSE)
+            install(WebSockets)
         }
     }
 
@@ -183,6 +192,43 @@ val portModule = module {
             setTermStartMs = get(),
             setTotalWeeks = get(),
             json = get(),
+        )
+    }
+    single { ToolsRegistry() }
+    single { McpRuntimeIdProvider(settings = get<ObservableSettings>(named(SettingsKeys.PREFS_NAME))) }
+    single(named("mcp_runtime_id")) { get<McpRuntimeIdProvider>().runtimeId() }
+    single {
+        RuntimeContextProvider(
+            authStore = get(),
+            getCampus = get(),
+            getTermStartMs = get(),
+            getTotalWeeks = get(),
+            toolsRegistry = get(),
+        )
+    }
+    single {
+        McpAuthTokenProvider(
+            authStore = get(),
+            settings = get<ObservableSettings>(named(SettingsKeys.PREFS_NAME)),
+        )
+    }
+    single {
+        McpTransport(
+            httpClient = get(named("agent")),
+            json = get(),
+            baseUrl = LocalSecrets.AGENT_BASE_URL,
+            runtimeId = get(named("mcp_runtime_id")),
+        )
+    }
+    single {
+        McpRuntime(
+            transport = get(),
+            toolsRegistry = get(),
+            clientCommandExecutor = get(),
+            contextProvider = get(),
+            authTokenProvider = get(),
+            json = get(),
+            runtimeId = get(named("mcp_runtime_id")),
         )
     }
 
@@ -340,6 +386,7 @@ val viewModelModule = module {
             fetchGrades = get(),
             loginUseCase = get(),
             runSyncUseCase = get(),
+            mcpRuntime = get(),
         )
     }
     factory {
@@ -415,7 +462,7 @@ val viewModelModule = module {
     }
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
-    factory { AgentViewModel(agentPort = get(), clientCommandExecutor = get()) }
+    factory { AgentViewModel(agentPort = get(), mcpRuntime = get()) }
 }
 
 val commonAppModule = module {

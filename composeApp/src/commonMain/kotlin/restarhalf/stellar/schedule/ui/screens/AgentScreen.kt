@@ -245,6 +245,18 @@ fun AgentScreen(
                     }
 
                 }
+                agentUiState.pendingConfirmation?.let { pending ->
+                    item(key = "pending-confirmation-${pending.toolCallId}") {
+                        ConfirmationCard(
+                            toolName = pending.toolName,
+                            policy = pending.policy,
+                            arguments = pending.arguments,
+                            submitting = pending.submitting,
+                            onApprove = { vm.decidePendingConfirmation(true) },
+                            onDeny = { vm.decidePendingConfirmation(false) },
+                        )
+                    }
+                }
             }
         }
 
@@ -413,6 +425,47 @@ fun MessageBubble(
                     )
                 }
             }
+    }
+}
+
+@Composable
+private fun ConfirmationCard(
+    toolName: String,
+    policy: String,
+    arguments: Map<String, String>,
+    submitting: Boolean,
+    onApprove: () -> Unit,
+    onDeny: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MiuixTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(text = "需要确认", style = MiuixTheme.textStyles.title3)
+            Text(text = "工具：$toolName", style = MiuixTheme.textStyles.body1)
+            Text(text = "权限：$policy", style = MiuixTheme.textStyles.body2)
+            val summary = arguments.entries.joinToString { "${it.key}=${it.value}" }.ifBlank { "无参数" }
+            Text(text = summary, style = MiuixTheme.textStyles.body2)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = onDeny, enabled = !submitting) {
+                    Text("拒绝")
+                }
+                Button(
+                    onClick = onApprove,
+                    enabled = !submitting,
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                ) {
+                    Text("允许")
+                }
+            }
+        }
     }
 }
 

@@ -44,6 +44,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
     @get:Input
     abstract val agentBaseUrl: Property<String>
 
+    @get:Input
+    abstract val mcpSharedSecret: Property<String>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -61,6 +64,11 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("$", "\$")
+        val escapedMcpSharedSecret =
+            mcpSharedSecret.get()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("$", "\$")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
@@ -69,6 +77,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
             internal object LocalSecrets {
                 const val AES_KEY = "$escapedAesKey"
                 const val AGENT_BASE_URL = "$escapedAgentBaseUrl"
+                const val MCP_SHARED_SECRET = "$escapedMcpSharedSecret"
             }
             """.trimIndent()
         )
@@ -78,6 +87,12 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
     aesKey.set(localSecretsAesKey)
     agentBaseUrl.set(localAgentBaseUrl)
+    mcpSharedSecret.set(
+        (localProps.getProperty("MCP_SHARED_SECRET") ?: System.getenv("MCP_SHARED_SECRET"))
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: "chrnova-local-dev-secret"
+    )
     outputDir.set(generatedLocalSecretsDir)
 }
 

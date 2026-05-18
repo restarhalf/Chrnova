@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -25,6 +28,7 @@ import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
+import restarhalf.stellar.schedule.mcp.McpRuntime
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
 class AppViewModel(
@@ -43,6 +47,7 @@ class AppViewModel(
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val loginUseCase: LoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
+    private val mcpRuntime: McpRuntime,
 ) : ViewModel() {
     data class AppUiState(
         val campus: Campus,
@@ -76,6 +81,16 @@ class AppViewModel(
             runCatching { runSyncUseCase() }
                 .fold(
                     onSuccess = {
+                        viewModelScope.launch {
+                            mcpRuntime.emitClientEvent(
+                                McpRuntime.ClientEventType.SyncCompleted,
+                                buildJsonObject {
+                                    put("inserted", it.inserted)
+                                    put("campusName", it.campusName)
+                                },
+                            )
+                            mcpRuntime.emitClientEvent(McpRuntime.ClientEventType.TimetableUpdated)
+                        }
                         SyncUiState.Success(
                             inserted = it.inserted,
                             campusName = it.campusName
@@ -91,18 +106,22 @@ class AppViewModel(
 
     fun logout() {
         clearAuth()
+        viewModelScope.launch { mcpRuntime.emitClientEvent(McpRuntime.ClientEventType.LoginExpired) }
     }
 
     fun onCampusChanged(campus: Campus) {
         setCampusUseCase(campus)
+        viewModelScope.launch { mcpRuntime.emitClientEvent(McpRuntime.ClientEventType.CapabilityChanged) }
     }
 
     fun onTermStartMsChanged(ms: Long) {
         setTermStartMsUseCase(ms)
+        viewModelScope.launch { mcpRuntime.emitClientEvent(McpRuntime.ClientEventType.CapabilityChanged) }
     }
 
     fun onTotalWeeksChanged(weeks: Int) {
         setTotalWeeksUseCase(weeks)
+        viewModelScope.launch { mcpRuntime.emitClientEvent(McpRuntime.ClientEventType.CapabilityChanged) }
     }
 
     suspend fun fetchExaminationArrangements(
