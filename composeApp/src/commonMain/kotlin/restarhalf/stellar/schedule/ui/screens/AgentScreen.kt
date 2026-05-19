@@ -1,8 +1,13 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -28,23 +33,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -112,25 +122,38 @@ fun AgentScreen(
     val listState = rememberLazyListState()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    val lastMessageText = agentUiState.messages.lastOrNull()?.text
-    val lastMessageStreaming = agentUiState.messages.lastOrNull()?.streaming ?: false
+    val lastMessage =
+        agentUiState.messages.lastOrNull()
+    val lastMessageText =
+        lastMessage?.text.orEmpty()
     @Suppress("Deprecation")
     val clipboardManager = LocalClipboardManager.current
 
     var renameTargetId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
 
-    LaunchedEffect(agentUiState.messages.size, lastMessageText, lastMessageStreaming) {
-        if (agentUiState.messages.isNotEmpty()) {
-            listState.scrollToItem(agentUiState.messages.size - 1)
+    val shouldFollowBottom by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val lastVisibleIndex =
+                layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastIndex =
+                (agentUiState.messages.size - 1)
+                    .coerceAtLeast(0)
+            lastVisibleIndex >= lastIndex - 1
         }
     }
 
-    LaunchedEffect(agentUiState.errorMessage) {
-        agentUiState.errorMessage?.let {
-            snackBarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Short
+    LaunchedEffect(
+        agentUiState.messages.lastOrNull()?.id,
+        lastMessageText,
+    ) {
+        if (
+            agentUiState.messages.isNotEmpty()
+            && shouldFollowBottom
+        ) {
+            listState.animateScrollToItem(
+                agentUiState.messages.lastIndex
             )
         }
     }
@@ -376,7 +399,50 @@ private fun BottomInputField(
         }
     }
 }
+@Composable
+fun ThinkingText(
+    modifier: Modifier = Modifier
+) {
+    val transition = rememberInfiniteTransition()
 
+    val scale by transition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(700),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(CircleShape)
+                .background(
+                    MiuixTheme.colorScheme.primary
+                )
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(
+            "思考中",
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSecondaryVariant
+        )
+    }
+}
 @Composable
 fun MessageBubble(
     text: String,
@@ -386,7 +452,7 @@ fun MessageBubble(
 ) {
     val bigRadius = 18.dp
     val tailRadius = 6.dp
-
+    val showText = text.trim()
     val bubbleColor = if (fromUser) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.surfaceContainer
     val textColor = if (fromUser) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurfaceContainer
 
@@ -401,27 +467,26 @@ fun MessageBubble(
             bottomEnd = bigRadius, bottomStart = tailRadius,
         )
     }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = if (fromUser) Arrangement.End else Arrangement.Start,
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        Surface(
-            modifier = Modifier
-                .wrapContentWidth()
-                .widthIn(max = 320.dp),
-            shape = shape,
-            color = bubbleColor,
-            contentColor = textColor,
+    if (streaming && showText.isEmpty()) {
+        ThinkingText()
+    }
+    else if(showText.isNotEmpty()) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = if (fromUser) Arrangement.End else Arrangement.Start,
+            verticalAlignment = Alignment.Bottom,
         ) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                val notEmptyText = text.trim()
-                val showText = remember(notEmptyText, streaming) {
-                    notEmptyText.ifBlank { "thinking..." }
-                }
+            Surface(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .widthIn(max = 320.dp),
+                shape = shape,
+                color = bubbleColor,
+                contentColor = textColor,
+            ) {
+                Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                     Markdown(
                         modifier = Modifier.wrapContentWidth(),
                         content = showText,
@@ -468,7 +533,10 @@ fun MessageBubble(
                     )
                 }
             }
+        }
     }
+    else{null}
+
 }
 
 @Composable

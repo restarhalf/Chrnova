@@ -50,7 +50,16 @@ class ToolsRegistry {
                     put("type", "object")
                     putJsonObject("properties") {
                         schemaProperties[name]?.forEach { (key, type) ->
-                            put(key, buildJsonObject { put("type", type) })
+                            val description = schemaDescriptions[name]?.get(key)
+                            put(
+                                key,
+                                buildJsonObject {
+                                    put("type", type)
+                                    if (!description.isNullOrBlank()) {
+                                        put("description", description)
+                                    }
+                                },
+                            )
                         }
                     }
                     val required = schemaRequired[name].orEmpty()
@@ -64,7 +73,7 @@ class ToolsRegistry {
     }
 
     private val schemaProperties = mapOf(
-        "get_courses" to mapOf("weekOffset" to "string"),
+        "get_courses" to mapOf("week" to "string", "weekOffset" to "string"),
         "get_grades" to mapOf("semester" to "string"),
         "get_exams" to mapOf("semester" to "string", "nameOrNumber" to "string"),
         "add_lab_course" to mapOf(
@@ -92,6 +101,43 @@ class ToolsRegistry {
         "set_campus" to mapOf("value" to "string"),
         "set_term_start" to mapOf("value" to "string"),
         "set_total_weeks" to mapOf("value" to "string"),
+    )
+
+    private val schemaDescriptions = mapOf(
+        "get_courses" to mapOf(
+            "week" to "指定周次，如 15（优先于 weekOffset）",
+            "weekOffset" to "周偏移：0=本周，1=下周，-1=上周",
+        ),
+        "get_grades" to mapOf("semester" to "学期，如 2025-2026-2，可留空为当前学期"),
+        "get_exams" to mapOf(
+            "semester" to "学期，可留空为当前学期",
+            "nameOrNumber" to "课程名或课程号，可留空",
+        ),
+        "add_lab_course" to mapOf(
+            "name" to "课程名称",
+            "dayOfWeek" to "星期：1=周一，7=周日",
+            "startSection" to "开始节次(1-20)",
+            "sectionCount" to "节数(1-10)",
+            "weeks" to "周次，如 1-16 或 1,3,5",
+            "location" to "地点",
+            "teacher" to "教师",
+        ),
+        "transfer_course" to mapOf(
+            "course" to "课程名称或课程 id",
+            "dayOfWeek" to "星期：1=周一，7=周日",
+            "startSection" to "开始节次(1-20)",
+            "sectionCount" to "节数(1-8)",
+            "weeks" to "周次，如 1-16 或 1,3,5",
+            "location" to "地点",
+        ),
+        "set_theme_mode" to mapOf("value" to "0=跟随系统，1=浅色，2=深色"),
+        "set_floating_bar" to mapOf("value" to "0=固定，1=悬浮，2=液态玻璃"),
+        "set_show_non_current_week" to mapOf("value" to "是否显示非本周课程：true/false"),
+        "set_course_reminder_enabled" to mapOf("value" to "课程提醒开关：true/false"),
+        "set_exam_reminder_enabled" to mapOf("value" to "考试提醒开关：true/false"),
+        "set_campus" to mapOf("value" to "校区名称，如 开发区/金石滩"),
+        "set_term_start" to mapOf("value" to "开学日期(yyyy-MM-dd)或时间戳(ms)"),
+        "set_total_weeks" to mapOf("value" to "总周数(1-20)"),
     )
 
     private val schemaRequired = mapOf(

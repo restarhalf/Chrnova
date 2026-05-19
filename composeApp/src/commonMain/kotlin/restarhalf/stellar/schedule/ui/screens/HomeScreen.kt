@@ -1,11 +1,9 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +35,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ToolbarPosition
@@ -83,24 +82,14 @@ fun HomeScreen(
         floatingToolbar = {
             FloatingToolbar(
                 color = MiuixTheme.colorScheme.secondaryContainer,
-                cornerRadius = 16.dp,
+                cornerRadius = 100.dp,
             ){
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 8.dp)
-                        .clickable(onClick = onAgent)
-                ) {
-                        Icon(
-                            imageVector = AppIcon,
-                            contentDescription = "Chrnova Helper",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    Text(
-                        text = "Chrnova Helper",
-                        color = MiuixTheme.colorScheme.onSecondaryContainer,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
+                IconButton(onAgent){
+                    Icon(
+                        imageVector = AppIcon,
+                        contentDescription = "Chrnova Helper",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp).size(20.dp)
+                )
                 }
             }
         },

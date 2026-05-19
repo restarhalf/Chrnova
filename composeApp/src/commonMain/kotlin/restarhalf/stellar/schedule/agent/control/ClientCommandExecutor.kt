@@ -51,11 +51,15 @@ class ClientCommandExecutor(
                     val termStartMs = getTermStartMs()
                     val weekInfo =
                         WeekCalculator.detect(totalWeeks = totalWeeks, termStartMs = termStartMs)
-                    val offset = command.arguments["weekOffset"].orEmpty().toIntOrNull() ?: 0
-                    val baseWeek = weekInfo.week + offset
-                    val week = baseWeek.coerceIn(1, totalWeeks)
+                    val explicitWeek = parseIntFromString(command.arguments["week"].orEmpty())
+                    val offset = parseWeekOffset(command.arguments["weekOffset"].orEmpty())
+                    val resolvedWeek = explicitWeek ?: (weekInfo.week + offset)
+                    if (totalWeeks > 0 && resolvedWeek !in 1..totalWeeks) {
+                        throw IllegalArgumentException("周次必须在 1 到 $totalWeeks 之间")
+                    }
+                    val week = if (totalWeeks > 0) resolvedWeek.coerceIn(1, totalWeeks) else resolvedWeek
                     val courses =
-                        if (weekInfo.isHoliday && offset == 0) {
+                        if (weekInfo.isHoliday && explicitWeek == null && offset == 0) {
                             emptyList()
                         } else {
                             val effective = effectiveCoursesForWeek(all = allCourses, week = week)
@@ -103,7 +107,7 @@ class ClientCommandExecutor(
                 ClientCommandTypeDto.SET_TOTAL_WEEKS -> {
                     val weeks = command.arguments["value"].orEmpty().toIntOrNull()
                         ?: throw IllegalArgumentException("总周数必须是数字")
-                    require(weeks in 1..30) { "总周数必须在 1 到 30 之间" }
+                    require(weeks in 1..20) { "总周数必须在 1 到 20 之间" }
                     setTotalWeeks(weeks)
                     "总周数已更新"
                 }
@@ -178,6 +182,26 @@ class ClientCommandExecutor(
             .mapNotNull { it.trim().toIntOrNull() }
             .filter { it > 0 }
             .distinct()
+
+    private fun parseWeekOffset(raw: String): Int {
+        val trimmed = raw.trim()
+        if (trimmed.isBlank()) return 0
+        parseIntFromString(trimmed)?.let { return it }
+        return when {
+            trimmed.contains("下") -> 1
+            trimmed.contains("上") -> -1
+            trimmed.contains("本") || trimmed.contains("这") -> 0
+            else -> 0
+        }
+    }
+
+    private fun parseIntFromString(raw: String): Int? {
+        val trimmed = raw.trim()
+        if (trimmed.isBlank()) return null
+        trimmed.toIntOrNull()?.let { return it }
+        val match = Regex("""-?\d+""").find(trimmed) ?: return null
+        return match.value.toIntOrNull()
+    }
 
     private fun requiredInt(command: ClientCommandDto, key: String, label: String): Int =
         command.arguments[key].orEmpty().toIntOrNull()
