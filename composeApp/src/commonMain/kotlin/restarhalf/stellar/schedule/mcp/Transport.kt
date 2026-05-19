@@ -25,14 +25,21 @@ class McpTransport(
         onConnected: suspend (SendChannel<Frame>) -> Unit,
         onMessage: suspend (JsonObject, SendChannel<Frame>) -> Unit,
     ) {
-        httpClient.webSocket(wsUrl) {
-            activeOutgoing.value = outgoing
-            onConnected(outgoing)
-            for (frame in incoming) {
-                if (frame is Frame.Text) {
-                    onMessage(json.parseToJsonElement(frame.readText()).jsonObject, outgoing)
+        try {
+            httpClient.webSocket(wsUrl) {
+                activeOutgoing.value = outgoing
+                try {
+                    onConnected(outgoing)
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+                            onMessage(json.parseToJsonElement(frame.readText()).jsonObject, outgoing)
+                        }
+                    }
+                } finally {
+                    activeOutgoing.value = null
                 }
             }
+        } finally {
             activeOutgoing.value = null
         }
     }

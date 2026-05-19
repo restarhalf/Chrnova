@@ -1,15 +1,15 @@
 package restarhalf.stellar.schedule.mcp
 
 import io.ktor.websocket.Frame
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -35,21 +35,27 @@ class McpRuntime(
         if (job != null) return
         toolsRegistry.registerDefaultTools()
         job = scope.launch {
-            transport.connect(
-                onConnected = { outgoing ->
-                    with(transport) {
-                        outgoing.sendJson(
-                            mcpInitializeRequest(
-                                requestId = RUNTIME_INIT_REQUEST_ID,
-                                runtimeId = runtimeId,
-                                authToken = authTokenProvider.token(),
-                                context = contextProvider.snapshot(),
-                            ),
-                        )
-                    }
-                },
-                onMessage = { request, outgoing -> handleMessage(request, outgoing) },
-            )
+            try {
+                transport.connect(
+                    onConnected = { outgoing ->
+                        with(transport) {
+                            outgoing.sendJson(
+                                mcpInitializeRequest(
+                                    requestId = RUNTIME_INIT_REQUEST_ID,
+                                    runtimeId = runtimeId,
+                                    authToken = authTokenProvider.token(),
+                                    context = contextProvider.snapshot(),
+                                ),
+                            )
+                        }
+                    },
+                    onMessage = { request, outgoing -> handleMessage(request, outgoing) },
+                )
+            } catch (exc: CancellationException) {
+                throw exc
+            } catch (exc: Exception) {
+                println("McpRuntime connect failed: ${exc::class.simpleName}: ${exc.message}")
+            }
         }
     }
 
@@ -144,7 +150,7 @@ class McpRuntime(
         put("result", payload)
     }
 
-    private fun kotlinx.serialization.json.JsonObjectBuilder.putMcpContent(text: String) {
+    private fun JsonObjectBuilder.putMcpContent(text: String) {
         putJsonArray("content") {
             add(
                 buildJsonObject {

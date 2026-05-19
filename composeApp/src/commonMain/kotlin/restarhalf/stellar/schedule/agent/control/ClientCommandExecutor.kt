@@ -1,6 +1,9 @@
 package restarhalf.stellar.schedule.agent.control
 
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.agent.ClientCommandDto
 import restarhalf.stellar.schedule.domain.model.agent.ClientCommandResultRequest
@@ -10,6 +13,8 @@ import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetExamReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetFloatingBarUseCase
@@ -29,6 +34,8 @@ class ClientCommandExecutor(
     private val setShowNonCurrentWeek: SetShowNonCurrentWeekUseCase,
     private val setCourseReminderEnabled: SetCourseReminderEnabledUseCase,
     private val setExamReminderEnabled: SetExamReminderEnabledUseCase,
+    private val getTermStartMs: GetTermStartMsUseCase,
+    private val getTotalWeeks: GetTotalWeeksUseCase,
     private val setTermStartMs: SetTermStartMsUseCase,
     private val setTotalWeeks: SetTotalWeeksUseCase,
     private val json: Json,
@@ -38,7 +45,24 @@ class ClientCommandExecutor(
     suspend fun execute(command: ClientCommandDto): ClientCommandResultRequest =
         runCatching {
             when (command.type) {
-                ClientCommandTypeDto.GET_COURSES -> json.encodeToString(courseRepository.getAllCoursesOnce())
+                ClientCommandTypeDto.GET_COURSES -> {
+                    val allCourses = courseRepository.getAllCoursesOnce()
+                    val totalWeeks = getTotalWeeks()
+                    val termStartMs = getTermStartMs()
+                    val weekInfo =
+                        WeekCalculator.detect(totalWeeks = totalWeeks, termStartMs = termStartMs)
+                    val offset = command.arguments["weekOffset"].orEmpty().toIntOrNull() ?: 0
+                    val baseWeek = weekInfo.week + offset
+                    val week = baseWeek.coerceIn(1, totalWeeks)
+                    val courses =
+                        if (weekInfo.isHoliday && offset == 0) {
+                            emptyList()
+                        } else {
+                            val effective = effectiveCoursesForWeek(all = allCourses, week = week)
+                            effective.filter { isCourseActiveInWeek(it, week) }
+                        }
+                    json.encodeToString(courses)
+                }
                 ClientCommandTypeDto.GET_GRADES -> json.encodeToString(fetchGrades(command.arguments["semester"].orEmpty()))
                 ClientCommandTypeDto.GET_EXAMS -> json.encodeToString(
                     fetchExaminations(

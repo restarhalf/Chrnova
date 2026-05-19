@@ -46,7 +46,7 @@ class ToolsRegistry {
             registerTool(
                 name,
                 buildJsonObject {
-                    put("\$schema", "https://json-schema.org/draft/2020-12/schema")
+                    put($$"$schema", "https://json-schema.org/draft/2020-12/schema")
                     put("type", "object")
                     putJsonObject("properties") {
                         schemaProperties[name]?.forEach { (key, type) ->
@@ -64,6 +64,7 @@ class ToolsRegistry {
     }
 
     private val schemaProperties = mapOf(
+        "get_courses" to mapOf("weekOffset" to "string"),
         "get_grades" to mapOf("semester" to "string"),
         "get_exams" to mapOf("semester" to "string", "nameOrNumber" to "string"),
         "add_lab_course" to mapOf(

@@ -19,7 +19,7 @@ import kotlin.random.Random
 
 class AgentViewModel(
     private val agentPort: AgentPort,
-    private val mcpRuntime: McpRuntime,
+    mcpRuntime: McpRuntime,
 ) : ViewModel() {
     data class Message(
         val id: String,
@@ -249,17 +249,21 @@ class AgentViewModel(
             runCatching { agentPort.listMessages(id) }
                 .onSuccess { messages ->
                     _activeConversationId.value = id
-                    _messages.value = messages.map(::toUiMessage)
+                    _messages.value = visibleMessages(messages).map(::toUiMessage)
                     _drawerOpen.value = false
                 }
                 .onFailure { _errorMessage.value = it.message ?: "切换对话失败" }
         }
     }
 
-    fun renameConversation(id: String) {
+    fun renameConversation(id: String, title: String) {
         viewModelScope.launch {
-            val title = _conversations.value.firstOrNull { it.id == id }?.summary.orEmpty()
-            runCatching { agentPort.renameConversation(id, "$title*") }
+            val nextTitle = title.trim()
+            if (nextTitle.isBlank()) {
+                _errorMessage.value = "标题不能为空"
+                return@launch
+            }
+            runCatching { agentPort.renameConversation(id, nextTitle) }
                 .onSuccess { loadConversations() }
                 .onFailure { _errorMessage.value = it.message ?: "重命名失败" }
         }
@@ -301,7 +305,7 @@ class AgentViewModel(
 
     private suspend fun refreshMessages(conversationId: String) {
         runCatching { agentPort.listMessages(conversationId) }
-            .onSuccess { _messages.value = it.map(::toUiMessage) }
+            .onSuccess { messages -> _messages.value = visibleMessages(messages).map(::toUiMessage) }
     }
 
     private fun appendAssistantDelta(messageId: String, delta: String) {
@@ -323,6 +327,11 @@ class AgentViewModel(
 
     private fun toUiMessage(message: AgentMessageDto): Message =
         Message(id = message.id, text = message.content, fromUser = message.role == AgentMessageRoleDto.USER)
+
+    private fun visibleMessages(messages: List<AgentMessageDto>): List<AgentMessageDto> =
+        messages.filter { message ->
+            message.role != AgentMessageRoleDto.TOOL && message.role != AgentMessageRoleDto.SYSTEM
+        }
 
     private fun localId(prefix: String): String = "$prefix-${Random.nextLong()}"
 }

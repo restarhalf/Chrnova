@@ -3,7 +3,6 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">jwyd.dlnu.edu.cn</domain>
         <domain includeSubdomains="true">jwxt.dlnu.edu.cn</domain>
-        <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">172.30.109.158</domain>
     </domain-config>
 </network-security-config>

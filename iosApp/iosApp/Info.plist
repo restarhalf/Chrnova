@@ -28,6 +28,13 @@
                 <key>NSExceptionAllowsInsecureHTTPLoads</key>
                 <true/>
             </dict>
+            <key>10.3.80.236</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
         </dict>
     </dict>
     <key>LSApplicationQueriesSchemes</key>

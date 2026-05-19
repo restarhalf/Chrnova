@@ -95,6 +95,7 @@ import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import top.yukonga.miuix.kmp.window.WindowListPopup
@@ -115,6 +116,9 @@ fun AgentScreen(
     val lastMessageStreaming = agentUiState.messages.lastOrNull()?.streaming ?: false
     @Suppress("Deprecation")
     val clipboardManager = LocalClipboardManager.current
+
+    var renameTargetId by remember { mutableStateOf<String?>(null) }
+    var renameText by remember { mutableStateOf("") }
 
     LaunchedEffect(agentUiState.messages.size, lastMessageText, lastMessageStreaming) {
         if (agentUiState.messages.isNotEmpty()) {
@@ -177,6 +181,41 @@ fun AgentScreen(
                     streaming = agentUiState.streaming,
                 )
             },
+            popupHost = {
+                OverlayDialog(
+                    show = renameTargetId != null,
+                    title = "重命名对话",
+                    onDismissRequest = { renameTargetId = null },
+                    ){
+                        Column {
+                            TextField(
+                                value = renameText,
+                                onValueChange = { renameText = it },
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                                label = "请输入标题",
+                            )
+                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                Button(
+                                    modifier = Modifier.weight(1f).padding(end = 5.dp),
+                                    onClick = { renameTargetId = null },
+                                ) {
+                                    Text(text = "取消")
+                                }
+                                Button(
+                                    modifier = Modifier.weight(1f).padding(start = 5.dp),
+                                    colors = ButtonDefaults.buttonColorsPrimary(),
+                                    onClick = {
+                                        val targetId = renameTargetId ?: return@Button
+                                        vm.renameConversation(targetId, renameText)
+                                        renameTargetId = null
+                                    },
+                                ) {
+                                    Text(text = "确定")
+                                }
+                            }
+                        }
+                    }
+            }
         ) { paddingValues ->
             LaunchedEffect(paddingValues.calculateBottomPadding()) {
                 if (agentUiState.messages.isNotEmpty()) {
@@ -283,7 +322,11 @@ fun AgentScreen(
                     conversations = agentUiState.conversations,
                     activeConversationId = agentUiState.activeConversationId,
                     delete = vm::deleteConversation,
-                    rename = vm::renameConversation,
+                    rename = { id ->
+                        val currentTitle = agentUiState.conversations.firstOrNull { it.id == id }?.summary.orEmpty()
+                        renameTargetId = id
+                        renameText = currentTitle
+                    },
                     trans = vm::transConversation,
                     newConversation = vm::newConversation,
                 )
