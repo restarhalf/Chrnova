@@ -31,6 +31,7 @@ val localAgentBaseUrl =
         ?.takeIf { it.isNotEmpty() }
         ?: "http://10.0.2.2:8080"
 
+
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
 }

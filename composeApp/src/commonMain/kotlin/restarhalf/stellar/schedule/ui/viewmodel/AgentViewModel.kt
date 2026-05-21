@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
+import restarhalf.stellar.schedule.data.remote.agent.AgentAuthException
+import restarhalf.stellar.schedule.data.remote.agent.UserIdentityMissingException
 import restarhalf.stellar.schedule.domain.model.agent.AgentConversationDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageDto
 import restarhalf.stellar.schedule.domain.model.agent.AgentMessageRoleDto
@@ -86,6 +88,13 @@ class AgentViewModel(
 
     val uiState: StateFlow<AgentUiState> = _uiState
 
+
+    private fun Throwable.toAgentMessage(default: String): String = when (this) {
+        is UserIdentityMissingException -> "请先登录后使用智能助手"
+        is AgentAuthException -> if (message?.contains("403") == true) "当前账号无权限使用智能助手" else "登录状态已失效，请重新登录"
+        else -> message ?: default
+    }
+
     init {
         loadConversations()
     }
@@ -120,7 +129,7 @@ class AgentViewModel(
                 refreshMessages(conversationId)
                 loadConversations()
             }.onFailure { throwable ->
-                _errorMessage.value = throwable.message ?: "AI 服务连接失败"
+                _errorMessage.value = throwable.toAgentMessage("AI 服务连接失败")
                 _messages.update { messages -> messages.map { if (it.streaming) it.copy(streaming = false) else it } }
             }
             _streaming.value = false
@@ -164,7 +173,7 @@ class AgentViewModel(
                     _messages.value = it.map(::toUiMessage)
                     _userInput.value = userMessage.text
                 }
-                .onFailure { _errorMessage.value = it.message ?: "回溯失败" }
+                .onFailure { _errorMessage.value = it.toAgentMessage("回溯失败") }
         }
     }
 
@@ -176,7 +185,7 @@ class AgentViewModel(
                     _conversations.value = conversations.map(::toUiConversation)
                     if (_activeConversationId.value == null) conversations.firstOrNull()?.let { transConversation(it.id) }
                 }
-                .onFailure { _errorMessage.value = it.message ?: "加载对话失败" }
+                .onFailure { _errorMessage.value = it.toAgentMessage("加载对话失败") }
         }
     }
 
@@ -189,7 +198,7 @@ class AgentViewModel(
                     _drawerOpen.value = false
                     loadConversations()
                 }
-                .onFailure { _errorMessage.value = it.message ?: "创建对话失败" }
+                .onFailure { _errorMessage.value = it.toAgentMessage("创建对话失败") }
         }
     }
 
@@ -201,7 +210,7 @@ class AgentViewModel(
                     _messages.value = messages.map(::toUiMessage)
                     _drawerOpen.value = false
                 }
-                .onFailure { _errorMessage.value = it.message ?: "切换对话失败" }
+                .onFailure { _errorMessage.value = it.toAgentMessage("切换对话失败") }
         }
     }
 
@@ -210,7 +219,7 @@ class AgentViewModel(
             val title = _conversations.value.firstOrNull { it.id == id }?.summary.orEmpty()
             runCatching { agentPort.renameConversation(id, "$title*") }
                 .onSuccess { loadConversations() }
-                .onFailure { _errorMessage.value = it.message ?: "重命名失败" }
+                .onFailure { _errorMessage.value = it.toAgentMessage("重命名失败") }
         }
     }
 
