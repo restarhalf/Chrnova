@@ -174,6 +174,11 @@ kotlin {
                 api(libs.lifecycle.viewmodel.navigation3)
             }
         }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.kotlinx.coroutines.get()}")
+        }
         androidMain.dependencies {
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.glance.appwidget)
