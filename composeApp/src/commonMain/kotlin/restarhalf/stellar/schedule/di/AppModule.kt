@@ -21,7 +21,9 @@ import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.TimetableSettings
 import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
+import restarhalf.stellar.schedule.data.remote.agent.AgentAuthSessionProvider
 import restarhalf.stellar.schedule.data.remote.agent.AgentClient
+import restarhalf.stellar.schedule.data.remote.agent.AgentSecurityPlugin
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
@@ -156,6 +158,9 @@ val portModule = module {
                 json(get<Json>())
             }
             install(SSE)
+            install(AgentSecurityPlugin) {
+                sessionProvider = AgentAuthSessionProvider(get())
+            }
         }
     }
 
