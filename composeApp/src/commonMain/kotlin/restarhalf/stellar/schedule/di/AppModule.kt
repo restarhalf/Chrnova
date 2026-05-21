@@ -28,6 +28,9 @@ import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.agent.AgentClient
+import restarhalf.stellar.schedule.data.remote.agent.AgentAuthPlugin
+import restarhalf.stellar.schedule.data.remote.agent.AgentAuthSessionProvider
+import restarhalf.stellar.schedule.data.remote.agent.AgentAuthTelemetry
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -158,12 +161,23 @@ val portModule = module {
 
     single { JwxtSync(get()) }
     single(named("agent")) {
+        val authStore: JwxtAuthStore = get()
         HttpClient {
             install(ContentNegotiation) {
                 json(get<Json>())
             }
             install(SSE)
             install(WebSockets)
+            install(AgentAuthPlugin) {
+                sessionProvider = object : AgentAuthSessionProvider {
+                    override fun userId(): String? = authStore.getUserNo()
+                    override fun clearSession() = authStore.clearSession()
+                    override suspend fun refreshToken(): Boolean = false
+                }
+                telemetry = AgentAuthTelemetry { success, userIdHashPrefix ->
+                    println("AgentIdentityInjection success=$success hashPrefix=${userIdHashPrefix ?: "none"}")
+                }
+            }
         }
     }
 
@@ -470,8 +484,6 @@ val viewModelModule = module {
 val commonAppModule = module {
     includes(portModule, useCaseModule, viewModelModule)
 }
-
-
 
 
 
