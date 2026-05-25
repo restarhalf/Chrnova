@@ -97,7 +97,7 @@ jobs:
 
   ios-release:
     name: iOS IPA
-    runs-on: macos-latest
+    runs-on: macos-26
     defaults:
       run:
         shell: bash
