@@ -65,7 +65,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 # Markdown
-multiplatform-markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3" ,version.ref="markdown"}
+multiplatform-markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer" ,version.ref="markdown"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
