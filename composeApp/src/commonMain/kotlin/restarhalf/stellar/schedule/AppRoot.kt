@@ -115,19 +115,18 @@ fun AppRoot(
         val intervalMs = 2L * 24 * 60 * 60 * 1000
         if (now - lastCheck < intervalMs) return@LaunchedEffect
 
-        settings[SettingsKeys.LAST_UPDATE_CHECK_MS] = now
-
-        val latest =
-            runCatching { appUpdate.check(currentVersionName = appInfo.versionName) }.getOrNull()
-
-        if (latest != null) {
-            updateAppState { current ->
-                current.copy(
-                    pendingUpdate = latest,
-                    showUpdateDialog = true,
-                )
+        runCatching { appUpdate.check(currentVersionName = appInfo.versionName) }
+            .onSuccess { latest ->
+                settings[SettingsKeys.LAST_UPDATE_CHECK_MS] = now
+                if (latest != null) {
+                    updateAppState { current ->
+                        current.copy(
+                            pendingUpdate = latest,
+                            showUpdateDialog = true,
+                        )
+                    }
+                }
             }
-        }
     }
 
     val apkDownloadState by appUpdate.apkDownloadState.collectAsState()

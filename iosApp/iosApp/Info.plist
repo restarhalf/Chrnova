@@ -4,39 +4,22 @@
 <dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
+
     <key>CFBundleDisplayName</key>
     <string>Chrnova</string>
+
     <key>NSPhotoLibraryUsageDescription</key>
     <string>需要读取照片库来选择背景图片</string>
+
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>需要保存赞赏码图片到相册</string>
+
     <key>NSAppTransportSecurity</key>
     <dict>
-        <key>NSExceptionDomains</key>
-        <dict>
-            <key>jwyd.dlnu.edu.cn</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-            <key>jwxt.dlnu.edu.cn</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-            <key>10.3.80.236</key>
-            <dict>
-                <key>NSIncludesSubdomains</key>
-                <true/>
-                <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                <true/>
-            </dict>
-        </dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
     </dict>
+
     <key>LSApplicationQueriesSchemes</key>
     <array>
         <string>tim</string>

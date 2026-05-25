@@ -137,6 +137,9 @@ iOS：
 ```properties
 # local.properties
 AES_KEY=your_16_byte_key
+ #可选
+AGENT_BASE_URL=https://your-agent.example.com
+MCP_SHARED_SECRET=your-shared-secret
 ```
 
 如果需要本地打 Android 签名包，还可以配置：
@@ -159,6 +162,11 @@ KEY_PASSWORD=...
 仓库内置 GitHub Actions 工作流：
 
 - [build-all-platforms.yml](.github/workflows/build-all-platforms.yml)
+
+CI 里对应配置放在 GitHub 仓库的 **Settings → Secrets and variables → Actions**：
+
+- `AES_KEY` / `MCP_SHARED_SECRET`：Secrets
+- `AGENT_BASE_URL`：Variable
 
 会构建：
 

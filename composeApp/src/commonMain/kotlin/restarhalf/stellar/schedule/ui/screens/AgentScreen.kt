@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.compose.Markdown
 import com.mikepenz.markdown.model.DefaultMarkdownColors
 import com.mikepenz.markdown.model.DefaultMarkdownTypography
+import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Add
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Send
@@ -99,7 +100,6 @@ import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Snackbar
 import top.yukonga.miuix.kmp.basic.SnackbarDefaults
-import top.yukonga.miuix.kmp.basic.SnackbarDuration
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Surface
@@ -548,30 +548,37 @@ private fun ConfirmationCard(
     onApprove: () -> Unit,
     onDeny: () -> Unit,
 ) {
-    Surface(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = MiuixTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = "需要确认", style = MiuixTheme.textStyles.title3)
+            Text(text = "工具调用确认", style = MiuixTheme.textStyles.title3)
             Text(text = "工具：$toolName", style = MiuixTheme.textStyles.body1)
             Text(text = "权限：$policy", style = MiuixTheme.textStyles.body2)
             val summary = arguments.entries.joinToString { "${it.key}=${it.value}" }.ifBlank { "无参数" }
             Text(text = summary, style = MiuixTheme.textStyles.body2)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = onDeny, enabled = !submitting) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Button(
+                    onClick = onDeny,
+                    enabled = !submitting,
+                    modifier = Modifier.weight(1f),
+                ) {
                     Text("拒绝")
                 }
                 Button(
                     onClick = onApprove,
                     enabled = !submitting,
                     colors = ButtonDefaults.buttonColorsPrimary(),
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text("允许")
                 }

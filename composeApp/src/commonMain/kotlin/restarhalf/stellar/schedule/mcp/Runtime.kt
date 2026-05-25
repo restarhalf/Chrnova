@@ -4,6 +4,7 @@ import io.ktor.websocket.Frame
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -36,25 +37,32 @@ class McpRuntime(
         toolsRegistry.registerDefaultTools()
         job = scope.launch {
             try {
-                transport.connect(
-                    onConnected = { outgoing ->
-                        with(transport) {
-                            outgoing.sendJson(
-                                mcpInitializeRequest(
-                                    requestId = RUNTIME_INIT_REQUEST_ID,
-                                    runtimeId = runtimeId,
-                                    authToken = authTokenProvider.token(),
-                                    context = contextProvider.snapshot(),
-                                ),
-                            )
-                        }
-                    },
-                    onMessage = { request, outgoing -> handleMessage(request, outgoing) },
-                )
-            } catch (exc: CancellationException) {
-                throw exc
-            } catch (exc: Exception) {
-                println("McpRuntime connect failed: ${exc::class.simpleName}: ${exc.message}")
+                while (true) {
+                    try {
+                        transport.connect(
+                            onConnected = { outgoing ->
+                                with(transport) {
+                                    outgoing.sendJson(
+                                        mcpInitializeRequest(
+                                            requestId = RUNTIME_INIT_REQUEST_ID,
+                                            runtimeId = runtimeId,
+                                            authToken = authTokenProvider.token(),
+                                            context = contextProvider.snapshot(),
+                                        ),
+                                    )
+                                }
+                            },
+                            onMessage = { request, outgoing -> handleMessage(request, outgoing) },
+                        )
+                    } catch (exc: CancellationException) {
+                        throw exc
+                    } catch (exc: Exception) {
+                        println("McpRuntime connect failed, retrying in 5s: ${exc::class.simpleName}: ${exc.message}")
+                    }
+                    delay(5000)
+                }
+            } finally {
+                job = null
             }
         }
     }
