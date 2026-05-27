@@ -1,9 +1,14 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -153,6 +158,42 @@ fun ScheduleScreen(
             AppPageTopBar(
                 title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
                 scrollBehavior = topAppBarScrollBehavior,
+                navigationIcon = {
+                    if(currentWeek!=uiState.detectedWeekInfo.week){
+                        IconButton(onClick = {
+                            scope.launch {
+                                val targetPage = vm.weekToPage(
+                                    week = uiState.detectedWeekInfo.week,
+                                    includeWeek0 = uiState.includeWeek0
+                                )
+                                pagerState.scroll(MutatePriority.UserInput) {
+                                    val distance =
+                                        kotlin.math.abs(targetPage - pagerState.currentPage).coerceAtLeast(2)
+                                    val duration = 100 * distance + 100
+                                    val pageSize =
+                                        pagerState.layoutInfo.pageSize + pagerState.layoutInfo.pageSpacing
+                                    val currentDistanceInPages =
+                                        targetPage - pagerState.currentPage - pagerState.currentPageOffsetFraction
+                                    val scrollPixels = currentDistanceInPages * pageSize
+
+                                    var previousValue = 0f
+                                    animate(
+                                        initialValue = 0f,
+                                        targetValue = scrollPixels,
+                                        animationSpec = tween(easing = EaseInOut, durationMillis = duration),
+                                    ) { currentValue, _ ->
+                                        previousValue += scrollBy(currentValue - previousValue)
+                                    }
+                                }
+                                if (pagerState.currentPage != targetPage) {
+                                    pagerState.scrollToPage(targetPage)
+                                }
+                            }
+                        }) {
+                            Text(text = "回到当前周")
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = onAddLabCourse) {
                         Icon(imageVector = Add, contentDescription = "添加实验课")
@@ -388,13 +429,12 @@ fun ScheduleScreen(
                 }
 
 
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 8.dp)
-                        .then(Modifier)
+                        .then(Modifier) ,
                 ) { page: Int ->
                     val pageRenderUi =
                         remember(
@@ -426,10 +466,8 @@ fun ScheduleScreen(
                                 contentCardAlpha = contentCardAlpha
                             )
                         }
-                    pageRenderUi.actualWeek
-
                     val pageScrollState =
-                        remember(page) { androidx.compose.foundation.ScrollState(0) }
+                        remember(page) { ScrollState(0) }
 
                     val pageRenderData = pageRenderUi.dayRenderData
 
@@ -454,19 +492,13 @@ fun ScheduleScreen(
 
                                 Canvas(modifier = Modifier.fillMaxSize()) {
                                     val sectionHeight = rowHeight.toPx()
-
                                     val gapPx = rowGap.toPx()
-
                                     val restPx = restHeight.toPx()
-
                                     val barHeight = restHeight.toPx()
-
                                     fun drawRestBar(afterSection: Int, label: String) {
-
                                         val y =
                                             afterSection * (sectionHeight + gapPx) +
                                                     (if (afterSection > 4) restPx else 0f)
-
                                         drawRect(
                                             color = surfaceSoft.copy(alpha = contentCardAlpha),
                                             topLeft = Offset(0f, y),
@@ -475,7 +507,6 @@ fun ScheduleScreen(
                                                 barHeight
                                             )
                                         )
-
                                         val textLayout =
                                             restBarTextMeasurer.measure(
                                                 text = label,

@@ -61,4 +61,8 @@ class BuildScheduleUiStateUseCase(
     fun pageToWeek(page: Int, includeWeek0: Boolean): Int {
         return if (includeWeek0) page else page + 1
     }
+
+    fun weekToPage(week: Int, includeWeek0: Boolean): Int {
+        return if (includeWeek0) week else week - 1
+    }
 }

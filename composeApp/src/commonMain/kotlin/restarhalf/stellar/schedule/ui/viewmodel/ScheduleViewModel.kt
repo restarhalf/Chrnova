@@ -192,6 +192,10 @@ class ScheduleViewModel(
         return buildScheduleUiStateUseCase.pageToWeek(page = page, includeWeek0 = includeWeek0)
     }
 
+    fun weekToPage(week: Int, includeWeek0: Boolean): Int {
+        return buildScheduleUiStateUseCase.weekToPage(week = week, includeWeek0 = includeWeek0)
+    }
+
     fun buildWeekHeaderUi(
         currentWeek: Int,
         detectedDiffDays: Int,
