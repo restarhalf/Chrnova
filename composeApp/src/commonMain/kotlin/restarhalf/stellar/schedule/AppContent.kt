@@ -108,13 +108,11 @@ fun AppContent(
         remember(
             currentRoute,
             mainPagerState.selectedPage,
-            appState.isWideScreen,
             appState.barMode,
         ) {
             AppChromeState(
                 currentScreen = mainPagerState.currentScreen,
                 isMainRoute = currentRoute == Screen.Main,
-                isWideScreen = appState.isWideScreen,
                 barMode = appState.barMode,
             )
         }

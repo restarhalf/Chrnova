@@ -2,10 +2,7 @@ package restarhalf.stellar.schedule.ui.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -39,15 +36,8 @@ fun appPageContentPadding(
     extraStart: Dp = 0.dp,
     extraEnd: Dp = 0.dp,
 ): PaddingValues {
-    val isWideScreen = LocalIsWideScreen.current
     val topPadding = innerPadding.calculateTopPadding() + extraTop
-    val bottomPadding =
-        if (isWideScreen) {
-            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                    outerPadding.calculateBottomPadding() + 12.dp
-        } else {
-            outerPadding.calculateBottomPadding() + 12.dp
-        }
+    val bottomPadding = outerPadding.calculateBottomPadding() + 12.dp
 
     return remember(topPadding, bottomPadding, extraStart, extraEnd) {
         PaddingValues(

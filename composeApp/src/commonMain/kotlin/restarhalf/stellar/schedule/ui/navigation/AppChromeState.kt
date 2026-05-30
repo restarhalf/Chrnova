@@ -7,7 +7,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 data class AppChromeState(
     val currentScreen: Screen,
     val isMainRoute: Boolean,
-    val isWideScreen: Boolean,
     val barMode: Int,
 ) {
     val showNavigationChrome: Boolean

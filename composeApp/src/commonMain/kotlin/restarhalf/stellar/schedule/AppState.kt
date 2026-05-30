@@ -13,7 +13,6 @@ data class AppState(
     val termStartMs: Long = 0L,
     val totalWeeks: Int = 0,
     val syncUiState: SyncUiState = SyncUiState.Idle,
-    val isWideScreen: Boolean = false,
     val barMode: Int = 0,
     val pendingUpdate: AppUpdateInfo? = null,
     val showUpdateDialog: Boolean = false,

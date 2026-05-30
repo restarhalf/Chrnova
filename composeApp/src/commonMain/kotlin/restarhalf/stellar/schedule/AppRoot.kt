@@ -22,7 +22,6 @@ import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.components.screen.about.DownloadDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
-import restarhalf.stellar.schedule.ui.navigation.shouldShowSplitPane
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -50,7 +49,6 @@ fun AppRoot(
     val appUpdate: AppUpdatePort = koinInject()
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
-    val isWideScreen = shouldShowSplitPane()
 
     val appUiState by vm.uiState.collectAsState()
     var appState by remember {
@@ -59,7 +57,6 @@ fun AppRoot(
                 campus = appUiState.campus,
                 termStartMs = appUiState.termStartMs,
                 totalWeeks = appUiState.totalWeeks,
-                isWideScreen = isWideScreen,
                 barMode = settings.getInt(SettingsKeys.FLOATING_BAR, 0),
             ),
         )
@@ -78,10 +75,6 @@ fun AppRoot(
             updateAppState { current -> current.copy(barMode = newValue) }
         }
         onDispose { listener.deactivate() }
-    }
-
-    LaunchedEffect(isWideScreen) {
-        updateAppState { current -> current.copy(isWideScreen = isWideScreen) }
     }
 
     LaunchedEffect(appUiState) {

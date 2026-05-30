@@ -8,16 +8,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalLayoutDirection
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.icons.Examination
 import restarhalf.stellar.schedule.ui.icons.Grade
@@ -29,8 +24,6 @@ import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 private data class TabSpec(
@@ -56,7 +49,7 @@ fun AppBottomBar(
     val mainPagerState = LocalMainPagerState.current
 
     AnimatedVisibility(
-        visible = !chromeState.isWideScreen && chromeState.showNavigationChrome,
+        visible = chromeState.showNavigationChrome,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(animationSpec = tween(200)),
         exit =
             slideOutVertically(targetOffsetY = { it }) +
@@ -108,55 +101,21 @@ fun AppBottomBar(
 }
 
 @Composable
-fun AppNavigationRail() {
-    val chromeState = LocalAppChromeState.current
-    val mainPagerState = LocalMainPagerState.current
-
-    NavigationRail {
-        appTabSpecs.forEach { tab ->
-            NavigationRailItem(
-                selected = chromeState.currentScreen == tab.screen,
-                onClick = { mainPagerState.animateTo(tab.screen) },
-                icon = tab.icon,
-                label = tab.label,
-            )
-        }
-    }
-}
-
-@Composable
 fun AppScaffoldBody(
     innerPadding: PaddingValues,
     componentsAlpha: Float,
     content: @Composable () -> Unit,
 ) {
-    val chromeState = LocalAppChromeState.current
-
     CompositionLocalProvider(
         LocalComponentsAlpha provides componentsAlpha,
         LocalAppScaffoldPadding provides innerPadding,
-        LocalIsWideScreen provides chromeState.isWideScreen,
     ) {
-        if (chromeState.isWideScreen && chromeState.showNavigationChrome) {
-            val layoutDirection = LocalLayoutDirection.current
-            val startPadding = innerPadding.calculateStartPadding(layoutDirection)
-            val endPadding = innerPadding.calculateEndPadding(layoutDirection)
-            Row(
+            Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(start = startPadding, end = endPadding),
             ) {
-                AppNavigationRail()
-
-                Box(modifier = Modifier.fillMaxSize()) {
-                    content()
-                }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize()) {
                 content()
             }
         }
-    }
 }
