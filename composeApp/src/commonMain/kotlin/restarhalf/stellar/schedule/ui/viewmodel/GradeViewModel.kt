@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,9 +14,14 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import kotlin.math.roundToInt
 
-class GradeViewModel : ViewModel() {
+class GradeViewModel(
+    observeAllGrades: ObserveAllGradesUseCase,
+    observeSelectedTerm: ObserveSelectedTermUseCase,
+) : ViewModel() {
 
     data class GradeUiState(
         val loading: Boolean,
@@ -42,11 +48,43 @@ class GradeViewModel : ViewModel() {
 
     private val _error = MutableStateFlow("")
 
-    private val _report = MutableStateFlow(TermGradeReport())
+    private val _summary = MutableStateFlow(TermGradeReport())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<GradeUiState> =
-        combine(_loading, _error, _report) { loading, error, report ->
-            GradeUiState(loading = loading, error = error, report = report)
+        combine(
+            _loading,
+            _error,
+            observeSelectedTerm(),
+            _summary,
+            observeAllGrades()
+        ) { loading, error, term, summary, allGrades ->
+            val itemsForTerm = allGrades.filter { it.semester == term }
+            val finalReport = when {
+                // 1. 优先显示当前选择学期的本地数据
+                itemsForTerm.isNotEmpty() -> {
+                    summary.copy(achievements = itemsForTerm)
+                }
+                // 2. 如果当前学期本地没数据，但 summary 有数据（说明刚从网络/Fallback 拿到）
+                summary.achievements.isNotEmpty() -> {
+                    summary
+                }
+                // 3. 断网状态且本地没当前学期数据，尝试寻找本地最新的其他学期数据作为回退
+                allGrades.isNotEmpty() -> {
+                    val latestSemester = allGrades
+                        .map { it.semester }
+                        .distinct()
+                        .filter { it.isNotBlank() }
+                        .sortedWith(SemesterComparator)
+                        .lastOrNull()
+                    
+                    val fallbackItems = allGrades.filter { it.semester == latestSemester }
+                    summary.copy(achievements = fallbackItems)
+                }
+                // 4. 彻底没数据
+                else -> summary
+            }
+            GradeUiState(loading = loading, error = error, report = finalReport)
         }
             .stateIn(
                 scope = viewModelScope,
@@ -58,6 +96,32 @@ class GradeViewModel : ViewModel() {
                         report = TermGradeReport(),
                     ),
             )
+
+    private object SemesterComparator : Comparator<String> {
+        override fun compare(a: String, b: String): Int {
+            val ka = parse(a)
+            val kb = parse(b)
+            return when {
+                ka != null && kb != null -> {
+                    if (ka.first != kb.first) ka.first.compareTo(kb.first)
+                    else if (ka.second != kb.second) ka.second.compareTo(kb.second)
+                    else ka.third.compareTo(kb.third)
+                }
+                ka != null -> 1
+                kb != null -> -1
+                else -> a.compareTo(b)
+            }
+        }
+
+        private fun parse(id: String): Triple<Int, Int, Int>? {
+            val parts = id.trim().split("-")
+            if (parts.size < 3) return null
+            val y1 = parts[0].toIntOrNull() ?: return null
+            val y2 = parts[1].toIntOrNull() ?: return null
+            val t = parts[2].toIntOrNull() ?: return null
+            return Triple(y1, y2, t)
+        }
+    }
 
     val uiState: StateFlow<GradeUiState> = _uiState
 
@@ -138,9 +202,9 @@ class GradeViewModel : ViewModel() {
 
         viewModelScope.launch {
             runCatching { loader() }
-                .onSuccess { _report.value = it }
+                .onSuccess { _summary.value = it }
                 .onFailure {
-                    _report.value = TermGradeReport()
+                    _summary.value = TermGradeReport()
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }
             _loading.value = false

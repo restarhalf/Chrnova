@@ -32,6 +32,8 @@ import restarhalf.stellar.schedule.data.remote.agent.AgentAuthPlugin
 import restarhalf.stellar.schedule.data.remote.agent.AgentAuthSessionProvider
 import restarhalf.stellar.schedule.data.remote.agent.AgentAuthTelemetry
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
+import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
+import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AgentPort
@@ -42,6 +44,8 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeGreetingUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeHeaderUiUseCase
@@ -81,7 +85,9 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveComponentsAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
@@ -249,6 +255,8 @@ val portModule = module {
     }
 
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
+    single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
+    single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
 
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<BackgroundSettingsPort> {
@@ -278,10 +286,19 @@ val useCaseModule = module {
             reminderScheduler = get(),
         )
     }
-    single { FetchExaminationsUseCase(authWorkflow = get(), academic = get()) }
+    single { FetchExaminationsUseCase(authWorkflow = get(), academic = get(), repository = get()) }
     single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
-    single { FetchGradesUseCase(authWorkflow = get(), academic = get(), settings = get()) }
+    single {
+        FetchGradesUseCase(
+            authWorkflow = get(),
+            academic = get(),
+            settings = get(),
+            repository = get()
+        )
+    }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
+    single { ObserveExaminationsUseCase(repository = get()) }
+    single { ObserveAllGradesUseCase(repository = get()) }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
@@ -462,8 +479,19 @@ val viewModelModule = module {
             scheduleNextExamReminder = get(),
         )
     }
-    factory { ExaminationViewModel(isExamNotEnded = get()) }
-    factory { GradeViewModel() }
+    factory {
+        ExaminationViewModel(
+            isExamNotEnded = get(),
+            observeExaminations = get(),
+            observeSelectedTerm = get()
+        )
+    }
+    factory {
+        GradeViewModel(
+            observeAllGrades = get(),
+            observeSelectedTerm = get()
+        )
+    }
     factory {
         HomeViewModel(
             observeAllCoursesUseCase = get(),

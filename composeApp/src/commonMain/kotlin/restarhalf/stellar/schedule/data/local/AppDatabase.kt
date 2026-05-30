@@ -11,12 +11,22 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-@Database(entities = [Course::class], version = 7, exportSchema = true)
+@Database(
+    entities = [
+        Course::class,
+        ExaminationEntity::class,
+        GradeEntity::class
+    ],
+    version = 8,
+    exportSchema = true
+)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun courseDao(): CourseDao
+    abstract fun examinationDao(): ExaminationDao
+    abstract fun gradeDao(): GradeDao
 
     companion object {
         const val DATABASE_NAME: String = "schedule.db"
@@ -58,10 +68,28 @@ private val migration6To7 = object : Migration(6, 7) {
     }
 }
 
+private val migration7To8 = object : Migration(7, 8) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `examinations` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `courseNumber` TEXT NOT NULL, `courseName` TEXT NOT NULL, `time` TEXT NOT NULL, `examinationPlace` TEXT NOT NULL, `zwh` TEXT NOT NULL, `ksbz` TEXT NOT NULL, `semesterId` TEXT NOT NULL)"
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `grades` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `courseCode` TEXT NOT NULL, `courseName` TEXT NOT NULL, `score` TEXT NOT NULL, `gradePoint` REAL NOT NULL, `credit` REAL NOT NULL, `curriculumAttributes` TEXT NOT NULL, `courseNature` TEXT NOT NULL, `examName` TEXT NOT NULL, `examinationNature` TEXT NOT NULL, `passStatus` TEXT NOT NULL, `gradeLevel` TEXT NOT NULL, `markFlag` TEXT NOT NULL, `repeatSemester` TEXT NOT NULL, `gradeId` TEXT NOT NULL, `semester` TEXT NOT NULL)"
+        )
+    }
+}
+
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(AppIoDispatcher)
         .fallbackToDestructiveMigration(false)
-        .addMigrations(migration2To3, migration3To4, migration4To5, migration5To6, migration6To7)
+        .addMigrations(
+            migration2To3,
+            migration3To4,
+            migration4To5,
+            migration5To6,
+            migration6To7,
+            migration7To8
+        )
         .build()

@@ -2,19 +2,25 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
+    private val observeExaminations: ObserveExaminationsUseCase,
+    private val observeSelectedTerm: ObserveSelectedTermUseCase,
 ) : ViewModel() {
 
     data class ExamCardUi(
@@ -43,12 +49,14 @@ class ExaminationViewModel(
 
     private val _error = MutableStateFlow("")
 
-    private val _items = MutableStateFlow<List<Examination>>(emptyList())
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<ExaminationUiState> =
-        combine(_loading, _error, _items) { loading, error, items ->
-            ExaminationUiState(loading = loading, error = error, items = items)
-        }
+        observeSelectedTerm()
+            .flatMapLatest { term ->
+                combine(_loading, _error, observeExaminations(term)) { loading, error, items ->
+                    ExaminationUiState(loading = loading, error = error, items = items)
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -94,7 +102,6 @@ class ExaminationViewModel(
 
         viewModelScope.launch {
             runCatching { loader() }
-                .onSuccess { _items.value = it }
                 .onFailure {
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
                 }

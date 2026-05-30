@@ -5,11 +5,13 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
 class FetchGradesUseCase(
     private val authWorkflow: AuthWorkflowPort,
     private val academic: AcademicPort,
     private val settings: SettingsPort,
+    private val repository: GradeRepository,
 ) {
     suspend operator fun invoke(semester: String = ""): TermGradeReport {
         fun parseSemesterKey(id: String): Triple<Int, Int, Int>? {
@@ -62,15 +64,23 @@ class FetchGradesUseCase(
 
         authWorkflow.ensureLoggedIn()
 
-        val firstAttempt = runCatching {
+        val report = try {
+            val resolvedSemester = resolveSemester()
+            fetchWithFallback(resolvedSemester)
+        } catch (e: Exception) {
+            authWorkflow.logout()
+            authWorkflow.ensureLoggedIn()
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
         }
-        if (firstAttempt.isSuccess) return firstAttempt.getOrThrow()
 
-        authWorkflow.logout()
-        authWorkflow.ensureLoggedIn()
-        val resolvedSemester = resolveSemester()
-        return fetchWithFallback(resolvedSemester)
+        if (report.achievements.isNotEmpty()) {
+            val sem = report.achievements.firstOrNull()?.semester ?: ""
+            if (sem.isNotBlank()) {
+                repository.replaceGrades(sem, report.achievements)
+            }
+        }
+
+        return report
     }
 }

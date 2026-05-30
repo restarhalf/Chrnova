@@ -10,6 +10,8 @@ import restarhalf.stellar.schedule.data.impl.AppUpdatePortImpl
 import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.CourseDao
+import restarhalf.stellar.schedule.data.local.ExaminationDao
+import restarhalf.stellar.schedule.data.local.GradeDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
@@ -33,6 +35,8 @@ private val androidPlatformModule = module {
 
     single<AppDatabase> { buildPlatformAppDatabase(androidContext()) }
     single<CourseDao> { get<AppDatabase>().courseDao() }
+    single<ExaminationDao> { get<AppDatabase>().examinationDao() }
+    single<GradeDao> { get<AppDatabase>().gradeDao() }
 
     single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
     single { ExamReminderScheduler(androidContext()) }
