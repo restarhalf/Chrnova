@@ -7,20 +7,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
-    private val observeExaminations: ObserveExaminationsUseCase,
-    private val observeSelectedTerm: ObserveSelectedTermUseCase,
+    observeAllExaminations: ObserveAllExaminationsUseCase,
 ) : ViewModel() {
 
     data class ExamCardUi(
@@ -51,12 +48,9 @@ class ExaminationViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<ExaminationUiState> =
-        observeSelectedTerm()
-            .flatMapLatest { term ->
-                combine(_loading, _error, observeExaminations(term)) { loading, error, items ->
-                    ExaminationUiState(loading = loading, error = error, items = items)
-                }
-            }
+        combine(_loading, _error, observeAllExaminations()) { loading, error, items ->
+            ExaminationUiState(loading = loading, error = error, items = items)
+        }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),

@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExaminationDao {
-    @Query("SELECT * FROM examinations WHERE semesterId = :semesterId")
-    fun observeExaminations(semesterId: String): Flow<List<ExaminationEntity>>
+    @Query("SELECT * FROM examinations")
+    fun observeAllExaminations(): Flow<List<ExaminationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExaminations(examinations: List<ExaminationEntity>)

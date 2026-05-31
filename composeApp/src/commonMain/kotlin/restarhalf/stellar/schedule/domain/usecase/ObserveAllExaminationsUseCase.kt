@@ -4,10 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
-class ObserveExaminationsUseCase(
+class ObserveAllExaminationsUseCase(
     private val repository: ExaminationRepository
 ) {
-    operator fun invoke(semesterId: String): Flow<List<Examination>> {
-        return repository.observeExaminations(semesterId)
+    operator fun invoke(): Flow<List<Examination>> {
+        return repository.observeAllExaminations()
     }
 }

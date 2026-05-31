@@ -85,7 +85,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveComponentsAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
@@ -297,7 +297,7 @@ val useCaseModule = module {
         )
     }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
-    single { ObserveExaminationsUseCase(repository = get()) }
+    single { ObserveAllExaminationsUseCase(repository = get()) }
     single { ObserveAllGradesUseCase(repository = get()) }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
     single { GetCampusUseCase(timetable = get()) }
@@ -482,8 +482,7 @@ val viewModelModule = module {
     factory {
         ExaminationViewModel(
             isExamNotEnded = get(),
-            observeExaminations = get(),
-            observeSelectedTerm = get()
+            observeAllExaminations = get()
         )
     }
     factory {

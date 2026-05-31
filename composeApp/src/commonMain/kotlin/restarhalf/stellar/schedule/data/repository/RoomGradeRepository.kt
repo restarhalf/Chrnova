@@ -12,12 +12,6 @@ class RoomGradeRepository(
     private val gradeDao: GradeDao
 ) : GradeRepository {
 
-    override fun observeGrades(semester: String): Flow<List<GradeCourse>> {
-        return gradeDao.observeGrades(semester).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
-
     override fun observeAllGrades(): Flow<List<GradeCourse>> {
         return gradeDao.observeAllGrades().map { entities ->
             entities.map { it.toDomain() }

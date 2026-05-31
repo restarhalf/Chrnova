@@ -12,8 +12,8 @@ class RoomExaminationRepository(
     private val examinationDao: ExaminationDao
 ) : ExaminationRepository {
 
-    override fun observeExaminations(semesterId: String): Flow<List<Examination>> {
-        return examinationDao.observeExaminations(semesterId).map { entities ->
+    override fun observeAllExaminations(): Flow<List<Examination>> {
+        return examinationDao.observeAllExaminations().map { entities ->
             entities.map { it.toDomain() }
         }
     }

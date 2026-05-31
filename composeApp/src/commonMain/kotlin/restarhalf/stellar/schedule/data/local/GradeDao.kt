@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GradeDao {
-    @Query("SELECT * FROM grades WHERE semester = :semester")
-    fun observeGrades(semester: String): Flow<List<GradeEntity>>
-
     @Query("SELECT * FROM grades")
     fun observeAllGrades(): Flow<List<GradeEntity>>
 
