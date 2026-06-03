@@ -2,9 +2,11 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
@@ -17,6 +19,7 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import kotlin.time.Duration.Companion.milliseconds
 
 class HomeViewModel(
     observeAllCoursesUseCase: ObserveAllCoursesUseCase,
@@ -30,6 +33,7 @@ class HomeViewModel(
 ) : ViewModel() {
     data class HomeUiState(
         val courses: List<Course>,
+        val nowMs: Long,
     )
     data class SectionRenderUi(
         val title: String,
@@ -44,13 +48,25 @@ class HomeViewModel(
         val nowMinutes: Int,
     )
 
+    private val _nowMs = flow {
+        while (true) {
+            emit(kotlin.time.Clock.System.now().toEpochMilliseconds())
+            delay(60_000L.milliseconds)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+    )
+
     private val _uiState: StateFlow<HomeUiState> =
-        observeAllCoursesUseCase()
-            .map { courses -> HomeUiState(courses = courses) }
+        combine(observeAllCoursesUseCase(), _nowMs) { courses, nowMs ->
+            HomeUiState(courses = courses, nowMs = nowMs)
+        }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = HomeUiState(courses = emptyList()),
+                initialValue = HomeUiState(courses = emptyList(), nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()),
             )
 
     val uiState: StateFlow<HomeUiState> = _uiState

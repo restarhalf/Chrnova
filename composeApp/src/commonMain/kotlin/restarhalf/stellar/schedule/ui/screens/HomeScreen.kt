@@ -40,11 +40,8 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 @Composable
-@OptIn(ExperimentalTime::class)
 fun HomeScreen(
     campus: Campus,
     termStartMs: Long,
@@ -63,7 +60,7 @@ fun HomeScreen(
 
     val homeUiState by vm.uiState.collectAsState()
     val renderState =
-        remember(homeUiState.courses, campus, termStartMs, totalWeeks, hasBackground, backgroundUiState.componentsAlpha) {
+        remember(homeUiState.courses, campus, termStartMs, totalWeeks, hasBackground, backgroundUiState.componentsAlpha, homeUiState.nowMs) {
             vm.buildHomeRenderState(
                 courses = homeUiState.courses,
                 campus = campus,
@@ -71,7 +68,7 @@ fun HomeScreen(
                 totalWeeks = totalWeeks,
                 hasBackground = hasBackground,
                 componentsAlpha = backgroundUiState.componentsAlpha,
-                nowMs = Clock.System.now().toEpochMilliseconds()
+                nowMs = homeUiState.nowMs
             )
         }
     val headerUi = renderState.headerUi
