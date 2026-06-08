@@ -3,17 +3,12 @@ package restarhalf.stellar.schedule.di
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
-import com.russhwolf.settings.ObservableSettings
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import restarhalf.stellar.schedule.agent.control.ClientCommandExecutor
-import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
@@ -27,16 +22,11 @@ import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
-import restarhalf.stellar.schedule.data.remote.agent.AgentClient
-import restarhalf.stellar.schedule.data.remote.agent.AgentAuthPlugin
-import restarhalf.stellar.schedule.data.remote.agent.AgentAuthSessionProvider
-import restarhalf.stellar.schedule.data.remote.agent.AgentAuthTelemetry
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AgentPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
@@ -118,14 +108,7 @@ import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
-import restarhalf.stellar.schedule.mcp.McpRuntime
-import restarhalf.stellar.schedule.mcp.McpAuthTokenProvider
-import restarhalf.stellar.schedule.mcp.McpRuntimeIdProvider
-import restarhalf.stellar.schedule.mcp.McpTransport
-import restarhalf.stellar.schedule.mcp.RuntimeContextProvider
-import restarhalf.stellar.schedule.mcp.ToolsRegistry
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.AgentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ChangeBackgroundViewModel
@@ -166,93 +149,8 @@ val portModule = module {
     }
 
     single { JwxtSync(get()) }
-    single(named("agent")) {
-        val authStore: JwxtAuthStore = get()
-        HttpClient {
-            install(ContentNegotiation) {
-                json(get<Json>())
-            }
-            install(SSE)
-            install(WebSockets)
-            install(AgentAuthPlugin) {
-                sessionProvider = object : AgentAuthSessionProvider {
-                    override fun userId(): String? = authStore.getUserNo()
-                    override fun clearSession() = authStore.clearSession()
-                    override suspend fun refreshToken(): Boolean = false
-                }
-                telemetry = AgentAuthTelemetry { success, userIdHashPrefix ->
-                    println("AgentIdentityInjection success=$success hashPrefix=${userIdHashPrefix ?: "none"}")
-                }
-            }
-        }
-    }
-
-    single<AgentPort> {
-        AgentClient(
-            httpClient = get(named("agent")),
-            json = get(),
-            baseUrl = LocalSecrets.AGENT_BASE_URL,
-        )
-    }
 
     single { TimetableSettings(get(named("timetable_prefs"))) }
-
-    single {
-        ClientCommandExecutor(
-            courseRepository = get(),
-            fetchGrades = get(),
-            fetchExaminations = get(),
-            insertCourse = get(),
-            runSync = get(),
-            setThemeMode = get(),
-            setFloatingBar = get(),
-            setShowNonCurrentWeek = get(),
-            setCourseReminderEnabled = get(),
-            setExamReminderEnabled = get(),
-            getTermStartMs = get(),
-            getTotalWeeks = get(),
-            setTermStartMs = get(),
-            setTotalWeeks = get(),
-            json = get(),
-        )
-    }
-    single { ToolsRegistry() }
-    single { McpRuntimeIdProvider(settings = get<ObservableSettings>(named(SettingsKeys.PREFS_NAME))) }
-    single(named("mcp_runtime_id")) { get<McpRuntimeIdProvider>().runtimeId() }
-    single {
-        RuntimeContextProvider(
-            authStore = get(),
-            getCampus = get(),
-            getTermStartMs = get(),
-            getTotalWeeks = get(),
-            toolsRegistry = get(),
-        )
-    }
-    single {
-        McpAuthTokenProvider(
-            authStore = get(),
-            settings = get<ObservableSettings>(named(SettingsKeys.PREFS_NAME)),
-        )
-    }
-    single {
-        McpTransport(
-            httpClient = get(named("agent")),
-            json = get(),
-            baseUrl = LocalSecrets.AGENT_BASE_URL,
-            runtimeId = get(named("mcp_runtime_id")),
-        )
-    }
-    single {
-        McpRuntime(
-            transport = get(),
-            toolsRegistry = get(),
-            clientCommandExecutor = get(),
-            contextProvider = get(),
-            authTokenProvider = get(),
-            json = get(),
-            runtimeId = get(named("mcp_runtime_id")),
-        )
-    }
 
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
@@ -419,7 +317,6 @@ val viewModelModule = module {
             fetchGrades = get(),
             loginUseCase = get(),
             runSyncUseCase = get(),
-            mcpRuntime = get(),
         )
     }
     factory {
@@ -505,7 +402,6 @@ val viewModelModule = module {
     }
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
-    factory { AgentViewModel(agentPort = get(), mcpRuntime = get()) }
 }
 
 val commonAppModule = module {

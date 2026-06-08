@@ -25,12 +25,6 @@ val localSecretsAesKey =
         ?.takeIf { it.isNotEmpty() }
         ?: error("AES_KEY missing in local.properties or environment")
 
-val localAgentBaseUrl =
-    (localProps.getProperty("AGENT_BASE_URL") ?: System.getenv("AGENT_BASE_URL"))
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-        ?: "http://10.0.2.2:8080"
-
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
 }
@@ -40,12 +34,6 @@ val generatedLocalSecretsDir = layout.buildDirectory.dir("generated/source/local
 abstract class GenerateLocalSecretsTask : DefaultTask() {
     @get:Input
     abstract val aesKey: Property<String>
-
-    @get:Input
-    abstract val agentBaseUrl: Property<String>
-
-    @get:Input
-    abstract val mcpSharedSecret: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -59,16 +47,6 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("$", "\$")
-        val escapedAgentBaseUrl =
-            agentBaseUrl.get()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("$", "\$")
-        val escapedMcpSharedSecret =
-            mcpSharedSecret.get()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("$", "\$")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
@@ -76,8 +54,6 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
             internal object LocalSecrets {
                 const val AES_KEY = "$escapedAesKey"
-                const val AGENT_BASE_URL = "$escapedAgentBaseUrl"
-                const val MCP_SHARED_SECRET = "$escapedMcpSharedSecret"
             }
             """.trimIndent()
         )
@@ -86,13 +62,6 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
 val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
     aesKey.set(localSecretsAesKey)
-    agentBaseUrl.set(localAgentBaseUrl)
-    mcpSharedSecret.set(
-        (localProps.getProperty("MCP_SHARED_SECRET") ?: System.getenv("MCP_SHARED_SECRET"))
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
-            ?: "chrnova-local-dev-secret"
-    )
     outputDir.set(generatedLocalSecretsDir)
 }
 
@@ -166,7 +135,6 @@ kotlin {
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.client.websockets)
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.multiplatform.markdown.renderer)
