@@ -17,8 +17,6 @@ env:
   JAVA_VERSION: "21"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   AES_KEY: ${{ secrets.AES_KEY }}
-  AGENT_BASE_URL: ${{ secrets.AGENT_BASE_URL }}
-  MCP_SHARED_SECRET: ${{ secrets.MCP_SHARED_SECRET }}
 
 jobs:
   android-release:
@@ -42,23 +40,6 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-
-      - name: Validate Agent base URL
-        run: |
-          set -euo pipefail
-          if [ -z "${AGENT_BASE_URL:-}" ]; then
-            echo "AGENT_BASE_URL is empty. Configure it in Settings -> Secrets and variables -> Actions."
-            exit 1
-          fi
-
-          case "${AGENT_BASE_URL}" in
-            http://localhost*|https://localhost*|http://127.0.0.1*|https://127.0.0.1*|http://10.0.2.2*|https://10.0.2.2*)
-              echo "AGENT_BASE_URL points to a local-only address. CI release artifacts need a public or device-reachable Agent URL."
-              exit 1
-              ;;
-          esac
-
-          echo "Agent base URL configured for CI release build."
 
       - name: Prepare Android signing
         env:
@@ -141,23 +122,6 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-
-      - name: Validate Agent base URL
-        run: |
-          set -euo pipefail
-          if [ -z "${AGENT_BASE_URL:-}" ]; then
-            echo "AGENT_BASE_URL is empty. Configure it in Settings -> Secrets and variables -> Actions."
-            exit 1
-          fi
-
-          case "${AGENT_BASE_URL}" in
-            http://localhost*|https://localhost*|http://127.0.0.1*|https://127.0.0.1*|http://10.0.2.2*|https://10.0.2.2*)
-              echo "AGENT_BASE_URL points to a local-only address. CI release artifacts need a public or device-reachable Agent URL."
-              exit 1
-              ;;
-          esac
-
-          echo "Agent base URL configured for CI release build."
 
       - name: Resolve iOS version
         run: |

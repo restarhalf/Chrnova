@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,17 +27,12 @@ import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
-import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -46,7 +40,6 @@ fun HomeScreen(
     campus: Campus,
     termStartMs: Long,
     totalWeeks: Int,
-    onAgent:()->Unit
 ) {
     val bgVm: BackgroundViewModel = koinInject()
     val vm: HomeViewModel = koinViewModel()
@@ -76,21 +69,6 @@ fun HomeScreen(
     val sectionRenders = renderState.sectionRenders
     Scaffold(
         containerColor = Color.Transparent,
-        floatingToolbar = {
-            FloatingToolbar(
-                color = MiuixTheme.colorScheme.secondaryContainer,
-                cornerRadius = 100.dp,
-            ){
-                IconButton(onAgent){
-                    Icon(
-                        imageVector = AppIcon,
-                        contentDescription = "Chrnova Helper",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp).size(20.dp)
-                )
-                }
-            }
-        },
-        floatingToolbarPosition = ToolbarPosition.TopEnd
     ) { paddingValues ->
         Box(
             modifier = Modifier
