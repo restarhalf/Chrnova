@@ -19,6 +19,11 @@ val localProps = Properties().apply {
     runCatching { rootProject.file("local.properties").inputStream().use(::load) }
 }
 
+val localSecretsSignKey =
+    (localProps.getProperty("SIGN_KEY") ?: System.getenv("SIGN_KEY"))
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("SIGN_KEY missing in local.properties or environment")
 val localSecretsAesKey =
     (localProps.getProperty("AES_KEY") ?: System.getenv("AES_KEY"))
         ?.trim()
@@ -35,6 +40,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
     @get:Input
     abstract val aesKey: Property<String>
 
+    @get:Input
+    abstract val signKey: Property<String>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -47,6 +55,11 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("$", "\$")
+        val escapedSignKey =
+            signKey.get()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("$", "\$")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
@@ -54,6 +67,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
             internal object LocalSecrets {
                 const val AES_KEY = "$escapedAesKey"
+                const val SIGN_KEY = "$escapedSignKey"
             }
             """.trimIndent()
         )
@@ -61,7 +75,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 }
 
 val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
+    description = ""
     aesKey.set(localSecretsAesKey)
+    signKey.set(localSecretsSignKey)
     outputDir.set(generatedLocalSecretsDir)
 }
 
@@ -78,7 +94,7 @@ kotlin {
     android {
         namespace = "restarhalf.stellar.schedule"
         compileSdk { version = release(37) }
-        minSdk = 32
+        minSdk = 33
 
         androidResources {
             enable = true
@@ -138,6 +154,9 @@ kotlin {
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.multiplatform.markdown.renderer)
+                implementation(libs.qrose)
+                implementation(libs.cryptography.core)
+                implementation(libs.cryptography.provider.optimal)
                 api(libs.lifecycle.viewmodel)
                 api(libs.lifecycle.viewmodel.navigation3)
             }

@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.components.screen.examination
+package restarhalf.stellar.schedule.ui.components.screen.ems
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween

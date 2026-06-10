@@ -17,6 +17,7 @@ env:
   JAVA_VERSION: "21"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   AES_KEY: ${{ secrets.AES_KEY }}
+  SIGN_KEY: ${{ secrets.SIGN_KEY }}
 
 jobs:
   android-release:

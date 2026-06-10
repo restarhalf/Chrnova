@@ -14,7 +14,8 @@ sealed interface Screen : NavKey {
     data object Schedule : Screen
 
     @Serializable
-    data object Examination : Screen
+    data object EMS : Screen
+
 
     @Serializable
     data object Settings : Screen
@@ -28,6 +29,4 @@ sealed interface Screen : NavKey {
     @Serializable
     data class ClassEdit(val courseId: Long? = null) : Screen
 
-    @Serializable
-    data object Grade : Screen
 }

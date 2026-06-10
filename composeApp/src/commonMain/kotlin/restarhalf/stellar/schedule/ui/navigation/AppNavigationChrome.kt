@@ -36,8 +36,9 @@ private val appTabSpecs =
     listOf(
         TabSpec(screen = Screen.Home, icon = Home, label = "首页"),
         TabSpec(screen = Screen.Schedule, icon = Schedule, label = "课程表"),
-        TabSpec(screen = Screen.Examination, icon = Examination, label = "考试"),
-        TabSpec(screen = Screen.Grade, icon = Grade, label = "成绩"),
+//        TabSpec(screen = Screen.Examination, icon = Examination, label = "考试"),
+//        TabSpec(screen = Screen.Grade, icon = Grade, label = "成绩"),
+        TabSpec(screen = Screen.EMS, icon = Examination, label = "考务"),
         TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
     )
 

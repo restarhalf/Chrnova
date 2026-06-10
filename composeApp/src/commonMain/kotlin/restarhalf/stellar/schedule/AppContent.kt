@@ -6,8 +6,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -27,11 +27,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.NavDisplayTransitionEffects
 import coil3.compose.AsyncImage
@@ -51,8 +51,7 @@ import restarhalf.stellar.schedule.ui.navigation.rootTabAt
 import restarhalf.stellar.schedule.ui.screens.AboutScreen
 import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
-import restarhalf.stellar.schedule.ui.screens.ExaminationScreen
-import restarhalf.stellar.schedule.ui.screens.GradeScreen
+import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
@@ -331,12 +330,8 @@ private fun MainRouteContent(
                 )
             }
 
-            Screen.Examination -> {
-                ExaminationScreen(onLoadExaminations = { vm.fetchExaminationArrangements() })
-            }
-
-            Screen.Grade -> {
-                GradeScreen(onLoadGrades = { vm.fetchGradeReport() })
+            Screen.EMS -> {
+                EMSScreen(onLoadExaminations = { vm.fetchExaminationArrangements() }, onLoadGrades = { vm.fetchGradeReport() })
             }
 
             Screen.Settings -> {

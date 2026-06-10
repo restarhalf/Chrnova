@@ -6,7 +6,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.data.impl.AppUpdatePortImpl
-import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.CourseDao
 import restarhalf.stellar.schedule.data.local.ExaminationDao
@@ -15,7 +14,6 @@ import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
-import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
@@ -48,7 +46,6 @@ private val iosPlatformModule = module {
     single<ExaminationDao> { get<AppDatabase>().examinationDao() }
     single<GradeDao> { get<AppDatabase>().gradeDao() }
 
-    single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
     single<PictureSelectorPort> { PictureSelectorPortImpl() }
     single<AppInfoPort> { AppInfoPortImpl() }
     single<CourseReminderPort> { CourseReminderPortImpl(settings = get(named("reminder_codes"))) }

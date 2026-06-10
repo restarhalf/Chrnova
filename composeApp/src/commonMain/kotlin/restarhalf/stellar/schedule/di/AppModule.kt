@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.di
 
+import PasswordEncryptionPortImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -13,6 +14,7 @@ import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.BackgroundSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.PEPasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
@@ -30,6 +32,8 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
+import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -157,6 +161,8 @@ val portModule = module {
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
 
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
+    single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
     single<BackgroundSettingsPort> {
         BackgroundSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME)))
     }

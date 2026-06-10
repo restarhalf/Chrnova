@@ -99,7 +99,7 @@ android {
 
     defaultConfig {
         applicationId = "restarhalf.stellar.schedule"
-        minSdk = 32
+        minSdk = 33
         targetSdk = 37
         versionCode = resolvedVersionCode
         versionName = resolvedVersionName

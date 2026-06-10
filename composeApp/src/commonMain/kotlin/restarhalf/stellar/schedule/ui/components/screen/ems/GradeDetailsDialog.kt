@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.components.screen.grade
+package restarhalf.stellar.schedule.ui.components.screen.ems
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState

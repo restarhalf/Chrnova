@@ -25,8 +25,7 @@ val RootTabs: List<Screen> =
     listOf(
         Screen.Home,
         Screen.Schedule,
-        Screen.Examination,
-        Screen.Grade,
+        Screen.EMS,
         Screen.Settings,
     )
 
