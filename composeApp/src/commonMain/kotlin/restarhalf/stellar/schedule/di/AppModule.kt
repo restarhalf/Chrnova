@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.di
 
-import PasswordEncryptionPortImpl
+import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -127,6 +127,7 @@ val portModule = module {
     single { Json { ignoreUnknownKeys = true } }
 
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
+    single { restarhalf.stellar.schedule.data.remote.PEAuthStore(get(named("pe_auth"))) }
 
     single(named("jwxt")) {
         HttpClient {
@@ -143,9 +144,29 @@ val portModule = module {
         }
     }
 
+    single(named("pe")) {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(get<Json>())
+            }
+            defaultRequest {
+                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+            }
+        }
+    }
+
     single<JwxtGateway> {
         JwxtClient(
             httpClient = get(named("jwxt")),
+            json = get(),
+            authStore = get(),
+            passwordEncryption = get(),
+        )
+    }
+
+    single {
+        restarhalf.stellar.schedule.data.remote.PEClient(
+            httpClient = get(named("pe")),
             json = get(),
             authStore = get(),
             passwordEncryption = get(),
@@ -159,6 +180,8 @@ val portModule = module {
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
+    single { restarhalf.stellar.schedule.data.repository.PERepository(peClient = get()) }
+    single { restarhalf.stellar.schedule.data.repository.PERoomRepository(peYearScoreDao = get(), peStudentInfoDao = get(), peDetailDao = get()) }
 
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
@@ -304,6 +327,7 @@ val useCaseModule = module {
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
     single { TransCourseUseCase() }
     single { TransCourseWithConflictsUseCase(getAllCoursesOnce = get(), transCourse = get()) }
+    single { restarhalf.stellar.schedule.domain.usecase.PEUseCase(repository = get(), authStore = get(), roomRepository = get()) }
 }
 
 val viewModelModule = module {
@@ -408,6 +432,7 @@ val viewModelModule = module {
     }
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
+    factory { restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(peUseCase = get()) }
 }
 
 val commonAppModule = module {

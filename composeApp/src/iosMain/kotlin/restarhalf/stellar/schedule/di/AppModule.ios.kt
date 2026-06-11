@@ -10,6 +10,9 @@ import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.CourseDao
 import restarhalf.stellar.schedule.data.local.ExaminationDao
 import restarhalf.stellar.schedule.data.local.GradeDao
+import restarhalf.stellar.schedule.data.local.PEStudentInfoDao
+import restarhalf.stellar.schedule.data.local.PEDetailDao
+import restarhalf.stellar.schedule.data.local.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
@@ -32,6 +35,7 @@ private val iosPlatformModule = module {
         )
     }
     single<ObservableSettings>(named("jwxt_auth")) { get<NSUserDefaultsSettings.Factory>().create("jwxt_auth") }
+    single<ObservableSettings>(named("pe_auth")) { get<NSUserDefaultsSettings.Factory>().create("pe_auth") }
     single<ObservableSettings>(named("reminder_codes")) {
         get<NSUserDefaultsSettings.Factory>().create("reminder_codes")
     }
@@ -45,6 +49,9 @@ private val iosPlatformModule = module {
     single<CourseDao> { get<AppDatabase>().courseDao() }
     single<ExaminationDao> { get<AppDatabase>().examinationDao() }
     single<GradeDao> { get<AppDatabase>().gradeDao() }
+    single<PEStudentInfoDao> { get<AppDatabase>().peStudentInfoDao() }
+    single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
+    single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
 
     single<PictureSelectorPort> { PictureSelectorPortImpl() }
     single<AppInfoPort> { AppInfoPortImpl() }

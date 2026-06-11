@@ -25,6 +25,11 @@ sealed interface Screen : NavKey {
 
     @Serializable
     data object About : Screen
+    @Serializable
+    data object PEScore : Screen
+
+    @Serializable
+    data class PEDetail(val schoolYear: String) : Screen
 
     @Serializable
     data class ClassEdit(val courseId: Long? = null) : Screen

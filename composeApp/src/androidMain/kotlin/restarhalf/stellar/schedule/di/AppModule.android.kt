@@ -11,6 +11,9 @@ import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.CourseDao
 import restarhalf.stellar.schedule.data.local.ExaminationDao
 import restarhalf.stellar.schedule.data.local.GradeDao
+import restarhalf.stellar.schedule.data.local.PEStudentInfoDao
+import restarhalf.stellar.schedule.data.local.PEDetailDao
+import restarhalf.stellar.schedule.data.local.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
@@ -34,6 +37,9 @@ private val androidPlatformModule = module {
     single<CourseDao> { get<AppDatabase>().courseDao() }
     single<ExaminationDao> { get<AppDatabase>().examinationDao() }
     single<GradeDao> { get<AppDatabase>().gradeDao() }
+    single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
+    single<PEStudentInfoDao> { get<AppDatabase>().peStudentInfoDao() }
+    single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
 
     single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
     single { ExamReminderScheduler(androidContext()) }
@@ -46,6 +52,9 @@ private val androidPlatformModule = module {
     }
     single<ObservableSettings>(named("jwxt_auth")) {
         SharedPreferencesSettings.Factory(androidContext()).create("jwxt_auth")
+    }
+    single<ObservableSettings>(named("pe_auth")) {
+        SharedPreferencesSettings.Factory(androidContext()).create("pe_auth")
     }
     single<ObservableSettings>(named("timetable_prefs")) {
         SharedPreferencesSettings.Factory(androidContext()).create("timetable_prefs")

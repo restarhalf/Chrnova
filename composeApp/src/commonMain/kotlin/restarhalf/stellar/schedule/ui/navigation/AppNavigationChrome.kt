@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.icons.Examination
-import restarhalf.stellar.schedule.ui.icons.Grade
 import restarhalf.stellar.schedule.ui.icons.Home
+import restarhalf.stellar.schedule.ui.icons.PE
 import restarhalf.stellar.schedule.ui.icons.Schedule
 import restarhalf.stellar.schedule.ui.icons.Settings
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
@@ -36,9 +36,8 @@ private val appTabSpecs =
     listOf(
         TabSpec(screen = Screen.Home, icon = Home, label = "首页"),
         TabSpec(screen = Screen.Schedule, icon = Schedule, label = "课程表"),
-//        TabSpec(screen = Screen.Examination, icon = Examination, label = "考试"),
-//        TabSpec(screen = Screen.Grade, icon = Grade, label = "成绩"),
         TabSpec(screen = Screen.EMS, icon = Examination, label = "考务"),
+        TabSpec(screen = Screen.PEScore, icon = PE, label = "体测"),
         TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
     )
 

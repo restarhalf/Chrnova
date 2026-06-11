@@ -15,9 +15,13 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
     entities = [
         Course::class,
         ExaminationEntity::class,
-        GradeEntity::class
+        GradeEntity::class,
+        PEYearScoreEntity::class,
+        PEStudentInfoEntity::class,
+        PESubjectScoreEntity::class,
+        PEDetailSummaryEntity::class
     ],
-    version = 8,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -27,6 +31,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun courseDao(): CourseDao
     abstract fun examinationDao(): ExaminationDao
     abstract fun gradeDao(): GradeDao
+    abstract fun peYearScoreDao(): PEYearScoreDao
+    abstract fun peStudentInfoDao(): PEStudentInfoDao
+    abstract fun peDetailDao(): PEDetailDao
 
     companion object {
         const val DATABASE_NAME: String = "schedule.db"
@@ -79,6 +86,33 @@ private val migration7To8 = object : Migration(7, 8) {
     }
 }
 
+private val migration8To9 = object : Migration(8, 9) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_scores` (`schoolYear` TEXT PRIMARY KEY NOT NULL, `total` REAL NOT NULL, `isFree` INTEGER NOT NULL, `done` INTEGER NOT NULL, `nums` INTEGER NOT NULL)"
+        )
+    }
+}
+
+private val migration9To10 = object : Migration(9, 10) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_student_info` (`id` TEXT PRIMARY KEY NOT NULL, `testCode` TEXT NOT NULL, `stuName` TEXT NOT NULL, `stdNumber` TEXT NOT NULL)"
+        )
+    }
+}
+
+private val migration10To11 = object : Migration(10, 11) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_detail_scores` (`schoolYear` TEXT NOT NULL, `subjectId` TEXT NOT NULL, `subName` TEXT NOT NULL, `result` TEXT, `score` INTEGER, `unit` TEXT NOT NULL, `subRatio` TEXT NOT NULL, `grade` TEXT, `isJoin` INTEGER NOT NULL, PRIMARY KEY (`schoolYear`, `subjectId`))"
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_detail_summary` (`schoolYear` TEXT PRIMARY KEY NOT NULL, `totalScore` REAL NOT NULL, `totalGrade` TEXT NOT NULL)"
+        )
+    }
+}
+
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
@@ -90,6 +124,9 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration4To5,
             migration5To6,
             migration6To7,
-            migration7To8
+            migration7To8,
+            migration8To9,
+            migration9To10,
+            migration10To11
         )
         .build()

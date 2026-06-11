@@ -26,6 +26,7 @@ val RootTabs: List<Screen> =
         Screen.Home,
         Screen.Schedule,
         Screen.EMS,
+        Screen.PEScore,
         Screen.Settings,
     )
 

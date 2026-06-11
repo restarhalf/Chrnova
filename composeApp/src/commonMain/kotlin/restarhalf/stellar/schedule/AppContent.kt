@@ -53,6 +53,7 @@ import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
+import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreenActions
@@ -188,6 +189,12 @@ fun AppContent(
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
                         courseId = screen.courseId,
+                    )
+                }
+                entry<Screen.PEDetail> { screen ->
+                    restarhalf.stellar.schedule.ui.screens.PEDetailScreen(
+                        schoolYear = screen.schoolYear,
+                        onBack = { navigator.pop() }
                     )
                 }
             }
@@ -332,6 +339,14 @@ private fun MainRouteContent(
 
             Screen.EMS -> {
                 EMSScreen(onLoadExaminations = { vm.fetchExaminationArrangements() }, onLoadGrades = { vm.fetchGradeReport() })
+            }
+
+            Screen.PEScore -> {
+                PEScoreScreen(
+                    onNavigateToDetail = { schoolYear ->
+                        navigator.push(Screen.PEDetail(schoolYear))
+                    }
+                )
             }
 
             Screen.Settings -> {
