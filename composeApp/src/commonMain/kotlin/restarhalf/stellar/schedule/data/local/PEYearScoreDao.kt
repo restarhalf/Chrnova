@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,4 +17,12 @@ interface PEYearScoreDao {
 
     @Query("DELETE FROM pe_scores")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(scores: List<PEYearScoreEntity>) {
+        deleteAll()
+        if (scores.isNotEmpty()) {
+            insertScores(scores)
+        }
+    }
 }

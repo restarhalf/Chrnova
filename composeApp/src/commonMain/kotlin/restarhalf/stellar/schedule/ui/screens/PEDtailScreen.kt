@@ -1,7 +1,13 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +17,9 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -23,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -41,10 +50,12 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 
 @Composable
 fun PEDetailScreen(
@@ -60,12 +71,11 @@ fun PEDetailScreen(
     val loading by vm.loading.collectAsState()
     val needsLogin by vm.needsLogin.collectAsState()
     val error by vm.error.collectAsState()
+    val detailScreenStatus by vm.detailScreenStatus.collectAsState()
+    val statusText = vm.buildDetailStatusText(detailScreenStatus)
+    val colors = MiuixTheme.colorScheme
     var showLoginDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(schoolYear) {
-        vm.observeCachedDetailData(schoolYear)
-        vm.loadScoreDetail(schoolYear)
-    }
+    val loggedIn = vm.isLoggedIn()
 
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
@@ -73,25 +83,52 @@ fun PEDetailScreen(
         }
     }
 
+    LaunchedEffect(schoolYear, loggedIn) {
+        if (loggedIn) {
+            vm.observeCachedDetailData(schoolYear)
+            vm.loadScoreDetail(schoolYear)
+        }
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            val nextYear=schoolYear.toInt()+1
-            AppPageTopBar(
-                title = "${schoolYear}-${nextYear}学年体测成绩",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
+            Column {
+                val nextYear=schoolYear.toInt()+1
+                AppPageTopBar(
+                    title = "${schoolYear}-${nextYear}学年体测成绩",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
 
-                    ){
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回"
-                        )
+                        ){
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回"
+                            )
+                        }
+                    }
+                )
+                AnimatedVisibility(
+                    visible = statusText != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier.clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(fontSize = 12.sp, text = statusText ?: "")
+                        }
                     }
                 }
-            )
+            }
         },
         popupHost = {
             if (showLoginDialog) {
@@ -130,22 +167,34 @@ fun PEDetailScreen(
                     bottom = 0.dp
                 )
             )
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
-                contentPadding = appPageContentPadding(
-                    innerPadding = PaddingValues(),
-                    outerPadding = appScaffoldPadding,
-                    extraTop = 12.dp,
-                    extraStart = 16.dp,
-                    extraEnd = 16.dp,
-                ),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                overscrollEffect = overscrollEffect
             ) {
-                detailData?.let { data ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                        .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    contentPadding = appPageContentPadding(
+                        innerPadding = PaddingValues(),
+                        outerPadding = appScaffoldPadding,
+                        extraTop = 12.dp,
+                        extraStart = 16.dp,
+                        extraEnd = 16.dp,
+                    ),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    overscrollEffect = overscrollEffect
+                ) {
+                    if (!loggedIn) {
+                        item {
+                            SmallTitle(text = "账号")
+                            AppCard {
+                                ArrowPreference(
+                                    title = "登录",
+                                    summary = "用于获取体测详情",
+                                    onClick = { showLoginDialog = true })
+                            }
+                        }
+                    }
+
+                    detailData?.let { data ->
                     item {
                         Box(
                             modifier = Modifier.animateItem(

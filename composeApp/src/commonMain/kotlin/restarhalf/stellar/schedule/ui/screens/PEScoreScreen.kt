@@ -1,7 +1,13 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +19,10 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -26,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -48,10 +57,12 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
@@ -72,15 +83,7 @@ fun PEScoreScreen(
     var showLoginDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val showPeQrCode = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        if (viewModel.isLoggedIn()) {
-            viewModel.loadScoreList()
-            viewModel.loadStudentInfo()
-        } else {
-            showLoginDialog = true
-        }
-    }
+    val loggedIn = viewModel.isLoggedIn()
 
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
@@ -88,26 +91,56 @@ fun PEScoreScreen(
         }
     }
 
+    LaunchedEffect(loggedIn) {
+        if (loggedIn) {
+            viewModel.loadScoreList()
+            viewModel.loadStudentInfo()
+        }
+    }
+
+    val scoreScreenStatus by viewModel.scoreScreenStatus.collectAsState()
+    val statusText = viewModel.buildScoreStatusText(scoreScreenStatus)
+    val colors = MiuixTheme.colorScheme
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = "体测",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = { showPeQrCode.value = true }) {
-                        Icon(imageVector = QrCode, contentDescription = "二维码")
-                    }
-                },
-                actions = {
-                    if (viewModel.isLoggedIn()) {
-                        IconButton(onClick = { showLogoutConfirm = true }) {
-                            Icon(imageVector = Logout, contentDescription = "退出登录")
+            Column {
+                AppPageTopBar(
+                    title = "体测",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = { showPeQrCode.value = true }) {
+                            Icon(imageVector = QrCode, contentDescription = "二维码")
+                        }
+                    },
+                    actions = {
+                        if (loggedIn) {
+                            IconButton(onClick = { showLogoutConfirm = true }) {
+                                Icon(imageVector = Logout, contentDescription = "退出登录")
+                            }
                         }
                     }
-
+                )
+                AnimatedVisibility(
+                    visible = statusText != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier.clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(fontSize = 12.sp, text = statusText ?: "")
+                        }
+                    }
                 }
-            )
+            }
         },
         popupHost = {
             if (showPeQrCode.value && studentInfo != null) {
@@ -116,7 +149,11 @@ fun PEScoreScreen(
                     title = "体测二维码",
                     onDismissRequest = { showPeQrCode.value = false }
                 ) {
-                    PEQRCode(id = studentInfo!!.stdNumber, name = studentInfo!!.stuName)
+                    Box(modifier = Modifier.background(Color.White))
+                    {
+                        PEQRCode(id = studentInfo!!.stdNumber, name = studentInfo!!.stuName)
+                    }
+
                 }
             }
             if (showLogoutConfirm) {
@@ -142,7 +179,6 @@ fun PEScoreScreen(
                             onClick = {
                                 viewModel.logout()
                                 showLogoutConfirm = false
-                                showLoginDialog = true
                             },) {
                             Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
                         }
@@ -199,6 +235,18 @@ fun PEScoreScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 overscrollEffect = overscrollEffect
             ) {
+                if (!loggedIn) {
+                    item {
+                        SmallTitle(text = "账号")
+                        AppCard {
+                            ArrowPreference(
+                                title = "登录",
+                                summary = "用于获取体测成绩",
+                                onClick = { showLoginDialog = true })
+                        }
+                    }
+                }
+
                 items(yearScores, key = { it.schoolYear }) { score ->
                     Box(
                         modifier = Modifier.animateItem(
@@ -218,7 +266,7 @@ fun PEScoreScreen(
                                     val nextYear = score.schoolYear.toInt() + 1
                                     Text(
                                         text = "${score.schoolYear}-${nextYear}学年",
-                                        fontSize = 16.sp,
+                                        fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
@@ -229,7 +277,7 @@ fun PEScoreScreen(
                                 }
                                 Text(
                                     text = if (score.isFree == 0) "${score.total}分" else "免测",
-                                    fontSize = 20.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }

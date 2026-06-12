@@ -37,10 +37,7 @@ class PERoomRepository(
     }
 
     suspend fun replaceScores(scores: List<PEYearScore>) {
-        peYearScoreDao.deleteAll()
-        if (scores.isNotEmpty()) {
-            peYearScoreDao.insertScores(scores.map { it.toEntity() })
-        }
+        peYearScoreDao.replaceAll(scores.map { it.toEntity() })
     }
 
     suspend fun saveStudentInfo(info: PEStudentInfo) {
@@ -48,11 +45,8 @@ class PERoomRepository(
     }
 
     suspend fun saveDetailData(schoolYear: String, detail: PEDetailData) {
-        peDetailDao.deleteDetailScoresByYear(schoolYear)
-        peDetailDao.deleteDetailSummaryByYear(schoolYear)
         val (summaries, scores) = detail.toEntity(schoolYear)
-        summaries.firstOrNull()?.let { peDetailDao.insertDetailSummary(it) }
-        peDetailDao.insertDetailScores(scores)
+        peDetailDao.replaceDetailByYear(schoolYear, summaries.firstOrNull(), scores)
     }
 
     suspend fun clearAll() {

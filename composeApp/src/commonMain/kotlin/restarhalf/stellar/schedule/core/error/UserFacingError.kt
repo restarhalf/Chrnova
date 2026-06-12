@@ -27,6 +27,15 @@ enum class UserFacingErrorKind(
     DownloadUpdate(
         fallbackMessage = "下载更新失败，请稍后重试",
     ),
+    LoadPEScores(
+        fallbackMessage = "加载体测成绩失败，请稍后重试",
+        invalidDataMessage = "体测数据暂时无法解析，请稍后重试",
+    ),
+    LoadPEDetail(
+        fallbackMessage = "加载体测详情失败，请稍后重试",
+        invalidDataMessage = "体测详情暂时无法解析，请稍后重试",
+    ),
+    ;
 }
 
 fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {

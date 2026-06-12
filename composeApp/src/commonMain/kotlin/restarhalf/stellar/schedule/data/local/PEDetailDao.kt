@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -31,4 +32,16 @@ interface PEDetailDao {
 
     @Query("DELETE FROM pe_detail_summary")
     suspend fun deleteAllSummary()
+
+    @Transaction
+    suspend fun replaceDetailByYear(
+        schoolYear: String,
+        summary: PEDetailSummaryEntity?,
+        scores: List<PESubjectScoreEntity>
+    ) {
+        deleteDetailScoresByYear(schoolYear)
+        deleteDetailSummaryByYear(schoolYear)
+        summary?.let { insertDetailSummary(it) }
+        insertDetailScores(scores)
+    }
 }
