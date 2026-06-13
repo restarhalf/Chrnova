@@ -10,6 +10,16 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 
+/**
+ * 同步课程用例
+ * 
+ * 执行教务系统课程同步的完整流程：
+ * 1. 确保用户已登录
+ * 2. 获取当前学期
+ * 3. 匹配校区
+ * 4. 执行同步
+ * 5. 刷新提醒
+ */
 class RunSyncUseCase(
     private val authWorkflow: AuthWorkflowPort,
     private val academic: AcademicPort,
@@ -19,15 +29,23 @@ class RunSyncUseCase(
     private val reminderScheduler: ReminderSchedulerPort,
 ) {
 
+    /**
+     * 执行同步操作
+     * 
+     * @return 同步结果
+     * @throws IllegalStateException 同步失败时抛出
+     */
     suspend operator fun invoke(): SyncResult {
         authWorkflow.ensureLoggedIn()
 
+        // 获取学期ID
         val selectedTerm = settings.observeSelectedTerm().first()
         val semesterId =
             if (selectedTerm.isNotBlank()) selectedTerm else academic.fetchCurrentTermId()
 
         val localCampus = timetable.getCampus()
 
+        // 获取校区列表并匹配
         val campuses = academic.fetchCampuses()
         if (campuses.isEmpty()) {
             throw IllegalStateException("校区列表为空")
@@ -42,22 +60,30 @@ class RunSyncUseCase(
             throw IllegalStateException("获取校区失败")
         }
 
+        // 执行同步，如果失败则刷新会话后重试
         val firstAttempt =
             runCatching { sync.sync(semesterId = semesterId, campusId = campus.id, week = "all") }
         val result =
             if (firstAttempt.isSuccess) {
                 firstAttempt.getOrThrow()
             } else {
-                authWorkflow.logout()
-                authWorkflow.ensureLoggedIn()
+                authWorkflow.refreshSession()
                 sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
             }
 
+        // 刷新提醒
         reminderScheduler.scheduleNow()
 
         return result.copy(campusName = campus.name)
     }
 
+    /**
+     * 检查校区名称是否匹配
+     * 
+     * @param local 本地校区
+     * @param remoteName 远程校区名称
+     * @return 是否匹配
+     */
     private fun isCampusNameMatch(local: Campus, remoteName: String): Boolean {
         val name = remoteName.trim()
         return when (local) {

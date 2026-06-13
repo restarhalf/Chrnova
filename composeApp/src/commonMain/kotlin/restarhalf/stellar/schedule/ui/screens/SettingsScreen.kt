@@ -66,6 +66,14 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+/**
+ * 设置页面状态
+ * 
+ * @param syncUiState 同步状态
+ * @param campus 当前校区
+ * @param termStartMs 学期开始时间戳
+ * @param totalWeeks 学期总周数
+ */
 data class SettingsScreenState(
     val syncUiState: SyncUiState,
     val campus: Campus,
@@ -73,6 +81,20 @@ data class SettingsScreenState(
     val totalWeeks: Int,
 )
 
+/**
+ * 设置页面操作回调
+ * 
+ * @param onSync 同步回调
+ * @param onLogout 登出回调
+ * @param onLogin 登录回调
+ * @param ensureCourseReminderPermission 课程提醒权限请求回调
+ * @param ensureExamReminderPermission 考试提醒权限请求回调
+ * @param onCampusChange 校区变更回调
+ * @param onTermStartChange 学期开始时间变更回调
+ * @param onTotalWeeksChange 总周数变更回调
+ * @param onChangeBackground 更换背景回调
+ * @param onAbout 关于页面回调
+ */
 data class SettingsScreenActions(
     val onSync: suspend () -> Unit,
     val onLogout: () -> Unit,
@@ -86,6 +108,21 @@ data class SettingsScreenActions(
     val onAbout: () -> Unit,
 )
 
+/**
+ * 设置页面屏幕
+ * 
+ * 显示应用设置，包括：
+ * - 账号登录/登出
+ * - 校区选择
+ * - 学期设置
+ * - 提醒设置
+ * - 主题设置
+ * - 背景设置
+ * - 关于页面
+ * 
+ * @param state 设置页面状态
+ * @param actions 设置页面操作回调
+ */
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SettingsScreen(

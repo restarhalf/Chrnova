@@ -32,6 +32,23 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 
+/**
+ * 课程详情项组件
+ * 
+ * 在课程详情弹窗中显示单个课程的详细信息，包括：
+ * - 课程名称和标签（实验课、调课、非本周）
+ * - 周次和节次时间
+ * - 地点和教师
+ * - 操作按钮（调课、编辑）
+ * 
+ * @param modifier Modifier修饰符
+ * @param course 课程数据
+ * @param isCurrent 是否为当前周课程
+ * @param surfaceSoft 柔和表面颜色
+ * @param uiState ViewModel UI状态
+ * @param onEdit 编辑回调
+ * @param onTrans 调课回调
+ */
 @Composable
 fun CourseDetailItem(
     modifier: Modifier = Modifier,

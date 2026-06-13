@@ -27,8 +27,13 @@ import restarhalf.stellar.schedule.domain.usecase.SetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
+/**
+ * 应用主ViewModel
+ * 
+ * 管理应用的核心状态，包括校区、学期开始时间、总周数等。
+ * 负责处理同步、登录、登出等全局操作。
+ */
 class AppViewModel(
-
     getCampusUseCase: GetCampusUseCase,
     observeCampusUseCase: ObserveCampusUseCase,
     getTotalWeeksUseCase: GetTotalWeeksUseCase,
@@ -44,6 +49,13 @@ class AppViewModel(
     private val loginUseCase: LoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
 ) : ViewModel() {
+    /**
+     * 应用UI状态数据类
+     * 
+     * @param campus 当前校区
+     * @param termStartMs 学期开始时间戳（毫秒）
+     * @param totalWeeks 学期总周数
+     */
     data class AppUiState(
         val campus: Campus,
         val termStartMs: Long,
@@ -69,7 +81,14 @@ class AppViewModel(
                     ),
             )
 
+    /** 对外暴露的UI状态流 */
     val uiState: StateFlow<AppUiState> = _uiState
+
+    /**
+     * 执行教务系统同步
+     * 
+     * @param updateState 状态更新回调，用于通知UI同步进度
+     */
     suspend fun runSync(updateState: (SyncUiState) -> Unit) {
         updateState(SyncUiState.Loading)
         val uiState =
@@ -89,22 +108,33 @@ class AppViewModel(
         updateState(uiState)
     }
 
+    /** 用户登出，清除认证信息 */
     fun logout() {
         clearAuth()
     }
 
+    /** 校区变更回调 */
     fun onCampusChanged(campus: Campus) {
         setCampusUseCase(campus)
     }
 
+    /** 学期开始时间变更回调 */
     fun onTermStartMsChanged(ms: Long) {
         setTermStartMsUseCase(ms)
     }
 
+    /** 总周数变更回调 */
     fun onTotalWeeksChanged(weeks: Int) {
         setTotalWeeksUseCase(weeks)
     }
 
+    /**
+     * 获取考试安排
+     * 
+     * @param semester 学期ID，空字符串表示当前学期
+     * @param nameOrNumber 课程名称或编号筛选
+     * @return 考试安排列表
+     */
     suspend fun fetchExaminationArrangements(
         semester: String = "",
         nameOrNumber: String = ""
@@ -112,10 +142,25 @@ class AppViewModel(
         return fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
     }
 
+    /**
+     * 获取成绩报告
+     * 
+     * @param semester 学期ID，空字符串表示当前学期
+     * @return 学期成绩报告
+     */
     suspend fun fetchGradeReport(semester: String = ""): TermGradeReport {
         return fetchGrades(semester = semester)
     }
 
+    /**
+     * 用户登录
+     * 
+     * @param userNo 学号
+     * @param password 密码
+     * @param captchaData 验证码数据（Base64编码）
+     * @param codeVal 用户输入的验证码
+     * @param p 加密参数（可选）
+     */
     suspend fun login(
         userNo: String,
         password: String,

@@ -79,8 +79,7 @@ class RescheduleRemindersUseCase(
         authWorkflow.ensureLoggedIn()
         return runCatching { academic.fetchExaminations(semester = "", nameOrNumber = "") }
             .getOrElse {
-                authWorkflow.logout()
-                authWorkflow.ensureLoggedIn()
+                authWorkflow.refreshSession()
                 academic.fetchExaminations(semester = "", nameOrNumber = "")
             }
     }

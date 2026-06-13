@@ -7,10 +7,24 @@ import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 
+/**
+ * 教务数据端口实现类
+ * 
+ * 实现AcademicPort接口，负责从教务系统获取学术数据。
+ * 包括学期信息、校区列表、考试安排、成绩报告等。
+ * 
+ * @param gateway 教务系统网关客户端
+ */
 class AcademicPortImpl(
     private val gateway: JwxtGateway,
 ) : AcademicPort {
 
+    /**
+     * 获取当前学期ID
+     * 
+     * @return 当前学期ID
+     * @throws IllegalStateException 获取失败时抛出
+     */
     override suspend fun fetchCurrentTermId(): String {
         val term = gateway.getCurrentTerm()
         if (!term.isSuccess()) {
@@ -23,6 +37,12 @@ class AcademicPortImpl(
         return id
     }
 
+    /**
+     * 获取校区列表
+     * 
+     * @return 远程校区列表
+     * @throws IllegalStateException 获取失败时抛出
+     */
     override suspend fun fetchCampuses(): List<RemoteCampus> {
         val campus = gateway.getCampusList()
         if (!campus.isSuccess()) {
@@ -37,10 +57,23 @@ class AcademicPortImpl(
         }
     }
 
+    /**
+     * 获取学期ID列表
+     * 
+     * @return 学期ID列表（去重）
+     */
     override suspend fun fetchSemesterIds(): List<String> {
         return gateway.getSemesterList().map { it.xnxq01id }.filter { it.isNotBlank() }.distinct()
     }
 
+    /**
+     * 获取考试安排
+     * 
+     * @param semester 学期ID
+     * @param nameOrNumber 课程名称或编号筛选
+     * @return 考试安排列表
+     * @throws IllegalStateException 获取失败时抛出
+     */
     override suspend fun fetchExaminations(
         semester: String,
         nameOrNumber: String
@@ -63,6 +96,13 @@ class AcademicPortImpl(
         }
     }
 
+    /**
+     * 获取学期成绩报告
+     * 
+     * @param semester 学期ID
+     * @return 学期成绩报告
+     * @throws IllegalStateException 获取失败时抛出
+     */
     override suspend fun fetchGradeReport(semester: String): TermGradeReport {
         val resp = gateway.fetchTermGradeReport(semester = semester)
         if (!resp.isSuccess()) {

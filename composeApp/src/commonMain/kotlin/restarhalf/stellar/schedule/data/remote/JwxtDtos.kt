@@ -9,6 +9,13 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
+/**
+ * 教务系统API数据传输对象（DTO）
+ * 
+ * 定义与教务系统通信的所有数据结构，用于JSON序列化/反序列化。
+ */
+
+/** 登录响应 */
 @Serializable
 data class JwxtLoginResponse(
     @SerialName("code") val code: Int = -1,
@@ -19,6 +26,7 @@ data class JwxtLoginResponse(
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
 
+/** 登录数据 */
 @Serializable
 data class JwxtLoginData(
     @SerialName("birthday") val birthday: String = "",
@@ -32,6 +40,7 @@ data class JwxtLoginData(
     @SerialName("iscsh") val isFirstLogin: String? = null
 )
 
+/** 通用API响应 */
 @Serializable
 data class JwxtApiResponse<T>(
     @SerialName("code") val code: String = "",
@@ -44,14 +53,17 @@ data class JwxtApiResponse<T>(
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
 
+/** 当前学期项 */
 @Serializable
 data class JwxtCurrentTermItem(
     @SerialName("semesterId") val semesterId: String = "",
     @SerialName("semesterName") val semesterName: String = ""
 )
 
+/** 当前学期响应类型别名 */
 typealias JwxtCurrentTermResponse = JwxtApiResponse<List<JwxtCurrentTermItem>>
 
+/** 学期项 */
 @Serializable
 data class JwxtSemesterItem(
     @SerialName("num") val num: String = "",
@@ -66,9 +78,11 @@ data class JwxtSemesterItem(
     fun isCurrent(): Boolean = isCurrentTerm == "1"
 }
 
+/** 教学周项 */
 @Serializable
 data class JwxtTeachingWeekItem(@SerialName("week") val week: String = "")
 
+/** 教学周响应 */
 @Serializable
 data class JwxtTeachingWeekResponse(
     @SerialName("isNowWeek") val isNowWeek: String = "",
@@ -80,6 +94,7 @@ data class JwxtTeachingWeekResponse(
     fun isSuccess(): Boolean = code == "1"
 }
 
+/** 校区项 */
 @Serializable
 data class JwxtCampusItem(
     @SerialName("mrms") val isDefault: String = "",
@@ -89,6 +104,7 @@ data class JwxtCampusItem(
     fun isDefaultCampus(): Boolean = isDefault == "1"
 }
 
+/** 校区响应 */
 @Serializable
 data class JwxtCampusResponse(
     @SerialName("msg") val msg: String = "",
@@ -98,6 +114,7 @@ data class JwxtCampusResponse(
     fun isSuccess(): Boolean = code == 1
 }
 
+/** 课程表响应 */
 @Serializable
 data class JwxtCurriculumResponse(
     @SerialName("Msg") val msg: String = "",
@@ -110,6 +127,7 @@ data class JwxtCurriculumResponse(
     fun isSuccess(): Boolean = code == "1"
 }
 
+/** 周次字符串序列化器 */
 private object WeekAsStringSerializer : KSerializer<String> {
     override val descriptor = buildClassSerialDescriptor("WeekAsString")
 
@@ -121,6 +139,7 @@ private object WeekAsStringSerializer : KSerializer<String> {
     }
 }
 
+/** 课程表日期块 */
 @Serializable
 data class JwxtCurriculumDayBlock(
     @SerialName("date") val date: List<JwxtDateItem> = emptyList(),
@@ -129,6 +148,7 @@ data class JwxtCurriculumDayBlock(
     @SerialName("weekday") val weekday: String = ""
 )
 
+/** 日期项 */
 @Serializable
 data class JwxtDateItem(
     @SerialName("xqmc") val xqmc: String = "",
@@ -137,6 +157,7 @@ data class JwxtDateItem(
     @SerialName("xqid") val xqid: Int = 0
 )
 
+/** 课程项 */
 @Serializable
 data class JwxtCurriculumItem(
     @SerialName("classWeek") val classWeek: String = "",
@@ -162,12 +183,14 @@ data class JwxtCurriculumItem(
     @SerialName("coursesNote") val coursesNote: Int = 0
 )
 
+/** 节次数据项 */
 @Serializable
 data class JwxtJcDataItem(
     @SerialName("XJMC") val xjmc: String = "",
     @SerialName("DJMC") val djmc: String = ""
 )
 
+/** 非课表项 */
 @Serializable
 data class JwxtNkbItem(
     @SerialName("kch") val kch: String = "",
@@ -180,6 +203,7 @@ data class JwxtNkbItem(
 )
 
 
+/** 考试安排项 */
 @Serializable
 data class JwxtExaminationItem(
     @SerialName("courseName") val courseName: String = "",
@@ -190,6 +214,7 @@ data class JwxtExaminationItem(
     @SerialName("time") val time: String = ""
 )
 
+/** 考试安排响应 */
 @Serializable
 data class JwxtExaminationResponse(
     @SerialName("Msg") val msg: String = "",
@@ -203,6 +228,7 @@ data class JwxtExaminationResponse(
 }
 
 
+/** 成绩详情项 */
 @Serializable
 data class JwxtGradeAchievementItem(
     @SerialName("curriculumAttributes") val curriculumAttributes: String = "",
@@ -222,6 +248,7 @@ data class JwxtGradeAchievementItem(
     @SerialName("cj0708id") val gradeId: String = "",
 )
 
+/** 学期成绩数据项 */
 @Serializable
 data class JwxtTermGradeDataItem(
     @SerialName("studentID") val studentId: String = "",
@@ -235,4 +262,5 @@ data class JwxtTermGradeDataItem(
     @SerialName("pjxfjd") val averageCreditGradePoint: String = "",
 )
 
+/** 学期成绩响应类型别名 */
 typealias JwxtTermGradeResponse = JwxtApiResponse<List<JwxtTermGradeDataItem>>

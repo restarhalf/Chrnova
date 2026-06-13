@@ -45,6 +45,21 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 课程编辑页面屏幕
+ * 
+ * 用于添加或编辑实验课，包括：
+ * - 选择课程名称
+ * - 设置教室
+ * - 选择星期几
+ * - 选择节次范围
+ * - 选择上课周次
+ * - 保存/删除操作
+ * 
+ * @param onBack 返回回调
+ * @param isEdit 是否为编辑模式
+ * @param courseId 课程ID（编辑时使用）
+ */
 @Composable
 fun CourseEditScreen(
     onBack: () -> Unit,

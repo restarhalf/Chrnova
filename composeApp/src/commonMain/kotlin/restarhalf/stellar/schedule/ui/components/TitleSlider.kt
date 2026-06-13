@@ -13,6 +13,17 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.Text
 
+/**
+ * 带标题的滑块组件
+ * 
+ * 包含标题、摘要和滑块的复合组件，用于背景设置页面。
+ * 
+ * @param title 标题文本
+ * @param summary 摘要文本（如百分比）
+ * @param value 当前值
+ * @param onValueChange 值变化回调
+ * @param valueRange 值范围
+ */
 @Composable
 fun TitleSlider(
     title: String,

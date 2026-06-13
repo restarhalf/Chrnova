@@ -26,21 +26,39 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
+/**
+ * 标签页规格数据类
+ * 
+ * @param screen 对应的Screen
+ * @param icon 图标
+ * @param label 标签文本
+ */
 private data class TabSpec(
     val screen: Screen,
     val icon: ImageVector,
     val label: String,
 )
 
+/** 底部导航栏标签页配置 */
 private val appTabSpecs =
     listOf(
         TabSpec(screen = Screen.Home, icon = Home, label = "首页"),
         TabSpec(screen = Screen.Schedule, icon = Schedule, label = "课程表"),
         TabSpec(screen = Screen.EMS, icon = Examination, label = "考务"),
         TabSpec(screen = Screen.PEScore, icon = PE, label = "体测"),
-        TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
+        TabSpec(screen = Screen.Settings, icon = Settings, label="设置"),
     )
 
+/**
+ * 应用底部导航栏
+ * 
+ * 根据barMode显示不同样式的导航栏：
+ * - 0: 固定导航栏
+ * - 1: 悬浮导航栏
+ * - 2: 液态玻璃导航栏
+ * 
+ * @param backdrop 模糊背景层，用于液态玻璃效果
+ */
 @Composable
 fun AppBottomBar(
     backdrop: LayerBackdrop?,
@@ -48,6 +66,7 @@ fun AppBottomBar(
     val chromeState = LocalAppChromeState.current
     val mainPagerState = LocalMainPagerState.current
 
+    // 带动画的显示/隐藏
     AnimatedVisibility(
         visible = chromeState.showNavigationChrome,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(animationSpec = tween(200)),
@@ -56,6 +75,7 @@ fun AppBottomBar(
                 fadeOut(animationSpec = tween(200)),
     ) {
         when (chromeState.barMode) {
+            // 固定导航栏模式
             0 -> {
                 NavigationBar {
                     appTabSpecs.forEach { tab ->
@@ -69,6 +89,7 @@ fun AppBottomBar(
                 }
             }
 
+            // 悬浮导航栏模式
             1 -> {
                 FloatingNavigationBar {
                     appTabSpecs.forEach { tab ->
@@ -82,6 +103,7 @@ fun AppBottomBar(
                 }
             }
 
+            // 液态玻璃导航栏模式
             else -> {
                 GlassNavigationBar(
                     items = appTabSpecs.map { tab ->
@@ -100,6 +122,15 @@ fun AppBottomBar(
     }
 }
 
+/**
+ * 应用Scaffold内容区域
+ * 
+ * 提供组件透明度和Scaffold内边距的CompositionLocal。
+ * 
+ * @param innerPadding Scaffold内边距
+ * @param componentsAlpha 组件透明度
+ * @param content 内容Composable
+ */
 @Composable
 fun AppScaffoldBody(
     innerPadding: PaddingValues,

@@ -57,6 +57,17 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 
+/**
+ * 体育成绩详情屏幕
+ * 
+ * 显示指定学年的体测详情，包括：
+ * - 各项体测成绩
+ * - 成绩等级
+ * - 总分和总等级
+ * 
+ * @param schoolYear 学年
+ * @param onBack 返回回调
+ */
 @Composable
 fun PEDetailScreen(
     schoolYear: String,

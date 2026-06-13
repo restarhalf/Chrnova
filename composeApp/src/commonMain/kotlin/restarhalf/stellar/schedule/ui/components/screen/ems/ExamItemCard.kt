@@ -32,6 +32,19 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 考试项目卡片组件
+ * 
+ * 在考试安排列表中显示单个考试信息，包括：
+ * - 课程名称
+ * - 考试日期和时间
+ * - 考试地点
+ * - 座位号
+ * - 备注信息
+ * 
+ * @param modifier Modifier修饰符
+ * @param card 考试卡片UI数据
+ */
 @Composable
 fun ExamItemCard(
     modifier: Modifier = Modifier,

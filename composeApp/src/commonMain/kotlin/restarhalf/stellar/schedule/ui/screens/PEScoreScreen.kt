@@ -70,6 +70,18 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
+/**
+ * 体育成绩屏幕
+ * 
+ * 显示体测成绩列表，支持：
+ * - 登录体育系统
+ * - 查看年度体测成绩
+ * - 点击查看详情
+ * - 下拉刷新
+ * - 登出功能
+ * 
+ * @param onNavigateToDetail 导航到成绩详情页面的回调
+ */
 @Composable
 fun PEScoreScreen(
     onNavigateToDetail: (String) -> Unit,

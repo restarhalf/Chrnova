@@ -34,6 +34,18 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 更换背景页面屏幕
+ * 
+ * 允许用户自定义应用背景，包括：
+ * - 选择/移除背景图片
+ * - 调整背景透明度
+ * - 调整背景模糊度
+ * - 调整组件透明度
+ * 
+ * @param onBack 返回回调
+ * @param pictureSelectorHost 图片选择器宿主组件
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChangeBackgroundScreen(

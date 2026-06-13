@@ -58,6 +58,19 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
 
+/**
+ * 关于页面屏幕
+ * 
+ * 显示应用信息、版本、更新检查、赞助等。
+ * 
+ * @param onBack 返回回调
+ * @param onHandleEvent 处理UI事件的回调
+ * @param onStartDownload 开始下载更新的回调
+ * @param appIcon 应用图标
+ * @param showMessage 显示消息的回调
+ * @param canSaveAwardPicture 是否可以保存赞赏图片
+ * @param onSaveAwardPicture 保存赞赏图片的挂起函数
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AboutScreen(

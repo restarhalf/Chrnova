@@ -17,7 +17,17 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
+/**
+ * 更新确认对话框组件
+ * 
+ * 显示新版本信息，询问用户是否下载更新。
+ * 包含更新日志和下载按钮。
+ * 
+ * @param show 是否显示
+ * @param pendingUpdate 待处理的更新信息
+ * @param onStartDownload 开始下载回调
+ * @param onLater 稍后更新回调
+ */
 @Composable
 fun UpdateConfirmDialog(
     show: MutableState<Boolean>,

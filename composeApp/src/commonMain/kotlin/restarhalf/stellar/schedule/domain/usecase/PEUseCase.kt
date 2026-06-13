@@ -13,37 +13,79 @@ import restarhalf.stellar.schedule.data.remote.PEYearScore
 import restarhalf.stellar.schedule.data.repository.PERepository
 import restarhalf.stellar.schedule.data.repository.PERoomRepository
 
+/**
+ * 体育成绩用例
+ * 
+ * 封装体育系统相关的业务逻辑，包括登录、成绩查询、学生信息获取等。
+ * 支持自动重试和本地缓存。
+ */
 class PEUseCase(
     private val repository: PERepository,
     private val authStore: PEAuthStore,
     private val roomRepository: PERoomRepository? = null
 ) {
+    /**
+     * 检查是否已登录
+     * 
+     * @return 是否已登录
+     */
     fun isLoggedIn(): Boolean = authStore.getToken() != null
 
+    /**
+     * 用户登录
+     * 
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录响应
+     */
     suspend fun login(username: String, password: String): PELoginResponse =
         repository.login(username, password)
 
+    /**
+     * 观察成绩列表（本地缓存）
+     * 
+     * @return 成绩列表Flow
+     */
     fun observeScoreList(): Flow<List<PEYearScore>> =
         roomRepository?.observeAllScores() ?: throw IllegalStateException("本地缓存不可用")
 
+    /**
+     * 获取成绩列表
+     * 
+     * @return 成绩列表响应
+     */
     suspend fun getScoreList(): PEScoreListResponse =
         withAutoRetryAndCache(
             fetch = { repository.getScoreList() },
             onSuccess = { response -> roomRepository?.replaceScores(response.dataArr) }
         )
 
+    /**
+     * 获取成绩详情
+     * 
+     * @param schoolYear 学年
+     * @return 成绩详情响应
+     */
     suspend fun getScoreDetail(schoolYear: String): PEDetailResponse =
         withAutoRetryAndCache(
             fetch = { repository.getScoreDetail(schoolYear) },
             onSuccess = { response -> response.data?.let { roomRepository?.saveDetailData(schoolYear, it) } }
         )
 
+    /**
+     * 获取学生信息
+     * 
+     * @return 学生信息响应
+     */
     suspend fun getStudentInfo(): PEStudentInfoResponse =
         withAutoRetryAndCache(
             fetch = { repository.getStudentInfo() },
             onSuccess = { response -> response.data?.let { roomRepository?.saveStudentInfo(it) } }
         )
 
+    /**
+     * 用户登出
+     */
     suspend fun logout() {
         authStore.clearAll()
         roomRepository?.clearAll()

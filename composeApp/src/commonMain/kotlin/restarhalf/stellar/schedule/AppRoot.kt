@@ -29,6 +29,25 @@ import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
 
+/**
+ * 应用根组件，负责初始化应用状态和管理全局UI逻辑
+ * 
+ * 该组件是整个应用的入口点，主要职责包括：
+ * - 初始化ViewModel和依赖注入
+ * - 管理应用全局状态（AppState）
+ * - 处理应用更新检查和下载
+ * - 管理隐私协议确认流程
+ * - 提供CompositionLocal供子组件访问状态
+ * 
+ * @param appIcon 应用图标，用于更新对话框展示
+ * @param pictureSelectorHost 图片选择器宿主组件，用于处理图片选择回调
+ * @param ensureNotificationPermission 通知权限请求回调
+ * @param openUri 打开URI的回调函数
+ * @param showMessage 显示消息的回调函数（如Toast）
+ * @param canSaveAwardPicture 是否可以保存奖励图片
+ * @param saveAwardPicture 保存奖励图片的挂起函数
+ * @param exitApp 退出应用的回调函数
+ */
 @Composable
 fun AppRoot(
     appIcon: ImageBitmap? = null,

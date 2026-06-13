@@ -2,35 +2,50 @@ package restarhalf.stellar.schedule.core.error
 
 import kotlinx.coroutines.CancellationException
 
+/**
+ * 用户可见错误类型枚举
+ * 
+ * 定义应用中可能出现的错误类型，每种类型包含默认错误消息和数据格式错误消息。
+ */
 enum class UserFacingErrorKind(
+    /** 默认错误消息，用于通用错误情况 */
     val fallbackMessage: String,
+    /** 数据格式错误消息，用于服务器返回数据无法解析的情况 */
     val invalidDataMessage: String = fallbackMessage,
 ) {
+    /** 登录失败 */
     Login(
         fallbackMessage = "登录失败，请稍后重试",
     ),
+    /** 课程同步失败 */
     Sync(
         fallbackMessage = "同步失败，请稍后重试",
     ),
+    /** 成绩加载失败 */
     LoadGrades(
         fallbackMessage = "加载成绩失败，请稍后重试",
         invalidDataMessage = "成绩数据暂时无法解析，请稍后重试",
     ),
+    /** 考试安排加载失败 */
     LoadExaminations(
         fallbackMessage = "加载考试安排失败，请稍后重试",
         invalidDataMessage = "考试数据暂时无法解析，请稍后重试",
     ),
+    /** 检查更新失败 */
     CheckUpdate(
         fallbackMessage = "检查更新失败，请稍后重试",
         invalidDataMessage = "更新信息暂时无法解析，请稍后重试",
     ),
+    /** 下载更新失败 */
     DownloadUpdate(
         fallbackMessage = "下载更新失败，请稍后重试",
     ),
+    /** 体测成绩加载失败 */
     LoadPEScores(
         fallbackMessage = "加载体测成绩失败，请稍后重试",
         invalidDataMessage = "体测数据暂时无法解析，请稍后重试",
     ),
+    /** 体测详情加载失败 */
     LoadPEDetail(
         fallbackMessage = "加载体测详情失败，请稍后重试",
         invalidDataMessage = "体测详情暂时无法解析，请稍后重试",
@@ -38,14 +53,26 @@ enum class UserFacingErrorKind(
     ;
 }
 
+/**
+ * 将异常转换为用户友好的错误消息
+ * 
+ * 该函数会分析异常的类型和消息，提取有意义的业务错误信息，
+ * 或者根据错误类型返回相应的默认提示消息。
+ * 
+ * @param kind 错误类型，用于确定使用哪种默认消息
+ * @return 用户友好的错误消息字符串
+ */
 fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
+    // 尝试提取业务友好的错误消息
     extractBusinessMessageOrNull()?.let { return it }
 
     val hints = buildHintText()
+    // 处理协程取消异常
     if (this is CancellationException || hints.contains("cancellation")) {
         return "操作已取消"
     }
 
+    // 检查登录状态失效
     if (kind.usesLoginState() && isLoginStateHint(hints)) {
         return "登录状态已失效，请重新登录"
     }

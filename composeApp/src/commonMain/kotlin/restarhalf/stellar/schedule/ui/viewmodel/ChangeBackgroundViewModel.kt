@@ -8,8 +8,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+/**
+ * 更换背景ViewModel
+ * 
+ * 管理背景更换页面的UI状态，包括：
+ * - 背景图片选择
+ * - 背景透明度调整
+ * - 背景模糊度调整
+ * - 组件透明度调整
+ */
 class ChangeBackgroundViewModel : ViewModel() {
 
+    /**
+     * 更换背景UI状态
+     * 
+     * @param hasCustomImage 是否有自定义背景图片
+     * @param imageSummary 图片状态摘要
+     * @param backgroundAlphaPercent 背景透明度百分比文本
+     * @param backgroundBlurPercent 背景模糊度百分比文本
+     * @param componentsAlphaPercent 组件透明度百分比文本
+     */
     data class ChangeBackgroundUiState(
         val hasCustomImage: Boolean,
         val imageSummary: String,
@@ -49,8 +67,17 @@ class ChangeBackgroundViewModel : ViewModel() {
                     ),
             )
 
+    /** 对外暴露的UI状态流 */
     val uiState: StateFlow<ChangeBackgroundUiState> = _uiState
 
+    /**
+     * 更新背景设置
+     * 
+     * @param backgroundImageUri 背景图片URI
+     * @param backgroundAlpha 背景透明度（0.0-1.0）
+     * @param backgroundBlur 背景模糊度（0.0-1.0）
+     * @param componentsAlpha 组件透明度（0.0-1.0）
+     */
     fun updateBackground(
         backgroundImageUri: String?,
         backgroundAlpha: Float,
@@ -63,6 +90,15 @@ class ChangeBackgroundViewModel : ViewModel() {
         _componentsAlpha.value = componentsAlpha
     }
 
+    /**
+     * 构建更换背景页面UI
+     * 
+     * @param backgroundImageUri 背景图片URI
+     * @param backgroundAlpha 背景透明度
+     * @param backgroundBlur 背景模糊度
+     * @param componentsAlpha 组件透明度
+     * @return 更换背景页面UI
+     */
     fun buildScreenUi(
         backgroundImageUri: String?,
         backgroundAlpha: Float,

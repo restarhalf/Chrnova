@@ -18,24 +18,53 @@ import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
+/**
+ * 关于页面UI事件密封接口
+ */
 sealed interface AboutUiEvent {
+    /** 打开URI */
     data class OpenUri(val uri: String) : AboutUiEvent
 
+    /** 加入QQ群 */
     data class JoinQqGroup(val key: String) : AboutUiEvent
 
+    /** 微信赞赏请求 */
     data object WxPayAwardRequested : AboutUiEvent
 }
 
+/**
+ * 关于页面ViewModel
+ * 
+ * 管理关于页面的UI状态，包括：
+ * - 版本信息显示
+ * - 应用更新检查
+ * - 外部链接跳转（GitHub、教务系统、赞赏等）
+ */
 class AboutViewModel(
     private val appUpdate: AppUpdatePort,
 ) : ViewModel() {
 
+    /**
+     * 关于页面UI状态
+     * 
+     * @param updateChecking 是否正在检查更新
+     * @param updateSummary 更新状态摘要
+     * @param pendingUpdate 待处理的更新信息
+     */
     data class AboutUiState(
         val updateChecking: Boolean,
         val updateSummary: String,
         val pendingUpdate: AppUpdateInfo?,
     )
 
+    /**
+     * 关于页面屏幕UI
+     * 
+     * @param versionDisplay 版本显示文本
+     * @param currentVersionForCheck 用于检查更新的当前版本
+     * @param updateActionSummary 更新操作摘要
+     * @param canCheckUpdate 是否可以检查更新
+     */
     data class AboutScreenUi(
         val versionDisplay: String,
         val currentVersionForCheck: String,
@@ -43,6 +72,7 @@ class AboutViewModel(
         val canCheckUpdate: Boolean,
     )
 
+    /** UI事件流，用于发送一次性事件 */
     private val _events = MutableSharedFlow<AboutUiEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<AboutUiEvent> = _events
 
@@ -66,8 +96,18 @@ class AboutViewModel(
                 initialValue = AboutUiState(updateChecking = false, updateSummary = "检查", pendingUpdate = null),
             )
 
+    /** 对外暴露的UI状态流 */
     val uiState: StateFlow<AboutUiState> = _uiState
 
+    /**
+     * 构建关于页面屏幕UI
+     * 
+     * @param isInPreview 是否为预览版
+     * @param versionName 版本名称
+     * @param updateChecking 是否正在检查更新
+     * @param updateSummary 更新状态摘要
+     * @return 关于页面屏幕UI
+     */
     fun buildScreenUi(
         isInPreview: Boolean,
         versionName: String,
@@ -83,10 +123,16 @@ class AboutViewModel(
         )
     }
 
+    /** 清除待处理的更新信息 */
     fun clearPendingUpdate() {
         _pendingUpdate.value = null
     }
 
+    /**
+     * 检查应用更新
+     * 
+     * @param currentVersionName 当前版本名称
+     */
     fun checkUpdate(currentVersionName: String) {
         if (_updateChecking.value) return
 
@@ -117,26 +163,36 @@ class AboutViewModel(
         }
     }
 
+    /**
+     * 请求加入QQ群
+     * 
+     * @param key QQ群加群链接中的key参数
+     */
     fun requestJoinQqGroup(key: String) {
         _events.tryEmit(AboutUiEvent.JoinQqGroup(key))
     }
 
+    /** 请求加入默认QQ群 */
     fun requestJoinDefaultQqGroup() {
         requestJoinQqGroup(DEFAULT_QQ_GROUP_KEY)
     }
 
+    /** 请求打开教务系统PC端 */
     fun requestOpenJwxtPc() {
         _events.tryEmit(AboutUiEvent.OpenUri("http://jwxt.dlnu.edu.cn/jsxsd/"))
     }
 
+    /** 请求打开教务系统移动端 */
     fun requestOpenJwxtMobile() {
         _events.tryEmit(AboutUiEvent.OpenUri("http://jwyd.dlnu.edu.cn/sjd/#/login"))
     }
 
+    /** 请求打开GitHub仓库 */
     fun requestOpenGithub() {
         _events.tryEmit(AboutUiEvent.OpenUri("https://github.com/restarhalf/scheduleKMP"))
     }
 
+    /** 请求打开支付宝赞赏码 */
     fun requestOpenAlipayAward() {
         _events.tryEmit(
             AboutUiEvent.OpenUri(
@@ -145,6 +201,7 @@ class AboutViewModel(
         )
     }
 
+    /** 请求微信赞赏 */
     fun requestWxPayAward() {
         _events.tryEmit(AboutUiEvent.WxPayAwardRequested)
     }

@@ -5,15 +5,36 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import kotlin.time.ExperimentalTime
 
+/**
+ * 构建课程表UI状态用例
+ * 
+ * 计算课程表页面的初始状态，包括当前周次、页码、时间表等。
+ */
 class BuildScheduleUiStateUseCase(
     private val getCampusTimetable: GetCampusTimetableUseCase,
 ) {
+    /**
+     * 检测到的周次信息
+     * 
+     * @param isHoliday 是否为假期
+     * @param week 当前周次
+     * @param diffDays 距离学期开始的天数差
+     */
     data class DetectedWeekInfo(
         val isHoliday: Boolean,
         val week: Int,
         val diffDays: Int,
     )
 
+    /**
+     * 课程表UI状态
+     * 
+     * @param detectedWeekInfo 检测到的周次信息
+     * @param includeWeek0 是否包含第0周（假期周）
+     * @param pagerInitialPage Pager初始页码
+     * @param pagerPageCount Pager总页数
+     * @param timetable 时间表配置
+     */
     data class ScheduleUiState(
         val detectedWeekInfo: DetectedWeekInfo,
         val includeWeek0: Boolean,
@@ -22,6 +43,14 @@ class BuildScheduleUiStateUseCase(
         val timetable: List<TimetableSlot>,
     )
 
+    /**
+     * 检测周次信息
+     * 
+     * @param totalWeeks 总周数
+     * @param termStartMs 学期开始时间戳
+     * @param nowMs 当前时间戳
+     * @return 检测到的周次信息
+     */
     fun detectWeekInfo(
         totalWeeks: Int,
         termStartMs: Long,
@@ -36,6 +65,15 @@ class BuildScheduleUiStateUseCase(
         )
     }
 
+    /**
+     * 构建课程表UI状态
+     * 
+     * @param campus 校区
+     * @param totalWeeks 总周数
+     * @param termStartMs 学期开始时间戳
+     * @param nowMs 当前时间戳
+     * @return 课程表UI状态
+     */
     @OptIn(ExperimentalTime::class)
     operator fun invoke(
         campus: Campus,
@@ -58,10 +96,24 @@ class BuildScheduleUiStateUseCase(
         )
     }
 
+    /**
+     * 页面索引转周次
+     * 
+     * @param page 页面索引
+     * @param includeWeek0 是否包含第0周
+     * @return 周次
+     */
     fun pageToWeek(page: Int, includeWeek0: Boolean): Int {
         return if (includeWeek0) page else page + 1
     }
 
+    /**
+     * 周次转页面索引
+     * 
+     * @param week 周次
+     * @param includeWeek0 是否包含第0周
+     * @return 页面索引
+     */
     fun weekToPage(week: Int, includeWeek0: Boolean): Int {
         return if (includeWeek0) week else week - 1
     }

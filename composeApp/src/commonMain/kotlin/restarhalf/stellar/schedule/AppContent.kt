@@ -66,23 +66,45 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 应用主内容组件
+ * 
+ * 负责渲染应用的主要UI结构，包括：
+ * - 底部导航栏
+ * - 页面导航和转场动画
+ * - 背景图片显示
+ * - 各功能页面的路由
+ * 
+ * 使用Navigation3实现页面导航，支持左右滑动切换页面和返回手势。
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppContent(
+    /** 应用ViewModel，管理业务逻辑和状态 */
     vm: AppViewModel,
+    /** 背景ViewModel，管理背景图片相关状态 */
     bgVm: BackgroundViewModel,
+    /** 应用更新端口，处理版本检查和下载 */
     appUpdate: AppUpdatePort,
+    /** 应用图标，用于关于页面展示 */
     appIcon: ImageBitmap? = null,
+    /** 图片选择器宿主组件，用于处理图片选择回调 */
     pictureSelectorHost: @Composable (
         show: Boolean,
         onDismissRequest: () -> Unit,
         onPicked: (String) -> Unit,
     ) -> Unit = { _, _, _ -> },
+    /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    /** 打开URI的回调函数 */
     openUri: (String) -> Boolean = { false },
+    /** 显示消息的回调函数（如Toast） */
     showMessage: (String) -> Unit = {},
+    /** 是否可以保存奖励图片 */
     canSaveAwardPicture: Boolean = false,
+    /** 保存奖励图片的挂起函数 */
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
+    /** 同步教务系统的挂起函数 */
     runSync: suspend () -> Unit,
 ) {
     val appState = LocalAppState.current
@@ -297,11 +319,25 @@ fun AppContent(
     }
 }
 
+/**
+ * 主路由内容组件
+ * 
+ * 使用HorizontalPager实现底部导航栏的页面切换，支持左右滑动。
+ * 包含以下页面：
+ * - Home：首页，显示今日课程
+ * - Schedule：课程表，按周查看完整课表
+ * - EMS：考试与成绩
+ * - PEScore：体育成绩
+ * - Settings：设置
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainRouteContent(
+    /** 应用ViewModel */
     vm: AppViewModel,
+    /** 同步教务系统的挂起函数 */
     runSync: suspend () -> Unit,
+    /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
 ) {
     val appState = LocalAppState.current

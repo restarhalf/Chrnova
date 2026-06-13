@@ -77,6 +77,23 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("UNUSED_VALUE")
+/**
+ * 课程表屏幕
+ * 
+ * 显示完整的课程表，支持：
+ * - 左右滑动切换周次
+ * - 课程卡片显示
+ * - 课程详情弹窗
+ * - 调课功能
+ * - 实验课添加
+ * 
+ * @param onSync 同步回调
+ * @param campus 当前校区
+ * @param termStartMs 学期开始时间戳
+ * @param totalWeeks 学期总周数
+ * @param onAddLabCourse 添加实验课回调
+ * @param onEditLabCourse 编辑实验课回调
+ */
 fun ScheduleScreen(
     onSync: suspend () -> Unit,
     campus: Campus,

@@ -35,6 +35,15 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 首页屏幕
+ * 
+ * 显示今日课程、问候语、当前时间等信息。
+ * 
+ * @param campus 当前校区
+ * @param termStartMs 学期开始时间戳
+ * @param totalWeeks 学期总周数
+ */
 @Composable
 fun HomeScreen(
     campus: Campus,

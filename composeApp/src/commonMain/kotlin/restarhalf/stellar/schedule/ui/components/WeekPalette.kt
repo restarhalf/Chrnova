@@ -23,6 +23,23 @@ import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 周次选择器组件
+ * 
+ * 网格状的周次选择器，支持多选、禁用状态。
+ * 用于实验课编辑时选择上课周次。
+ * 
+ * @param modifier Modifier修饰符
+ * @param weeks 总周数
+ * @param selectedWeeks 已选中的周次集合
+ * @param disabledWeeks 禁用的周次集合（有冲突的周次）
+ * @param onToggleWeek 切换周次选中状态的回调
+ * @param columns 每行列数
+ * @param itemHeight 每个周次项的高度
+ * @param cornerRadius 圆角半径
+ * @param horizontalSpacing 水平间距
+ * @param verticalSpacing 垂直间距
+ */
 @Composable
 fun WeekPalette(
     modifier: Modifier = Modifier,
@@ -36,12 +53,14 @@ fun WeekPalette(
     horizontalSpacing: Dp = 6.dp,
     verticalSpacing: Dp = 6.dp,
 ) {
+    // 定义颜色
     val selectedBg = MiuixTheme.colorScheme.primary
     val unselectedBg = MiuixTheme.colorScheme.secondary
     val selectedText = MiuixTheme.colorScheme.onPrimary
     val unselectedText = Color.Unspecified.copy(0.8f)
     val notEnableText = MiuixTheme.colorScheme.onSecondary.copy(0.4f)
 
+    // 按列数分组
     val rows = (1..weeks).toList().chunked(columns)
     Column(
         modifier = modifier.fillMaxWidth(),

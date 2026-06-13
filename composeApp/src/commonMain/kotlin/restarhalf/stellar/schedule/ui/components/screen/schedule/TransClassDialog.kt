@@ -25,6 +25,28 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 调课对话框组件
+ * 
+ * 用于将课程调整到其他周次，支持：
+ * - 选择目标周次
+ * - 设置新教室
+ * - 选择星期几
+ * - 选择节次范围
+ * - 显示冲突提示
+ * 
+ * @param show 是否显示
+ * @param onDismiss 关闭回调
+ * @param totalWeeks 总周数
+ * @param onTotalWeeksChange 总周数变更回调
+ * @param newClassRoom 新教室
+ * @param onNewClassRoomChange 教室变更回调
+ * @param dayOfWeek 星期几
+ * @param onDayOfWeekChange 星期几变更回调
+ * @param startSection 开始节次
+ * @param endSection 结束节次
+ * @param onSectionRangeChange 节次范围变更回调
+ */
 @Composable
 fun TransClassDialog(
     show: Boolean,

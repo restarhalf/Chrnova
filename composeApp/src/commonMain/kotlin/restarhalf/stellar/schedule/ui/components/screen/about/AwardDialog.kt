@@ -16,6 +16,15 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
+/**
+ * 赞赏对话框组件
+ * 
+ * 显示赞赏选项，支持微信和支付宝两种赞赏方式。
+ * 
+ * @param show 是否显示
+ * @param onWxpay 微信赞赏回调
+ * @param onAlipay 支付宝赞赏回调
+ */
 @Composable
 fun AwardDialog(show: MutableState<Boolean>, onWxpay: () -> Unit, onAlipay: () -> Unit) {
     OverlayDialog(

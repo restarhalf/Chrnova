@@ -14,26 +14,77 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseColor
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.theme.pickCourseTitleColor
 
+/**
+ * 课程视觉样式数据类
+ * 
+ * @param cardColor 卡片颜色
+ * @param titleColor 标题颜色
+ * @param subColor 副标题颜色
+ */
 private data class CourseVisual(val cardColor: Color, val titleColor: Color, val subColor: Color)
 
+/**
+ * 每日渲染数据
+ * 
+ * @param items 课程渲染项列表
+ */
 data class DayRenderData(val items: List<CourseRenderItem>)
 
+/**
+ * 课程渲染项
+ * 
+ * @param model 课程卡片模型
+ * @param overlaps 重叠的课程列表
+ */
 data class CourseRenderItem(val model: CourseCardModel, val overlaps: List<Course>)
 
+/**
+ * 课程卡片模型
+ * 
+ * 用于渲染课程卡片的不可变数据类。
+ */
 @Immutable
 data class CourseCardModel(
+    /** 课程名称 */
     val name: String,
+    /** 上课地点 */
     val location: String,
+    /** 教师 */
     val teacher: String,
+    /** 顶部偏移量 */
     val topOffsetY: Dp,
+    /** 卡片高度 */
     val height: Dp,
+    /** 重叠课程数量徽章 */
     val badgeCount: Int?,
+    /** 卡片颜色 */
     val color: Color,
+    /** 标题颜色 */
     val titleColor: Color,
+    /** 副文本颜色 */
     val subTextColor: Color,
+    /** 卡片透明度 */
     val cardAlpha: Float,
 )
 
+/**
+ * 构建每日渲染数据
+ * 
+ * 将课程列表转换为渲染数据，处理重叠课程和非当前周课程。
+ * 
+ * @param dayCourses 当天课程列表
+ * @param page 当前周次
+ * @param showNonCurrentWeek 是否显示非当前周课程
+ * @param isDarkMode 是否为深色模式
+ * @param mutedCourseColor 非当前周课程颜色
+ * @param mutedTitleColor 非当前周标题颜色
+ * @param mutedSubColor 非当前周副标题颜色
+ * @param yForSection 计算节次Y坐标的函数
+ * @param heightForSections 计算节次高度的函数
+ * @param cellInset 单元格内边距
+ * @param contentCardAlpha 内容卡片透明度
+ * @return 每日渲染数据
+ */
 fun buildDayRenderData(
     dayCourses: List<Course>,
     page: Int,

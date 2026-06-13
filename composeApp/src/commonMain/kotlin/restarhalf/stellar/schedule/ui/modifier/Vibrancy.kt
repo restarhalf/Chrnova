@@ -8,7 +8,12 @@ package restarhalf.stellar.schedule.ui.modifier
 import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.colorControls
 
-/** Lightweight stand-in for Kyant's `vibrancy()`. */
+/**
+ * 鲜艳度效果扩展函数
+ * 
+ * 为背景效果添加鲜艳度调整，使颜色更加饱和。
+ * 用于液态玻璃导航栏效果。
+ */
 fun BackdropEffectScope.vibrancy() {
     colorControls(
         brightness = 0f,

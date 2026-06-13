@@ -14,6 +14,13 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
+/**
+ * 计算指定年月的天数
+ * 
+ * @param year 年份
+ * @param month 月份（1-12）
+ * @return 该月天数
+ */
 private fun daysInMonth(year: Int, month: Int): Int {
     val firstDay = LocalDate(year, month, 1)
     val nextMonthFirstDay =
@@ -25,6 +32,18 @@ private fun daysInMonth(year: Int, month: Int): Int {
     return firstDay.daysUntil(nextMonthFirstDay)
 }
 
+/**
+ * 日期选择器底部弹窗
+ * 
+ * 提供年月滚轮选择器，用于选择日期。
+ * 
+ * @param show 是否显示
+ * @param title 标题
+ * @param initialDate 初始日期
+ * @param yearRange 年份范围
+ * @param onDismissRequest 关闭回调
+ * @param onConfirm 确认回调
+ */
 @OptIn(ExperimentalTime::class)
 @Composable
 fun DatePickerBottomSheet(

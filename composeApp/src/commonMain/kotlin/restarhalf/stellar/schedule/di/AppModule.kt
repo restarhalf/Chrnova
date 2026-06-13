@@ -123,12 +123,25 @@ import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 
+/**
+ * 端口实现模块
+ * 
+ * 注册所有端口接口的实现类，包括：
+ * - HTTP客户端配置
+ * - 教务系统网关
+ * - 数据存储仓库
+ * - 端口实现（认证、设置、同步等）
+ */
 val portModule = module {
+    // JSON序列化配置，忽略未知键
     single { Json { ignoreUnknownKeys = true } }
 
+    // 教务系统认证存储
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
+    // 体育系统认证存储
     single { restarhalf.stellar.schedule.data.remote.PEAuthStore(get(named("pe_auth"))) }
 
+    // 教务系统HTTP客户端，配置JSON序列化和认证插件
     single(named("jwxt")) {
         HttpClient {
             install(ContentNegotiation) {
@@ -144,6 +157,7 @@ val portModule = module {
         }
     }
 
+    // 体育系统HTTP客户端
     single(named("pe")) {
         HttpClient {
             install(ContentNegotiation) {
@@ -155,6 +169,7 @@ val portModule = module {
         }
     }
 
+    // 教务系统网关客户端
     single<JwxtGateway> {
         JwxtClient(
             httpClient = get(named("jwxt")),
@@ -164,6 +179,7 @@ val portModule = module {
         )
     }
 
+    // 体育系统客户端
     single {
         restarhalf.stellar.schedule.data.remote.PEClient(
             httpClient = get(named("pe")),
@@ -173,16 +189,20 @@ val portModule = module {
         )
     }
 
+    // 教务系统同步服务
     single { JwxtSync(get()) }
 
+    // 课表时间配置
     single { TimetableSettings(get(named("timetable_prefs"))) }
 
+    // 数据仓库
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
     single { restarhalf.stellar.schedule.data.repository.PERepository(peClient = get()) }
     single { restarhalf.stellar.schedule.data.repository.PERoomRepository(peYearScoreDao = get(), peStudentInfoDao = get(), peDetailDao = get()) }
 
+    // 端口实现
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
     single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
@@ -202,7 +222,14 @@ val portModule = module {
     single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get()) }
 }
 
+/**
+ * 用例模块
+ * 
+ * 注册所有业务用例，每个用例封装一个具体的业务操作。
+ * 用例层位于UI层和数据层之间，负责协调多个端口完成业务逻辑。
+ */
 val useCaseModule = module {
+    // 同步用例
     single {
         RunSyncUseCase(
             authWorkflow = get(),
@@ -330,6 +357,12 @@ val useCaseModule = module {
     single { restarhalf.stellar.schedule.domain.usecase.PEUseCase(repository = get(), authStore = get(), roomRepository = get()) }
 }
 
+/**
+ * ViewModel模块
+ * 
+ * 注册所有ViewModel，每个ViewModel对应一个页面或功能模块。
+ * ViewModel负责管理UI状态和处理用户交互。
+ */
 val viewModelModule = module {
     factory {
         AppViewModel(
@@ -435,9 +468,11 @@ val viewModelModule = module {
     factory { restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(peUseCase = get()) }
 }
 
+/**
+ * 通用应用模块
+ * 
+ * 组合所有子模块，作为应用的主要依赖注入配置。
+ */
 val commonAppModule = module {
     includes(portModule, useCaseModule, viewModelModule)
 }
-
-
-

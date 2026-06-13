@@ -34,6 +34,19 @@ import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 成绩项目卡片组件
+ * 
+ * 在成绩列表中显示单个课程的成绩信息，包括：
+ * - 课程名称
+ * - 成绩分数
+ * - 课程属性（必修/选修）
+ * - 补考标识
+ * - 点击查看详情
+ * 
+ * @param modifier Modifier修饰符
+ * @param card 成绩卡片UI数据
+ */
 @Composable
 fun GradeItemCard(
     modifier: Modifier = Modifier,

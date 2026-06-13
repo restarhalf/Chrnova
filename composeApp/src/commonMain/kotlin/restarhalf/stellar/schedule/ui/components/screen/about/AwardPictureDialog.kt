@@ -19,7 +19,17 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
+/**
+ * 赞赏图片对话框组件
+ * 
+ * 显示赞赏码图片，支持保存到相册。
+ * 
+ * @param show 是否显示
+ * @param title 对话框标题
+ * @param image 赞赏码图片资源
+ * @param onDismissRequest 关闭回调
+ * @param onSavePicture 保存图片回调
+ */
 @Composable
 fun AwardPictureDialog(
     show: Boolean,

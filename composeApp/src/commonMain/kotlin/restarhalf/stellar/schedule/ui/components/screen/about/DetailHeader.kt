@@ -17,6 +17,15 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 详情页面头部组件
+ * 
+ * 显示应用图标、名称和版本信息。
+ * 
+ * @param appIcon 应用图标
+ * @param appName 应用名称
+ * @param version 版本号
+ */
 @Composable
 fun DetailHeader(
     appIcon: ImageBitmap?,

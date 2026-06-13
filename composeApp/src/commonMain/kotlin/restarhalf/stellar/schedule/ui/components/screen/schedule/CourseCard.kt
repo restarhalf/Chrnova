@@ -26,6 +26,15 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
 
+/**
+ * 课程卡片组件
+ * 
+ * 在课程表中显示单个课程信息，包括课程名称、地点、教师。
+ * 支持点击事件和重叠课程徽章显示。
+ * 
+ * @param model 课程卡片模型
+ * @param onClick 点击回调
+ */
 @Composable
 fun CourseCard(model: CourseCardModel, onClick: (() -> Unit)?) {
 

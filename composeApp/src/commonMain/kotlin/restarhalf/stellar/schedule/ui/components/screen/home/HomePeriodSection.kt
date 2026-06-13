@@ -23,8 +23,23 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRenderRowsUseCa
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
 
+/**
+ * 课程行渲染UI类型别名
+ */
 private typealias PeriodRowRenderUi = BuildHomePeriodRenderRowsUseCase.RowRenderUi
 
+/**
+ * 首页时间段区域组件
+ * 
+ * 显示首页中的一个时间段（如上午、下午、晚上）的课程列表。
+ * 每个时间段包含多个课程行，每行显示节次时间和课程信息。
+ * 
+ * @param title 时间段标题（如"上午"、"下午"）
+ * @param rows 课程行列表
+ * @param textPrimary 主要文本颜色
+ * @param textSecondary 次要文本颜色
+ * @param dividerColor 分隔线颜色
+ */
 @Composable
 fun HomePeriodSection(
     title: String,

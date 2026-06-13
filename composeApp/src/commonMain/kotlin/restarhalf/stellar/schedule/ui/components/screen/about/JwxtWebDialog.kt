@@ -14,6 +14,17 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
+/**
+ * 教务系统网页对话框组件
+ * 
+ * 提供选择教务系统入口的对话框，支持：
+ * - 手机端教务系统
+ * - PC端教务系统
+ * 
+ * @param show 是否显示
+ * @param onPc 打开PC端教务系统回调
+ * @param onMobile 打开手机端教务系统回调
+ */
 @Composable
 fun JwxtWebDialog(show: MutableState<Boolean>, onPc: () -> Unit, onMobile: () -> Unit) {
     OverlayDialog(

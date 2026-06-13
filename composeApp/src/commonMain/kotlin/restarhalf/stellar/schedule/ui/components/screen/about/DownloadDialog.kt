@@ -21,6 +21,16 @@ import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
+/**
+ * 下载进度对话框组件
+ * 
+ * 显示APK下载进度，支持停止下载和后台下载。
+ * 
+ * @param show 是否显示
+ * @param downloadProgress 下载进度（0.0-1.0）
+ * @param onStop 停止下载回调
+ * @param onBackGround 后台下载回调
+ */
 @Composable
 fun DownloadDialog(
     show: MutableState<Boolean>,

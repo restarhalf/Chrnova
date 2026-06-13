@@ -11,6 +11,14 @@ import androidx.compose.ui.unit.dp
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.ktor.http.encodeURLParameter
 
+/**
+ * 体育系统二维码组件
+ * 
+ * 生成包含学生信息的二维码，用于体育系统登录或信息查询。
+ * 
+ * @param id 学生ID
+ * @param name 学生姓名
+ */
 @Composable
 fun PEQRCode(
     id: String,

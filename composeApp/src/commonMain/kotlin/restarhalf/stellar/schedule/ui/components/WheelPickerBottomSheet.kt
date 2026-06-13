@@ -43,6 +43,22 @@ import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 
+/**
+ * 滚轮选择器底部弹窗
+ * 
+ * 提供通用的滚轮选择器弹窗框架，支持：
+ * - 自定义内容
+ * - 标题显示
+ * - 确认/取消操作
+ * - 滚动到选中项动画
+ * - 触觉反馈
+ * 
+ * @param show 是否显示
+ * @param title 标题
+ * @param onDismissRequest 关闭回调
+ * @param onConfirm 确认回调
+ * @param content 自定义内容
+ */
 @Composable
 fun WheelPickerBottomSheet(
     show: MutableState<Boolean>,

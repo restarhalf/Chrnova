@@ -22,6 +22,15 @@ import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Text
 
+/**
+ * 周次头部行组件
+ * 
+ * 显示课程表顶部的星期和日期信息，今日会高亮显示。
+ * 
+ * @param ui 周次头部UI数据
+ * @param primary 主题色
+ * @param textSecondary 次要文本颜色
+ */
 @Composable
 fun WeekHeaderRow(
     ui: ScheduleViewModel.WeekHeaderUi,
