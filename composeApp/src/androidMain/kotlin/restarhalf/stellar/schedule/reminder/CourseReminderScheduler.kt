@@ -104,7 +104,6 @@ class CourseReminderScheduler(
         val timetable = getCampusTimetable(campus)
         val today = kotlin.time.Instant.fromEpochMilliseconds(nowMs)
             .toLocalDateTime(TimeZone.currentSystemDefault()).date
-        today.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
         var best: NextReminder? = null
         val scanDays = 14

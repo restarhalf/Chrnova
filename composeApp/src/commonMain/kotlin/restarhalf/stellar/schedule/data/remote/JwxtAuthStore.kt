@@ -86,15 +86,15 @@ class JwxtAuthStore(private val settings: ObservableSettings) {
     }
 
     companion object {
-        private const val PREFS_NAME = "jwxt_auth"
-        private const val KEY_TOKEN = "token"
-        private const val KEY_SERVERID_COOKIE = "serverid_cookie"
-        private const val KEY_USER_NO = "user_no"
-        private const val KEY_NAME = "name"
-        private const val KEY_CLS_NAME = "cls_name"
-        private const val KEY_ACADEMY_NAME = "academy_name"
-        private const val KEY_LAST_USER_NO = "last_user_no"
-        private const val KEY_SAVED_USER_NO = "saved_user_no"
-        private const val KEY_SAVED_PASSWORD = "saved_password"
+        internal const val PREFS_NAME = "jwxt_auth"
+        internal const val KEY_TOKEN = "token"
+        internal const val KEY_SERVERID_COOKIE = "serverid_cookie"
+        internal const val KEY_USER_NO = "user_no"
+        internal const val KEY_NAME = "name"
+        internal const val KEY_CLS_NAME = "cls_name"
+        internal const val KEY_ACADEMY_NAME = "academy_name"
+        internal const val KEY_LAST_USER_NO = "last_user_no"
+        internal const val KEY_SAVED_USER_NO = "saved_user_no"
+        internal const val KEY_SAVED_PASSWORD = "saved_password"
     }
 }

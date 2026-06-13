@@ -14,16 +14,16 @@ class AuthPortImpl(
 ) : AuthPort {
 
     override fun observeToken(): Flow<String> {
-        return authStore.getSettings().getStringFlow("token", "")
+        return authStore.getSettings().getStringFlow(JwxtAuthStore.KEY_TOKEN, "")
     }
 
     override fun observeProfile(): Flow<AuthProfile> {
         val settings = authStore.getSettings()
         return combine(
-            settings.getStringFlow("name", ""),
-            settings.getStringFlow("user_no", ""),
-            settings.getStringFlow("cls_name", ""),
-            settings.getStringFlow("academy_name", "")
+            settings.getStringFlow(JwxtAuthStore.KEY_NAME, ""),
+            settings.getStringFlow(JwxtAuthStore.KEY_USER_NO, ""),
+            settings.getStringFlow(JwxtAuthStore.KEY_CLS_NAME, ""),
+            settings.getStringFlow(JwxtAuthStore.KEY_ACADEMY_NAME, "")
         ) { name, userNo, clsName, academyName ->
             AuthProfile(
                 name = name, userNo = userNo, clsName = clsName, academyName = academyName

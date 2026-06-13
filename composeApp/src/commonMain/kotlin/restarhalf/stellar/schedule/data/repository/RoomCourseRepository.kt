@@ -51,10 +51,7 @@ class RoomCourseRepository(
     }
 
     override suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String) {
-        courseDao.deleteSyncedCourses()
-        if (courses.isNotEmpty()) {
-            courseDao.insertCourses(courses.map { it.toEntity() })
-        }
+        courseDao.replaceSyncedCourses(courses.map { it.toEntity() })
         if (semesterId.isNotBlank()) {
             courseDao.bindManualCoursesWithoutSemester(semesterId)
             settings.setActiveScheduleTerm(semesterId)

@@ -22,8 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -170,7 +173,9 @@ fun SettingsScreen(
                                         onValueChange = {
                                             vm.onLoginUserNoChange(it)
                                         },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth().semantics {
+                                            contentType = ContentType.Username
+                                        }
                                     )
                                 }
                             }
@@ -183,7 +188,9 @@ fun SettingsScreen(
                                             vm.onLoginPasswordChange(it)
                                         },
                                         visualTransformation = PasswordVisualTransformation(),
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth().semantics {
+                                            contentType = ContentType.Password
+                                        }
                                     )
                                 }
                             }

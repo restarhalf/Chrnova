@@ -34,10 +34,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
@@ -312,13 +316,18 @@ fun PELoginDialog(
                 label = "学号",
                 value = username,
                 onValueChange = { username = it },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().semantics {
+                    contentType = ContentType.Username
+                }
             )
             TextField(
                 label = "密码",
                 value = password,
                 onValueChange = { password = it },
-                modifier = Modifier.fillMaxWidth()
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth().semantics {
+                    contentType = ContentType.Password
+                }
             )
             if (error != null) {
                 Text(

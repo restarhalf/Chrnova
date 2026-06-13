@@ -1,4 +1,4 @@
-﻿package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
@@ -49,7 +49,6 @@ class TransCourseUseCase {
                 .asSequence()
                 .filter { it.dayOfWeek == overrideCourse.dayOfWeek }
                 .filter { isCourseActiveInWeek(it, targetWeek) }
-                .filterNot { other -> other.id == originCourse.id }
                 .filter { other ->
                     val bStart = other.startSection
                     val bEnd = other.startSection + other.sectionCount - 1

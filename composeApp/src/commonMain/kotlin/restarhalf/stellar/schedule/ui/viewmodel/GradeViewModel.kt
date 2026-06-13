@@ -162,7 +162,6 @@ class GradeViewModel(
         return buildString {
             appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")
             appendLine("成绩：${buildGradeScoreText(grade)}")
-            appendLine("绩点：${grade.gradePoint.displayOrDash()}")
             appendLine("学分：${grade.credit.displayOrDash()}")
             appendLine("课程属性：${grade.curriculumAttributes.ifBlank { "暂无" }}")
             appendLine("课程性质：${grade.courseNature.ifBlank { "暂无" }}")

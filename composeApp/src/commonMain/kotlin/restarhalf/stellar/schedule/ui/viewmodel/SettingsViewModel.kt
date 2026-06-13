@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -135,6 +137,7 @@ class SettingsViewModel(
     private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
     private val _loginUiState = MutableStateFlow(LoginUiState())
     private val _pendingNotificationTarget = MutableStateFlow(NotificationTarget.None)
+    private val loginMutex = Mutex()
 
     private val prefsFlow =
         combine(
@@ -369,33 +372,35 @@ class SettingsViewModel(
     }
 
     fun submitLogin(onLogin: suspend (userNo: String, password: String) -> Unit) {
-        val current = _loginUiState.value
-        if (current.loading) return
-        val userNo = current.userNo.trim()
-        val password = current.password
-        if (userNo.isBlank() || password.isBlank()) return
-
-        _loginUiState.value = current.copy(loading = true, error = "")
         viewModelScope.launch {
-            runCatching { onLogin(userNo, password) }
-                .onSuccess {
-                    val latest = _loginUiState.value
-                    _loginUiState.value =
-                        latest.copy(
-                            showLoginSheet = false,
-                            password = "",
-                            loading = false,
-                            authVersion = latest.authVersion + 1,
-                        )
-                }
-                .onFailure {
-                    val latest = _loginUiState.value
-                    _loginUiState.value =
-                        latest.copy(
-                            loading = false,
-                            error = it.toUserFacingMessage(UserFacingErrorKind.Login)
-                        )
-                }
+            loginMutex.withLock {
+                val current = _loginUiState.value
+                if (current.loading) return@withLock
+                val userNo = current.userNo.trim()
+                val password = current.password
+                if (userNo.isBlank() || password.isBlank()) return@withLock
+
+                _loginUiState.value = current.copy(loading = true, error = "")
+                runCatching { onLogin(userNo, password) }
+                    .onSuccess {
+                        val latest = _loginUiState.value
+                        _loginUiState.value =
+                            latest.copy(
+                                showLoginSheet = false,
+                                password = "",
+                                loading = false,
+                                authVersion = latest.authVersion + 1,
+                            )
+                    }
+                    .onFailure {
+                        val latest = _loginUiState.value
+                        _loginUiState.value =
+                            latest.copy(
+                                loading = false,
+                                error = it.toUserFacingMessage(UserFacingErrorKind.Login)
+                            )
+                    }
+            }
         }
     }
 

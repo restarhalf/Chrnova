@@ -39,28 +39,6 @@ fun findOverlappingCourses(
                 .thenBy { it.name })
 }
 
-fun filterNonOverlappingForPreview(courses: List<Course>): List<Course> {
-    val sorted =
-        courses.sortedWith(compareBy({ it.startSection }, { it.sectionCount }, { it.name }))
-    val result = ArrayList<Course>()
-
-    for (course in sorted) {
-        if (result.isEmpty()) {
-            result.add(course)
-            continue
-        }
-        val lastCourse = result.last()
-        val lastEnd = lastCourse.startSection + lastCourse.sectionCount
-        val courseStart = course.startSection
-
-
-        if (courseStart < lastEnd) continue
-
-        result.add(course)
-    }
-    return result
-}
-
 fun filterNonOverlapping(courses: List<Course>): List<Course> {
     val sorted =
         courses.sortedWith(compareBy({ it.startSection }, { it.sectionCount }, { it.name }))
@@ -79,3 +57,6 @@ fun filterNonOverlapping(courses: List<Course>): List<Course> {
     }
     return result
 }
+
+fun filterNonOverlappingForPreview(courses: List<Course>): List<Course> =
+    filterNonOverlapping(courses)

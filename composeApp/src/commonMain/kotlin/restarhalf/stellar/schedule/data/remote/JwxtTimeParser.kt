@@ -68,6 +68,7 @@ object JwxtTimeParser {
         if (trimmed.length < 5) return null
 
         val sectionPart = trimmed.substring(1)
+        if (sectionPart.length % 2 != 0) return null
         val sectionNumbers =
             sectionPart.chunked(2).mapNotNull { it.toIntOrNull() }.filter { it in 1..30 }
 

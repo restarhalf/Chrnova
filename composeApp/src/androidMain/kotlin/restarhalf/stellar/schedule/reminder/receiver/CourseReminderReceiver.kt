@@ -223,12 +223,11 @@ class CourseReminderReceiver : BroadcastReceiver() {
 
         notificationManager.notify(notificationId, notification)
 
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
                 val deps = Deps()
                 deps.rescheduleNextReminderIfEnabled()
             } catch (_: Exception) {
-
             } finally {
                 result.finish()
             }

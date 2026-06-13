@@ -198,7 +198,6 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                         _needsLogin.value = true
                     }
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)
-                    _loadedScoreList.value = true
                 }
                 _loading.value = false
             }
@@ -221,7 +220,6 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                         _needsLogin.value = true
                     }
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)
-                    _loadedDetail.value = true
                 }
                 _loading.value = false
             }

@@ -5,6 +5,7 @@ import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -40,4 +41,12 @@ interface CourseDao {
 
     @Query("SELECT * FROM courses")
     suspend fun getAllCoursesOnce(): List<Course>
+
+    @Transaction
+    suspend fun replaceSyncedCourses(courses: List<Course>) {
+        deleteSyncedCourses()
+        if (courses.isNotEmpty()) {
+            insertCourses(courses)
+        }
+    }
 }

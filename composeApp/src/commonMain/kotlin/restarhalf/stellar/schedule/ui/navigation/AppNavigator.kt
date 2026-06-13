@@ -29,6 +29,7 @@ class AppNavigator(
     fun pop() {
         if (backStack.size > 1) {
             backStack.removeLastOrNull()
+            cleanUpStaleChannels()
         }
     }
 
@@ -65,4 +66,15 @@ class AppNavigator(
 
     private fun ensureChannel(key: String): MutableSharedFlow<Any> =
         resultBus.getOrPut(key) { MutableSharedFlow(replay = 1, extraBufferCapacity = 0) }
+
+    private fun cleanUpStaleChannels() {
+        val activeKeys = mutableSetOf<String>()
+        for (key in resultBus.keys) {
+            val flow = resultBus[key] ?: continue
+            if (flow.subscriptionCount.value > 0) {
+                activeKeys.add(key)
+            }
+        }
+        resultBus.keys.retainAll(activeKeys)
+    }
 }

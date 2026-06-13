@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -212,9 +213,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
 
         val result = goAsync()
         val appContext = context.applicationContext
-        CoroutineScope(Dispatchers.Default).launch @RequiresPermission(
-            Manifest.permission.SCHEDULE_EXACT_ALARM
-        ) {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
                 if (isMinuteTick) {
                     WidgetUpdater.refreshLargeOnly(appContext)
@@ -224,6 +223,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
                     WidgetUpdater.refreshAll(appContext)
                 }
                 WidgetRefreshController.scheduleIfNeeded(appContext)
+            } catch (_: Exception) {
             } finally {
                 result.finish()
             }
