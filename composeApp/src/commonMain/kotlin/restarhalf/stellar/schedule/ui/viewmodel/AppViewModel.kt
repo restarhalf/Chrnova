@@ -6,8 +6,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -18,6 +20,7 @@ import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
@@ -40,6 +43,7 @@ class AppViewModel(
     observeTotalWeeksUseCase: ObserveTotalWeeksUseCase,
     getTermStartMsUseCase: GetTermStartMsUseCase,
     observeTermStartMsUseCase: ObserveTermStartMsUseCase,
+    observeLogEnabled: ObserveLogEnabledUseCase,
     private val setCampusUseCase: SetCampusUseCase,
     private val setTermStartMsUseCase: SetTermStartMsUseCase,
     private val clearAuth: ClearAuthUseCase,
@@ -48,7 +52,16 @@ class AppViewModel(
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val loginUseCase: LoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
-) : ViewModel() {
+    ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            observeLogEnabled().collect { enabled ->
+                AppLogger.setEnabled(enabled)
+            }
+        }
+    }
+
     /**
      * 应用UI状态数据类
      * 
@@ -101,6 +114,7 @@ class AppViewModel(
                         )
                     },
                     onFailure = {
+                        AppLogger.log("Sync", "同步失败", it)
                         SyncUiState.Error(it.toUserFacingMessage(UserFacingErrorKind.Sync))
                     },
                 )

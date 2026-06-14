@@ -149,6 +149,14 @@ class SettingsPortImpl(
         settings[SettingsKeys.EXAM_REMINDER_ENABLED] = enabled
     }
 
+    override fun observeLogEnabled(): Flow<Boolean> {
+        return settings.getBooleanFlow(SettingsKeys.LOG_ENABLED, false)
+    }
+
+    override fun setLogEnabled(enabled: Boolean) {
+        settings[SettingsKeys.LOG_ENABLED] = enabled
+    }
+
     /**
      * 检查是否需要自动同步并标记
      * 

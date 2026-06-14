@@ -22,6 +22,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import restarhalf.stellar.schedule.MainActivity
 import restarhalf.stellar.schedule.R
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
 import java.util.Calendar
 
@@ -79,7 +80,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(context, "静音失败，可能需要免打扰权限", Toast.LENGTH_SHORT).show()
+                AppLogger.log("Reminder", "恢复铃声失败", e)
             }
             result.finish()
             return
@@ -93,7 +94,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 audioManager.ringerMode = restoreMode
                 Toast.makeText(context, "课程已结束，已恢复铃声", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                e.printStackTrace()
+                AppLogger.log("Reminder", "恢复铃声失败", e)
             }
             result.finish()
             return
@@ -116,6 +117,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 Toast.makeText(context, "已到上课时间，自动开启静音", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 e.printStackTrace()
+                AppLogger.log("Reminder", "上课静音失败", e)
             }
             result.finish()
             return
@@ -227,7 +229,8 @@ class CourseReminderReceiver : BroadcastReceiver() {
             try {
                 val deps = Deps()
                 deps.rescheduleNextReminderIfEnabled()
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLogger.log("Reminder", "重新调度下次提醒失败", e)
             } finally {
                 result.finish()
             }

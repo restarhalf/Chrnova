@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEDetailResponse
 import restarhalf.stellar.schedule.data.remote.PELoginResponse
@@ -126,6 +127,7 @@ class PEUseCase(
                     onSuccess?.invoke(result)
                     result
                 } else {
+                    AppLogger.log("PE", "自动重新登录失败: ${loginResult.message}")
                     peAuth.clear()
                     throw PETokenExpiredException("登录已过期，请重新登录")
                 }

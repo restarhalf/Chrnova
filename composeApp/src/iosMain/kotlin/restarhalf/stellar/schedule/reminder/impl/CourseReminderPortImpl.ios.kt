@@ -18,6 +18,7 @@ import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.data.local.getCampusTimetable
@@ -180,6 +181,8 @@ class CourseReminderPortImpl(
             center.removePendingNotificationRequestsWithIdentifiers(listOf(identifier))
             center.addNotificationRequest(request, withCompletionHandler = { _ -> })
             true
+        }.onFailure {
+            AppLogger.log("Reminder", "设置课程提醒失败", it)
         }.getOrDefault(false)
     }
 

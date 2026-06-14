@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -49,6 +50,7 @@ class RunSyncUseCase(
         // 获取校区列表并匹配
         val campuses = academic.fetchCampuses()
         if (campuses.isEmpty()) {
+            AppLogger.log("Sync", "同步失败: 校区列表为空")
             throw IllegalStateException("校区列表为空")
         }
 
@@ -58,6 +60,7 @@ class RunSyncUseCase(
                 ?: campuses.firstOrNull()
 
         if (campus == null || campus.id.isBlank() || campus.name.isBlank()) {
+            AppLogger.log("Sync", "同步失败: 获取校区失败")
             throw IllegalStateException("获取校区失败")
         }
 
@@ -69,7 +72,11 @@ class RunSyncUseCase(
                 firstAttempt.getOrThrow()
             } else {
                 val ex = firstAttempt.exceptionOrNull()
-                if (ex != null && ex.isNetworkError()) throw ex
+                if (ex != null && ex.isNetworkError()) {
+                    AppLogger.log("Sync", "同步网络错误", ex)
+                    throw ex
+                }
+                AppLogger.log("Sync", "同步失败，刷新会话重试")
                 authWorkflow.refreshSession()
                 sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
             }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.content.FileProvider
 import androidx.core.graphics.scale
+import restarhalf.stellar.schedule.core.log.AppLogger
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.time.Clock
@@ -59,6 +60,8 @@ object ImageCropper {
                 "${context.packageName}.fileprovider",
                 outputFile,
             ).toString()
+        }.onFailure {
+            AppLogger.log("Picture", "裁剪图片写入缓存失败", it)
         }.getOrNull()
     }
 }

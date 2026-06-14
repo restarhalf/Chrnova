@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -106,6 +107,7 @@ class AuthWorkflowPortImpl(
         val oldToken = authStore.getToken()
         runCatching { login(userNo = userNo, password = password) }
             .onFailure {
+                AppLogger.log("Auth", "刷新会话失败，恢复旧Token", it)
                 if (oldToken != null) authStore.setToken(oldToken)
             }
     }

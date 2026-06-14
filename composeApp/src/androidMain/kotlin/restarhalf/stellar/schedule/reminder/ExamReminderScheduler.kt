@@ -8,6 +8,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtExaminationItem
 import restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver
 import kotlin.time.ExperimentalTime
@@ -101,6 +102,9 @@ class ExamReminderScheduler(private val context: Context) {
         return runCatching {
             LocalDateTime.parse(normalized)
         }
+            .onFailure {
+                AppLogger.log("Reminder", "解析考试时间失败: raw=$raw", it)
+            }
             .getOrNull()
     }
 
@@ -158,6 +162,7 @@ class ExamReminderScheduler(private val context: Context) {
             }
             true
         } catch (e: SecurityException) {
+            AppLogger.log("Reminder", "设置考试提醒SecurityException", e)
             try {
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
@@ -165,10 +170,12 @@ class ExamReminderScheduler(private val context: Context) {
                     pendingIntent
                 )
                 true
-            } catch (_: Exception) {
+            } catch (e2: Exception) {
+                AppLogger.log("Reminder", "设置考试提醒重试失败", e2)
                 false
             }
         } catch (e: Exception) {
+            AppLogger.log("Reminder", "设置考试提醒失败", e)
             false
         }
     }

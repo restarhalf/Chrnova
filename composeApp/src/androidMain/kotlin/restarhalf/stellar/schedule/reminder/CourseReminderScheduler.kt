@@ -16,6 +16,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.data.local.Campus
@@ -257,6 +258,7 @@ class CourseReminderScheduler(
             }
             true
         } catch (e: SecurityException) {
+            AppLogger.log("Reminder", "设置课程提醒SecurityException", e)
 
             try {
                 alarmManager.setAndAllowWhileIdle(
@@ -265,10 +267,12 @@ class CourseReminderScheduler(
                     pendingIntent
                 )
                 true
-            } catch (_: Exception) {
+            } catch (e2: Exception) {
+                AppLogger.log("Reminder", "设置课程提醒重试失败", e2)
                 false
             }
         } catch (e: Exception) {
+            AppLogger.log("Reminder", "设置课程提醒失败", e)
             false
         }
     }

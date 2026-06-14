@@ -167,7 +167,7 @@ fun PEScoreScreen(
                 ) {
                     Box(modifier = Modifier.background(Color.White))
                     {
-                        PEQRCode(id = studentInfo!!.stdNumber, name = studentInfo!!.stuName)
+                        PEQRCode(id = studentInfo.stdNumber, name = studentInfo.stuName)
                     }
 
                 }

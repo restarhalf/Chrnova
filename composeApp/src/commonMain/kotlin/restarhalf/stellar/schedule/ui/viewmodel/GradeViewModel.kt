@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -286,6 +287,7 @@ class GradeViewModel(
             runCatching { loader() }
                 .onSuccess { _summary.value = it }
                 .onFailure {
+                    AppLogger.log("Grades", "加载成绩数据失败", it)
                     _summary.value = TermGradeReport()
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }

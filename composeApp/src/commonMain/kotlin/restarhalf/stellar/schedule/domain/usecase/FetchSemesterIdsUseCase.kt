@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.error.isNetworkError
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 
@@ -22,9 +23,16 @@ class FetchSemesterIdsUseCase(
         val firstAttempt = runCatching { academic.fetchSemesterIds() }
         if (firstAttempt.isSuccess) return firstAttempt.getOrThrow()
 
-        if (firstAttempt.exceptionOrNull()?.isNetworkError() == true) return emptyList()
+        val ex = firstAttempt.exceptionOrNull()
+        if (ex?.isNetworkError() == true) {
+            AppLogger.log("Fetch", "获取学期列表网络错误", ex)
+            return emptyList()
+        }
 
+        ex?.let { AppLogger.log("Fetch", "获取学期列表失败，刷新会话重试", it) }
         authWorkflow.refreshSession()
-        return runCatching { academic.fetchSemesterIds() }.getOrElse { emptyList() }
+        return runCatching { academic.fetchSemesterIds() }
+            .onFailure { AppLogger.log("Fetch", "获取学期列表重试失败", it) }
+            .getOrElse { emptyList() }
     }
 }

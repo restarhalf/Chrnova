@@ -46,6 +46,7 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
@@ -369,7 +370,9 @@ fun SettingsScreen(
                             vm.onSelectedTermChanged(
                                 vm.selectedTermValueFromIndex(termSelectionUi.items, index)
                             )
-                            scope.launch { runCatching { onSync() } }
+                            scope.launch { runCatching { onSync() }
+                                .onFailure { AppLogger.log("Sync", "切换学期后同步失败", it) }
+                            }
                         })
                     OverlayDropdownPreference(
                         title = "上课校区",
@@ -378,7 +381,9 @@ fun SettingsScreen(
                         selectedIndex = screenUi.campusSelectedIndex,
                         onSelectedIndexChange = { index: Int ->
                             onCampusChange(vm.campusFromIndex(index))
-                            scope.launch { runCatching { onSync() } }
+                            scope.launch { runCatching { onSync() }
+                                .onFailure { AppLogger.log("Sync", "切换校区后同步失败", it) }
+                            }
                         })
                     ArrowPreference(
                         title = "开始上课时间",
@@ -433,7 +438,9 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "手动刷新课表",
                         summary = screenUi.syncSummary,
-                        onClick = { scope.launch { runCatching { onSync() } } })
+                        onClick = { scope.launch { runCatching { onSync() }
+                            .onFailure { AppLogger.log("Sync", "手动刷新课表失败", it) }
+                        } })
                     SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",
@@ -467,6 +474,13 @@ termStartMs = termStartMs,
                             } else {
                                 vm.onExamReminderEnabledChanged(false)
                             }
+                        })
+                    SwitchPreference(
+                        title = "开启日志",
+                        summary = "点开关于单击五次logo进入log界面",
+                        checked = settingsUiState.logEnabled,
+                        onCheckedChange = {
+                            vm.onLogEnabledChanged(it)
                         })
                 }
             }

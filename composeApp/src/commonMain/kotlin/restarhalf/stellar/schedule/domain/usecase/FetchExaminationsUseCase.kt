@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.error.isNetworkError
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -36,6 +37,7 @@ class FetchExaminationsUseCase(
             )
         } catch (e: Exception) {
             if (e.isNetworkError()) throw e
+            AppLogger.log("Fetch", "获取考试安排失败，刷新会话重试", e)
             authWorkflow.refreshSession()
             academic.fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
         }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.core.log.AppLogger
 import java.util.Calendar
 
 internal object WidgetRefreshController {
@@ -87,7 +88,8 @@ internal object WidgetRefreshController {
             } else {
                 alarmManager.setExact(AlarmManager.RTC, triggerAtMillis, pendingIntent)
             }
-        } catch (_: SecurityException) {
+        } catch (e: SecurityException) {
+            AppLogger.log("Widget", "设置精确闹钟SecurityException", e)
             alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent)
         }
     }
@@ -171,7 +173,8 @@ internal object WidgetRefreshController {
             } else {
                 alarmManager.setExact(AlarmManager.RTC, triggerAtMillis, pendingIntent)
             }
-        } catch (_: SecurityException) {
+        } catch (e: SecurityException) {
+            AppLogger.log("Widget", "设置小部件精确闹钟SecurityException", e)
             alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent)
         }
     }
@@ -220,7 +223,8 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
                     WidgetUpdater.refreshAll(appContext)
                 }
                 WidgetRefreshController.scheduleIfNeeded(appContext)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLogger.log("Widget", "刷新小部件失败", e)
             } finally {
                 result.finish()
             }

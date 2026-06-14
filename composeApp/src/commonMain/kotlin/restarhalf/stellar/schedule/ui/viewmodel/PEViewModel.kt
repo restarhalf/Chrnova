@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
@@ -102,13 +103,14 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeScoreList()
-                    .catch { }
+                    .catch { e -> AppLogger.log("PE", "缓存成绩Flow异常", e) }
                     .collect { scores ->
                         if (_yearScores.value.isEmpty()) {
                             _yearScores.value = scores.sortedByDescending { it.schoolYear }
                         }
                     }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLogger.log("PE", "读取缓存成绩失败", e)
             }
         }
     }
@@ -117,13 +119,14 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeStudentInfo()
-                    .catch { }
+                    .catch { e -> AppLogger.log("PE", "缓存学生信息Flow异常", e) }
                     .collect { info ->
                         if (_studentInfo.value == null && info != null) {
                             _studentInfo.value = info
                         }
                     }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLogger.log("PE", "读取缓存学生信息失败", e)
             }
         }
     }
@@ -137,13 +140,14 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeDetailData(schoolYear)
-                    .catch { }
+                    .catch { e -> AppLogger.log("PE", "缓存详情Flow异常", e) }
                     .collect { detail ->
                         if (_detailData.value == null && detail != null) {
                             _detailData.value = detail
                         }
                     }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLogger.log("PE", "读取缓存详情失败", e)
             }
         }
     }
@@ -195,11 +199,13 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                     loadStudentInfo()
                     onSuccess()
                 } else {
+                    AppLogger.log("PE", "体育系统登录失败: ${it.message}")
                     _error.value = it.message
                     onError(it.message)
                 }
             }.onFailure {
                 val errorMsg = it.message ?: "登录失败"
+                AppLogger.log("PE", "体育系统登录失败", it)
                 _error.value = errorMsg
                 onError(errorMsg)
             }
@@ -223,6 +229,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                     if (it is PETokenExpiredException) {
                         _needsLogin.value = true
                     }
+                    AppLogger.log("PE", "加载体育成绩失败", it)
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)
                 }
                 _loading.value = false
@@ -250,6 +257,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                     if (it is PETokenExpiredException) {
                         _needsLogin.value = true
                     }
+                    AppLogger.log("PE", "加载体测详情失败", it)
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)
                 }
                 _loading.value = false
@@ -269,6 +277,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                 if (it is PETokenExpiredException) {
                     _needsLogin.value = true
                 }
+                AppLogger.log("PE", "加载学生信息失败", it)
                 _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)
             }
         }

@@ -15,6 +15,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
@@ -26,6 +27,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveThemeModeUseCase
@@ -34,6 +36,7 @@ import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCas
 import restarhalf.stellar.schedule.domain.usecase.SetCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetExamReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetFloatingBarUseCase
+import restarhalf.stellar.schedule.domain.usecase.SetLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetThemeModeUseCase
@@ -61,6 +64,7 @@ class SettingsViewModel(
     observeThemeMode: ObserveThemeModeUseCase,
     observeExamReminderEnabled: ObserveExamReminderEnabledUseCase,
     observeSelectedTerm: ObserveSelectedTermUseCase,
+    observeLogEnabled: ObserveLogEnabledUseCase,
     private val setShowNonCurrentWeekUseCase: SetShowNonCurrentWeekUseCase,
     private val setCourseReminderEnabled: SetCourseReminderEnabledUseCase,
     private val setFloatingBarUseCase: SetFloatingBarUseCase,
@@ -69,6 +73,7 @@ class SettingsViewModel(
     private val cancelAllExamReminders: CancelAllExamRemindersUseCase,
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val setSelectedTermUseCase: SetSelectedTermUseCase,
+    private val setLogEnabledUseCase: SetLogEnabledUseCase,
     private val ensureLoggedIn: EnsureLoggedInUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
@@ -82,6 +87,7 @@ class SettingsViewModel(
         val themeMode: Int,
         val floatingBar: Int,
         val selectedTerm: String,
+        val logEnabled: Boolean,
     )
 
     /** 认证状态 */
@@ -166,6 +172,7 @@ class SettingsViewModel(
         val themeMode: Int,
         val floatingBar: Int,
         val selectedTerm: String,
+        val logEnabled: Boolean,
         val authToken: String,
         val profile: AuthProfile,
         val remoteTermItems: List<String>,
@@ -209,10 +216,14 @@ class SettingsViewModel(
                 themeMode = themeMode,
                 floatingBar = floatingBar,
                 selectedTerm = "",
+                logEnabled = false,
             )
         }
             .combine(observeSelectedTerm()) { prefs, selectedTerm ->
                 prefs.copy(selectedTerm = selectedTerm)
+            }
+            .combine(observeLogEnabled()) { prefs, logEnabled ->
+                prefs.copy(logEnabled = logEnabled)
             }
 
     private val authFlow =
@@ -239,6 +250,7 @@ class SettingsViewModel(
                     themeMode = prefs.themeMode,
                     floatingBar = prefs.floatingBar,
                     selectedTerm = prefs.selectedTerm,
+                    logEnabled = prefs.logEnabled,
                     authToken = auth.authToken,
                     profile = auth.profile,
                     remoteTermItems = remoteTermItems,
@@ -257,6 +269,7 @@ class SettingsViewModel(
                         themeMode = 0,
                         floatingBar = 0,
                         selectedTerm = "",
+                        logEnabled = false,
                         authToken = "",
                         profile = AuthProfile(),
                         remoteTermItems = emptyList(),
@@ -275,6 +288,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             withContext(AppIoDispatcher) {
                 runCatching { ensureLoggedIn() }
+                    .onFailure {
+                        AppLogger.log("Auth", "刷新认证失败", it)
+                    }
             }
         }
     }
@@ -287,11 +303,15 @@ class SettingsViewModel(
         }
 
         viewModelScope.launch {
-            val terms =
-                withContext(AppIoDispatcher) {
-                    fetchSemesterIds()
-                }
-            _remoteTermItems.value = terms
+            runCatching {
+                val terms =
+                    withContext(AppIoDispatcher) {
+                        fetchSemesterIds()
+                    }
+                _remoteTermItems.value = terms
+            }.onFailure {
+                AppLogger.log("Settings", "刷新远程学期列表失败", it)
+            }
         }
     }
 
@@ -463,6 +483,10 @@ class SettingsViewModel(
         }
     }
 
+    fun onLogEnabledChanged(enabled: Boolean) {
+        setLogEnabledUseCase.invoke(enabled)
+    }
+
     /** 显示登录弹窗 */
     fun showLoginSheet() {
         _loginUiState.value = _loginUiState.value.copy(showLoginSheet = true)
@@ -541,6 +565,7 @@ class SettingsViewModel(
                             )
                     }
                     .onFailure {
+                        AppLogger.log("Auth", "登录失败 userNo=$userNo", it)
                         val latest = _loginUiState.value
                         _loginUiState.value =
                             latest.copy(
@@ -624,6 +649,7 @@ class SettingsViewModel(
                     }.isSuccess
                 }
             if (!success) {
+                AppLogger.log("Reminder", "课程提醒调度失败，关闭提醒")
                 onReminderEnabledChanged(false)
             }
         }
@@ -643,6 +669,7 @@ class SettingsViewModel(
                     }.isSuccess
                 }
             if (!success) {
+                AppLogger.log("Reminder", "考试提醒调度失败，关闭提醒")
                 onExamReminderEnabledChanged(false)
             }
         }

@@ -37,4 +37,6 @@ object SettingsKeys {
     const val COMPONENTS_ALPHA = "components_alpha"
     /** 浮动导航栏模式：0=标准，1=紧凑 */
     const val FLOATING_BAR = "floating_bar"
+    /** 是否开启日志 */
+    const val LOG_ENABLED = "log_enabled"
 }

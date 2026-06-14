@@ -1,4 +1,4 @@
-﻿package restarhalf.stellar.schedule.ui.viewmodel
+package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -660,7 +660,8 @@ class ScheduleViewModel(
     suspend fun shouldAutoSync(): Boolean {
         return withContext(AppIoDispatcher) {
             val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-            shouldAutoSyncAndMark(nowMs = now)
+            val result = shouldAutoSyncAndMark(nowMs = now)
+            result
         }
     }
 

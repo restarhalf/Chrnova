@@ -14,6 +14,7 @@ import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNNotificationSound
 import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import kotlin.time.Clock
@@ -97,7 +98,11 @@ class ExamReminderPortImpl(
         val dateStr = match.groupValues[1]
         val timeStr = match.groupValues[2]
         val normalized = "${dateStr}T${timeStr.padStart(5, '0')}"
-        return runCatching { LocalDateTime.parse(normalized) }.getOrNull()
+        return runCatching { LocalDateTime.parse(normalized) }
+            .onFailure {
+                AppLogger.log("Reminder", "解析考试时间失败: raw=$raw", it)
+            }
+            .getOrNull()
     }
 
     private fun scheduleNotification(
@@ -134,6 +139,8 @@ class ExamReminderPortImpl(
             center.removePendingNotificationRequestsWithIdentifiers(listOf(identifier))
             center.addNotificationRequest(request, withCompletionHandler = { _ -> })
             true
+        }.onFailure {
+            AppLogger.log("Reminder", "iOS调度考试通知失败", it)
         }.getOrDefault(false)
     }
 

@@ -1,4 +1,4 @@
-﻿package restarhalf.stellar.schedule.pictureselector
+package restarhalf.stellar.schedule.pictureselector
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
+import restarhalf.stellar.schedule.core.log.AppLogger
 import java.io.InputStream
 
 class PictureSelectorPortImpl(
@@ -325,6 +326,8 @@ class PictureSelectorPortImpl(
         block: (InputStream) -> T?,
     ): T? = runCatching {
         contentResolver.openInputStream(uriString.toUri())?.use(block)
+    }.onFailure {
+        AppLogger.log("Picture", "读取图片输入流失败", it)
     }.getOrNull()
 }
 

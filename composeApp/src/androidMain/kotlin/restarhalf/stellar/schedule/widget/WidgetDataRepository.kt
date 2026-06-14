@@ -15,6 +15,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.data.local.AppDatabase
@@ -377,6 +378,10 @@ internal object WidgetDataRepository {
 
     private fun parseCourseColor(raw: String): Color? {
         if (raw.isBlank()) return null
-        return runCatching { Color(raw.toColorInt()) }.getOrNull()
+        return runCatching { Color(raw.toColorInt()) }
+            .onFailure {
+                AppLogger.log("Widget", "解析课程颜色失败: raw=$raw", it)
+            }
+            .getOrNull()
     }
 }

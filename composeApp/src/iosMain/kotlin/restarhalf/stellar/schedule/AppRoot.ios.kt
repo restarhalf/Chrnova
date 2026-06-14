@@ -17,11 +17,17 @@ import org.jetbrains.skia.Image
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSData
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSSelectorFromString
 import platform.Foundation.NSThread
 import platform.Foundation.NSURL
+import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
+import platform.Foundation.writeToFile
+import platform.Foundation.writeToURL
 import platform.Photos.PHAssetChangeRequest
 import platform.Photos.PHAuthorizationStatus
 import platform.Photos.PHAuthorizationStatusAuthorized
@@ -54,6 +60,7 @@ import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
 import platform.posix.memcpy
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
@@ -100,6 +107,9 @@ fun AppRoot(): UIViewController {
                         bytes = bytes,
                     )
                 },
+                saveLog = { fileName, content ->
+                    saveLogToFile(fileName, content)
+                },
                 exitApp = {
                     UIApplication.sharedApplication.performSelector(
                         NSSelectorFromString("suspend")
@@ -114,6 +124,11 @@ private fun ensureKoinStarted() {
     if (KoinPlatform.getKoinOrNull() != null) return
     startKoin {
         modules(appModule)
+    }
+    restarhalf.stellar.schedule.core.log.AppLogger.init()
+    @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
+    kotlin.native.setUnhandledExceptionHook { throwable ->
+        AppLogger.logFatal("main", throwable)
     }
 }
 
@@ -210,6 +225,28 @@ private fun showNotificationPermissionAlert(controller: UIViewController) {
 private fun openAppSettings(): Boolean {
     val url = NSURL.URLWithString(UIApplicationOpenSettingsURLString) ?: return false
     return openUrlWithOptionsOnMain(url)
+}
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+private fun saveLogToFile(fileName: String, content: String): String? {
+    return runCatching {
+        val dirPath = NSSearchPathForDirectoriesInDomains(
+            NSDocumentDirectory, NSUserDomainMask, true
+        ).firstOrNull() as? String ?: return@runCatching null
+        val dirUrl = NSURL.fileURLWithPath("$dirPath/Chrnova")
+        NSFileManager.defaultManager.createDirectoryAtURL(
+            dirUrl, withIntermediateDirectories = true, attributes = null, error = null
+        )
+        val fileUrl = NSURL.fileURLWithPath("$dirPath/Chrnova/$fileName")
+        val bytes = content.encodeToByteArray()
+        val nsData = bytes.usePinned { pinned ->
+            NSData.create(bytes = pinned.addressOf(0), length = bytes.size.toULong())
+        }
+        nsData.writeToURL(fileUrl, atomically = true)
+        "$dirPath/Chrnova/$fileName"
+    }.onFailure {
+        AppLogger.log("App", "保存日志文件失败: fileName=$fileName", it)
+    }.getOrDefault(null)
 }
 
 private fun showNativeMessage(controller: UIViewController, message: String) {
@@ -397,5 +434,9 @@ private fun NSData.toComposeImageBitmapOrNull(): ImageBitmap? {
                 memcpy(pinned.addressOf(0), source, length)
             }
         }
-    return runCatching { Image.makeFromEncoded(bytesArray).toComposeImageBitmap() }.getOrNull()
+    return runCatching { Image.makeFromEncoded(bytesArray).toComposeImageBitmap() }
+        .onFailure {
+            AppLogger.log("Image", "解码图片失败", it)
+        }
+        .getOrNull()
 }

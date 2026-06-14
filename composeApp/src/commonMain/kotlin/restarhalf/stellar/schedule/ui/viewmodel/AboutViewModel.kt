@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
@@ -156,6 +157,7 @@ class AboutViewModel(
                 }
             }
                 .onFailure {
+                    AppLogger.log("Update", "检查更新失败", it)
                     _updateSummary.value = it.toUserFacingMessage(UserFacingErrorKind.CheckUpdate)
                 }
 

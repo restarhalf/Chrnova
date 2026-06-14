@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.components.screen.about
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,26 +22,27 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 详情页面头部组件
- * 
- * 显示应用图标、名称和版本信息。
- * 
- * @param appIcon 应用图标
- * @param appName 应用名称
- * @param version 版本号
- */
 @Composable
 fun DetailHeader(
     appIcon: ImageBitmap?,
     appName: String,
-    version: String?
+    version: String?,
+    onIconTap: () -> Unit = {},
 ) {
+    var tapCount by remember { mutableIntStateOf(0) }
+
     Box(
         modifier =
             Modifier
                 .size(90.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .clip(RoundedCornerShape(8.dp))
+                .clickable {
+                    tapCount++
+                    if (tapCount >= 5) {
+                        tapCount = 0
+                        onIconTap()
+                    }
+                },
         contentAlignment = Alignment.Center,
     ) {
         if (appIcon != null) {

@@ -83,6 +83,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUs
 import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
@@ -106,6 +107,7 @@ import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetExamReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetFloatingBarUseCase
+import restarhalf.stellar.schedule.domain.usecase.SetLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetTermStartMsUseCase
@@ -277,6 +279,8 @@ val useCaseModule = module {
     single { SetThemeModeUseCase(settings = get()) }
     single { ObserveFloatingBarUseCase(settings = get()) }
     single { SetFloatingBarUseCase(settings = get()) }
+    single { ObserveLogEnabledUseCase(settings = get()) }
+    single { SetLogEnabledUseCase(settings = get()) }
     single { ObserveSelectedTermUseCase(settings = get()) }
     single { SetSelectedTermUseCase(settings = get()) }
     single { ObserveCourseReminderEnabledUseCase(settings = get()) }
@@ -383,6 +387,7 @@ val viewModelModule = module {
             fetchGrades = get(),
             loginUseCase = get(),
             runSyncUseCase = get(),
+            observeLogEnabled = get(),
         )
     }
     factory {
@@ -434,6 +439,8 @@ val viewModelModule = module {
             setFloatingBarUseCase = get(),
             observeSelectedTerm = get(),
             setSelectedTermUseCase = get(),
+            observeLogEnabled = get(),
+            setLogEnabledUseCase = get(),
             observeAuthToken = get(),
             observeAuthProfile = get(),
             ensureLoggedIn = get(),

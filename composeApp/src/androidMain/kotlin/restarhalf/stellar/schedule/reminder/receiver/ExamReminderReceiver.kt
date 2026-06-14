@@ -19,6 +19,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import restarhalf.stellar.schedule.MainActivity
 import restarhalf.stellar.schedule.R
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.reminder.ExamReminderScheduler
 
@@ -136,8 +137,8 @@ class ExamReminderReceiver : BroadcastReceiver() {
             try {
                 val deps = Deps()
                 deps.rescheduleNextReminderIfEnabled()
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
+                AppLogger.log("Reminder", "重新调度下次考试提醒失败", e)
             } finally {
                 result.finish()
             }

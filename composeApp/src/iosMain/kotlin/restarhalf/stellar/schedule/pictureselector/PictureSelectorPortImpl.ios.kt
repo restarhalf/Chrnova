@@ -1,4 +1,4 @@
-﻿@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 
 package restarhalf.stellar.schedule.pictureselector
 
@@ -28,6 +28,7 @@ import platform.UIKit.UIGraphicsEndImageContext
 import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
+import restarhalf.stellar.schedule.core.log.AppLogger
 import platform.posix.memcpy
 import kotlin.math.max
 
@@ -249,6 +250,8 @@ private fun UIImage.toComposeBitmap(): ImageBitmap? {
     val data = UIImageJPEGRepresentation(this, 0.95) ?: return null
     return runCatching {
         Image.makeFromEncoded(data.toByteArray()).toComposeImageBitmap()
+    }.onFailure {
+        AppLogger.log("Picture", "iOS图片转换失败", it)
     }.getOrNull()
 }
 

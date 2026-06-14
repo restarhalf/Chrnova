@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
 import java.io.IOException
 import java.util.Calendar
@@ -35,12 +36,15 @@ class ReminderRescheduleWorker(appContext: Context, params: WorkerParameters) :
             }
         } catch (e: IOException) {
             Log.w(TAG, "IO failure when rescheduling reminders, will retry", e)
+            AppLogger.log("Reminder", "重新调度提醒IO失败", e)
             Result.retry()
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Non-recoverable data/state issue during reminder reschedule", e)
+            AppLogger.log("Reminder", "重新调度提醒数据状态异常", e)
             Result.failure()
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected failure during reminder reschedule", e)
+            AppLogger.log("Reminder", "重新调度提醒意外失败", e)
             Result.failure()
         }
     }

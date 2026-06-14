@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 
 /**
@@ -26,12 +27,17 @@ class LoginUseCase(
         codeVal: String = "",
         p: String? = null,
     ) {
-        authWorkflow.login(
-            userNo = userNo,
-            password = password,
-            captchaData = captchaData,
-            codeVal = codeVal,
-            p = p
-        )
+        try {
+            authWorkflow.login(
+                userNo = userNo,
+                password = password,
+                captchaData = captchaData,
+                codeVal = codeVal,
+                p = p
+            )
+        } catch (e: Exception) {
+            AppLogger.log("Auth", "登录失败 userNo=$userNo", e)
+            throw e
+        }
     }
 }

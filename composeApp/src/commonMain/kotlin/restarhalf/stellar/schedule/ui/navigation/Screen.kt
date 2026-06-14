@@ -50,6 +50,10 @@ sealed interface Screen : NavKey {
     @Serializable
     data class PEDetail(val schoolYear: String) : Screen
 
+    /** 日志页面 */
+    @Serializable
+    data object Log : Screen
+
     /**
      * 课程编辑页面
      * 

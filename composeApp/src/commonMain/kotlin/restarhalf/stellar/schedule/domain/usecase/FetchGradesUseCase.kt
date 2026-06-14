@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -95,6 +96,7 @@ class FetchGradesUseCase(
             fetchWithFallback(resolvedSemester)
         } catch (e: Exception) {
             if (e.isNetworkError()) throw e
+            AppLogger.log("Fetch", "获取成绩失败，刷新会话重试", e)
             authWorkflow.refreshSession()
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)

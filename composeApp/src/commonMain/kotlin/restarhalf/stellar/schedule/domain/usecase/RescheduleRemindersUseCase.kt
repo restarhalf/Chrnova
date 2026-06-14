@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -79,6 +80,7 @@ class RescheduleRemindersUseCase(
     private suspend fun fetchExamsWithReloginRetry(): List<Examination> {
         authWorkflow.ensureLoggedIn()
         return runCatching { academic.fetchExaminations(semester = "", nameOrNumber = "") }
+            .onFailure { AppLogger.log("Reminder", "获取考试失败", it) }
             .getOrElse {
                 if (it.isNetworkError()) throw it
                 authWorkflow.refreshSession()

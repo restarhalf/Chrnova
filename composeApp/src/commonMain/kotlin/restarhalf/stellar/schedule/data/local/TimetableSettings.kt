@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import restarhalf.stellar.schedule.core.log.AppLogger
 import kotlin.time.ExperimentalTime
 
 /**
@@ -32,7 +33,11 @@ class TimetableSettings(private val settings: ObservableSettings) {
      */
     fun getCampus(): Campus {
         val raw = settings.getString(KEY_CAMPUS, Campus.Development.name)
-        return runCatching { Campus.valueOf(raw) }.getOrElse { Campus.Development }
+        return runCatching { Campus.valueOf(raw) }
+            .onFailure {
+                AppLogger.log("Settings", "解析校区失败: raw=$raw", it)
+            }
+            .getOrElse { Campus.Development }
     }
 
     /**
@@ -43,7 +48,13 @@ class TimetableSettings(private val settings: ObservableSettings) {
     @OptIn(ExperimentalSettingsApi::class)
     fun observeCampus(): Flow<Campus> {
         return settings.getStringFlow(KEY_CAMPUS, Campus.Development.name)
-            .map { raw -> runCatching { Campus.valueOf(raw) }.getOrElse { Campus.Development } }
+            .map { raw ->
+                runCatching { Campus.valueOf(raw) }
+                    .onFailure {
+                        AppLogger.log("Settings", "解析校区失败: raw=$raw", it)
+                    }
+                    .getOrElse { Campus.Development }
+            }
     }
 
     /**

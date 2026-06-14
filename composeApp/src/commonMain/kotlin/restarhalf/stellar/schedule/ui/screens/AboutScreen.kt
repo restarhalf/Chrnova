@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import restarhalf.stellar.schedule.core.log.AppLogger
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.ui.components.AppCard
@@ -81,6 +82,7 @@ fun AboutScreen(
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
     onSaveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
+    onIconTap: () -> Unit = {},
 ) {
     val vm: AboutViewModel = koinViewModel()
     val appInfo: AppInfoPort = koinInject()
@@ -203,7 +205,11 @@ fun AboutScreen(
                                         val fileName = path.substringAfterLast('/')
                                         scope.launch {
                                             val bytes =
-                                                runCatching { Res.readBytes(path) }.getOrNull()
+                                                runCatching { Res.readBytes(path) }
+                                                    .onFailure {
+                                                        AppLogger.log("About", "读取奖励图片失败: path=$path", it)
+                                                    }
+                                                    .getOrNull()
                                             if (bytes == null) {
                                                 showMessage("读取图片失败，请重试")
                                                 return@launch
@@ -214,6 +220,8 @@ fun AboutScreen(
                                                         fileName,
                                                         bytes
                                                     )
+                                                }.onFailure {
+                                                    AppLogger.log("About", "保存奖励图片失败: fileName=$fileName", it)
                                                 }.getOrDefault(false)
                                             showAwardPicture.value = false
                                             showMessage(
@@ -272,7 +280,8 @@ fun AboutScreen(
                 DetailHeader(
                     appIcon = appIcon,
                     appName = appName,
-                    version = screenUi.versionDisplay
+                    version = screenUi.versionDisplay,
+                    onIconTap = onIconTap,
                 )
             }
             item {

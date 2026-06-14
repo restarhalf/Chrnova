@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
@@ -147,6 +148,7 @@ class ExaminationViewModel(
         viewModelScope.launch {
             runCatching { loader() }
                 .onFailure {
+                    AppLogger.log("Exams", "加载考试数据失败", it)
                     _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
                 }
             _loading.value = false

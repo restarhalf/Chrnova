@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,6 +36,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.NavDisplayTransitionEffects
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
@@ -53,6 +55,7 @@ import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
+import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
@@ -104,6 +107,8 @@ fun AppContent(
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     /** 同步教务系统的挂起函数 */
     runSync: suspend () -> Unit,
+    /** 保存日志文件的回调，返回保存路径或null */
+    saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
 ) {
     val appState = LocalAppState.current
 
@@ -122,6 +127,7 @@ fun AppContent(
 
     val backStack = remember { mutableStateListOf<NavKey>(Screen.Main) }
     val navigator = remember(backStack) { AppNavigator(backStack) }
+    val scope = rememberCoroutineScope()
     val currentRoute = (navigator.current() as? Screen) ?: Screen.Main
     val chromeState =
         remember(
@@ -171,6 +177,7 @@ fun AppContent(
                         showMessage = showMessage,
                         canSaveAwardPicture = canSaveAwardPicture,
                         onSaveAwardPicture = saveAwardPicture,
+                        onIconTap = { navigator.push(Screen.Log) },
                         onHandleEvent = { event ->
                             when (event) {
                                 is AboutUiEvent.OpenUri -> {
@@ -209,6 +216,17 @@ fun AppContent(
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
                         courseId = screen.courseId,
+                    )
+                }
+                entry(Screen.Log) {
+                    LogScreen(
+                        onBack = { navigator.pop() },
+                        onExport = { fileName, content ->
+                            scope.launch {
+                                val path = saveLog(fileName, content)
+                                showMessage(if (path != null) "已保存: $path" else "保存失败")
+                            }
+                        },
                     )
                 }
                 entry<Screen.PEDetail> { screen ->

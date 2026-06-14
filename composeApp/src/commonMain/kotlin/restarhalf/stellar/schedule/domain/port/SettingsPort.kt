@@ -43,6 +43,11 @@ interface SettingsPort {
     /** 设置浮动导航栏模式 */
     fun setFloatingBar(mode: Int)
 
+    /** 观察日志开关状态 */
+    fun observeLogEnabled(): Flow<Boolean>
+    /** 设置日志开关 */
+    fun setLogEnabled(enabled: Boolean)
+
     /**
      * 检查是否需要自动同步，并标记已同步时间
      * 

@@ -16,6 +16,7 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
@@ -61,6 +62,7 @@ fun AppRoot(
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
+    saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     exitApp: () -> Unit = {},
 ) {
     val vm: AppViewModel = koinViewModel()
@@ -139,6 +141,9 @@ fun AppRoot(
                     }
                 }
             }
+            .onFailure {
+                AppLogger.log("Update", "自动检查更新失败", it)
+            }
     }
 
     val apkDownloadState by appUpdate.apkDownloadState.collectAsState()
@@ -156,7 +161,9 @@ fun AppRoot(
                     appUpdate.openUnknownSourcesSettings()
                 } else {
                     val launched =
-                        runCatching { appUpdate.launchInstaller(state.filePath) }.getOrDefault(false)
+                        runCatching { appUpdate.launchInstaller(state.filePath) }
+                            .onFailure { AppLogger.log("Update", "启动安装器失败", it) }
+                            .getOrDefault(false)
                     if (!launched) {
                         showMessage("无法拉起安装，请在文件管理器中手动安装")
                     }
@@ -212,6 +219,7 @@ fun AppRoot(
             showMessage = showMessage,
             canSaveAwardPicture = canSaveAwardPicture,
             saveAwardPicture = saveAwardPicture,
+            saveLog = saveLog,
             runSync = runSync,
         )
 
@@ -223,10 +231,12 @@ fun AppRoot(
                     if (platform() != Platform.Android) {
                         val openedDownload =
                             runCatching { appUpdate.launchInstaller(info.downloadUrl) }
+                                .onFailure { AppLogger.log("Update", "打开下载链接失败", it) }
                                 .getOrDefault(false)
                         val openedReleasePage =
                             if (openedDownload) true
                             else runCatching { appUpdate.launchInstaller(info.releasePageUrl) }
+                                .onFailure { AppLogger.log("Update", "打开发布页失败", it) }
                                 .getOrDefault(false)
                         showMessage(
                             if (openedReleasePage) "已打开下载链接，请在浏览器完成安装"

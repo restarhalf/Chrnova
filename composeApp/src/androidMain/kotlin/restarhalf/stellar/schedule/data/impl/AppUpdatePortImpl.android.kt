@@ -31,6 +31,7 @@ import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.ANDROID_RELEASE_APK_FILE_NAME
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
@@ -101,6 +102,8 @@ class AppUpdatePortImpl(
                 .listFiles()
                 ?.filter { it.isFile && it.name.startsWith("schedule-") && it.name.endsWith(".apk") }
                 ?.forEach { it.delete() }
+        }.onFailure {
+            AppLogger.log("Update", "清理旧APK文件失败", it)
         }
 
         val target =
@@ -150,7 +153,9 @@ class AppUpdatePortImpl(
                     _apkDownloadState.value = ApkDownloadState.Completed(file.absolutePath)
                 }
                 .onFailure { error ->
+                    AppLogger.log("Update", "下载APK失败", error)
                     runCatching { target.delete() }
+                        .onFailure { AppLogger.log("Update", "清理下载文件失败", it) }
                     _apkDownloadState.value =
                         ApkDownloadState.Error(
                             error.toUserFacingMessage(UserFacingErrorKind.DownloadUpdate)
@@ -162,7 +167,9 @@ class AppUpdatePortImpl(
     override fun cancelApkDownload() {
         activeDownloadJob?.cancel()
         activeDownloadJob = null
-        activeDownloadFile?.let { runCatching { it.delete() } }
+        activeDownloadFile?.let { runCatching { it.delete() }
+            .onFailure { AppLogger.log("Update", "取消下载清理文件失败", it) }
+        }
         activeDownloadFile = null
         _apkDownloadState.value = ApkDownloadState.Idle
     }
@@ -214,8 +221,11 @@ class AppUpdatePortImpl(
                     .use { input -> input.copyTo(output) }
             } ?: error("openOutputStream returned null")
             true
+        }.onFailure {
+            AppLogger.log("Update", "保存微信支付图片失败", it)
         }.getOrElse {
             runCatching { resolver.delete(uri, null, null) }
+                .onFailure { AppLogger.log("Update", "清理微信支付图片URI失败", it) }
             false
         }
     }
@@ -230,6 +240,8 @@ class AppUpdatePortImpl(
         return runCatching {
             context.startActivity(intent)
             true
+        }.onFailure {
+            AppLogger.log("Update", "加入QQ群失败", it)
         }.getOrDefault(false)
     }
 
@@ -244,6 +256,8 @@ class AppUpdatePortImpl(
                 }
             context.startActivity(intent)
             true
+        }.onFailure {
+            AppLogger.log("Update", "打开微信扫一扫失败", it)
         }.getOrDefault(false)
     }
 
