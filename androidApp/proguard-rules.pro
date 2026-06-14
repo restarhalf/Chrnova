@@ -7,27 +7,26 @@
 -keep class restarhalf.stellar.schedule.data.local.AppDatabase { *; }
 -keep class restarhalf.stellar.schedule.data.local.AppDatabase_Impl { *; }
 -keep class restarhalf.stellar.schedule.data.local.AppDatabaseConstructor { *; }
--keep class restarhalf.stellar.schedule.data.local.CourseDao { *; }
--keep class restarhalf.stellar.schedule.data.local.CourseDao_Impl { *; }
--keep class restarhalf.stellar.schedule.data.local.CourseDao_Impl$* { *; }
+-keep class restarhalf.stellar.schedule.data.local.dao.CourseDao { *; }
+-keep class restarhalf.stellar.schedule.data.local.dao.*_Impl { *; }
+-keep class restarhalf.stellar.schedule.data.local.dao.*_Impl$* { *; }
 -keep class androidx.sqlite.driver.bundled.** { *; }
 -keepclassmembers class androidx.sqlite.driver.bundled.** {
     native <methods>;
 }
 
 # WorkManager, receivers and Glance widgets are runtime entry points.
--keep class restarhalf.stellar.schedule.work.ReminderRescheduleWorker { *; }
--keep class restarhalf.stellar.schedule.ScheduleApp { *; }
--keep class restarhalf.stellar.schedule.only.receiver.BootReceiver { *; }
--keep class restarhalf.stellar.schedule.only.receiver.CourseReminderReceiver { *; }
--keep class restarhalf.stellar.schedule.only.receiver.ExamReminderReceiver { *; }
+-keep class restarhalf.stellar.schedule.reminder.ReminderRescheduleWorker { *; }
+-keep class restarhalf.stellar.schedule.AndroidApp { *; }
+-keep class restarhalf.stellar.schedule.reminder.receiver.BootReceiver { *; }
+-keep class restarhalf.stellar.schedule.reminder.receiver.CourseReminderReceiver { *; }
+-keep class restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.TodaySmallWidgetReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.TodayLargeWidgetReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.WidgetRefreshReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.** { *; }
 
-# Ktor content-negotiation and kotlinx.serialization.
--keep class io.ktor.serialization.kotlinx.json.KotlinxSerializationJsonExtensionProvider { *; }
+# kotlinx.serialization.
 -keep class **$$serializer { *; }
 -keepclassmembers class * {
     *** Companion;

@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.mapper
 
-import restarhalf.stellar.schedule.data.local.ExaminationEntity
+import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 import restarhalf.stellar.schedule.domain.model.Examination
 
 fun ExaminationEntity.toDomain(): Examination {

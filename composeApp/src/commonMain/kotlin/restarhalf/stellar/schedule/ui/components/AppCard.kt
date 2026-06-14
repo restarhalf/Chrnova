@@ -29,15 +29,12 @@ val LocalComponentsAlpha = compositionLocalOf { 1f }
 fun AppCard(
     modifier: Modifier = Modifier,
     colors: Color = MiuixTheme.colorScheme.surfaceContainer,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val alpha = LocalComponentsAlpha.current
     Card(
         modifier = modifier,
-        colors =
-            CardDefaults.defaultColors(
-                color = colors.copy(alpha = alpha)
-            ),
-        content = content
+        colors = CardDefaults.defaultColors(color = colors.copy(alpha = alpha)),
+        content = content,
     )
 }

@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.mapper
 
-import restarhalf.stellar.schedule.data.local.GradeEntity
+import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 
 fun GradeEntity.toDomain(): GradeCourse {

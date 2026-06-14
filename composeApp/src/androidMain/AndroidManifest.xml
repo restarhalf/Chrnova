@@ -25,7 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Schedule"
         android:usesCleartextTraffic="false"
-        tools:targetApi="33">
+        >
 
         <meta-data
             android:name="miuiWidgetVersion"

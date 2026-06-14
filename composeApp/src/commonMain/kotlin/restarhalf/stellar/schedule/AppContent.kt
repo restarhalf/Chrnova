@@ -56,8 +56,6 @@ import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
-import restarhalf.stellar.schedule.ui.screens.SettingsScreenActions
-import restarhalf.stellar.schedule.ui.screens.SettingsScreenState
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
@@ -387,37 +385,31 @@ private fun MainRouteContent(
 
             Screen.Settings -> {
                 SettingsScreen(
-                    state =
-                        SettingsScreenState(
-                            syncUiState = appState.syncUiState,
-                            campus = appState.campus,
-                            termStartMs = appState.termStartMs,
-                            totalWeeks = appState.totalWeeks,
-                        ),
-                    actions =
-                        SettingsScreenActions(
-                            onSync = runSync,
-                            onLogout = { vm.logout() },
-                            onLogin = { userNo, password ->
-                                vm.login(userNo = userNo, password = password)
-                            },
-                            ensureCourseReminderPermission = ensureNotificationPermission,
-                            ensureExamReminderPermission = ensureNotificationPermission,
-                            onCampusChange = { campus ->
-                                updateAppState { current -> current.copy(campus = campus) }
-                                vm.onCampusChanged(campus)
-                            },
-                            onTermStartChange = { termStartMs ->
-                                updateAppState { current -> current.copy(termStartMs = termStartMs) }
-                                vm.onTermStartMsChanged(termStartMs)
-                            },
-                            onTotalWeeksChange = { totalWeeks ->
-                                updateAppState { current -> current.copy(totalWeeks = totalWeeks) }
-                                vm.onTotalWeeksChanged(totalWeeks)
-                            },
-                            onChangeBackground = { navigator.push(Screen.ChangeBackground) },
-                            onAbout = { navigator.push(Screen.About) },
-                        ),
+                    syncUiState = appState.syncUiState,
+                    campus = appState.campus,
+                    termStartMs = appState.termStartMs,
+                    totalWeeks = appState.totalWeeks,
+                    onSync = runSync,
+                    onLogout = { vm.logout() },
+                    onLogin = { userNo, password ->
+                        vm.login(userNo = userNo, password = password)
+                    },
+                    ensureCourseReminderPermission = ensureNotificationPermission,
+                    ensureExamReminderPermission = ensureNotificationPermission,
+                    onCampusChange = { campus ->
+                        updateAppState { current -> current.copy(campus = campus) }
+                        vm.onCampusChanged(campus)
+                    },
+                    onTermStartChange = { termStartMs ->
+                        updateAppState { current -> current.copy(termStartMs = termStartMs) }
+                        vm.onTermStartMsChanged(termStartMs)
+                    },
+                    onTotalWeeksChange = { totalWeeks ->
+                        updateAppState { current -> current.copy(totalWeeks = totalWeeks) }
+                        vm.onTotalWeeksChanged(totalWeeks)
+                    },
+                    onChangeBackground = { navigator.push(Screen.ChangeBackground) },
+                    onAbout = { navigator.push(Screen.About) },
                 )
             }
 

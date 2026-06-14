@@ -67,23 +67,21 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
- * 设置页面状态
- * 
+ * 设置页面屏幕
+ *
+ * 显示应用设置，包括：
+ * - 账号登录/登出
+ * - 校区选择
+ * - 学期设置
+ * - 提醒设置
+ * - 主题设置
+ * - 背景设置
+ * - 关于页面
+ *
  * @param syncUiState 同步状态
  * @param campus 当前校区
  * @param termStartMs 学期开始时间戳
  * @param totalWeeks 学期总周数
- */
-data class SettingsScreenState(
-    val syncUiState: SyncUiState,
-    val campus: Campus,
-    val termStartMs: Long,
-    val totalWeeks: Int,
-)
-
-/**
- * 设置页面操作回调
- * 
  * @param onSync 同步回调
  * @param onLogout 登出回调
  * @param onLogin 登录回调
@@ -95,39 +93,23 @@ data class SettingsScreenState(
  * @param onChangeBackground 更换背景回调
  * @param onAbout 关于页面回调
  */
-data class SettingsScreenActions(
-    val onSync: suspend () -> Unit,
-    val onLogout: () -> Unit,
-    val onLogin: suspend (userNo: String, password: String) -> Unit,
-    val ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
-    val ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
-    val onCampusChange: (Campus) -> Unit,
-    val onTermStartChange: (Long) -> Unit,
-    val onTotalWeeksChange: (Int) -> Unit,
-    val onChangeBackground: () -> Unit,
-    val onAbout: () -> Unit,
-)
-
-/**
- * 设置页面屏幕
- * 
- * 显示应用设置，包括：
- * - 账号登录/登出
- * - 校区选择
- * - 学期设置
- * - 提醒设置
- * - 主题设置
- * - 背景设置
- * - 关于页面
- * 
- * @param state 设置页面状态
- * @param actions 设置页面操作回调
- */
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SettingsScreen(
-    state: SettingsScreenState,
-    actions: SettingsScreenActions,
+    syncUiState: SyncUiState,
+    campus: Campus,
+    termStartMs: Long,
+    totalWeeks: Int,
+    onSync: suspend () -> Unit,
+    onLogout: () -> Unit,
+    onLogin: suspend (userNo: String, password: String) -> Unit,
+    ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    onCampusChange: (Campus) -> Unit,
+    onTermStartChange: (Long) -> Unit,
+    onTotalWeeksChange: (Int) -> Unit,
+    onChangeBackground: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -139,11 +121,11 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     val screenUi =
-        remember(state.syncUiState, state.campus, state.termStartMs) {
+        remember(syncUiState, campus, termStartMs) {
             vm.buildScreenUi(
-                syncUiState = state.syncUiState,
-                campus = state.campus,
-                termStartMs = state.termStartMs
+                syncUiState = syncUiState,
+                campus = campus,
+                termStartMs = termStartMs,
             )
         }
 
@@ -243,7 +225,7 @@ fun SettingsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColorsPrimary(),
                                     onClick = {
-                                        vm.submitLogin(actions.onLogin)
+                                        vm.submitLogin(onLogin)
                                     }) {
                                     Text(
                                         text =
@@ -289,7 +271,7 @@ fun SettingsScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColorsPrimary(),
                                 onClick = {
-                                    vm.confirmLogout(actions.onLogout)
+                                    vm.confirmLogout(onLogout)
                                 }) {
                                 Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
                             }
@@ -301,13 +283,13 @@ fun SettingsScreen(
                     show = showTermStartPicker,
                     title = "选择开始上课时间",
                     initialDate =
-                        Instant.fromEpochMilliseconds(state.termStartMs)
+                        Instant.fromEpochMilliseconds(termStartMs)
                             .toLocalDateTime(TimeZone.currentSystemDefault())
                             .date,
                     onConfirm = { date: LocalDate ->
                         val ms = date.atStartOfDayIn(TimeZone.currentSystemDefault())
                             .toEpochMilliseconds()
-                        actions.onTermStartChange(ms)
+                        onTermStartChange(ms)
                         showTermStartPicker.value = false
                     },
                 )
@@ -316,10 +298,10 @@ fun SettingsScreen(
                 WeekPickerBottomSheet(
                     show = showTotalWeeksPicker,
                     title = "本学期总周数",
-                    initialWeek = state.totalWeeks,
+                    initialWeek = totalWeeks,
                     weekRange = 1..20,
                     onConfirm = { week: Int ->
-                        actions.onTotalWeeksChange(week)
+                        onTotalWeeksChange(week)
                         showTotalWeeksPicker.value = false
                     },
                 )
@@ -387,7 +369,7 @@ fun SettingsScreen(
                             vm.onSelectedTermChanged(
                                 vm.selectedTermValueFromIndex(termSelectionUi.items, index)
                             )
-                            scope.launch { runCatching { actions.onSync() } }
+                            scope.launch { runCatching { onSync() } }
                         })
                     OverlayDropdownPreference(
                         title = "上课校区",
@@ -395,8 +377,8 @@ fun SettingsScreen(
                         items = screenUi.campusOptions,
                         selectedIndex = screenUi.campusSelectedIndex,
                         onSelectedIndexChange = { index: Int ->
-                            actions.onCampusChange(vm.campusFromIndex(index))
-                            scope.launch { runCatching { actions.onSync() } }
+                            onCampusChange(vm.campusFromIndex(index))
+                            scope.launch { runCatching { onSync() } }
                         })
                     ArrowPreference(
                         title = "开始上课时间",
@@ -405,7 +387,7 @@ fun SettingsScreen(
 
                     ArrowPreference(
                         title = "本学期总周数",
-                        summary = state.totalWeeks.toString(),
+                        summary = totalWeeks.toString(),
                         onClick = { showTotalWeeksPicker.value = true })
                     SwitchPreference(
                         title = "是否显示非本周课程",
@@ -440,7 +422,7 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "更换背景",
                         summary = "设置背景图片、模糊度与透明度",
-                        onClick = actions.onChangeBackground
+                        onClick = onChangeBackground
                     )
                 }
             }
@@ -451,19 +433,19 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "手动刷新课表",
                         summary = screenUi.syncSummary,
-                        onClick = { scope.launch { runCatching { actions.onSync() } } })
+                        onClick = { scope.launch { runCatching { onSync() } } })
                     SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",
                         checked = settingsUiState.reminderEnabled,
                         onCheckedChange = { newValue ->
                             if (newValue) {
-                                actions.ensureCourseReminderPermission {
+                                ensureCourseReminderPermission {
                                     vm.onReminderEnabledChanged(true)
                                     vm.scheduleCourseReminder(
-                                        campus = state.campus,
-                                        termStartMs = state.termStartMs,
-                                        totalWeeks = state.totalWeeks
+                                        campus = campus,
+termStartMs = termStartMs,
+                            totalWeeks = totalWeeks
                                     )
                                 }
                             } else {
@@ -476,7 +458,7 @@ fun SettingsScreen(
                         checked = settingsUiState.examReminderEnabled,
                         onCheckedChange = { newValue ->
                             if (newValue) {
-                                actions.ensureExamReminderPermission {
+                                ensureExamReminderPermission {
                                     vm.onExamReminderEnabledChanged(true)
                                     vm.scheduleExamReminder(
                                         selectedTerm = settingsUiState.selectedTerm
@@ -494,7 +476,7 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "关于",
                         summary = "版本信息及更新",
-                        onClick = actions.onAbout
+                        onClick = onAbout
                     )
                 }
             }

@@ -1,4 +1,4 @@
-﻿package restarhalf.stellar.schedule.data.impl
+package restarhalf.stellar.schedule.data.impl
 
 import android.content.ComponentName
 import android.content.ContentValues
@@ -210,7 +210,7 @@ class AppUpdatePortImpl(
             resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
         return runCatching {
             resolver.openOutputStream(uri)?.use { output ->
-                context.resources.openRawResource(R.drawable.wxpay)
+                context.resources.openRawResource(R.raw.wxpay)
                     .use { input -> input.copyTo(output) }
             } ?: error("openOutputStream returned null")
             true
@@ -239,9 +239,8 @@ class AppUpdatePortImpl(
                 Intent().apply {
                     component = ComponentName("com.tencent.mm", "com.tencent.mm.ui.LauncherUI")
                     putExtra("LauncherUI.From.Scaner.Shortcut", true)
-                    flags = 335544320
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     action = "android.intent.action.VIEW"
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             context.startActivity(intent)
             true

@@ -9,6 +9,19 @@ import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
+import restarhalf.stellar.schedule.data.local.dao.CourseDao
+import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
+import restarhalf.stellar.schedule.data.local.dao.GradeDao
+import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
+import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
+import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
+import restarhalf.stellar.schedule.data.local.entity.CourseEntity
+import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
+import restarhalf.stellar.schedule.data.local.entity.GradeEntity
+import restarhalf.stellar.schedule.data.local.entity.PEDetailSummaryEntity
+import restarhalf.stellar.schedule.data.local.entity.PEStudentInfoEntity
+import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
+import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -25,7 +38,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  */
 @Database(
     entities = [
-        Course::class,
+        CourseEntity::class,
         ExaminationEntity::class,
         GradeEntity::class,
         PEYearScoreEntity::class,

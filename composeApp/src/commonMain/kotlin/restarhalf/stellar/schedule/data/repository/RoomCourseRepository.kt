@@ -4,8 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import restarhalf.stellar.schedule.data.local.Course as CourseEntity
-import restarhalf.stellar.schedule.data.local.CourseDao
+import restarhalf.stellar.schedule.data.local.entity.CourseEntity
+import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.Course

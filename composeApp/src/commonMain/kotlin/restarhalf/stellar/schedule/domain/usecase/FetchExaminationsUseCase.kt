@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
+import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -28,18 +29,17 @@ class FetchExaminationsUseCase(
     ): List<Examination> {
         authWorkflow.ensureLoggedIn()
 
-        // 获取考试安排，如果失败则刷新会话后重试
         val exams = try {
             academic.fetchExaminations(
                 semester = semester,
                 nameOrNumber = nameOrNumber
             )
         } catch (e: Exception) {
+            if (e.isNetworkError()) throw e
             authWorkflow.refreshSession()
             academic.fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
         }
 
-        // 如果是全量查询，保存到本地数据库
         if (nameOrNumber.isBlank()) {
             repository.replaceExaminations(semester, exams)
         }

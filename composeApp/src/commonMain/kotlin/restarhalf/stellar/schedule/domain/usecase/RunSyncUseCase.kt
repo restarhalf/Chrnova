@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
+import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -67,6 +68,8 @@ class RunSyncUseCase(
             if (firstAttempt.isSuccess) {
                 firstAttempt.getOrThrow()
             } else {
+                val ex = firstAttempt.exceptionOrNull()
+                if (ex != null && ex.isNetworkError()) throw ex
                 authWorkflow.refreshSession()
                 sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
             }

@@ -25,11 +25,7 @@ fun PictureSelectorHost(
     val context = LocalContext.current
     val port: PictureSelectorPort = koinInject()
     val permission = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
+        Manifest.permission.READ_MEDIA_IMAGES
     }
     var hasPermission by remember(show) {
         mutableStateOf(

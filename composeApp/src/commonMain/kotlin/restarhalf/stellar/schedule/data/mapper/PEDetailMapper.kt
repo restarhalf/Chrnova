@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.data.mapper
 
-import restarhalf.stellar.schedule.data.local.PEDetailSummaryEntity
-import restarhalf.stellar.schedule.data.local.PESubjectScoreEntity
+import restarhalf.stellar.schedule.data.local.entity.PEDetailSummaryEntity
+import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PESubjectScore
 

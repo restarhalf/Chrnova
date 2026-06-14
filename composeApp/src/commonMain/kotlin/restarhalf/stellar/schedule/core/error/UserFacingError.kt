@@ -198,6 +198,11 @@ private val NETWORK_HINTS =
         "网络",
     )
 
+fun Throwable.isNetworkError(): Boolean {
+    val hints = buildHintText()
+    return isNetworkHint(hints) || isTimeoutHint(hints)
+}
+
 private val INVALID_DATA_HINTS =
     listOf(
         "serialization",

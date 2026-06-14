@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.data.local
+package restarhalf.stellar.schedule.data.local.dao
 
 import androidx.room3.Dao
 import androidx.room3.Delete
@@ -8,6 +8,7 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 
 /**
  * 课程数据访问对象（DAO）
@@ -23,7 +24,7 @@ interface CourseDao {
      * @return 课程列表Flow
      */
     @Query("SELECT * FROM courses")
-    fun getAllCourses(): Flow<List<Course>>
+    fun getAllCourses(): Flow<List<CourseEntity>>
 
     /**
      * 根据ID观察课程
@@ -32,7 +33,7 @@ interface CourseDao {
      * @return 课程Flow
      */
     @Query("SELECT * FROM courses WHERE id = :id LIMIT 1")
-    fun getCourseById(id: Long): Flow<Course?>
+    fun getCourseById(id: Long): Flow<CourseEntity?>
 
     /**
      * 插入课程
@@ -41,7 +42,7 @@ interface CourseDao {
      * @return 插入后的课程ID
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCourse(course: Course): Long
+    suspend fun insertCourse(course: CourseEntity): Long
 
     /**
      * 批量插入课程
@@ -50,7 +51,7 @@ interface CourseDao {
      * @return 插入后的课程ID列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCourses(courses: List<Course>): List<Long>
+    suspend fun insertCourses(courses: List<CourseEntity>): List<Long>
 
     /**
      * 删除课程
@@ -58,7 +59,7 @@ interface CourseDao {
      * @param course 课程数据
      */
     @Delete
-    suspend fun deleteCourse(course: Course)
+    suspend fun deleteCourse(course: CourseEntity)
 
     /**
      * 更新课程
@@ -66,7 +67,7 @@ interface CourseDao {
      * @param course 课程数据
      */
     @Update
-    suspend fun updateCourse(course: Course)
+    suspend fun updateCourse(course: CourseEntity)
 
     /** 删除所有课程 */
     @Query("DELETE FROM courses")
@@ -90,7 +91,7 @@ interface CourseDao {
      * @return 课程列表
      */
     @Query("SELECT * FROM courses")
-    suspend fun getAllCoursesOnce(): List<Course>
+    suspend fun getAllCoursesOnce(): List<CourseEntity>
 
     /**
      * 替换同步的课程数据
@@ -100,7 +101,7 @@ interface CourseDao {
      * @param courses 新课程列表
      */
     @Transaction
-    suspend fun replaceSyncedCourses(courses: List<Course>) {
+    suspend fun replaceSyncedCourses(courses: List<CourseEntity>) {
         deleteSyncedCourses()
         if (courses.isNotEmpty()) {
             insertCourses(courses)

@@ -2,10 +2,11 @@ package restarhalf.stellar.schedule.data.remote
 
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
+import restarhalf.stellar.schedule.domain.port.PEAuthPort
 
-class PEAuthStore(private val settings: ObservableSettings) {
+class PEAuthStore(private val settings: ObservableSettings) : PEAuthPort {
 
-    fun getToken(): String? = settings.getStringOrNull(KEY_TOKEN)?.takeIf { it.isNotBlank() }
+    override fun getToken(): String? = settings.getStringOrNull(KEY_TOKEN)?.takeIf { it.isNotBlank() }
 
     fun setToken(token: String?) {
         settings[KEY_TOKEN] = token
@@ -17,24 +18,24 @@ class PEAuthStore(private val settings: ObservableSettings) {
         settings[KEY_USER_ID] = userId
     }
 
-    fun getUsername(): String? = settings.getStringOrNull(KEY_USERNAME)?.takeIf { it.isNotBlank() }
+    override fun getUsername(): String? = settings.getStringOrNull(KEY_USERNAME)?.takeIf { it.isNotBlank() }
 
     fun setUsername(username: String?) {
         settings[KEY_USERNAME] = username
     }
 
-    fun getPassword(): String? = settings.getStringOrNull(KEY_PASSWORD)?.takeIf { it.isNotBlank() }
+    override fun getPassword(): String? = settings.getStringOrNull(KEY_PASSWORD)?.takeIf { it.isNotBlank() }
 
     fun setPassword(password: String?) {
         settings[KEY_PASSWORD] = password
     }
 
-    fun clear() {
+    override fun clear() {
         settings.remove(KEY_TOKEN)
         settings.remove(KEY_USER_ID)
     }
 
-    fun clearAll() {
+    override fun clearAll() {
         settings.remove(KEY_TOKEN)
         settings.remove(KEY_USER_ID)
         settings.remove(KEY_USERNAME)

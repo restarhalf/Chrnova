@@ -3,9 +3,9 @@ package restarhalf.stellar.schedule.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import restarhalf.stellar.schedule.data.local.PEDetailDao
-import restarhalf.stellar.schedule.data.local.PEStudentInfoDao
-import restarhalf.stellar.schedule.data.local.PEYearScoreDao
+import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
+import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
+import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.data.remote.PEDetailData

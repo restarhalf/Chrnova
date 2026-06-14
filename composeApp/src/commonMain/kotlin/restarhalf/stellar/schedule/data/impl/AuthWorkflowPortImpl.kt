@@ -102,7 +102,11 @@ class AuthWorkflowPortImpl(
 
     /** 刷新会话，重新登录 */
     override suspend fun refreshSession() {
-        authStore.clearToken()
-        ensureLoggedIn()
+        val (userNo, password) = authStore.getCredentials() ?: return
+        val oldToken = authStore.getToken()
+        runCatching { login(userNo = userNo, password = password) }
+            .onFailure {
+                if (oldToken != null) authStore.setToken(oldToken)
+            }
     }
 }

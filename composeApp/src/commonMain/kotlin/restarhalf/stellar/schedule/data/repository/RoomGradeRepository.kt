@@ -2,7 +2,7 @@ package restarhalf.stellar.schedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import restarhalf.stellar.schedule.data.local.GradeDao
+import restarhalf.stellar.schedule.data.local.dao.GradeDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.GradeCourse

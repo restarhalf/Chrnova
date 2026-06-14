@@ -5,14 +5,32 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+/**
+ * 构建首页时钟快照用例
+ *
+ * 根据当前时间戳生成时钟显示所需的数据快照。
+ */
 class BuildHomeClockSnapshotUseCase {
 
+    /**
+     * 时钟快照
+     *
+     * @param dayOfWeekMon1 星期几（1=周一，7=周日）
+     * @param nowMinutes 当天已过的分钟数
+     * @param dateLabel 日期标签，如"6月13日 星期六"
+     */
     data class Snapshot(
         val dayOfWeekMon1: Int,
         val nowMinutes: Int,
         val dateLabel: String,
     )
 
+    /**
+     * 构建时钟快照
+     *
+     * @param nowMs 当前时间戳（毫秒）
+     * @return 时钟快照
+     */
     @OptIn(ExperimentalTime::class)
     operator fun invoke(nowMs: Long): Snapshot {
         val dateTime =
@@ -35,7 +53,7 @@ class BuildHomeClockSnapshotUseCase {
         return Snapshot(
             dayOfWeekMon1 = dayOfWeekMon1,
             nowMinutes = nowMinutes,
-            dateLabel = dateLabel
+            dateLabel = dateLabel,
         )
     }
 }

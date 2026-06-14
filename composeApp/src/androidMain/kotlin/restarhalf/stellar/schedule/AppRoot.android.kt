@@ -93,7 +93,6 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                 },
                 ensureNotificationPermission = { onGranted ->
                     if (
-                        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                         ContextCompat.checkSelfPermission(
                             this@AppRoot,
                             Manifest.permission.POST_NOTIFICATIONS,

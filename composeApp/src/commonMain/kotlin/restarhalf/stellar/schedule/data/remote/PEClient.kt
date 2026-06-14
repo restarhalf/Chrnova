@@ -21,10 +21,10 @@ class PEClient(
     private val json: Json = Json { ignoreUnknownKeys = true },
     private val authStore: PEAuthStore,
     private val passwordEncryption: PEPasswordEncryptionPort,
-) {
+) : PEGateway {
     private val baseUrl = "http://39.100.89.70/service"
 
-    suspend fun login(username: String, password: String): PELoginResponse =
+    override suspend fun login(username: String, password: String): PELoginResponse =
         withContext(AppIoDispatcher) {
             val encryptedPassword = passwordEncryption.encryptPasswordForPELogin(password)
             val sign = generateSign(
@@ -63,7 +63,7 @@ class PEClient(
             parsed
         }
 
-    suspend fun getScoreList(): PEScoreListResponse =
+    override suspend fun getScoreList(): PEScoreListResponse =
         withContext(AppIoDispatcher) {
             val userId = authStore.getUserId() ?: throw PETokenExpiredException()
             val token = authStore.getToken() ?: throw PETokenExpiredException()
@@ -95,7 +95,7 @@ class PEClient(
             parsed
         }
 
-    suspend fun getScoreDetail(schoolYear: String): PEDetailResponse =
+    override suspend fun getScoreDetail(schoolYear: String): PEDetailResponse =
         withContext(AppIoDispatcher) {
             val userId = authStore.getUserId() ?: throw PETokenExpiredException()
             val token = authStore.getToken() ?: throw PETokenExpiredException()
@@ -128,7 +128,7 @@ class PEClient(
             parsed
         }
 
-    suspend fun getStudentInfo(): PEStudentInfoResponse =
+    override suspend fun getStudentInfo(): PEStudentInfoResponse =
         withContext(AppIoDispatcher) {
             val userId = authStore.getUserId() ?: throw PETokenExpiredException()
             val token = authStore.getToken() ?: throw PETokenExpiredException()

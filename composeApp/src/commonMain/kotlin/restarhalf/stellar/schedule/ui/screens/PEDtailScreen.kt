@@ -78,12 +78,12 @@ fun PEDetailScreen(
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val overscrollEffect = MiuixOverscrollEffect()
-    val detailData by vm.detailData.collectAsState()
-    val loading by vm.loading.collectAsState()
-    val needsLogin by vm.needsLogin.collectAsState()
-    val error by vm.error.collectAsState()
-    val detailScreenStatus by vm.detailScreenStatus.collectAsState()
-    val statusText = vm.buildDetailStatusText(detailScreenStatus)
+    val uiState by vm.uiState.collectAsState()
+    val detailData = uiState.detailData
+    val loading = uiState.loading
+    val needsLogin = uiState.needsLogin
+    val error = uiState.error
+    val statusText = vm.buildStatusText(isDetail = true)
     val colors = MiuixTheme.colorScheme
     var showLoginDialog by remember { mutableStateOf(false) }
     val loggedIn = vm.isLoggedIn()

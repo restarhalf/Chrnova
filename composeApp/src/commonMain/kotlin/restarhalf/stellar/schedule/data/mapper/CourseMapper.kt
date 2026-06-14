@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.mapper
 
-import restarhalf.stellar.schedule.data.local.Course as CourseEntity
+import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 import restarhalf.stellar.schedule.domain.model.Course as CourseDomain
 
 fun CourseEntity.toDomain(): CourseDomain {
@@ -18,7 +18,7 @@ fun CourseEntity.toDomain(): CourseDomain {
         type = type,
         remoteKey = remoteKey,
         originRemoteKey = originRemoteKey,
-        targetWeek = targetWeek
+        targetWeek = targetWeek,
     )
 }
 
@@ -37,6 +37,6 @@ fun CourseDomain.toEntity(): CourseEntity {
         type = type,
         remoteKey = remoteKey,
         originRemoteKey = originRemoteKey,
-        targetWeek = targetWeek
+        targetWeek = targetWeek,
     )
 }

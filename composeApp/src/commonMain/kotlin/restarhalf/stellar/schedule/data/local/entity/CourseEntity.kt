@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.data.local
+package restarhalf.stellar.schedule.data.local.entity
 
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
@@ -9,7 +9,7 @@ import androidx.room3.PrimaryKey
  * 映射到courses表，存储课程信息。
  */
 @Entity(tableName = "courses")
-data class Course(
+data class CourseEntity(
     /** 课程ID（自动生成） */
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     /** 课程名称 */
@@ -37,5 +37,5 @@ data class Course(
     /** 原始远程标识（调课时使用） */
     val originRemoteKey: String? = null,
     /** 目标周次（调课时使用） */
-    val targetWeek: Int = 0
+    val targetWeek: Int = 0,
 )

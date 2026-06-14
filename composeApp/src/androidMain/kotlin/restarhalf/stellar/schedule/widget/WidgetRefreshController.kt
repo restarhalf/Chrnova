@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -82,8 +81,7 @@ internal object WidgetRefreshController {
         val pendingIntent = buildTickPendingIntent(context)
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                !alarmManager.canScheduleExactAlarms()
+            if (!alarmManager.canScheduleExactAlarms()
             ) {
                 alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent)
             } else {
@@ -167,8 +165,7 @@ internal object WidgetRefreshController {
         val triggerAtMillis = computeNextSmallPeriodicTriggerAtMillis(System.currentTimeMillis())
         val pendingIntent = buildSmallPeriodicPendingIntent(context)
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                !alarmManager.canScheduleExactAlarms()
+            if (!alarmManager.canScheduleExactAlarms()
             ) {
                 alarmManager.set(AlarmManager.RTC, triggerAtMillis, pendingIntent)
             } else {

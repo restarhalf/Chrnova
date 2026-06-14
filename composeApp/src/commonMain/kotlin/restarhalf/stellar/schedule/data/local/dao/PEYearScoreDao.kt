@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.data.local
+package restarhalf.stellar.schedule.data.local.dao
 
 import androidx.room3.Dao
 import androidx.room3.Insert
@@ -6,6 +6,7 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
+import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 
 @Dao
 interface PEYearScoreDao {

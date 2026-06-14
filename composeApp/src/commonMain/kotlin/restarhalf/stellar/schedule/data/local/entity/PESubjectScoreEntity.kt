@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.data.local
+package restarhalf.stellar.schedule.data.local.entity
 
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey

@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
+import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
@@ -32,6 +33,7 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
+import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
@@ -140,6 +142,7 @@ val portModule = module {
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
     // 体育系统认证存储
     single { restarhalf.stellar.schedule.data.remote.PEAuthStore(get(named("pe_auth"))) }
+    single<PEAuthPort> { get<restarhalf.stellar.schedule.data.remote.PEAuthStore>() }
 
     // 教务系统HTTP客户端，配置JSON序列化和认证插件
     single(named("jwxt")) {
@@ -180,7 +183,7 @@ val portModule = module {
     }
 
     // 体育系统客户端
-    single {
+    single<PEGateway> {
         restarhalf.stellar.schedule.data.remote.PEClient(
             httpClient = get(named("pe")),
             json = get(),
@@ -199,7 +202,7 @@ val portModule = module {
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
-    single { restarhalf.stellar.schedule.data.repository.PERepository(peClient = get()) }
+    single { restarhalf.stellar.schedule.data.repository.PERepository(peGateway = get()) }
     single { restarhalf.stellar.schedule.data.repository.PERoomRepository(peYearScoreDao = get(), peStudentInfoDao = get(), peDetailDao = get()) }
 
     // 端口实现
@@ -354,7 +357,7 @@ val useCaseModule = module {
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
     single { TransCourseUseCase() }
     single { TransCourseWithConflictsUseCase(getAllCoursesOnce = get(), transCourse = get()) }
-    single { restarhalf.stellar.schedule.domain.usecase.PEUseCase(repository = get(), authStore = get(), roomRepository = get()) }
+    single { restarhalf.stellar.schedule.domain.usecase.PEUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
 }
 
 /**

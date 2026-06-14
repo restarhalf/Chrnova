@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
+import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -93,6 +94,7 @@ class FetchGradesUseCase(
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
         } catch (e: Exception) {
+            if (e.isNetworkError()) throw e
             authWorkflow.refreshSession()
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)

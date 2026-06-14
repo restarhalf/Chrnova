@@ -46,7 +46,7 @@ private val appTabSpecs =
         TabSpec(screen = Screen.Schedule, icon = Schedule, label = "课程表"),
         TabSpec(screen = Screen.EMS, icon = Examination, label = "考务"),
         TabSpec(screen = Screen.PEScore, icon = PE, label = "体测"),
-        TabSpec(screen = Screen.Settings, icon = Settings, label="设置"),
+        TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
     )
 
 /**
@@ -110,8 +110,8 @@ fun AppBottomBar(
                         NavigationItem(
                             icon = tab.icon,
                             label = tab.label,
-                        ) }
-                    ,
+                        )
+                    },
                     selectedIndex = appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }.coerceAtLeast(0),
                     onItemClick = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
                     backdrop = backdrop,

@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.data.mapper
 
-import restarhalf.stellar.schedule.data.local.PEStudentInfoEntity
+import restarhalf.stellar.schedule.data.local.entity.PEStudentInfoEntity
 import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 
 fun PEStudentInfo.toEntity() = PEStudentInfoEntity(

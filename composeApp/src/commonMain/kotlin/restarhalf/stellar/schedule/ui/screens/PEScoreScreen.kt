@@ -91,11 +91,12 @@ fun PEScoreScreen(
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val overscrollEffect = MiuixOverscrollEffect()
-    val yearScores by viewModel.yearScores.collectAsState()
-    val loading by viewModel.loading.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val studentInfo by viewModel.studentInfo.collectAsState()
-    val needsLogin by viewModel.needsLogin.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val yearScores = uiState.yearScores
+    val loading = uiState.loading
+    val error = uiState.error
+    val studentInfo = uiState.studentInfo
+    val needsLogin = uiState.needsLogin
     var showLoginDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val showPeQrCode = remember { mutableStateOf(false) }
@@ -114,8 +115,7 @@ fun PEScoreScreen(
         }
     }
 
-    val scoreScreenStatus by viewModel.scoreScreenStatus.collectAsState()
-    val statusText = viewModel.buildScoreStatusText(scoreScreenStatus)
+    val statusText = viewModel.buildStatusText()
     val colors = MiuixTheme.colorScheme
 
     Scaffold(
