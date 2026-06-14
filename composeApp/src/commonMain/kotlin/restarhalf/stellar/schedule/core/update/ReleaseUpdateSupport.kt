@@ -3,7 +3,7 @@ package restarhalf.stellar.schedule.core.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private const val GITHUB_MIRROR = "https://gh.felicity.ac.cn/https://github.com"
+private const val GITHUB_MIRROR = "https://gh.felicity.ac.cn"
 internal const val GITHUB_OWNER = "restarhalf"
 internal const val GITHUB_REPO = "Chrnova"
 internal const val ANDROID_RELEASE_APK_FILE_NAME = "app-release.apk"
