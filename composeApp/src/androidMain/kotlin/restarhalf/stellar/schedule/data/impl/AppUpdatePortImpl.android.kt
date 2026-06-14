@@ -36,10 +36,10 @@ import restarhalf.stellar.schedule.core.update.ANDROID_RELEASE_APK_FILE_NAME
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
-import restarhalf.stellar.schedule.core.update.GiteeLatestReleaseResponse
-import restarhalf.stellar.schedule.core.update.buildGiteeLatestReleaseApi
-import restarhalf.stellar.schedule.core.update.buildGiteeReleaseAssetUrl
-import restarhalf.stellar.schedule.core.update.buildGiteeReleasePageUrl
+import restarhalf.stellar.schedule.core.update.GithubLatestReleaseResponse
+import restarhalf.stellar.schedule.core.update.buildGithubLatestReleaseApi
+import restarhalf.stellar.schedule.core.update.buildGithubReleaseAssetUrl
+import restarhalf.stellar.schedule.core.update.buildGithubReleasePageUrl
 import restarhalf.stellar.schedule.core.update.isNewerVersion
 import restarhalf.stellar.schedule.core.update.resolvedLatestVersion
 import java.io.File
@@ -58,13 +58,13 @@ class AppUpdatePortImpl(
 
     override suspend fun check(currentVersionName: String): AppUpdateInfo? =
         withContext(Dispatchers.IO) {
-            val response = client.get(buildGiteeLatestReleaseApi())
+            val response = client.get(buildGithubLatestReleaseApi())
             if (!response.status.isSuccess()) {
                 throw IllegalStateException("Check update failed (HTTP ${response.status.value})")
             }
 
             val payload: String = response.body()
-            val latest = json.decodeFromString(GiteeLatestReleaseResponse.serializer(), payload)
+            val latest = json.decodeFromString(GithubLatestReleaseResponse.serializer(), payload)
             val latestVersion = resolvedLatestVersion(latest)
             if (latestVersion.isBlank()) {
                 throw IllegalStateException("Latest version is empty")
@@ -74,9 +74,9 @@ class AppUpdatePortImpl(
             }
 
             val releasePageUrl = latest.htmlUrl?.takeIf { it.isNotBlank() }
-                ?: buildGiteeReleasePageUrl(latestVersion)
+                ?: buildGithubReleasePageUrl(latestVersion)
             val downloadUrl =
-                buildGiteeReleaseAssetUrl(latestVersion, ANDROID_RELEASE_APK_FILE_NAME)
+                buildGithubReleaseAssetUrl(latestVersion, ANDROID_RELEASE_APK_FILE_NAME)
             AppUpdateInfo(
                 latestVersion = latestVersion,
                 releasePageUrl = releasePageUrl,

@@ -15,11 +15,11 @@ import platform.darwin.dispatch_sync
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
-import restarhalf.stellar.schedule.core.update.GiteeLatestReleaseResponse
+import restarhalf.stellar.schedule.core.update.GithubLatestReleaseResponse
 import restarhalf.stellar.schedule.core.update.IOS_RELEASE_IPA_FILE_NAME
-import restarhalf.stellar.schedule.core.update.buildGiteeLatestReleaseApi
-import restarhalf.stellar.schedule.core.update.buildGiteeReleaseAssetUrl
-import restarhalf.stellar.schedule.core.update.buildGiteeReleasePageUrl
+import restarhalf.stellar.schedule.core.update.buildGithubLatestReleaseApi
+import restarhalf.stellar.schedule.core.update.buildGithubReleaseAssetUrl
+import restarhalf.stellar.schedule.core.update.buildGithubReleasePageUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupIosUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupWebUrl
 import restarhalf.stellar.schedule.core.update.isNewerVersion
@@ -33,12 +33,12 @@ class AppUpdatePortImpl : AppUpdatePort {
     override val apkDownloadState: StateFlow<ApkDownloadState> = _apkDownloadState
 
     override suspend fun check(currentVersionName: String): AppUpdateInfo? {
-        val response = client.get(buildGiteeLatestReleaseApi())
+        val response = client.get(buildGithubLatestReleaseApi())
         if (!response.status.isSuccess()) {
             throw IllegalStateException("检查更新失败（HTTP ${response.status.value}）")
         }
 
-        val latest = json.decodeFromString<GiteeLatestReleaseResponse>(response.body())
+        val latest = json.decodeFromString<GithubLatestReleaseResponse>(response.body())
         val latestVersion = resolvedLatestVersion(latest)
         if (latestVersion.isBlank()) {
             throw IllegalStateException("检查更新失败：未获取到版本号")
@@ -46,8 +46,8 @@ class AppUpdatePortImpl : AppUpdatePort {
         if (!isNewerVersion(latestVersion, currentVersionName)) return null
 
         val releasePageUrl =
-            latest.htmlUrl?.takeIf { it.isNotBlank() } ?: buildGiteeReleasePageUrl(latestVersion)
-        val downloadUrl = buildGiteeReleaseAssetUrl(latestVersion, IOS_RELEASE_IPA_FILE_NAME)
+            latest.htmlUrl?.takeIf { it.isNotBlank() } ?: buildGithubReleasePageUrl(latestVersion)
+        val downloadUrl = buildGithubReleaseAssetUrl(latestVersion, IOS_RELEASE_IPA_FILE_NAME)
         return AppUpdateInfo(
             latestVersion = latestVersion,
             releasePageUrl = releasePageUrl,

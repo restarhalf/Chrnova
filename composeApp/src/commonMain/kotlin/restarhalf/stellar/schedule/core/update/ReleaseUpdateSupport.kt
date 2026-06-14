@@ -3,13 +3,14 @@ package restarhalf.stellar.schedule.core.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-internal const val GITEE_OWNER = "restarhalf"
-internal const val GITEE_REPO = "schedule"
+private const val GITHUB_MIRROR = "https://gh.felicity.ac.cn/https://github.com"
+internal const val GITHUB_OWNER = "restarhalf"
+internal const val GITHUB_REPO = "Chrnova"
 internal const val ANDROID_RELEASE_APK_FILE_NAME = "app-release.apk"
 internal const val IOS_RELEASE_IPA_FILE_NAME = "app-release.ipa"
 
 @Serializable
-internal data class GiteeLatestReleaseResponse(
+internal data class GithubLatestReleaseResponse(
     @SerialName("tag_name") val tagName: String = "",
     val name: String = "",
     val body: String = "",
@@ -36,16 +37,16 @@ internal fun isNewerVersion(latest: String, current: String): Boolean {
     return false
 }
 
-internal fun resolvedLatestVersion(response: GiteeLatestReleaseResponse): String =
+internal fun resolvedLatestVersion(response: GithubLatestReleaseResponse): String =
     response.tagName.ifBlank { response.name }.trim()
 
-internal fun buildGiteeLatestReleaseApi(): String =
-    "https://gitee.com/api/v5/repos/$GITEE_OWNER/$GITEE_REPO/releases/latest"
+internal fun buildGithubLatestReleaseApi(): String =
+    "$GITHUB_MIRROR/https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
 
-internal fun buildGiteeReleasePageUrl(version: String): String =
-    "https://gitee.com/$GITEE_OWNER/$GITEE_REPO/releases/tag/$version"
+internal fun buildGithubReleasePageUrl(version: String): String =
+    "$GITHUB_MIRROR/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/tag/$version"
 
-internal fun buildGiteeReleaseAssetUrl(
+internal fun buildGithubReleaseAssetUrl(
     version: String,
     fileName: String,
-): String = "https://gitee.com/$GITEE_OWNER/$GITEE_REPO/releases/download/$version/$fileName"
+): String = "$GITHUB_MIRROR/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$version/$fileName"
