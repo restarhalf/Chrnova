@@ -58,8 +58,11 @@ sealed interface Screen : NavKey {
      * 课程编辑页面
      * 
      * @param courseId 课程ID，null表示新建实验课
+     * @param dayOfWeek 预选星期几（1-7），用于新建时预填
+     * @param startSection 预选开始节次（1-12），用于新建时预填
+     * @param selectedWeek 预选周次（1-n），用于新建时预填
      */
     @Serializable
-    data class ClassEdit(val courseId: Long? = null) : Screen
+    data class ClassEdit(val courseId: Long? = null, val dayOfWeek: Int = 1, val startSection: Int = 1, val selectedWeek: Int = 1) : Screen
 
 }

@@ -216,6 +216,9 @@ fun AppContent(
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
                         courseId = screen.courseId,
+                        initialDayOfWeek = screen.dayOfWeek,
+                        initialStartSection = screen.startSection,
+                        initialSelectedWeek = screen.selectedWeek,
                     )
                 }
                 entry(Screen.Log) {
@@ -382,7 +385,9 @@ private fun MainRouteContent(
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
                     totalWeeks = appState.totalWeeks,
-                    onAddLabCourse = { navigator.push(Screen.ClassEdit()) },
+                    onAddLabCourse = { dayOfWeek, startSection, selectedWeek ->
+                        navigator.push(Screen.ClassEdit(dayOfWeek = dayOfWeek, startSection = startSection, selectedWeek = selectedWeek))
+                    },
                     onEditLabCourse = { courseId ->
                         navigator.push(Screen.ClassEdit(courseId = courseId))
                     },

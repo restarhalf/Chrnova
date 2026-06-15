@@ -209,23 +209,29 @@ class CourseEditViewModel(
      * @param courseId 课程ID
      * @param editingCourse 正在编辑的课程
      * @param courseNames 课程名称列表
+     * @param initialDayOfWeek 预选星期几（1-7），用于新建时预填
+     * @param initialStartSection 预选开始节次（1-12），用于新建时预填
+     * @param initialSelectedWeek 预选周次（1-n），用于新建时预填
      * @return 编辑表单状态
      */
     fun buildEditingFormState(
         courseId: Long?,
         editingCourse: Course?,
         courseNames: List<String>,
+        initialDayOfWeek: Int = 1,
+        initialStartSection: Int = 1,
+        initialSelectedWeek: Int = 1,
     ): EditingFormState {
         if (courseId == null || editingCourse == null) {
-            // 新建模式
+            // 新建模式，使用预选值
             return EditingFormState(
                 isEdit = false,
                 selectedIndex = 0,
                 classRoom = "",
-                dayOfWeek = 1,
-                startSection = 1,
-                endSection = 2,
-                selectedWeeks = emptySet()
+                dayOfWeek = initialDayOfWeek.coerceIn(1, 7),
+                startSection = initialStartSection.coerceIn(1, 12),
+                endSection = initialStartSection.coerceIn(1, 12),
+                selectedWeeks = setOf(initialSelectedWeek.coerceAtLeast(1))
             )
         }
 

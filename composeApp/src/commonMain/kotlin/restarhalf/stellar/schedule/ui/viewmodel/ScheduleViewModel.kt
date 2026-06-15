@@ -91,6 +91,7 @@ class ScheduleViewModel(
         val transDialogUiState: TransDialogUiState,
         val transConflictUiState: TransConflictUiState,
         val detailSheetUiState: DetailSheetUiState,
+        val selectedEmptyCell: SelectedEmptyCell? = null,
     )
 
     /**
@@ -192,6 +193,36 @@ class ScheduleViewModel(
         val WEEKDAYS = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
     }
 
+    /**
+     * 选中的空单元格状态
+     * 
+     * @param dayOfWeek 星期几（1-7）
+     * @param section 节次（1-12）
+     */
+    data class SelectedEmptyCell(val dayOfWeek: Int, val section: Int)
+
+    private val _selectedEmptyCell = MutableStateFlow<SelectedEmptyCell?>(null)
+
+    /** 对外暴露的选中空单元格状态流 */
+    val selectedEmptyCell: StateFlow<SelectedEmptyCell?> = _selectedEmptyCell
+
+    /**
+     * 设置选中的空单元格
+     * 
+     * @param dayOfWeek 星期几（1-7）
+     * @param section 节次（1-12）
+     */
+    fun selectEmptyCell(dayOfWeek: Int, section: Int) {
+        _selectedEmptyCell.value = SelectedEmptyCell(dayOfWeek, section)
+    }
+
+    /**
+     * 清除选中的空单元格
+     */
+    fun clearSelectedEmptyCell() {
+        _selectedEmptyCell.value = null
+    }
+
     private val _transDialogUiState = MutableStateFlow(TransDialogUiState())
     private val _transConflictUiState = MutableStateFlow(TransConflictUiState())
     private val _detailSheetUiState = MutableStateFlow(DetailSheetUiState())
@@ -202,12 +233,14 @@ class ScheduleViewModel(
             _transDialogUiState,
             _transConflictUiState,
             _detailSheetUiState,
-        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState ->
+            _selectedEmptyCell,
+        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState, selectedEmptyCell ->
             ScheduleUiState(
                 showNonCurrentWeek = showNonCurrentWeek,
                 transDialogUiState = transDialogUiState,
                 transConflictUiState = transConflictUiState,
                 detailSheetUiState = detailSheetUiState,
+                selectedEmptyCell = selectedEmptyCell,
             )
         }
             .stateIn(

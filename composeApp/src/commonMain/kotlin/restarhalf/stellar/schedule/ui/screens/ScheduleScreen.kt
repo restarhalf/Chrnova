@@ -9,6 +9,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,18 +24,24 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -85,13 +94,13 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * - 课程卡片显示
  * - 课程详情弹窗
  * - 调课功能
- * - 实验课添加
+ * - 点击空格子添加实验课
  * 
  * @param onSync 同步回调
  * @param campus 当前校区
  * @param termStartMs 学期开始时间戳
  * @param totalWeeks 学期总周数
- * @param onAddLabCourse 添加实验课回调
+ * @param onAddLabCourse 添加课程回调，参数为(dayOfWeek, startSection, selectedWeek)
  * @param onEditLabCourse 编辑实验课回调
  */
 fun ScheduleScreen(
@@ -99,7 +108,7 @@ fun ScheduleScreen(
     campus: Campus,
     termStartMs: Long,
     totalWeeks: Int,
-    onAddLabCourse: () -> Unit,
+    onAddLabCourse: (dayOfWeek: Int, startSection: Int, selectedWeek: Int) -> Unit,
     onEditLabCourse: (Long) -> Unit
 ) {
     val vm: ScheduleViewModel = koinViewModel()
@@ -127,7 +136,12 @@ fun ScheduleScreen(
     val currentWeek =
         vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
     val scheduleUiState by vm.uiState.collectAsState()
+    var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val colors = MiuixTheme.colorScheme
+
+    LaunchedEffect(pagerState.currentPage) {
+        selectedEmptyCell = null
+    }
     val primary = colors.primary
     val surfaceSoft = colors.surfaceContainerHigh
     val textPrimary = colors.onBackground
@@ -211,11 +225,7 @@ fun ScheduleScreen(
                         }
                     }
                 },
-                actions = {
-                    IconButton(onClick = onAddLabCourse) {
-                        Icon(imageVector = Add, contentDescription = "添加实验课")
-                    }
-                },
+                actions = {},
             )
         },
         popupHost = {
@@ -620,8 +630,58 @@ fun ScheduleScreen(
                                                     CourseCard(
                                                         model = item.model,
                                                         onClick = {
+                                                            selectedEmptyCell = null
                                                             vm.openDetailSheet(item.overlaps)
                                                         })
+                                                }
+
+                                                (1..12).forEach { section ->
+                                                    val isOccupied = renderItems.any { item ->
+                                                        val courseStart = (item.model.topOffsetY.value / (rowHeight + rowGap).value).toInt() + 1
+                                                        val courseSections = (item.model.height.value / rowHeight.value).toInt().coerceAtLeast(1)
+                                                        section in courseStart until (courseStart + courseSections)
+                                                    }
+                                                    if (!isOccupied) {
+                                                        val isSelected = selectedEmptyCell == Pair(day, section)
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .height(rowHeight)
+                                                                .padding(horizontal = 2.5.dp)
+                                                                .offset(y = yForSection(section))
+                                                                .clickable(
+                                                                    interactionSource = remember { MutableInteractionSource() },
+                                                                    indication = null
+                                                                ) {
+                                                                    if (isSelected) {
+                                                                        onAddLabCourse(day, section, currentWeek)
+                                                                        selectedEmptyCell = null
+                                                                    } else {
+                                                                        selectedEmptyCell = Pair(day, section)
+                                                                    }
+                                                                },
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            if (isSelected) {
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .fillMaxSize()
+                                                                        .background(
+                                                                            color = colors.surfaceContainerHighest.copy(alpha = 0.8f),
+                                                                            shape = RoundedCornerShape(8.dp)
+                                                                        ),
+                                                                    contentAlignment = Alignment.Center
+                                                                ) {
+                                                                    Icon(
+                                                                        imageVector = Add,
+                                                                        contentDescription = "添加课程",
+                                                                        tint = colors.surfaceVariant,
+                                                                        modifier = Modifier.size(24.dp)
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }

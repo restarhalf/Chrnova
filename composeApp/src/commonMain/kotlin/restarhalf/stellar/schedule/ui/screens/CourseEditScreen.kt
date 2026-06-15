@@ -59,12 +59,18 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param onBack 返回回调
  * @param isEdit 是否为编辑模式
  * @param courseId 课程ID（编辑时使用）
+ * @param initialDayOfWeek 预选星期几（1-7），用于新建时预填
+ * @param initialStartSection 预选开始节次（1-12），用于新建时预填
+ * @param initialSelectedWeek 预选周次（1-n），用于新建时预填
  */
 @Composable
 fun CourseEditScreen(
     onBack: () -> Unit,
     isEdit: MutableState<Boolean>,
-    courseId: Long? = null
+    courseId: Long? = null,
+    initialDayOfWeek: Int = 1,
+    initialStartSection: Int = 1,
+    initialSelectedWeek: Int = 1,
 ) {
     val vm: CourseEditViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -85,8 +91,8 @@ fun CourseEditScreen(
     var endSection by remember { mutableIntStateOf(2) }
     var selectedWeeks by remember { mutableStateOf(emptySet<Int>()) }
 
-    LaunchedEffect(courseId, editingCourse, courseNames) {
-        val formState = vm.buildEditingFormState(courseId, editingCourse, courseNames)
+    LaunchedEffect(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek) {
+        val formState = vm.buildEditingFormState(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek)
         isEdit.value = formState.isEdit
         selectedIndex = formState.selectedIndex
         classRoomValue.value = formState.classRoom
