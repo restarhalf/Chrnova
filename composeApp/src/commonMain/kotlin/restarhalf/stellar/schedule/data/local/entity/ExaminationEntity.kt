@@ -25,5 +25,7 @@ data class ExaminationEntity(
     /** 考试标志 */
     val ksbz: String = "",
     /** 学期ID */
-    val semesterId: String = ""
+    val semesterId: String = "",
+    /** 数据来源："sync"=教务同步，"manual"=手动添加 */
+    val source: String = "sync"
 )

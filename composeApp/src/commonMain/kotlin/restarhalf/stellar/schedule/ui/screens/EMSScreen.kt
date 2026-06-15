@@ -1,24 +1,30 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -35,13 +41,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.ExamItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
@@ -81,7 +90,9 @@ import kotlin.time.ExperimentalTime
  */
 fun EMSScreen(
     onLoadExaminations: suspend () -> List<Examination>,
-    onLoadGrades: suspend () -> TermGradeReport
+    onLoadGrades: suspend () -> TermGradeReport,
+    onAddExam: () -> Unit = {},
+    onEditExam: (Long) -> Unit = {},
 ) {
     val examVm: ExaminationViewModel = koinViewModel()
     val gradeVm: GradeViewModel = koinViewModel()
@@ -201,13 +212,80 @@ fun EMSScreen(
                 overscrollEffect = overscrollEffect
             ) {
                 when (selectedTab) {
-                    0 -> items(examScreenUi.cards, key = { it.idKey }) { card ->
-                        Box(
-                            modifier = Modifier.animateItem(
-                                placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                            )
-                        ) {
-                            ExamItemCard(card = card)
+                    0 -> {
+                        items(examScreenUi.cards, key = { it.idKey }) { card ->
+                            Box(
+                                modifier = Modifier.animateItem(
+                                    placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                )
+                            ) {
+                                ExamItemCard(
+                                    card = card,
+                                    onClick = { 
+                                        if (card.exam.source == "manual" && card.exam.id > 0) {
+                                            onEditExam(card.exam.id)
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                        item(key = "add_exam_card") {
+                            val animProgress = remember { Animatable(0f) }
+                            LaunchedEffect(Unit) {
+                                animProgress.animateTo(targetValue = 1f, animationSpec = tween(durationMillis = 300))
+                            }
+                            Box(
+                                modifier = Modifier.animateItem(
+                                    placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                )
+                            ) {
+                                AppCard(
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            alpha = animProgress.value
+                                            translationY = 50f * (1f - animProgress.value)
+                                        }
+                                        .clickable { onAddExam() }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "",
+                                                fontSize = 12.sp,
+                                                color = colors.onSurfaceVariantSummary
+                                            )
+                                            Text(
+                                                text = "",
+                                                fontSize = 12.sp,
+                                                color = colors.onSurfaceVariantSummary
+                                            )
+                                            Text(
+                                                text = "添加考试",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp,
+                                                color=colors.primary
+                                            )
+                                            Text(
+                                                text = "",
+                                                fontSize = 12.sp,
+                                                color = colors.onSurfaceVariantSummary
+                                            )
+                                            Text(
+                                                text = "",
+                                                fontSize = 12.sp,
+                                                color = colors.onSurfaceVariantSummary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     1 -> items(gradeScreenUi.cards, key = { it.idKey }) { card ->

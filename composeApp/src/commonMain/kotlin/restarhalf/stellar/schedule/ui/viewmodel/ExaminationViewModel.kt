@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
@@ -165,14 +167,37 @@ class ExaminationViewModel(
         val title = exam.courseName.ifBlank { "未命名课程" }
         val datePart = exam.time.substringBefore(" ").ifBlank { "待定" }
         val timePart = exam.time.substringAfter(" ", "").ifBlank { "待定" }
+        val weekday = datePart.takeIf { it.isNotBlank() && it != "待定" }
+            ?.let { try { LocalDate.parse(it) } catch (_: Exception) { null } }
+            ?.let { weekdayText(it.dayOfWeek) }
+            ?: ""
+        val hasWeekdayInTime = timePart.contains(Regex("星期[一二三四五六日]"))
+        val dateText = "考试日期:$datePart"
+        val timeText = if (weekday.isNotBlank() && !hasWeekdayInTime) {
+            "考试时间:星期$weekday $timePart"
+        } else {
+            "考试时间:$timePart"
+        }
         return ExamCardUi(
             idKey = exam.courseNumber + exam.zwh + exam.time,
             exam = exam,
             title = title,
-            dateText = "考试日期:$datePart",
-            timeText = "考试时间:$timePart",
+            dateText = dateText,
+            timeText = timeText,
             locationText = "地点：${exam.examinationPlace.ifBlank { "待定" }}",
             seatText = "座位号：${exam.zwh.ifBlank { "--" }}",
             remarkText = exam.ksbz.takeIf { it.isNotBlank() }?.let { "备注：$it" })
+    }
+
+    private fun weekdayText(dayOfWeek: DayOfWeek): String {
+        return when (dayOfWeek) {
+            DayOfWeek.MONDAY -> "一"
+            DayOfWeek.TUESDAY -> "二"
+            DayOfWeek.WEDNESDAY -> "三"
+            DayOfWeek.THURSDAY -> "四"
+            DayOfWeek.FRIDAY -> "五"
+            DayOfWeek.SATURDAY -> "六"
+            DayOfWeek.SUNDAY -> "日"
+        }
     }
 }

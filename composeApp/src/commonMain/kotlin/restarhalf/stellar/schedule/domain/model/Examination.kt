@@ -9,6 +9,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Examination(
+    /** 数据库ID */
+    val id: Long = 0,
     /** 课程编号 */
     val courseNumber: String = "",
     /** 课程名称 */
@@ -21,4 +23,6 @@ data class Examination(
     val zwh: String = "",
     /** 考试标志（如"正常"、"缓考"等） */
     val ksbz: String = "",
+    /** 数据来源："sync"=教务同步，"manual"=手动添加 */
+    val source: String = "sync",
 )

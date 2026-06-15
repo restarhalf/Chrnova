@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -251,20 +252,24 @@ fun WheelPickerRow(
         horizontalArrangement = Arrangement.spacedBy(columnSpacing),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        columns.forEach { col ->
-            WheelPickerColumn(
-                items = col.items,
-                selectedIndex = col.selectedIndex,
-                onSelectedIndexChange = col.onSelectedIndexChange,
-                modifier = Modifier.weight(1f),
-                visibleCount = col.visibleCount,
-                itemHeight = col.itemHeight,
-            )
+        columns.forEachIndexed { index, col ->
+            val effectiveKey = col.key.ifBlank { "col_$index" }
+            key(effectiveKey) {
+                WheelPickerColumn(
+                    items = col.items,
+                    selectedIndex = col.selectedIndex,
+                    onSelectedIndexChange = col.onSelectedIndexChange,
+                    modifier = Modifier.weight(1f),
+                    visibleCount = col.visibleCount,
+                    itemHeight = col.itemHeight,
+                )
+            }
         }
     }
 }
 
 data class WheelPickerColumnState(
+    val key: String = "",
     val items: List<String>,
     val selectedIndex: Int,
     val onSelectedIndexChange: (Int) -> Unit,

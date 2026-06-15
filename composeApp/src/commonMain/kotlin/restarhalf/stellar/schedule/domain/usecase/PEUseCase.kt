@@ -132,6 +132,7 @@ class PEUseCase(
                     throw PETokenExpiredException("登录已过期，请重新登录")
                 }
             } else {
+                AppLogger.log("PE", "无存储凭证，无法自动重新登录")
                 peAuth.clear()
                 throw PETokenExpiredException("登录已过期，请重新登录")
             }

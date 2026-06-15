@@ -31,6 +31,38 @@ class RoomExaminationRepository(
     }
 
     /**
+     * 按ID观察单个考试安排
+     * 
+     * @param id 考试ID
+     * @return 考试安排Flow
+     */
+    override fun observeExaminationById(id: Long): Flow<Examination?> {
+        return examinationDao.observeExaminationById(id).map { entity ->
+            entity?.toDomain()
+        }
+    }
+
+    /**
+     * 保存单个考试安排
+     * 
+     * @param examination 考试安排
+     * @param semesterId 学期ID
+     * @return 保存的行ID
+     */
+    override suspend fun saveExamination(examination: Examination, semesterId: String): Long {
+        return examinationDao.insertExamination(examination.toEntity(semesterId))
+    }
+
+    /**
+     * 删除单个考试安排
+     * 
+     * @param id 考试ID
+     */
+    override suspend fun deleteExamination(id: Long) {
+        examinationDao.deleteExamination(id)
+    }
+
+    /**
      * 替换考试安排数据
      * 
      * @param semesterId 学期ID

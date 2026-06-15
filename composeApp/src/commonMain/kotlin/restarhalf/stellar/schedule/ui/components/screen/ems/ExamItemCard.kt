@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.components.screen.ems
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun ExamItemCard(
     modifier: Modifier = Modifier,
     card: ExaminationViewModel.ExamCardUi,
+    onClick: () -> Unit = {},
 ) {
     val animProgress = remember { Animatable(0f) }
     val summary = MiuixTheme.colorScheme.onSurfaceVariantSummary
@@ -59,10 +61,13 @@ fun ExamItemCard(
     }
     AppCard(
         modifier =
-            modifier.graphicsLayer {
-                alpha = animProgress.value
-                translationY = 50f * (1f - animProgress.value)
-            }) {
+            modifier
+                .graphicsLayer {
+                    alpha = animProgress.value
+                    translationY = 50f * (1f - animProgress.value)
+                }
+                .clickable { onClick() }
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

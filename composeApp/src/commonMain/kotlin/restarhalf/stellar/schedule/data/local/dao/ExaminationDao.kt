@@ -38,6 +38,32 @@ interface ExaminationDao {
     @Query("DELETE FROM examinations WHERE semesterId = :semesterId")
     suspend fun deleteExaminationsBySemester(semesterId: String)
 
+    /**
+     * 按ID观察单个考试安排
+     * 
+     * @param id 考试ID
+     * @return 考试安排Flow
+     */
+    @Query("SELECT * FROM examinations WHERE id = :id")
+    fun observeExaminationById(id: Long): Flow<ExaminationEntity?>
+
+    /**
+     * 插入单个考试安排
+     * 
+     * @param examination 考试安排
+     * @return 插入的行ID
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExamination(examination: ExaminationEntity): Long
+
+    /**
+     * 删除单个考试安排
+     * 
+     * @param examination 考试安排
+     */
+    @androidx.room3.Query("DELETE FROM examinations WHERE id = :id")
+    suspend fun deleteExamination(id: Long)
+
     /** 删除所有考试安排 */
     @Query("DELETE FROM examinations")
     suspend fun deleteAll()

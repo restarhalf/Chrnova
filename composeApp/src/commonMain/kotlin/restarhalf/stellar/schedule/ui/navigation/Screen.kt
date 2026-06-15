@@ -65,4 +65,12 @@ sealed interface Screen : NavKey {
     @Serializable
     data class ClassEdit(val courseId: Long? = null, val dayOfWeek: Int = 1, val startSection: Int = 1, val selectedWeek: Int = 1) : Screen
 
+    /**
+     * 考试编辑页面
+     * 
+     * @param examinationId 考试ID，null表示新建考试
+     */
+    @Serializable
+    data class ExamEdit(val examinationId: Long? = null) : Screen
+
 }

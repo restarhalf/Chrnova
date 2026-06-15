@@ -5,23 +5,27 @@ import restarhalf.stellar.schedule.domain.model.Examination
 
 fun ExaminationEntity.toDomain(): Examination {
     return Examination(
-        courseNumber = courseNumber,
-        courseName = courseName,
-        time = time,
-        examinationPlace = examinationPlace,
-        zwh = zwh,
-        ksbz = ksbz
-    )
-}
-
-fun Examination.toEntity(semesterId: String): ExaminationEntity {
-    return ExaminationEntity(
+        id = id,
         courseNumber = courseNumber,
         courseName = courseName,
         time = time,
         examinationPlace = examinationPlace,
         zwh = zwh,
         ksbz = ksbz,
-        semesterId = semesterId
+        source = source
+    )
+}
+
+fun Examination.toEntity(semesterId: String): ExaminationEntity {
+    return ExaminationEntity(
+        id = id,
+        courseNumber = courseNumber,
+        courseName = courseName,
+        time = time,
+        examinationPlace = examinationPlace,
+        zwh = zwh,
+        ksbz = ksbz,
+        semesterId = semesterId,
+        source = source
     )
 }

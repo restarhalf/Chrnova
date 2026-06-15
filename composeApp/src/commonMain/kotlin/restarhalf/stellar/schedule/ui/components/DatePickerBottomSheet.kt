@@ -108,6 +108,7 @@ fun DatePickerBottomSheet(
                         onSelectedIndexChange = { selectedMonthIndex = it },
                     ),
                     WheelPickerColumnState(
+                        key = "day_${selectedYear}_${selectedMonth}",
                         items = dayItems,
                         selectedIndex = selectedDayIndex,
                         onSelectedIndexChange = { selectedDayIndex = it },

@@ -17,6 +17,30 @@ interface ExaminationRepository {
     fun observeAllExaminations(): Flow<List<Examination>>
 
     /**
+     * 按ID观察单个考试安排
+     * 
+     * @param id 考试ID
+     * @return 考试安排Flow
+     */
+    fun observeExaminationById(id: Long): Flow<Examination?>
+
+    /**
+     * 保存单个考试安排（插入或更新）
+     * 
+     * @param examination 考试安排
+     * @param semesterId 学期ID
+     * @return 保存的行ID
+     */
+    suspend fun saveExamination(examination: Examination, semesterId: String): Long
+
+    /**
+     * 删除单个考试安排
+     * 
+     * @param id 考试ID
+     */
+    suspend fun deleteExamination(id: Long)
+
+    /**
      * 替换考试安排数据
      * 
      * @param semesterId 学期ID

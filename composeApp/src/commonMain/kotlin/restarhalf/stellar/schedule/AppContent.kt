@@ -54,6 +54,7 @@ import restarhalf.stellar.schedule.ui.screens.AboutScreen
 import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
+import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
@@ -219,6 +220,14 @@ fun AppContent(
                         initialDayOfWeek = screen.dayOfWeek,
                         initialStartSection = screen.startSection,
                         initialSelectedWeek = screen.selectedWeek,
+                    )
+                }
+                entry<Screen.ExamEdit> { screen ->
+                    val isEdit = remember(screen.examinationId) { mutableStateOf(screen.examinationId != null) }
+                    ExamEditScreen(
+                        onBack = { navigator.pop() },
+                        isEdit = isEdit,
+                        examinationId = screen.examinationId,
                     )
                 }
                 entry(Screen.Log) {
@@ -395,7 +404,12 @@ private fun MainRouteContent(
             }
 
             Screen.EMS -> {
-                EMSScreen(onLoadExaminations = { vm.fetchExaminationArrangements() }, onLoadGrades = { vm.fetchGradeReport() })
+                EMSScreen(
+                    onLoadExaminations = { vm.fetchExaminationArrangements() },
+                    onLoadGrades = { vm.fetchGradeReport() },
+                    onAddExam = { navigator.push(Screen.ExamEdit()) },
+                    onEditExam = { examId -> navigator.push(Screen.ExamEdit(examinationId = examId)) },
+                )
             }
 
             Screen.PEScore -> {
