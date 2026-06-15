@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.SectionRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPalette
 import restarhalf.stellar.schedule.ui.components.WeekdayPickerBottomSheet
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Check
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -41,6 +44,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.TextFieldDefaults
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -72,6 +76,7 @@ fun CourseEditScreen(
     initialStartSection: Int = 1,
     initialSelectedWeek: Int = 1,
 ) {
+    val changeToSelect = remember { mutableStateOf(true) }
     val vm: CourseEditViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -82,7 +87,9 @@ fun CourseEditScreen(
         .collectAsState(initial = null)
 
     val courseNames = courseEditUiState.courseNames
+    val inputCourseName = remember { mutableStateOf("") }
     var selectedIndex by remember { mutableIntStateOf(0) }
+    var courseNameError by remember { mutableStateOf(false) }
     val classRoomValue = remember { mutableStateOf("") }
     val showWeekdayPicker = remember { mutableStateOf(false) }
     val showSectionPicker = remember { mutableStateOf(false) }
@@ -123,7 +130,12 @@ fun CourseEditScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            val selectedName = courseNames.getOrNull(selectedIndex).orEmpty()
+                            val selectedName = if(changeToSelect.value){courseNames.getOrNull(selectedIndex).orEmpty()}else{inputCourseName.value}
+                            if (selectedName.isBlank()) {
+                                courseNameError = true
+                                AppLogger.log("EDIT", level = AppLogger.Level.ERROR, message = "课名为空，保存失败")
+                                return@IconButton
+                            }
                             val toSave =
                                 vm.buildLabCourseToSave(
                                     selectedName = selectedName,
@@ -217,18 +229,42 @@ fun CourseEditScreen(
             overscrollEffect = null
         ) {
             item {
-                AppCard {
-                    OverlayDropdownPreference(
-                        title = "课程名",
-                        summary = "选择是哪门课的实验课",
-                        items = courseNames,
-                        selectedIndex = selectedIndex.coerceIn(
-                            0,
-                            (courseNames.size - 1).coerceAtLeast(0)
-                        ),
-                        onSelectedIndexChange = { index: Int -> selectedIndex = index },
-                    )
+
+                    AppCard {
+                        Column (horizontalAlignment = Alignment.CenterHorizontally){
+                        if(changeToSelect.value){
+                            OverlayDropdownPreference(
+                                title = "课程名",
+                                items = courseNames,
+                                selectedIndex = selectedIndex.coerceIn(
+                                    0,
+                                    (courseNames.size - 1).coerceAtLeast(0)
+                                ),
+                                onSelectedIndexChange = { index: Int -> selectedIndex = index },
+                            )
+                        }else{
+                            TextField(
+                                label = "课程名",
+                                value = inputCourseName.value,
+                                onValueChange = {
+                                    inputCourseName.value=it
+                                    courseNameError=false
+                                },
+                                colors = if(courseNameError) TextFieldDefaults.textFieldColors(borderColor = MiuixTheme.colorScheme.error) else TextFieldDefaults.textFieldColors()
+                            )
+                        }
+                            IconButton(
+                                onClick = {changeToSelect.value=!changeToSelect.value}
+                            ){
+                                Icon(
+                                    imageVector = Change,
+                                    contentDescription = "切换"
+                                )
+                            }
+                    }
+
                 }
+
             }
             item { Spacer(Modifier.height(12.dp)) }
             item {

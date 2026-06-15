@@ -667,7 +667,7 @@ fun ScheduleScreen(
                                                                     modifier = Modifier
                                                                         .fillMaxSize()
                                                                         .background(
-                                                                            color = colors.surfaceContainerHighest.copy(alpha = 0.8f),
+                                                                            color = colors.surfaceContainerHighest,
                                                                             shape = RoundedCornerShape(8.dp)
                                                                         ),
                                                                     contentAlignment = Alignment.Center

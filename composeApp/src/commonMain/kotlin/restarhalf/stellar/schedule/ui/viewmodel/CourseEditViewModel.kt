@@ -175,8 +175,10 @@ class CourseEditViewModel(
                 .orEmpty()
         val semesterId =
             existing?.semesterId
-                ?: courses.firstOrNull { it.type == 0 && it.name == selectedName }?.semesterId
-                .orEmpty()
+                ?: (courses.firstOrNull { it.type == 0 && it.name == selectedName }
+                    ?: courses.firstOrNull { it.type == 0 && it.semesterId.isNotBlank() })
+                    ?.semesterId
+                    .orEmpty()
 
         return Course(
             id = existing?.id ?: 0,
