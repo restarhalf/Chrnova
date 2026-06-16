@@ -124,14 +124,8 @@ fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-        val lastCheck = settings.getLong(SettingsKeys.LAST_UPDATE_CHECK_MS, 0L)
-        val intervalMs = 2L * 24 * 60 * 60 * 1000
-        if (now - lastCheck < intervalMs) return@LaunchedEffect
-
         runCatching { appUpdate.check(currentVersionName = appInfo.versionName) }
             .onSuccess { latest ->
-                settings[SettingsKeys.LAST_UPDATE_CHECK_MS] = now
                 if (latest != null) {
                     updateAppState { current ->
                         current.copy(

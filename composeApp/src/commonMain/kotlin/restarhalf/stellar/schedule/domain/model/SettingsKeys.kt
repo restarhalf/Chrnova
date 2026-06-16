@@ -23,8 +23,6 @@ object SettingsKeys {
     const val ACTIVE_SCHEDULE_TERM = "active_schedule_term"
     /** 上次自动同步的时间戳（毫秒） */
     const val LAST_AUTO_SYNC_MS = "last_auto_sync_ms"
-    /** 上次检查更新的时间戳（毫秒） */
-    const val LAST_UPDATE_CHECK_MS = "last_update_check_ms"
     /** 是否已确认隐私协议 */
     const val CONFIRM_PRIVACY = "confirm_privacy"
     /** 背景图片URI */
