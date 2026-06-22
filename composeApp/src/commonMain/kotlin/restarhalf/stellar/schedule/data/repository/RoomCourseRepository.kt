@@ -9,6 +9,7 @@ import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
@@ -20,10 +21,12 @@ import restarhalf.stellar.schedule.domain.repository.CourseRepository
  * 
  * @param courseDao 课程DAO
  * @param settings 设置端口，用于获取当前学期
+ * @param auth 认证端口，用于获取当前用户学号
  */
 class RoomCourseRepository(
     private val courseDao: CourseDao,
     private val settings: SettingsPort,
+    private val auth: AuthPort,
 ) : CourseRepository {
 
     /**
@@ -41,14 +44,20 @@ class RoomCourseRepository(
     /**
      * 观察所有课程
      * 
-     * @return 课程列表Flow，自动按当前学期过滤
+     * @return 课程列表Flow，自动按当前学期和用户过滤
      */
     override fun observeAllCourses(): Flow<List<Course>> =
         combine(
             courseDao.getAllCourses().map { list: List<CourseEntity> -> list.map { it.toDomain() } },
-            settings.observeActiveScheduleTerm()
-        ) { courses, semesterId ->
-            filterCoursesBySemester(courses = courses, semesterId = semesterId)
+            settings.observeActiveScheduleTerm(),
+            auth.observeProfile().map { it.userNo },
+        ) { courses, semesterId, userNo ->
+            val filtered = if (userNo.isNotBlank()) {
+                courses.filter { it.userNo == userNo }
+            } else {
+                courses
+            }
+            filterCoursesBySemester(courses = filtered, semesterId = semesterId)
         }
 
     /**
@@ -115,5 +124,10 @@ class RoomCourseRepository(
     override suspend fun clearAllCourses() {
         courseDao.deleteAll()
         settings.setActiveScheduleTerm("")
+    }
+
+    /** 将未绑定学号的课程绑定到指定学号 */
+    override suspend fun bindUnboundCourses(userNo: String) {
+        courseDao.bindUnboundCourses(userNo)
     }
 }

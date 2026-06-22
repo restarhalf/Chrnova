@@ -25,4 +25,6 @@ data class Examination(
     val ksbz: String = "",
     /** 数据来源："sync"=教务同步，"manual"=手动添加 */
     val source: String = "sync",
+    /** 关联的学号（用户账号） */
+    val userNo: String = "",
 )

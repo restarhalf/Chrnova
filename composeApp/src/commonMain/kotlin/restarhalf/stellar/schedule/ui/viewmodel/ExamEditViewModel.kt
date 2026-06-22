@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -14,7 +15,7 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
@@ -34,6 +35,7 @@ class ExamEditViewModel(
     private val saveExaminationUseCase: SaveExaminationUseCase,
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
     observeSelectedTerm: ObserveSelectedTermUseCase,
+    observeAuthProfile: ObserveAuthProfileUseCase,
 ) : ViewModel() {
 
     /**
@@ -97,6 +99,15 @@ class ExamEditViewModel(
             initialValue = "",
         )
 
+    /** 当前登录用户的学号 */
+    private val userNo: StateFlow<String> = observeAuthProfile()
+        .map { it.userNo }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = "",
+        )
+
     /**
      * 构建课程名称列表
      * 
@@ -136,14 +147,12 @@ class ExamEditViewModel(
      * @param examinationId 考试ID
      * @param editingExamination 正在编辑的考试
      * @param courseNames 课程名称列表
-     * @param courses 所有课程列表
      * @return 编辑表单状态
      */
     fun buildEditingFormState(
         examinationId: Long?,
         editingExamination: Examination?,
         courseNames: List<String>,
-        courses: List<Course>,
     ): EditingFormState {
         if (examinationId == null || editingExamination == null) {
             return EditingFormState(
@@ -220,7 +229,8 @@ class ExamEditViewModel(
             examinationPlace = examinationPlace,
             zwh = zwh,
             ksbz = ksbz,
-            source = existing?.source ?: "manual"
+            source = existing?.source ?: "manual",
+            userNo = existing?.userNo?.takeIf { it.isNotBlank() } ?: userNo.value,
         )
     }
 

@@ -17,6 +17,14 @@ interface ExaminationRepository {
     fun observeAllExaminations(): Flow<List<Examination>>
 
     /**
+     * 按学号观察考试安排
+     * 
+     * @param userNo 学号
+     * @return 考试安排列表Flow
+     */
+    fun observeExaminationsByUserNo(userNo: String): Flow<List<Examination>>
+
+    /**
      * 按ID观察单个考试安排
      * 
      * @param id 考试ID
@@ -52,4 +60,11 @@ interface ExaminationRepository {
      * 清除所有考试安排
      */
     suspend fun clearAll()
+
+    /**
+     * 将未绑定学号的考试绑定到指定学号
+     *
+     * @param userNo 学号
+     */
+    suspend fun bindUnboundExaminations(userNo: String)
 }

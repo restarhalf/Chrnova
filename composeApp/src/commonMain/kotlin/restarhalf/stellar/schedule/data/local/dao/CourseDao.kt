@@ -27,6 +27,15 @@ interface CourseDao {
     fun getAllCourses(): Flow<List<CourseEntity>>
 
     /**
+     * 按学号观察课程
+     *
+     * @param userNo 学号
+     * @return 课程列表Flow
+     */
+    @Query("SELECT * FROM courses WHERE userNo = :userNo")
+    fun getCoursesByUserNo(userNo: String): Flow<List<CourseEntity>>
+
+    /**
      * 根据ID观察课程
      * 
      * @param id 课程ID
@@ -72,6 +81,10 @@ interface CourseDao {
     /** 删除所有课程 */
     @Query("DELETE FROM courses")
     suspend fun deleteAll()
+
+    /** 将未绑定学号的课程绑定到指定学号 */
+    @Query("UPDATE courses SET userNo = :userNo WHERE userNo = ''")
+    suspend fun bindUnboundCourses(userNo: String)
 
     /** 删除所有同步的课程（type=0） */
     @Query("DELETE FROM courses WHERE type = 0")

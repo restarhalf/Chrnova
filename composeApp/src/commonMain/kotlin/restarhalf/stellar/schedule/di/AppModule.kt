@@ -42,6 +42,7 @@ import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
+import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeGreetingUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeHeaderUiUseCase
@@ -205,7 +206,7 @@ val portModule = module {
     single { TimetableSettings(get(named("timetable_prefs"))) }
 
     // 数据仓库
-    single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get()) }
+    single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
     single { restarhalf.stellar.schedule.data.repository.PERepository(peGateway = get()) }
@@ -228,7 +229,7 @@ val portModule = module {
         )
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
-    single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get()) }
+    single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get(), auth = get()) }
 }
 
 /**
@@ -249,7 +250,7 @@ val useCaseModule = module {
             reminderScheduler = get(),
         )
     }
-    single { FetchExaminationsUseCase(authWorkflow = get(), academic = get(), repository = get()) }
+    single { FetchExaminationsUseCase(authWorkflow = get(), academic = get(), repository = get(), auth = get()) }
     single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
     single {
         FetchGradesUseCase(
@@ -363,6 +364,7 @@ val useCaseModule = module {
     single { SaveLabCourseUseCase(courseRepository = get()) }
     single { DeleteCourseUseCase(courseRepository = get()) }
     single { InsertCourseUseCase(courseRepository = get()) }
+    single { BindUnboundDataUseCase(auth = get(), courseRepository = get(), examinationRepository = get()) }
     single { ObserveAllCoursesUseCase(courseRepository = get()) }
     single { ObserveCourseByIdUseCase(courseRepository = get()) }
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
@@ -395,6 +397,7 @@ val viewModelModule = module {
             loginUseCase = get(),
             runSyncUseCase = get(),
             observeLogEnabled = get(),
+            bindUnboundData = get(),
         )
     }
     factory {
@@ -415,6 +418,7 @@ val viewModelModule = module {
             observeCourseByIdUseCase = get(),
             saveLabCourseUseCase = get(),
             deleteCourseUseCase = get(),
+            observeAuthProfile = get(),
         )
     }
     factory {
@@ -459,7 +463,8 @@ val viewModelModule = module {
     factory {
         ExaminationViewModel(
             isExamNotEnded = get(),
-            observeAllExaminations = get()
+            observeAllExaminations = get(),
+            observeAuthProfile = get(),
         )
     }
     factory {
@@ -469,6 +474,7 @@ val viewModelModule = module {
             saveExaminationUseCase = get(),
             deleteExaminationUseCase = get(),
             observeSelectedTerm = get(),
+            observeAuthProfile = get(),
         )
     }
     factory {

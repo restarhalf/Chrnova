@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
@@ -17,6 +18,7 @@ import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 
 /**
  * 考试安排ViewModel
@@ -29,6 +31,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
+    observeAuthProfile: ObserveAuthProfileUseCase,
 ) : ViewModel() {
 
     /**
@@ -82,11 +85,27 @@ class ExaminationViewModel(
 
     private val _error = MutableStateFlow("")
 
+    private val _userNo = observeAuthProfile().map { it.userNo }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = "",
+        )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<ExaminationUiState> =
-        combine(_loading, _error, observeAllExaminations()) { loading, error, items ->
-            ExaminationUiState(loading = loading, error = error, items = items)
+        combine(_loading, _error, _userNo) { loading, error, userNo ->
+            Triple(loading, error, userNo)
         }
+            .combine(observeAllExaminations()) { triple, exams ->
+                val (loading, error, userNo) = triple
+                val filtered = if (userNo.isNotBlank()) {
+                    exams.filter { it.userNo == userNo }
+                } else {
+                    exams
+                }
+                ExaminationUiState(loading = loading, error = error, items = filtered)
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),

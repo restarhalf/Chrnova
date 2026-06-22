@@ -13,6 +13,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
 import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
@@ -52,6 +53,7 @@ class AppViewModel(
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val loginUseCase: LoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
+    private val bindUnboundData: BindUnboundDataUseCase,
     ) : ViewModel() {
 
     init {
@@ -59,6 +61,9 @@ class AppViewModel(
             observeLogEnabled().collect { enabled ->
                 AppLogger.setEnabled(enabled)
             }
+        }
+        viewModelScope.launch {
+            runCatching { bindUnboundData() }
         }
     }
 

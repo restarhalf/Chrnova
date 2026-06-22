@@ -93,7 +93,7 @@ fun ExamEditScreen(
     var pickerEndMinute by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(examinationId, editingExamination, courseNames, courses) {
-        val formState = vm.buildEditingFormState(examinationId, editingExamination, courseNames, courses)
+        val formState = vm.buildEditingFormState(examinationId, editingExamination, courseNames)
         isEdit.value = formState.isEdit
         selectedIndex = formState.selectedIndex
         inputCourseName.value = formState.courseName

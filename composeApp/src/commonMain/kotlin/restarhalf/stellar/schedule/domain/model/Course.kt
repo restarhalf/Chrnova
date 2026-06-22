@@ -38,4 +38,6 @@ data class Course(
     val originRemoteKey: String? = null,
     /** 调课目标周次（仅调课类型课程有效） */
     val targetWeek: Int = 0,
+    /** 关联的学号（用户账号） */
+    val userNo: String = "",
 )

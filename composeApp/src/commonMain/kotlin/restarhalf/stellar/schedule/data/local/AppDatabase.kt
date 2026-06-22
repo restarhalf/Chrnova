@@ -46,7 +46,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
         PESubjectScoreEntity::class,
         PEDetailSummaryEntity::class
     ],
-    version = 12,
+    version = 14,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -161,6 +161,20 @@ private val migration11To12 = object : Migration(11, 12) {
     }
 }
 
+/** 数据库迁移：考试表添加userNo字段 */
+private val migration12To13 = object : Migration(12, 13) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE examinations ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
+    }
+}
+
+/** 数据库迁移：课程表添加userNo字段 */
+private val migration13To14 = object : Migration(13, 14) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE courses ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
+    }
+}
+
 /**
  * 构建应用数据库
  * 
@@ -182,6 +196,8 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration8To9,
             migration9To10,
             migration10To11,
-            migration11To12
+            migration11To12,
+            migration12To13,
+            migration13To14
         )
         .build()

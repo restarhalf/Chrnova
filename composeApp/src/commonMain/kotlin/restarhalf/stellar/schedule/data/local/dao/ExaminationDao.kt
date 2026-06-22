@@ -23,6 +23,15 @@ interface ExaminationDao {
     fun observeAllExaminations(): Flow<List<ExaminationEntity>>
 
     /**
+     * 按学号观察考试安排
+     * 
+     * @param userNo 学号
+     * @return 考试安排列表Flow
+     */
+    @Query("SELECT * FROM examinations WHERE userNo = :userNo")
+    fun observeExaminationsByUserNo(userNo: String): Flow<List<ExaminationEntity>>
+
+    /**
      * 批量插入考试安排
      * 
      * @param examinations 考试安排列表
@@ -67,4 +76,8 @@ interface ExaminationDao {
     /** 删除所有考试安排 */
     @Query("DELETE FROM examinations")
     suspend fun deleteAll()
+
+    /** 将未绑定学号的考试绑定到指定学号 */
+    @Query("UPDATE examinations SET userNo = :userNo WHERE userNo = ''")
+    suspend fun bindUnboundExaminations(userNo: String)
 }

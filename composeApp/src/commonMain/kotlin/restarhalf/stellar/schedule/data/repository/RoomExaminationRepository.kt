@@ -31,6 +31,18 @@ class RoomExaminationRepository(
     }
 
     /**
+     * 按学号观察考试安排
+     * 
+     * @param userNo 学号
+     * @return 考试安排列表Flow
+     */
+    override fun observeExaminationsByUserNo(userNo: String): Flow<List<Examination>> {
+        return examinationDao.observeExaminationsByUserNo(userNo).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    /**
      * 按ID观察单个考试安排
      * 
      * @param id 考试ID
@@ -78,5 +90,10 @@ class RoomExaminationRepository(
     /** 清除所有考试安排数据 */
     override suspend fun clearAll() {
         examinationDao.deleteAll()
+    }
+
+    /** 将未绑定学号的考试绑定到指定学号 */
+    override suspend fun bindUnboundExaminations(userNo: String) {
+        examinationDao.bindUnboundExaminations(userNo)
     }
 }

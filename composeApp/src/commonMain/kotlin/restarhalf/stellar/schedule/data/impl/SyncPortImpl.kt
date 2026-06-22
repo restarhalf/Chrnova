@@ -4,8 +4,10 @@ import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.JwxtTimeParser
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.SyncResult
+import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * 同步端口实现类
@@ -14,10 +16,12 @@ import restarhalf.stellar.schedule.domain.repository.CourseRepository
  * 
  * @param jwxtSync 教务系统同步服务
  * @param courseRepository 课程仓库
+ * @param auth 认证端口，用于获取当前用户学号
  */
 class SyncPortImpl(
     private val jwxtSync: JwxtSync,
     private val courseRepository: CourseRepository,
+    private val auth: AuthPort,
 ) : SyncPort {
 
     /**
@@ -54,9 +58,10 @@ class SyncPortImpl(
      * @return 同步结果
      */
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
+        val userNo = try { auth.observeProfile().first().userNo } catch (_: Exception) { "" }
         val courses =
             jwxtSync.fetchCourses(semesterId = semesterId, campusId = campusId, week = week).map {
-                it.toDomain().copy(semesterId = semesterId)
+                it.toDomain().copy(semesterId = semesterId, userNo = userNo)
             }
         courseRepository.replaceSyncedCourses(courses = courses, semesterId = semesterId)
         return SyncResult(

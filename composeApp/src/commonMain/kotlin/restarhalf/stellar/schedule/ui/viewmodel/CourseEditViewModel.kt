@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveLabCourseUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -31,6 +33,7 @@ class CourseEditViewModel(
     private val observeCourseByIdUseCase: ObserveCourseByIdUseCase,
     private val saveLabCourseUseCase: SaveLabCourseUseCase,
     private val deleteCourseUseCase: DeleteCourseUseCase,
+    observeAuthProfile: ObserveAuthProfileUseCase,
 ) : ViewModel() {
 
     /**
@@ -78,6 +81,15 @@ class CourseEditViewModel(
 
     /** 对外暴露的UI状态流 */
     val uiState: StateFlow<CourseEditUiState> = _uiState
+
+    /** 当前登录用户的学号 */
+    private val userNo: StateFlow<String> = observeAuthProfile()
+        .map { it.userNo }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = "",
+        )
 
     /**
      * 构建课程名称列表
@@ -191,7 +203,8 @@ class CourseEditViewModel(
             sectionCount = sectionCount,
             weeks = weeks,
             color = existing?.color ?: "",
-            type = 1  // 实验课类型
+            type = 1,  // 实验课类型
+            userNo = existing?.userNo?.takeIf { it.isNotBlank() } ?: userNo.value,
         )
     }
 

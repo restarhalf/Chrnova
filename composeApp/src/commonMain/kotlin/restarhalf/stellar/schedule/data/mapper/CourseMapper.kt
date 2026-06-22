@@ -19,6 +19,7 @@ fun CourseEntity.toDomain(): CourseDomain {
         remoteKey = remoteKey,
         originRemoteKey = originRemoteKey,
         targetWeek = targetWeek,
+        userNo = userNo,
     )
 }
 
@@ -38,5 +39,6 @@ fun CourseDomain.toEntity(): CourseEntity {
         remoteKey = remoteKey,
         originRemoteKey = originRemoteKey,
         targetWeek = targetWeek,
+        userNo = userNo,
     )
 }

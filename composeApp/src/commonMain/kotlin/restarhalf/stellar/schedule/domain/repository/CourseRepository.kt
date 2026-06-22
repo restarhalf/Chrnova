@@ -58,4 +58,11 @@ interface CourseRepository {
      * 清除所有课程
      */
     suspend fun clearAllCourses()
+
+    /**
+     * 将未绑定学号的课程绑定到指定学号
+     *
+     * @param userNo 学号
+     */
+    suspend fun bindUnboundCourses(userNo: String)
 }

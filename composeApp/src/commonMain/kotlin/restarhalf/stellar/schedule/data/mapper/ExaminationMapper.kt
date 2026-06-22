@@ -12,7 +12,8 @@ fun ExaminationEntity.toDomain(): Examination {
         examinationPlace = examinationPlace,
         zwh = zwh,
         ksbz = ksbz,
-        source = source
+        source = source,
+        userNo = userNo,
     )
 }
 
@@ -26,6 +27,7 @@ fun Examination.toEntity(semesterId: String): ExaminationEntity {
         zwh = zwh,
         ksbz = ksbz,
         semesterId = semesterId,
-        source = source
+        source = source,
+        userNo = userNo,
     )
 }

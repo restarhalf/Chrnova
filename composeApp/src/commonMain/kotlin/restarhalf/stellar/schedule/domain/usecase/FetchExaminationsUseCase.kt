@@ -4,8 +4,10 @@ import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * 获取考试安排用例
@@ -16,6 +18,7 @@ class FetchExaminationsUseCase(
     private val authWorkflow: AuthWorkflowPort,
     private val academic: AcademicPort,
     private val repository: ExaminationRepository,
+    private val auth: AuthPort,
 ) {
     /**
      * 获取考试安排
@@ -42,10 +45,13 @@ class FetchExaminationsUseCase(
             academic.fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
         }
 
+        val userNo = try { auth.observeProfile().first().userNo } catch (_: Exception) { "" }
+        val boundExams = exams.map { it.copy(userNo = userNo) }
+
         if (nameOrNumber.isBlank()) {
-            repository.replaceExaminations(semester, exams)
+            repository.replaceExaminations(semester, boundExams)
         }
 
-        return exams
+        return boundExams
     }
 }
