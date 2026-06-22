@@ -40,6 +40,7 @@ import restarhalf.stellar.schedule.core.update.GithubLatestReleaseResponse
 import restarhalf.stellar.schedule.core.update.buildGithubLatestReleaseApi
 import restarhalf.stellar.schedule.core.update.buildGithubReleaseAssetUrl
 import restarhalf.stellar.schedule.core.update.buildGithubReleasePageUrl
+import restarhalf.stellar.schedule.core.update.allGithubMirrors
 import restarhalf.stellar.schedule.core.update.isNewerVersion
 import restarhalf.stellar.schedule.core.update.resolvedLatestVersion
 import java.io.File
@@ -58,31 +59,41 @@ class AppUpdatePortImpl(
 
     override suspend fun check(currentVersionName: String): AppUpdateInfo? =
         withContext(Dispatchers.IO) {
-            val response = client.get(buildGithubLatestReleaseApi())
-            if (!response.status.isSuccess()) {
-                throw IllegalStateException("Check update failed (HTTP ${response.status.value})")
-            }
+            var lastException: Exception? = null
+            for (mirror in allGithubMirrors()) {
+                try {
+                    val response = client.get(buildGithubLatestReleaseApi(mirror))
+                    if (!response.status.isSuccess()) {
+                        lastException = IllegalStateException("Check update failed (HTTP ${response.status.value}) from $mirror")
+                        continue
+                    }
 
-            val payload: String = response.body()
-            val latest = json.decodeFromString(GithubLatestReleaseResponse.serializer(), payload)
-            val latestVersion = resolvedLatestVersion(latest)
-            if (latestVersion.isBlank()) {
-                throw IllegalStateException("Latest version is empty")
-            }
-            if (!isNewerVersion(latestVersion, currentVersionName)) {
-                return@withContext null
-            }
+                    val payload: String = response.body()
+                    val latest = json.decodeFromString(GithubLatestReleaseResponse.serializer(), payload)
+                    val latestVersion = resolvedLatestVersion(latest)
+                    if (latestVersion.isBlank()) {
+                        throw IllegalStateException("Latest version is empty")
+                    }
+                    if (!isNewerVersion(latestVersion, currentVersionName)) {
+                        return@withContext null
+                    }
 
-            val releasePageUrl = latest.htmlUrl?.takeIf { it.isNotBlank() }
-                ?: buildGithubReleasePageUrl(latestVersion)
-            val downloadUrl =
-                buildGithubReleaseAssetUrl(latestVersion, ANDROID_RELEASE_APK_FILE_NAME)
-            AppUpdateInfo(
-                latestVersion = latestVersion,
-                releasePageUrl = releasePageUrl,
-                downloadUrl = downloadUrl,
-                changelog = latest.body,
-            )
+                    val releasePageUrl = latest.htmlUrl?.takeIf { it.isNotBlank() }
+                        ?: buildGithubReleasePageUrl(latestVersion, mirror)
+                    val downloadUrl =
+                        buildGithubReleaseAssetUrl(latestVersion, ANDROID_RELEASE_APK_FILE_NAME, mirror)
+                    return@withContext AppUpdateInfo(
+                        latestVersion = latestVersion,
+                        releasePageUrl = releasePageUrl,
+                        downloadUrl = downloadUrl,
+                        changelog = latest.body,
+                    )
+                } catch (e: Exception) {
+                    lastException = e
+                    AppLogger.log("Update", "Mirror $mirror failed for check", e)
+                }
+            }
+            throw lastException ?: IllegalStateException("All mirrors failed")
         }
 
     override fun startDirectDownload(info: AppUpdateInfo) {
@@ -112,55 +123,67 @@ class AppUpdatePortImpl(
         _apkDownloadState.value = ApkDownloadState.Downloading(0f, 0L, -1L, target.absolutePath)
 
         activeDownloadJob = scope.launch {
-            val result = runCatching {
-                client.prepareGet(info.downloadUrl).execute { response ->
-                    if (!response.status.isSuccess()) {
-                        error("Download failed (HTTP ${response.status.value})")
-                    }
+            val mirrors = allGithubMirrors()
+            val downloadUrlFromPrimary = info.downloadUrl
+            val downloadUrls = mirrors.map { mirror ->
+                buildGithubReleaseAssetUrl(info.latestVersion, ANDROID_RELEASE_APK_FILE_NAME, mirror)
+            }.toMutableList().apply {
+                if (downloadUrlFromPrimary !in this) {
+                    add(0, downloadUrlFromPrimary)
+                }
+            }
 
-                    val total = response.contentLength() ?: -1L
-                    var downloaded = 0L
-                    val channel = response.bodyAsChannel()
+            var lastError: Exception? = null
+            for (url in downloadUrls) {
+                try {
+                    val file = client.prepareGet(url).execute { response ->
+                        if (!response.status.isSuccess()) {
+                            error("Download failed (HTTP ${response.status.value}) from $url")
+                        }
 
-                    FileOutputStream(target).use { output ->
-                        while (!channel.isClosedForRead) {
-                            val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
-                            while (!packet.exhausted()) {
-                                val bytes = packet.readByteArray()
-                                output.write(bytes)
-                                downloaded += bytes.size
-                                val progress =
-                                    if (total > 0L) (downloaded.toDouble() / total.toDouble()).toFloat() * 100f else 0f
-                                _apkDownloadState.value =
-                                    ApkDownloadState.Downloading(
-                                        progress = progress,
-                                        downloadedBytes = downloaded,
-                                        totalBytes = total,
-                                        filePath = target.absolutePath,
-                                    )
+                        val total = response.contentLength() ?: -1L
+                        var downloaded = 0L
+                        val channel = response.bodyAsChannel()
+
+                        FileOutputStream(target).use { output ->
+                            while (!channel.isClosedForRead) {
+                                val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong())
+                                while (!packet.exhausted()) {
+                                    val bytes = packet.readByteArray()
+                                    output.write(bytes)
+                                    downloaded += bytes.size
+                                    val progress =
+                                        if (total > 0L) (downloaded.toDouble() / total.toDouble()).toFloat() * 100f else 0f
+                                    _apkDownloadState.value =
+                                        ApkDownloadState.Downloading(
+                                            progress = progress,
+                                            downloadedBytes = downloaded,
+                                            totalBytes = total,
+                                            filePath = target.absolutePath,
+                                        )
+                                }
                             }
                         }
+                        target
                     }
-                    target
+                    activeDownloadJob = null
+                    activeDownloadFile = null
+                    _apkDownloadState.value = ApkDownloadState.Completed(file.absolutePath)
+                    return@launch
+                } catch (e: Exception) {
+                    lastError = e
+                    AppLogger.log("Update", "Mirror download failed: $url", e)
+                    runCatching { target.delete() }
+                        .onFailure { AppLogger.log("Update", "清理下载文件失败", it) }
                 }
             }
 
             activeDownloadJob = null
             activeDownloadFile = null
-
-            result
-                .onSuccess { file ->
-                    _apkDownloadState.value = ApkDownloadState.Completed(file.absolutePath)
-                }
-                .onFailure { error ->
-                    AppLogger.log("Update", "下载APK失败", error)
-                    runCatching { target.delete() }
-                        .onFailure { AppLogger.log("Update", "清理下载文件失败", it) }
-                    _apkDownloadState.value =
-                        ApkDownloadState.Error(
-                            error.toUserFacingMessage(UserFacingErrorKind.DownloadUpdate)
-                        )
-                }
+            _apkDownloadState.value =
+                ApkDownloadState.Error(
+                    (lastError ?: Exception("All mirrors failed")).toUserFacingMessage(UserFacingErrorKind.DownloadUpdate)
+                )
         }
     }
 

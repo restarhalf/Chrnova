@@ -3,7 +3,13 @@ package restarhalf.stellar.schedule.core.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private const val GITHUB_MIRROR = "https://gh.felicity.ac.cn"
+private const val PRIMARY_GITHUB_MIRROR = "https://v4.gh-proxy.org"
+private val FALLBACK_GITHUB_MIRRORS = listOf(
+    "https://gh.llkk.cc",
+    "https://gh.felicity.ac.cn"
+)
+private val ALL_GITHUB_MIRRORS = listOf(PRIMARY_GITHUB_MIRROR) + FALLBACK_GITHUB_MIRRORS
+
 internal const val GITHUB_OWNER = "restarhalf"
 internal const val GITHUB_REPO = "Chrnova"
 internal const val ANDROID_RELEASE_APK_FILE_NAME = "app-release.apk"
@@ -40,13 +46,16 @@ internal fun isNewerVersion(latest: String, current: String): Boolean {
 internal fun resolvedLatestVersion(response: GithubLatestReleaseResponse): String =
     response.tagName.ifBlank { response.name }.trim()
 
-internal fun buildGithubLatestReleaseApi(): String =
-    "$GITHUB_MIRROR/https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
+internal fun buildGithubLatestReleaseApi(mirror: String = PRIMARY_GITHUB_MIRROR): String =
+    "$mirror/https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
 
-internal fun buildGithubReleasePageUrl(version: String): String =
-    "$GITHUB_MIRROR/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/tag/$version"
+internal fun buildGithubReleasePageUrl(version: String, mirror: String = PRIMARY_GITHUB_MIRROR): String =
+    "$mirror/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/tag/$version"
 
 internal fun buildGithubReleaseAssetUrl(
     version: String,
     fileName: String,
-): String = "$GITHUB_MIRROR/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$version/$fileName"
+    mirror: String = PRIMARY_GITHUB_MIRROR,
+): String = "$mirror/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$version/$fileName"
+
+internal fun allGithubMirrors(): List<String> = ALL_GITHUB_MIRRORS

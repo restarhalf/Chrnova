@@ -22,6 +22,7 @@ import restarhalf.stellar.schedule.core.update.buildGithubReleaseAssetUrl
 import restarhalf.stellar.schedule.core.update.buildGithubReleasePageUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupIosUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupWebUrl
+import restarhalf.stellar.schedule.core.update.allGithubMirrors
 import restarhalf.stellar.schedule.core.update.isNewerVersion
 import restarhalf.stellar.schedule.core.update.resolvedLatestVersion
 
@@ -33,27 +34,36 @@ class AppUpdatePortImpl : AppUpdatePort {
     override val apkDownloadState: StateFlow<ApkDownloadState> = _apkDownloadState
 
     override suspend fun check(currentVersionName: String): AppUpdateInfo? {
-        val response = client.get(buildGithubLatestReleaseApi())
-        if (!response.status.isSuccess()) {
-            throw IllegalStateException("检查更新失败（HTTP ${response.status.value}）")
-        }
+        var lastException: Exception? = null
+        for (mirror in allGithubMirrors()) {
+            try {
+                val response = client.get(buildGithubLatestReleaseApi(mirror))
+                if (!response.status.isSuccess()) {
+                    lastException = IllegalStateException("检查更新失败（HTTP ${response.status.value}）from $mirror")
+                    continue
+                }
 
-        val latest = json.decodeFromString<GithubLatestReleaseResponse>(response.body())
-        val latestVersion = resolvedLatestVersion(latest)
-        if (latestVersion.isBlank()) {
-            throw IllegalStateException("检查更新失败：未获取到版本号")
-        }
-        if (!isNewerVersion(latestVersion, currentVersionName)) return null
+                val latest = json.decodeFromString<GithubLatestReleaseResponse>(response.body())
+                val latestVersion = resolvedLatestVersion(latest)
+                if (latestVersion.isBlank()) {
+                    throw IllegalStateException("检查更新失败：未获取到版本号")
+                }
+                if (!isNewerVersion(latestVersion, currentVersionName)) return null
 
-        val releasePageUrl =
-            latest.htmlUrl?.takeIf { it.isNotBlank() } ?: buildGithubReleasePageUrl(latestVersion)
-        val downloadUrl = buildGithubReleaseAssetUrl(latestVersion, IOS_RELEASE_IPA_FILE_NAME)
-        return AppUpdateInfo(
-            latestVersion = latestVersion,
-            releasePageUrl = releasePageUrl,
-            downloadUrl = downloadUrl,
-            changelog = latest.body,
-        )
+                val releasePageUrl =
+                    latest.htmlUrl?.takeIf { it.isNotBlank() } ?: buildGithubReleasePageUrl(latestVersion, mirror)
+                val downloadUrl = buildGithubReleaseAssetUrl(latestVersion, IOS_RELEASE_IPA_FILE_NAME, mirror)
+                return AppUpdateInfo(
+                    latestVersion = latestVersion,
+                    releasePageUrl = releasePageUrl,
+                    downloadUrl = downloadUrl,
+                    changelog = latest.body,
+                )
+            } catch (e: Exception) {
+                lastException = e
+            }
+        }
+        throw lastException ?: IllegalStateException("All mirrors failed")
     }
 
     override fun startDirectDownload(info: AppUpdateInfo) {
