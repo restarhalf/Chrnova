@@ -27,6 +27,14 @@ actual object LogFileStorage {
         return logFile?.takeIf { it.exists() }?.length() ?: 0L
     }
 
+    actual fun sync() {
+        runCatching {
+            logFile?.let { file ->
+                java.io.FileOutputStream(file, true).use { it.fd.sync() }
+            }
+        }
+    }
+
     actual fun clear() {
         logFile?.delete()
     }

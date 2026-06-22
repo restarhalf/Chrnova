@@ -6,5 +6,6 @@ expect object LogFileStorage {
     fun readAllLines(): List<String>
     fun rewriteLines(lines: List<String>)
     fun getFileSize(): Long
+    fun sync()
     fun clear()
 }

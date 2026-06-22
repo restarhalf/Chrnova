@@ -75,6 +75,9 @@ actual object LogFileStorage {
     }
 
     @OptIn(ExperimentalForeignApi::class)
+    actual fun sync() {}
+
+    @OptIn(ExperimentalForeignApi::class)
     actual fun clear() {
         val path = logFilePath ?: return
         NSFileManager.defaultManager.removeItemAtPath(path, error = null)

@@ -79,7 +79,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
                     notificationManager.cancel(notificationId)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 AppLogger.log("Reminder", "恢复铃声失败", e)
             }
             result.finish()
@@ -116,7 +115,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 )
                 Toast.makeText(context, "已到上课时间，自动开启静音", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                e.printStackTrace()
                 AppLogger.log("Reminder", "上课静音失败", e)
             }
             result.finish()

@@ -61,6 +61,10 @@ object AppLogger {
     }
 
     fun logFatal(threadName: String, throwable: Throwable) {
+        if (!initialized) {
+            runCatching { LogFileStorage.init("") }
+            initialized = true
+        }
         val stackTrace = throwable.stackTraceToString()
         val fullMessage = buildString {
             append("Uncaught exception on $threadName")
@@ -74,6 +78,7 @@ object AppLogger {
         val entry = createEntry("FATAL", fullMessage, Level.ERROR)
         _entries.value = (_entries.value + entry).takeLast(MAX_ENTRIES)
         appendToFile(entry)
+        runCatching { LogFileStorage.sync() }
     }
 
     private fun createEntry(tag: String, message: String, level: Level): LogEntry {
@@ -86,7 +91,8 @@ object AppLogger {
     private fun appendToFile(entry: LogEntry) {
         if (!initialized) return
         runCatching {
-            val line = "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] ${entry.message}"
+            val escapedMessage = entry.message.replace("\\", "\\\\").replace("\n", "\\n")
+            val line = "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] $escapedMessage"
             LogFileStorage.appendLine(line)
             checkAndRotate()
         }
@@ -106,22 +112,30 @@ object AppLogger {
         runCatching {
             val lines = LogFileStorage.readAllLines()
             if (lines.isEmpty()) return
-            val parsed = lines.mapNotNull { line ->
-                parseLogLine(line)
+            val timestampPrefixRegex = Regex("""^\[\d{4}-\d{2}-\d{2}""")
+            val joined = mutableListOf<String>()
+            for (line in lines) {
+                if (line.isNotEmpty() && timestampPrefixRegex.containsMatchIn(line)) {
+                    joined.add(line)
+                } else if (joined.isNotEmpty()) {
+                    joined[joined.lastIndex] += "\n$line"
+                }
             }
+            val parsed = joined.mapNotNull { parseLogLine(it) }
             _entries.value = parsed.takeLast(MAX_ENTRIES)
         }
     }
 
     private fun parseLogLine(line: String): LogEntry? {
         val timestampRegex = Regex("""\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\]""")
-        val levelTagRegex = Regex("""\[(\w)/(\w+)\]""")
+        val levelTagRegex = Regex("""\[(\w+)/([\w.]+)\]""")
         val tsMatch = timestampRegex.find(line) ?: return null
         val ltMatch = levelTagRegex.find(line) ?: return null
         val timestamp = tsMatch.groupValues[1]
         val levelTag = ltMatch.groupValues[1]
         val tag = ltMatch.groupValues[2]
-        val message = line.substring(ltMatch.range.last + 2)
+        val rawMessage = line.substring(ltMatch.range.last + 2)
+        val message = rawMessage.replace("\\n", "\n").replace("\\\\", "\\")
         val level = Level.entries.find { it.tag == levelTag } ?: Level.INFO
         return LogEntry(timestamp = timestamp, tag = tag, level = level, message = message)
     }
@@ -135,7 +149,8 @@ object AppLogger {
 
     fun toPlainText(): String {
         return _entries.value.joinToString("\n") { entry ->
-            "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] ${entry.message}"
+            val escapedMessage = entry.message.replace("\\", "\\\\").replace("\n", "\\n")
+            "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] $escapedMessage"
         }
     }
 

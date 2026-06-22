@@ -38,7 +38,7 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
     AppLogger.init(filesDir.absolutePath + "/logs")
     val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-        AppLogger.logFatal(thread.name, throwable)
+        runCatching { AppLogger.logFatal(thread.name, throwable) }
         defaultHandler?.uncaughtException(thread, throwable)
     }
     setContent {

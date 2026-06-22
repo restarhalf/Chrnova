@@ -127,12 +127,12 @@ class PEUseCase(
                     onSuccess?.invoke(result)
                     result
                 } else {
-                    AppLogger.log("PE", "自动重新登录失败: ${loginResult.message}")
+                    AppLogger.log("PE", "自动重新登录失败: ${loginResult.message}", e)
                     peAuth.clear()
                     throw PETokenExpiredException("登录已过期，请重新登录")
                 }
             } else {
-                AppLogger.log("PE", "无存储凭证，无法自动重新登录")
+                AppLogger.log("PE", "无存储凭证，无法自动重新登录", e)
                 peAuth.clear()
                 throw PETokenExpiredException("登录已过期，请重新登录")
             }

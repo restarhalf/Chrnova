@@ -43,7 +43,7 @@ class RunSyncUseCase(
         // 获取学期ID
         val selectedTerm = settings.observeSelectedTerm().first()
         val semesterId =
-            if (selectedTerm.isNotBlank()) selectedTerm else academic.fetchCurrentTermId()
+            selectedTerm.ifBlank { academic.fetchCurrentTermId() }
 
         val localCampus = timetable.getCampus()
 
@@ -72,11 +72,15 @@ class RunSyncUseCase(
                 firstAttempt.getOrThrow()
             } else {
                 val ex = firstAttempt.exceptionOrNull()
-                if (ex != null && ex.isNetworkError()) {
-                    AppLogger.log("Sync", "同步网络错误", ex)
-                    throw ex
+                if (ex != null)
+                {
+                    if (ex.isNetworkError()) {
+                        AppLogger.log("Sync", "同步网络错误", ex)
+                        throw ex
+                    }
+                    AppLogger.log("Sync", "同步失败，刷新会话重试", ex)
                 }
-                AppLogger.log("Sync", "同步失败，刷新会话重试")
+
                 authWorkflow.refreshSession()
                 sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
             }

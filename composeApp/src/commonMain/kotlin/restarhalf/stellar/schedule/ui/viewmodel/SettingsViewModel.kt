@@ -638,7 +638,7 @@ class SettingsViewModel(
      */
     fun scheduleCourseReminder(campus: Campus, termStartMs: Long, totalWeeks: Int) {
         viewModelScope.launch {
-            val success =
+            val result =
                 withContext(AppIoDispatcher) {
                     runCatching {
                         scheduleNextCourseReminder(
@@ -646,10 +646,10 @@ class SettingsViewModel(
                             termStartMs = termStartMs,
                             totalWeeks = totalWeeks
                         )
-                    }.isSuccess
+                    }
                 }
-            if (!success) {
-                AppLogger.log("Reminder", "课程提醒调度失败，关闭提醒")
+            if (result.isFailure) {
+                AppLogger.log("Reminder", "课程提醒调度失败，关闭提醒", result.exceptionOrNull()!!)
                 onReminderEnabledChanged(false)
             }
         }
@@ -662,14 +662,14 @@ class SettingsViewModel(
      */
     fun scheduleExamReminder(selectedTerm: String) {
         viewModelScope.launch {
-            val success =
+            val result =
                 withContext(AppIoDispatcher) {
                     runCatching {
                         scheduleNextExamReminder(selectedTerm = selectedTerm)
-                    }.isSuccess
+                    }
                 }
-            if (!success) {
-                AppLogger.log("Reminder", "考试提醒调度失败，关闭提醒")
+            if (result.isFailure) {
+                AppLogger.log("Reminder", "考试提醒调度失败，关闭提醒", result.exceptionOrNull()!!)
                 onExamReminderEnabledChanged(false)
             }
         }
