@@ -5,8 +5,10 @@ import kotlinx.serialization.Serializable
 
 private const val PRIMARY_GITHUB_MIRROR = "https://v4.gh-proxy.org"
 private val FALLBACK_GITHUB_MIRRORS = listOf(
-    "https://gh.llkk.cc",
-    "https://gh.felicity.ac.cn"
+    "https://github.dpik.top",
+    "https://gh.927223.xyz",
+    "https://gh.felicity.ac.cn",
+    "https://ghfile.geekertao.top"
 )
 private val ALL_GITHUB_MIRRORS = listOf(PRIMARY_GITHUB_MIRROR) + FALLBACK_GITHUB_MIRRORS
 
