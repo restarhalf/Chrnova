@@ -60,6 +60,7 @@ import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
 import platform.posix.memcpy
+import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
@@ -89,6 +90,9 @@ fun AppRoot(): UIViewController {
                         onDismissRequest = onDismissRequest,
                         onPicked = onPicked,
                     )
+                },
+                pdfFilePickerHost = { onPicked ->
+                    PdfFilePickerHost(onPicked = onPicked)
                 },
                 openUri = ::openUri,
                 ensureNotificationPermission = { onGranted ->

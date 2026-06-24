@@ -30,6 +30,7 @@ import com.russhwolf.settings.ObservableSettings
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
+import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
@@ -99,6 +100,9 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                         onDismissRequest = onDismissRequest,
                         onPicked = onPicked,
                     )
+                },
+                pdfFilePickerHost = { onPicked ->
+                    PdfFilePickerHost(onPicked = onPicked)
                 },
                 ensureNotificationPermission = { onGranted ->
                     if (

@@ -60,9 +60,14 @@ import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
+import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
+import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
+import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
+import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -96,6 +101,10 @@ fun AppContent(
         onDismissRequest: () -> Unit,
         onPicked: (String) -> Unit,
     ) -> Unit = { _, _, _ -> },
+    /** PDF文件选择器宿主组件 */
+    pdfFilePickerHost: @Composable (
+        onPicked: (ByteArray, String, String) -> Unit,
+    ) -> Unit = {},
     /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     /** 打开URI的回调函数 */
@@ -245,6 +254,32 @@ fun AppContent(
                     restarhalf.stellar.schedule.ui.screens.PEDetailScreen(
                         schoolYear = screen.schoolYear,
                         onBack = { navigator.pop() }
+                    )
+                }
+                entry(Screen.Papers) {
+                    PapersListScreen(
+                        vm = koinViewModel<PapersViewModel>(),
+                        onBack = { navigator.pop() },
+                        onPaperClick = { paperId ->
+                            navigator.push(Screen.PapersDetail(paperId))
+                        },
+                        onUploadClick = { navigator.push(Screen.PapersUpload) },
+                    )
+                }
+                entry<Screen.PapersDetail> { screen ->
+                    PapersDetailScreen(
+                        paperId = screen.paperId,
+                        vm = koinViewModel<PapersViewModel>(),
+                        onBack = { navigator.pop() },
+                        onDownload = { url, title -> openUri(url) },
+                    )
+                }
+                entry(Screen.PapersUpload) {
+                    PapersUploadScreen(
+                        vm = koinViewModel<PapersViewModel>(),
+                        onBack = { navigator.pop() },
+                        onResult = { showMessage(it) },
+                        pdfFilePickerHost = pdfFilePickerHost,
                     )
                 }
             }

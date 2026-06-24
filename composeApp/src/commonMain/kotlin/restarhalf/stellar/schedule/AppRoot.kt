@@ -57,6 +57,9 @@ fun AppRoot(
         onDismissRequest: () -> Unit,
         onPicked: (String) -> Unit,
     ) -> Unit = { _, _, _ -> },
+    pdfFilePickerHost: @Composable (
+        onPicked: (ByteArray, String, String) -> Unit,
+    ) -> Unit = {},
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     openUri: (String) -> Boolean = { false },
     showMessage: (String) -> Unit = {},
@@ -208,6 +211,7 @@ fun AppRoot(
             appUpdate = appUpdate,
             appIcon = appIcon,
             pictureSelectorHost = pictureSelectorHost,
+            pdfFilePickerHost = pdfFilePickerHost,
             ensureNotificationPermission = ensureNotificationPermission,
             openUri = openUri,
             showMessage = showMessage,

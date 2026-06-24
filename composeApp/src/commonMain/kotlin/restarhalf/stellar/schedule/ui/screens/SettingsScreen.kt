@@ -42,6 +42,8 @@ import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
+import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -113,6 +115,7 @@ fun SettingsScreen(
     onAbout: () -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
+    val navigator = LocalNavigator.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val vm: SettingsViewModel = koinViewModel()
     val overscrollEffect = MiuixOverscrollEffect()
@@ -401,6 +404,17 @@ fun SettingsScreen(
                         onCheckedChange = {
                             vm.onShowNonCurrentWeekChanged(it)
                         })
+                }
+            }
+
+            item {
+                SmallTitle(text = "学习资料")
+                AppCard {
+                    ArrowPreference(
+                        title = "试卷共享",
+                        summary = "校园试卷与学习资料共享",
+                        onClick = { navigator.push(Screen.Papers) },
+                    )
                 }
             }
 

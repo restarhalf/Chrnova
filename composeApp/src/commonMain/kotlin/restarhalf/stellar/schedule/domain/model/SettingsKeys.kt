@@ -37,4 +37,8 @@ object SettingsKeys {
     const val FLOATING_BAR = "floating_bar"
     /** 是否开启日志 */
     const val LOG_ENABLED = "log_enabled"
+    /** 设备唯一标识符 */
+    const val DEVICE_ID = "device_id"
+    /** Star 验证状态 */
+    const val STAR_VERIFIED = "star_verified"
 }

@@ -23,9 +23,5 @@ node_modules/
 **/profile/
 dlnusche.jks
 example/
-.github/skills
-.vscode
-.codex
-/docs/miuix-skill/config.json
-/docs/miuix-skill/SKILL.md
-/docs/pe.md
+worker/
+docs/

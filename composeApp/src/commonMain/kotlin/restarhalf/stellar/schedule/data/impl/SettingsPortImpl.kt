@@ -175,4 +175,23 @@ class SettingsPortImpl(
             false
         }
     }
+
+    override fun getDeviceId(): String {
+        val existing = settings.getStringOrNull(SettingsKeys.DEVICE_ID)
+        if (!existing.isNullOrEmpty()) return existing
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        val id = buildString(32) {
+            repeat(32) { append(chars[kotlin.random.Random.nextInt(chars.length)]) }
+        }
+        settings[SettingsKeys.DEVICE_ID] = id
+        return id
+    }
+
+    override fun getStarVerified(): Boolean {
+        return settings.getBoolean(SettingsKeys.STAR_VERIFIED, false)
+    }
+
+    override fun setStarVerified(verified: Boolean) {
+        settings[SettingsKeys.STAR_VERIFIED] = verified
+    }
 }

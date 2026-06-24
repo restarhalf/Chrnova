@@ -30,6 +30,12 @@ val localSecretsAesKey =
         ?.takeIf { it.isNotEmpty() }
         ?: error("AES_KEY missing in local.properties or environment")
 
+val localSecretsPapersBaseUrl =
+    (localProps.getProperty("PAPERS_BASE_URL") ?: System.getenv("PAPERS_BASE_URL"))
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: "http://localhost:8080"
+
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
 }
@@ -42,6 +48,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
     @get:Input
     abstract val signKey: Property<String>
+
+    @get:Input
+    abstract val papersBaseUrl: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -60,6 +69,11 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("$", "\$")
+        val escapedPapersBaseUrl =
+            papersBaseUrl.get()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("$", "\$")
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
@@ -68,6 +82,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
             internal object LocalSecrets {
                 const val AES_KEY = "$escapedAesKey"
                 const val SIGN_KEY = "$escapedSignKey"
+                const val PAPERS_BASE_URL = "$escapedPapersBaseUrl"
             }
             """.trimIndent()
         )
@@ -78,6 +93,7 @@ val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
     description = ""
     aesKey.set(localSecretsAesKey)
     signKey.set(localSecretsSignKey)
+    papersBaseUrl.set(localSecretsPapersBaseUrl)
     outputDir.set(generatedLocalSecretsDir)
 }
 

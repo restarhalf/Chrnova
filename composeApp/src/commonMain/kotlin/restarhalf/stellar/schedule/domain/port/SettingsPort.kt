@@ -55,4 +55,13 @@ interface SettingsPort {
      * @return 如果距离上次同步超过24小时返回true，否则返回false
      */
     suspend fun shouldAutoSyncAndMark(nowMs: Long): Boolean
+
+    /** 获取设备唯一标识符 */
+    fun getDeviceId(): String
+
+    /** 获取 star 验证状态 */
+    fun getStarVerified(): Boolean
+
+    /** 设置 star 验证状态 */
+    fun setStarVerified(verified: Boolean)
 }

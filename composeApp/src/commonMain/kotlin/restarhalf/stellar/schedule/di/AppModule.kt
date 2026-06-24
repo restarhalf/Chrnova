@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
@@ -129,8 +130,11 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
+import restarhalf.stellar.schedule.data.remote.PapersApi
+import restarhalf.stellar.schedule.domain.port.PapersPort
 
 /**
  * 端口实现模块
@@ -212,6 +216,15 @@ val portModule = module {
     single { restarhalf.stellar.schedule.data.repository.PERepository(peGateway = get()) }
     single { restarhalf.stellar.schedule.data.repository.PERoomRepository(peYearScoreDao = get(), peStudentInfoDao = get(), peDetailDao = get()) }
 
+    // 课件系统HTTP客户端
+    single(named("papers")) {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(get<Json>())
+            }
+        }
+    }
+
     // 端口实现
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
@@ -230,6 +243,14 @@ val portModule = module {
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
     single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get(), auth = get()) }
+    single<PapersPort> {
+        PapersApi(
+            httpClient = get(named("papers")),
+            json = get(),
+            baseUrl = LocalSecrets.PAPERS_BASE_URL,
+            getDeviceId = { get<SettingsPort>().getDeviceId() },
+        )
+    }
 }
 
 /**
@@ -498,6 +519,12 @@ val viewModelModule = module {
     factory { AboutViewModel(appUpdate = get()) }
     factory { ChangeBackgroundViewModel() }
     factory { restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(peUseCase = get()) }
+    factory {
+        PapersViewModel(
+            papersPort = get(),
+            settingsPort = get(),
+        )
+    }
 }
 
 /**

@@ -73,4 +73,13 @@ sealed interface Screen : NavKey {
     @Serializable
     data class ExamEdit(val examinationId: Long? = null) : Screen
 
+    @Serializable
+    data object Papers : Screen
+
+    @Serializable
+    data class PapersDetail(val paperId: String) : Screen
+
+    @Serializable
+    data object PapersUpload : Screen
+
 }
