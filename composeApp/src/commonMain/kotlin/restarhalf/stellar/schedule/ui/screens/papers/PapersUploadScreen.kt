@@ -92,7 +92,7 @@ fun PapersUploadScreen(
         },
         bottomBar = {
             Button(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 colors = ButtonDefaults.buttonColorsPrimary(),
                 enabled = isFormValid && !uiState.uploading,
                 onClick = {
@@ -161,7 +161,7 @@ fun PapersUploadScreen(
                 SmallTitle(text = "选择文件")
                 AppCard {
                     BasicComponent(
-                        title = if (selectedFilePath != null) "已选择文件" else "选择PDF文件",
+                        title = if (selectedFilePath != null) "已选择文件" else "选择文件",
                         summary = selectedFilePath,
                         onClick = { showFilePicker = true },
                     )
@@ -197,6 +197,7 @@ fun PapersUploadScreen(
             selectedFileMime = mime
             selectedFilePath = name
             showFilePicker = false
+            title = name.substringBeforeLast('.')
         }
     }
 }

@@ -25,8 +25,11 @@ fun PdfFilePickerHost(
         }
     }
 
-    LaunchedEffect(Unit) {
-        launcher.launch(arrayOf("application/pdf"))
+    LaunchedEffect(Unit) { launcher.launch(arrayOf(
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ))
     }
 
     val currentUri = pendingUri.value
@@ -34,7 +37,8 @@ fun PdfFilePickerHost(
         LaunchedEffect(currentUri) {
             val bytes = context.contentResolver.openInputStream(currentUri)?.use { it.readBytes() }
             val fileName = getFileName(context, currentUri)
-            val mimeType = context.contentResolver.getType(currentUri) ?: "application/pdf"
+            val mimeType = context.contentResolver.getType(currentUri)
+                ?: guessMimeFromName(fileName)
             if (bytes != null) {
                 onPicked(bytes, fileName, mimeType)
             }
@@ -50,4 +54,10 @@ private fun getFileName(context: Context, uri: Uri): String {
         it.moveToFirst()
         if (nameIndex >= 0) it.getString(nameIndex) else "document.pdf"
     } ?: "document.pdf"
+}
+
+private fun guessMimeFromName(name: String): String = when {
+    name.endsWith(".doc", ignoreCase = true) -> "application/msword"
+    name.endsWith(".docx", ignoreCase = true) -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    else -> "application/pdf"
 }

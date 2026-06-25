@@ -82,7 +82,7 @@ fun PapersDetailScreen(
             if (paper!=null)
             {
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding( 8.dp),
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     onClick = { vm.downloadPaper(paper.id) },
                 ) {
@@ -98,7 +98,7 @@ fun PapersDetailScreen(
                         top = paddingValues.calculateTopPadding(),
                         start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                         end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp,
+                        bottom = paddingValues.calculateBottomPadding(),
                     )
                 )
                 .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),

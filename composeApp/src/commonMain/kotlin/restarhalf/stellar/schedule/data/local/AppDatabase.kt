@@ -1,10 +1,10 @@
 package restarhalf.stellar.schedule.data.local
 
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
-import androidx.room3.TypeConverters
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -49,7 +49,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
     version = 14,
     exportSchema = true
 )
-@TypeConverters(Converters::class)
+@ColumnTypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
 
