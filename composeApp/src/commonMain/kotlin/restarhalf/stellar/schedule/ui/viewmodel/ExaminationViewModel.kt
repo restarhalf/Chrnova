@@ -55,6 +55,7 @@ class ExaminationViewModel(
         val locationText: String,
         val seatText: String,
         val remarkText: String?,
+        val isEnded: Boolean = false,
     )
 
     /**
@@ -146,9 +147,7 @@ class ExaminationViewModel(
         error: String,
         nowMs: Long,
     ): ExaminationScreenUi {
-        // 过滤已结束的考试
-        val visibleItems = items.filter { isExamNotEnded(it.time, nowMs) }
-        val cards = visibleItems.map { exam -> buildExamCardUi(exam) }
+        val cards = items.map { exam -> buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not()) }
         val statusText =
             when {
                 error.isNotBlank() -> error
@@ -182,7 +181,7 @@ class ExaminationViewModel(
      * @param exam 考试数据
      * @return 考试卡片UI
      */
-    private fun buildExamCardUi(exam: Examination): ExamCardUi {
+    private fun buildExamCardUi(exam: Examination, isEnded: Boolean = false): ExamCardUi {
         val title = exam.courseName.ifBlank { "未命名课程" }
         val datePart = exam.time.substringBefore(" ").ifBlank { "待定" }
         val timePart = exam.time.substringAfter(" ", "").ifBlank { "待定" }
@@ -205,7 +204,8 @@ class ExaminationViewModel(
             timeText = timeText,
             locationText = "地点：${exam.examinationPlace.ifBlank { "待定" }}",
             seatText = "座位号：${exam.zwh.ifBlank { "--" }}",
-            remarkText = exam.ksbz.takeIf { it.isNotBlank() }?.let { "备注：$it" })
+            remarkText = exam.ksbz.takeIf { it.isNotBlank() }?.let { "备注：$it" },
+            isEnded = isEnded)
     }
 
     private fun weekdayText(dayOfWeek: DayOfWeek): String {

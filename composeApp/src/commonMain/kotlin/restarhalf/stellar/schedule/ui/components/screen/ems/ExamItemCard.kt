@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,66 +69,91 @@ fun ExamItemCard(
                 }
                 .clickable { onClick() }
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier =
-                    Modifier.align(Alignment.CenterVertically)
-                        .clip(CircleShape)
-                        .background(accentColor)
-                        .width(4.dp)
-                        .fillMaxHeight(0.9f)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = card.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Box(
+                    modifier =
+                        Modifier.align(Alignment.CenterVertically)
+                            .clip(CircleShape)
+                            .background(accentColor)
+                            .width(4.dp)
+                            .fillMaxHeight(0.9f)
                 )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
-                        text = card.dateText,
-                        fontSize = 12.sp,
-                        color = summary,
+                        text = card.title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = card.timeText,
-                        fontSize = 12.sp,
-                        color = summary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = card.locationText,
-                        fontSize = 12.sp,
-                        color = summary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = card.seatText,
-                        fontSize = 12.sp,
-                        color = summary
-                    )
-                val remarkText = card.remarkText
-                if (remarkText != null) {
+                        Text(
+                            text = card.dateText,
+                            fontSize = 12.sp,
+                            color = summary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = card.timeText,
+                            fontSize = 12.sp,
+                            color = summary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = card.locationText,
+                            fontSize = 12.sp,
+                            color = summary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = card.seatText,
+                            fontSize = 12.sp,
+                            color = summary
+                        )
+                    val remarkText = card.remarkText
+                    if (remarkText != null) {
+                        Box(
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(6.dp))
+                                    .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    .align(Alignment.End)
+                        ) {
+                            Text(text = remarkText, fontSize = 11.sp, color = summary)
+                        }
+                    }
+                }
+            }
+
+            if (card.isEnded) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.6f))
+                ) {
                     Box(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(6.dp))
-                                .background(MiuixTheme.colorScheme.surfaceContainerHigh)
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                                .align(Alignment.End)
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF9E9E9E).copy(0.8f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
-                        Text(text = remarkText, fontSize = 11.sp, color = summary)
+                        Text(
+                            text = "已结束",
+                            color = Color.White,
+                            fontSize = 11.sp
+                        )
                     }
                 }
             }

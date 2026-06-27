@@ -198,7 +198,7 @@ fun ExamEditScreen(
                         pickerStartMinute = sm
                         pickerEndHour = eh
                         pickerEndMinute = em
-                        timePartValue.value = "${padTwo(sh)}:${padTwo(sm)}-${padTwo(eh)}:${padTwo(em)}"
+                        timePartValue.value = "${padTwo(sh)}:${padTwo(sm)}~${padTwo(eh)}:${padTwo(em)}"
                         showTimePicker.value = false
                     },
                 )
