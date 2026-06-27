@@ -89,7 +89,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
     }
 }
 
-val generateLocalSecrets by tasks.registering(GenerateLocalSecretsTask::class) {
+val generateLocalSecrets = tasks.register<GenerateLocalSecretsTask>("generateLocalSecrets") {
     description = ""
     aesKey.set(localSecretsAesKey)
     signKey.set(localSecretsSignKey)
@@ -110,7 +110,7 @@ kotlin {
     android {
         namespace = "restarhalf.stellar.schedule"
         compileSdk { version = release(37) }
-        minSdk = 33
+        minSdk = 24
 
         androidResources {
             enable = true

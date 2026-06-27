@@ -27,7 +27,7 @@ class IsExamNotEndedUseCase {
                 ?: return true
         // 解析结束时间
         val end =
-            Regex("~\\s*(\\d{1,2}:\\d{2})").find(rawTime)?.groupValues?.getOrNull(1)
+            Regex("[~-]\\s*(\\d{1,2}:\\d{2})").find(rawTime)?.groupValues?.getOrNull(1)
                 ?: return true
         val normalized = "${date}T${end.padStart(5, '0')}"
         val endDateTime = runCatching { LocalDateTime.parse(normalized) }

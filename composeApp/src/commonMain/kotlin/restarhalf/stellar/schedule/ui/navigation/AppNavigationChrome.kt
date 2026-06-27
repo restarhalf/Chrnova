@@ -25,6 +25,7 @@ import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.shader.isRuntimeShaderSupported
 
 /**
  * 标签页规格数据类
@@ -115,7 +116,7 @@ fun AppBottomBar(
                     selectedIndex = appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }.coerceAtLeast(0),
                     onItemClick = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
                     backdrop = backdrop,
-                    isBlurActive = true,
+                    isBlurActive = isRuntimeShaderSupported() && backdrop != null,
                 )
             }
         }
