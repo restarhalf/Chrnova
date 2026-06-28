@@ -147,7 +147,8 @@ class ExaminationViewModel(
         error: String,
         nowMs: Long,
     ): ExaminationScreenUi {
-        val cards = items.map { exam -> buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not()) }
+        val sorted = items.sortedBy { it.time.substringBefore(" ").ifBlank { "9999-99-99" } }
+        val cards = sorted.map { exam -> buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not()) }
         val statusText =
             when {
                 error.isNotBlank() -> error
