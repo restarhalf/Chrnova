@@ -19,6 +19,7 @@ class AndroidApp : Application() {
 
     private val screenStateReceiver = ScreenStateReceiver()
 
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate() {
         super.onCreate()
         if (!isMainProcess()) return

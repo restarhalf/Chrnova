@@ -22,6 +22,7 @@ class PictureSelectorPortImpl(
 ) : PictureSelectorPort {
     private val contentResolver: ContentResolver = context.contentResolver
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun loadRecentImages(limit: Int, offset: Int): List<MediaImage> {
         val queryArgs = Bundle().apply {
             putStringArray(
@@ -97,6 +98,7 @@ class PictureSelectorPortImpl(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun loadAlbumImages(
         bucketId: Long,
         limit: Int,
@@ -162,6 +164,7 @@ class PictureSelectorPortImpl(
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun queryImages(queryArgs: Bundle): List<MediaImage> {
         val results = mutableListOf<MediaImage>()
         contentResolver.query(
