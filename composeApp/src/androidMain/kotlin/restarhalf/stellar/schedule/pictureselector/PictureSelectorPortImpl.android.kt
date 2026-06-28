@@ -6,8 +6,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.net.toUri
@@ -36,6 +38,7 @@ class PictureSelectorPortImpl(
         return queryImages(queryArgs)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun loadAlbums(maxScan: Int): List<MediaAlbum> {
         val queryArgs = Bundle().apply {
             putStringArray(

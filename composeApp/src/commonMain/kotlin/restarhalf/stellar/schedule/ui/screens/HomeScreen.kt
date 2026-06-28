@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
+import restarhalf.stellar.schedule.ui.components.screen.home.HomeExamSection
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
@@ -76,6 +77,12 @@ fun HomeScreen(
     val headerUi = renderState.headerUi
     val surfaceUi = renderState.surfaceUi
     val sectionRenders = renderState.sectionRenders
+    val todayExams = remember(homeUiState.exams, homeUiState.nowMs) {
+        vm.buildExamUiList(
+            vm.getTodayExams(homeUiState.exams, homeUiState.nowMs),
+            homeUiState.nowMs
+        )
+    }
     Scaffold(
         containerColor = Color.Transparent,
     ) { paddingValues ->
@@ -150,6 +157,14 @@ fun HomeScreen(
                         HomePeriodSection(
                             title = section.title,
                             rows = section.rows,
+                            textPrimary = textPrimary,
+                            textSecondary = textSecondary,
+                            dividerColor = dividerColor,
+                        )
+                    }
+                    if (todayExams.isNotEmpty()) {
+                        HomeExamSection(
+                            exams = todayExams,
                             textPrimary = textPrimary,
                             textSecondary = textSecondary,
                             dividerColor = dividerColor,

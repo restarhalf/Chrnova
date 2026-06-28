@@ -7,6 +7,7 @@ import android.os.Build
 import android.view.WindowManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,7 @@ fun PictureSelectorHost(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.R)
 private fun Context.resolveCropOutputSize(): OutputSize {
     val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val bounds = windowManager.currentWindowMetrics.bounds

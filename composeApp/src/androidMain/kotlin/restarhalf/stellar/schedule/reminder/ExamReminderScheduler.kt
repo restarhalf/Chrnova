@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -22,6 +24,7 @@ class ExamReminderScheduler(private val context: Context) {
         val examTimeRaw: String
     )
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(ExperimentalTime::class)
     fun scheduleNextReminder(
         exams: List<JwxtExaminationItem>,
@@ -139,6 +142,7 @@ class ExamReminderScheduler(private val context: Context) {
      *
      * @return true 表示成功设置闹钟，false 表示失败
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun scheduleAlarmBestEffort(
         alarmManager: AlarmManager,
         triggerAtMs: Long,

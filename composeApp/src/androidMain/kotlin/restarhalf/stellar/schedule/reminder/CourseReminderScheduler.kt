@@ -5,6 +5,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
@@ -37,6 +39,7 @@ class CourseReminderScheduler(
         val slotEnd: String
     )
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(ExperimentalTime::class)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     fun scheduleNextReminder(
@@ -234,6 +237,7 @@ class CourseReminderScheduler(
      *
      * @return true 表示成功设置闹钟，false 表示失败
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleAlarmBestEffort(
         alarmManager: AlarmManager,

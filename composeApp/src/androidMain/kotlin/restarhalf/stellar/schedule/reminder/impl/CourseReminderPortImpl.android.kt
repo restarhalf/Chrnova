@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.reminder.impl
 
 import android.Manifest
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
@@ -10,6 +12,7 @@ import restarhalf.stellar.schedule.reminder.CourseReminderScheduler
 class CourseReminderPortImpl(
     private val scheduler: CourseReminderScheduler,
 ) : CourseReminderPort {
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     override fun scheduleNextReminder(
         courses: List<Course>,

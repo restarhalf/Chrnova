@@ -36,7 +36,6 @@ class ReminderRescheduleWorker(appContext: Context, params: WorkerParameters) :
             AppLogger.log("Reminder", "重新调度提醒数据状态异常", e)
             Result.failure()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             AppLogger.log("Reminder", "重新调度提醒意外失败", e)
             Result.failure()
         }

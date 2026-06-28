@@ -507,6 +507,9 @@ val viewModelModule = module {
     factory {
         HomeViewModel(
             observeAllCoursesUseCase = get(),
+            observeAllExaminations = get(),
+            observeAuthProfile = get(),
+            isExamNotEnded = get(),
             getCampusTimetableUseCase = get(),
             buildHomeClockSnapshotUseCase = get(),
             buildHomeTodayScheduleUseCase = get(),

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,12 +31,13 @@ import androidx.core.net.toUri
 import com.russhwolf.settings.ObservableSettings
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
-import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
+import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
+@RequiresApi(Build.VERSION_CODES.Q)
 fun ComponentActivity.AppRoot(settings: ObservableSettings) {
     AppLogger.init(filesDir.absolutePath + "/logs")
     val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()

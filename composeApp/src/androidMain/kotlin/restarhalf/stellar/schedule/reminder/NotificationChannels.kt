@@ -6,18 +6,22 @@ import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
+import androidx.annotation.RequiresApi
 import restarhalf.stellar.schedule.reminder.receiver.CourseReminderReceiver
 import restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver
 
 object NotificationChannels {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun ensureAll(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
         ensureCourseReminder(manager)
         ensureExamReminder(manager)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun ensureCourseReminder(manager: NotificationManager) {
         if (manager.getNotificationChannel(CourseReminderReceiver.CHANNEL_ID) != null) return
 
@@ -45,6 +49,7 @@ object NotificationChannels {
         manager.createNotificationChannel(channel)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun ensureExamReminder(manager: NotificationManager) {
         if (manager.getNotificationChannel(ExamReminderReceiver.CHANNEL_ID) != null) return
 

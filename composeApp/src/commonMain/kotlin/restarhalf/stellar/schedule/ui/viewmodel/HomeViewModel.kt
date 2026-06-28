@@ -7,9 +7,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeHeaderUiUseCase
@@ -18,7 +22,11 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
+import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -32,6 +40,9 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class HomeViewModel(
     observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    observeAllExaminations: ObserveAllExaminationsUseCase,
+    observeAuthProfile: ObserveAuthProfileUseCase,
+    private val isExamNotEnded: IsExamNotEndedUseCase,
     private val getCampusTimetableUseCase: GetCampusTimetableUseCase,
     private val buildHomeClockSnapshotUseCase: BuildHomeClockSnapshotUseCase,
     private val buildHomeTodayScheduleUseCase: BuildHomeTodayScheduleUseCase,
@@ -44,10 +55,12 @@ class HomeViewModel(
      * 首页基础UI状态
      * 
      * @param courses 所有课程列表
+     * @param exams 考试列表
      * @param nowMs 当前时间戳（毫秒）
      */
     data class HomeUiState(
         val courses: List<Course>,
+        val exams: List<Examination>,
         val nowMs: Long,
     )
 
@@ -83,23 +96,36 @@ class HomeViewModel(
     // 每分钟更新一次当前时间
     private val _nowMs = flow {
         while (true) {
-            emit(kotlin.time.Clock.System.now().toEpochMilliseconds())
+            emit(Clock.System.now().toEpochMilliseconds())
             delay(60_000L.milliseconds)
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+        initialValue = Clock.System.now().toEpochMilliseconds(),
     )
 
+    private val _userNo = observeAuthProfile().map { it.userNo }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = "",
+        )
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<HomeUiState> =
-        combine(observeAllCoursesUseCase(), _nowMs) { courses, nowMs ->
-            HomeUiState(courses = courses, nowMs = nowMs)
+        combine(observeAllCoursesUseCase(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
+            val filteredExams = if (userNo.isNotBlank()) {
+                exams.filter { it.userNo == userNo }
+            } else {
+                exams
+            }
+            HomeUiState(courses = courses, exams = filteredExams, nowMs = nowMs)
         }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = HomeUiState(courses = emptyList(), nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()),
+                initialValue = HomeUiState(courses = emptyList(), exams = emptyList(), nowMs = Clock.System.now().toEpochMilliseconds()),
             )
 
     /** 对外暴露的UI状态流 */
@@ -284,5 +310,50 @@ class HomeViewModel(
             timetable = timetable,
             nowMinutes = nowMinutes
         )
+    }
+
+    /**
+     * 获取当天的考试列表
+     */
+    fun getTodayExams(exams: List<Examination>, nowMs: Long): List<Examination> {
+        val todayDate = Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
+        return exams
+            .filter { it.time.startsWith(todayDate) }
+            .sortedBy { it.time.substringAfter(" ").ifBlank { "00:00" } }
+    }
+
+    /**
+     * 构建考试UI列表
+     */
+    fun buildExamUiList(exams: List<Examination>, nowMs: Long): List<restarhalf.stellar.schedule.ui.components.screen.home.ExamUi> {
+        return exams.map { exam ->
+            val isEnded = !isExamNotEnded(exam.time, nowMs)
+            val isStarted = isExamStarted(exam.time, nowMs)
+            val timePart = exam.time.substringAfter(" ").ifBlank { "待定" }
+            val startTime = timePart.substringBefore("~").substringBefore("-").trim()
+            val endTime = timePart.substringAfter("~").substringAfter("-").trim().ifBlank { startTime }
+            val location = exam.examinationPlace.ifBlank { "待定" }
+            restarhalf.stellar.schedule.ui.components.screen.home.ExamUi(
+                title = exam.courseName.ifBlank { "未命名课程" },
+                startTime = startTime,
+                endTime = endTime,
+                location = location,
+                accentCourseName = exam.courseName.ifBlank { exam.courseNumber },
+                isEnded = isEnded,
+                isStarted = isStarted,
+            )
+        }
+    }
+
+    /**
+     * 检查考试是否已开始
+     */
+    private fun isExamStarted(rawTime: String, nowMs: Long): Boolean {
+        val date = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawTime)?.groupValues?.getOrNull(1) ?: return false
+        val start = Regex("(\\d{1,2}:\\d{2})[~-]").find(rawTime)?.groupValues?.getOrNull(1) ?: return false
+        val normalized = "${date}T${start.padStart(5, '0')}"
+        val startDateTime = runCatching { kotlinx.datetime.LocalDateTime.parse(normalized) }.getOrNull() ?: return false
+        val startMs = startDateTime.toInstant(kotlinx.datetime.TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        return nowMs >= startMs
     }
 }

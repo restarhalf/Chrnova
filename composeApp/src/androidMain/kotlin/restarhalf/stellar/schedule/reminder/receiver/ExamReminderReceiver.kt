@@ -9,8 +9,10 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,6 +29,7 @@ class ExamReminderReceiver : BroadcastReceiver() {
 
     private data class ExamPeriod(val start: String, val end: String)
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onReceive(context: Context, intent: Intent) {
         val result = goAsync()
 

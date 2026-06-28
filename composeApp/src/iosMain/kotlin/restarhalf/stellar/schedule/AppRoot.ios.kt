@@ -17,8 +17,8 @@ import org.jetbrains.skia.Image
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
-import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSData
+import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSSelectorFromString
@@ -26,7 +26,6 @@ import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
-import platform.Foundation.writeToFile
 import platform.Foundation.writeToURL
 import platform.Photos.PHAssetChangeRequest
 import platform.Photos.PHAuthorizationStatus
@@ -60,10 +59,10 @@ import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
 import platform.posix.memcpy
-import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 import restarhalf.stellar.schedule.ui.theme.rememberAppThemeController
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -129,11 +128,11 @@ private fun ensureKoinStarted() {
     startKoin {
         modules(appModule)
     }
-    restarhalf.stellar.schedule.core.log.AppLogger.init()
+    AppLogger.init()
     @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-    kotlin.native.setUnhandledExceptionHook { throwable ->
+    (setUnhandledExceptionHook { throwable ->
         AppLogger.logFatal("main", throwable)
-    }
+    })
 }
 
 private fun openUri(uriString: String): Boolean {
