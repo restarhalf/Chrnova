@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.reminder
 
 import android.content.Context
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -21,10 +20,6 @@ import java.util.concurrent.TimeUnit
 class ReminderRescheduleWorker(appContext: Context, params: WorkerParameters) :
     CoroutineWorker(appContext, params), KoinComponent {
 
-    companion object {
-        private const val TAG = "ReminderRescheduleWorker"
-    }
-
     private val rescheduleReminders: RescheduleRemindersUseCase by inject()
 
     override suspend fun doWork(): Result {
@@ -35,15 +30,12 @@ class ReminderRescheduleWorker(appContext: Context, params: WorkerParameters) :
                 RescheduleRemindersUseCase.Result.Failure -> Result.failure()
             }
         } catch (e: IOException) {
-            Log.w(TAG, "IO failure when rescheduling reminders, will retry", e)
             AppLogger.log("Reminder", "重新调度提醒IO失败", e)
             Result.retry()
         } catch (e: IllegalStateException) {
-            Log.e(TAG, "Non-recoverable data/state issue during reminder reschedule", e)
             AppLogger.log("Reminder", "重新调度提醒数据状态异常", e)
             Result.failure()
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected failure during reminder reschedule", e)
             AppLogger.log("Reminder", "重新调度提醒意外失败", e)
             Result.failure()
         }

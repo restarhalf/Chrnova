@@ -58,7 +58,8 @@ private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
 @Composable
 fun ExamEditScreen(
     onBack: () -> Unit,
-    isEdit: MutableState<Boolean>,
+    isEdit: Boolean,
+    onEditChanged: (Boolean) -> Unit,
     examinationId: Long? = null,
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
@@ -94,7 +95,7 @@ fun ExamEditScreen(
 
     LaunchedEffect(examinationId, editingExamination, courseNames, courses) {
         val formState = vm.buildEditingFormState(examinationId, editingExamination, courseNames)
-        isEdit.value = formState.isEdit
+        onEditChanged(formState.isEdit)
         selectedIndex = formState.selectedIndex
         inputCourseName.value = formState.courseName
         datePartValue.value = formState.datePart
@@ -106,7 +107,9 @@ fun ExamEditScreen(
         if (formState.datePart.isNotBlank()) {
             try {
                 pickerDate = LocalDate.parse(formState.datePart)
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                AppLogger.log("ExamEdit", "日期解析失败: ${formState.datePart}", e)
+            }
         }
         if (formState.timePart.isNotBlank()) {
             try {
@@ -123,7 +126,9 @@ fun ExamEditScreen(
                         pickerEndMinute = endParts[1].toInt().coerceIn(0, 59)
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                AppLogger.log("ExamEdit", "时间解析失败: ${formState.timePart}", e)
+            }
         }
     }
 
@@ -207,7 +212,7 @@ fun ExamEditScreen(
             }
         },
         bottomBar = {
-            if (isEdit.value) {
+            if (isEdit) {
                 Button(
                     onClick = {
                         if (examinationId != null) {

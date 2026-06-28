@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
@@ -30,13 +29,14 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 fun UpdateConfirmDialog(
-    show: MutableState<Boolean>,
+    show: Boolean,
+    onDismissRequest: () -> Unit,
     pendingUpdate: AppUpdateInfo?,
     onStartDownload: (AppUpdateInfo) -> Unit,
     onLater: (() -> Unit)? = null,
 ) {
     WindowDialog(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = "发现新版本 ${pendingUpdate?.latestVersion.orEmpty()}",
         titleColor = DialogDefaults.titleColor(),
@@ -46,7 +46,7 @@ fun UpdateConfirmDialog(
         enableWindowDim = true,
         onDismissRequest = {
             onLater?.invoke()
-            show.value = false
+            onDismissRequest()
         },
         onDismissFinished = null,
         outsideMargin = DialogDefaults.outsideMargin,
@@ -73,7 +73,7 @@ fun UpdateConfirmDialog(
                         modifier = Modifier.weight(1f),
                         onClick = {
                             onLater?.invoke()
-                            show.value = false
+                            onDismissRequest()
                         }) {
                         Text(text = "稍后")
                     }
@@ -85,7 +85,7 @@ fun UpdateConfirmDialog(
                         colors = ButtonDefaults.buttonColorsPrimary(),
                         onClick = {
                             pendingUpdate?.let { onStartDownload(it) }
-                            show.value = false
+                            onDismissRequest()
                         }) {
                         Text(text = "下载")
                     }

@@ -35,6 +35,20 @@ interface PEDetailDao {
     @Query("DELETE FROM pe_detail_summary")
     suspend fun deleteAllSummary()
 
+    @Query("DELETE FROM pe_scores")
+    suspend fun deleteAllPeScores()
+
+    @Query("DELETE FROM pe_student_info")
+    suspend fun deleteAllPeStudentInfo()
+
+    @Transaction
+    suspend fun deleteAllPeData() {
+        deleteAllScores()
+        deleteAllSummary()
+        deleteAllPeScores()
+        deleteAllPeStudentInfo()
+    }
+
     @Transaction
     suspend fun replaceDetailByYear(
         schoolYear: String,

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.text.WeeksFormatter
@@ -660,7 +661,8 @@ class ScheduleViewModel(
      */
     fun insertCourse(course: Course) {
         viewModelScope.launch {
-            withContext(AppIoDispatcher) { insertCourseUseCase(course) }
+            runCatching { withContext(AppIoDispatcher) { insertCourseUseCase(course) } }
+                .onFailure { AppLogger.log("Schedule", "插入课程失败", it) }
         }
     }
 
@@ -671,7 +673,8 @@ class ScheduleViewModel(
      */
     fun deleteCourse(course: Course) {
         viewModelScope.launch {
-            withContext(AppIoDispatcher) { deleteCourseUseCase(course) }
+            runCatching { withContext(AppIoDispatcher) { deleteCourseUseCase(course) } }
+                .onFailure { AppLogger.log("Schedule", "删除课程失败", it) }
         }
     }
 

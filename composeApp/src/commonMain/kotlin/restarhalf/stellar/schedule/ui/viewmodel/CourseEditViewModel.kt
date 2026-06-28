@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
@@ -306,8 +307,9 @@ class CourseEditViewModel(
      */
     fun saveLabCourse(course: Course, onSaved: () -> Unit) {
         viewModelScope.launch {
-            withContext(AppIoDispatcher) { saveLabCourseUseCase(course) }
-            onSaved()
+            runCatching { withContext(AppIoDispatcher) { saveLabCourseUseCase(course) } }
+                .onSuccess { onSaved() }
+                .onFailure { AppLogger.log("CourseEdit", "保存实验课失败", it) }
         }
     }
 
@@ -319,8 +321,9 @@ class CourseEditViewModel(
      */
     fun deleteCourse(course: Course, onDeleted: () -> Unit) {
         viewModelScope.launch {
-            withContext(AppIoDispatcher) { deleteCourseUseCase(course) }
-            onDeleted()
+            runCatching { withContext(AppIoDispatcher) { deleteCourseUseCase(course) } }
+                .onSuccess { onDeleted() }
+                .onFailure { AppLogger.log("CourseEdit", "删除课程失败", it) }
         }
     }
 

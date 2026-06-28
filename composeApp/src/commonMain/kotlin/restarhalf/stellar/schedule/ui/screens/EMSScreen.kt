@@ -181,7 +181,8 @@ fun EMSScreen(
             if (showGradeDetailsDialog.value) {
                 selectedGrade?.let {
                     GradeDetailsDialog(
-                        show = showGradeDetailsDialog,
+                        show = showGradeDetailsDialog.value,
+                        onDismissRequest = { showGradeDetailsDialog.value = false },
                         title = gradeVm.buildGradeTitle(it),
                         summary = gradeVm.buildGradeDetailsSummary(it)
                     )

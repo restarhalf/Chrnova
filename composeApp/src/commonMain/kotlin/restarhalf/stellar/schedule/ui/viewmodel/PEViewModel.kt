@@ -209,7 +209,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                     loadStudentInfo()
                     onSuccess()
                 } else {
-                    AppLogger.log("PE", "体育系统登录失败: ${it.message}")
+                    AppLogger.log("PE", "体育系统登录失败: ${it.message}", level = AppLogger.Level.ERROR)
                     _error.value = it.message
                     onError(it.message)
                 }

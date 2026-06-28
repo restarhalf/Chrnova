@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
@@ -246,8 +247,9 @@ class ExamEditViewModel(
                 examination.time.substringBefore(" ").takeIf { it.isNotBlank() }
                     ?.let { "manual" } ?: ""
             }
-            withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) }
-            onSaved()
+            runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
+                .onSuccess { onSaved() }
+                .onFailure { AppLogger.log("ExamEdit", "保存考试失败", it) }
         }
     }
 
@@ -259,8 +261,9 @@ class ExamEditViewModel(
      */
     fun deleteExamination(id: Long, onDeleted: () -> Unit) {
         viewModelScope.launch {
-            withContext(AppIoDispatcher) { deleteExaminationUseCase(id) }
-            onDeleted()
+            runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }
+                .onSuccess { onDeleted() }
+                .onFailure { AppLogger.log("ExamEdit", "删除考试失败", it) }
         }
     }
 }

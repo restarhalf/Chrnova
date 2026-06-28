@@ -61,6 +61,7 @@ class AppUpdatePortImpl : AppUpdatePort {
                 )
             } catch (e: Exception) {
                 lastException = e
+                AppLogger.log("Update", "Mirror $mirror failed for check", e)
             }
         }
         throw lastException ?: IllegalStateException("All mirrors failed")

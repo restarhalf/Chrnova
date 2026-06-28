@@ -14,6 +14,11 @@ import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
+/**
+ * 教务系统HTTP客户端
+ *
+ * 注意：本类中所有URL均为第三方教务系统地址（jwyd.dlnu.edu.cn），该服务器仅支持HTTP，无法升级为HTTPS。
+ */
 class JwxtClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },

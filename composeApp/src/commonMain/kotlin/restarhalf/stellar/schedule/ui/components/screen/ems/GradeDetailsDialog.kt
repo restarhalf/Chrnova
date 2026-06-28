@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.components.screen.ems
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
@@ -16,9 +15,9 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  * @param summary 成绩详情摘要文本
  */
 @Composable
-fun GradeDetailsDialog(show: MutableState<Boolean>, title: String, summary: String) {
+fun GradeDetailsDialog(show: Boolean, onDismissRequest: () -> Unit, title: String, summary: String) {
     OverlayDialog(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = title,
         titleColor = DialogDefaults.titleColor(),
@@ -26,7 +25,7 @@ fun GradeDetailsDialog(show: MutableState<Boolean>, title: String, summary: Stri
         summaryColor = DialogDefaults.summaryColor(),
         backgroundColor = DialogDefaults.backgroundColor(),
         enableWindowDim = true,
-        onDismissRequest = { show.value = false },
+        onDismissRequest = onDismissRequest,
         onDismissFinished = null,
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,

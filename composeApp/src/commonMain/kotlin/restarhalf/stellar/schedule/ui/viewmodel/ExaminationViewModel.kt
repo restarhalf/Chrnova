@@ -187,7 +187,10 @@ class ExaminationViewModel(
         val datePart = exam.time.substringBefore(" ").ifBlank { "待定" }
         val timePart = exam.time.substringAfter(" ", "").ifBlank { "待定" }
         val weekday = datePart.takeIf { it.isNotBlank() && it != "待定" }
-            ?.let { try { LocalDate.parse(it) } catch (_: Exception) { null } }
+            ?.let { try { LocalDate.parse(it) } catch (e: Exception) {
+                AppLogger.log("Exam", "日期解析失败: $it", e)
+                null
+            } }
             ?.let { weekdayText(it.dayOfWeek) }
             ?: ""
         val hasWeekdayInTime = timePart.contains(Regex("星期[一二三四五六日]"))

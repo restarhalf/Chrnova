@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
@@ -33,13 +32,14 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 fun DownloadDialog(
-    show: MutableState<Boolean>,
+    show: Boolean,
+    onDismissRequest: () -> Unit,
     downloadProgress: Float,
     onStop: () -> Unit,
     onBackGround: () -> Unit,
 ) {
     WindowDialog(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = "下载中",
         titleColor = DialogDefaults.titleColor(),
@@ -54,7 +54,7 @@ fun DownloadDialog(
         defaultWindowInsetsPadding = true,
         content = {
             if (downloadProgress >= 100.00f) {
-                show.value = false
+                onDismissRequest()
             }
 
             val normalizedProgress = (downloadProgress / 100f).coerceIn(0f, 1f)

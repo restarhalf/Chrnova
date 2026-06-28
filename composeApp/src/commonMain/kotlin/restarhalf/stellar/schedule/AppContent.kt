@@ -221,10 +221,11 @@ fun AppContent(
                     )
                 }
                 entry<Screen.ClassEdit> { screen ->
-                    val isEdit = remember(screen.courseId) { mutableStateOf(screen.courseId != null) }
+                    val isEdit = remember(screen.courseId) { screen.courseId != null }
                     CourseEditScreen(
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
+                        onEditChanged = { },
                         courseId = screen.courseId,
                         initialDayOfWeek = screen.dayOfWeek,
                         initialStartSection = screen.startSection,
@@ -232,10 +233,11 @@ fun AppContent(
                     )
                 }
                 entry<Screen.ExamEdit> { screen ->
-                    val isEdit = remember(screen.examinationId) { mutableStateOf(screen.examinationId != null) }
+                    val isEdit = remember(screen.examinationId) { screen.examinationId != null }
                     ExamEditScreen(
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
+                        onEditChanged = { },
                         examinationId = screen.examinationId,
                     )
                 }

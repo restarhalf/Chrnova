@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.JwxtTimeParser
 import restarhalf.stellar.schedule.domain.model.Course
@@ -58,7 +59,10 @@ class SyncPortImpl(
      * @return 同步结果
      */
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
-        val userNo = try { auth.observeProfile().first().userNo } catch (_: Exception) { "" }
+        val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
+            AppLogger.log("Sync", "获取用户学号失败，使用空值", e)
+            ""
+        }
         val courses =
             jwxtSync.fetchCourses(semesterId = semesterId, campusId = campusId, week = week).map {
                 it.toDomain().copy(semesterId = semesterId, userNo = userNo)

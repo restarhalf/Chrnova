@@ -64,6 +64,7 @@ class AppViewModel(
         }
         viewModelScope.launch {
             runCatching { bindUnboundData() }
+                .onFailure { AppLogger.log("AppViewModel", "数据绑定失败", it) }
         }
     }
 

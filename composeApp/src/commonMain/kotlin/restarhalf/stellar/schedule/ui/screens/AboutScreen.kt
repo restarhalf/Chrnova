@@ -146,7 +146,8 @@ fun AboutScreen(
         popupHost = {
             if (showUpdateConfirm.value && aboutUiState.pendingUpdate != null) {
                 UpdateConfirmDialog(
-                    show = showUpdateConfirm,
+                    show = showUpdateConfirm.value,
+                    onDismissRequest = { showUpdateConfirm.value = false },
                     pendingUpdate = aboutUiState.pendingUpdate,
                     onStartDownload = { info ->
                         onStartDownload(info)
@@ -157,7 +158,8 @@ fun AboutScreen(
             }
             if (showAward.value) {
                 AwardDialog(
-                    show = showAward,
+                    show = showAward.value,
+                    onDismissRequest = { showAward.value = false },
                     onWxpay = {
                         if (platform()== Platform.Android) {
                             vm.requestWxPayAward()
@@ -238,7 +240,8 @@ fun AboutScreen(
             }
             if (showJwxt.value) {
                 JwxtWebDialog(
-                    show = showJwxt,
+                    show = showJwxt.value,
+                    onDismissRequest = { showJwxt.value = false },
                     onPc = {
                         vm.requestOpenJwxtPc()
                         showJwxt.value = false

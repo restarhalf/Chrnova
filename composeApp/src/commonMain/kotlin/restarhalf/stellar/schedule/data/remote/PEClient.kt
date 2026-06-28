@@ -16,6 +16,11 @@ import kotlinx.serialization.json.put
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
+/**
+ * 体育系统HTTP客户端
+ *
+ * 注意：本类中URL为第三方体育系统地址（39.100.89.70），该服务器仅支持HTTP，无法升级为HTTPS。
+ */
 class PEClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },

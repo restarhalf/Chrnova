@@ -81,10 +81,7 @@ class RoomExaminationRepository(
      * @param examinations 考试安排列表
      */
     override suspend fun replaceExaminations(semesterId: String, examinations: List<Examination>) {
-        examinationDao.deleteExaminationsBySemester(semesterId)
-        if (examinations.isNotEmpty()) {
-            examinationDao.insertExaminations(examinations.map { it.toEntity(semesterId) })
-        }
+        examinationDao.replaceBySemester(semesterId, examinations.map { it.toEntity(semesterId) })
     }
 
     /** 清除所有考试安排数据 */

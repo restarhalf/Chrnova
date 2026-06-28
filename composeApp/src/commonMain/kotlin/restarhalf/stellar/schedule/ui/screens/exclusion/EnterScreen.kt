@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -37,7 +36,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun EnterScreen(
-    show: MutableState<Boolean>,
+    onDismissRequest: () -> Unit,
     pagerState: PagerState
 ) {
     val appInfo: AppInfoPort = koinInject()
@@ -98,7 +97,7 @@ fun EnterScreen(
             colors = ButtonDefaults.buttonColorsPrimary(),
             onClick = {
                 settings[SettingsKeys.CONFIRM_PRIVACY] = true
-                show.value = false
+                onDismissRequest()
             }
         ) {
             Text(

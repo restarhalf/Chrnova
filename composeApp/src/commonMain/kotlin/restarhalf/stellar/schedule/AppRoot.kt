@@ -223,7 +223,8 @@ fun AppRoot(
 
         if (appState.showUpdateDialog) {
             UpdateConfirmDialog(
-                show = showUpdateDialogState,
+                show = showUpdateDialogState.value,
+                onDismissRequest = { showUpdateDialogState.value = false },
                 pendingUpdate = appState.pendingUpdate,
                 onStartDownload = { info ->
                     if (platform() != Platform.Android) {
@@ -253,7 +254,8 @@ fun AppRoot(
                     ?: if (apkDownloadState is ApkDownloadState.Completed) 100f else 0f
 
             DownloadDialog(
-                show = showApkDownloadDialogState,
+                show = showApkDownloadDialogState.value,
+                onDismissRequest = { showApkDownloadDialogState.value = false },
                 downloadProgress = progress,
                 onStop = {
                     appUpdate.cancelApkDownload()

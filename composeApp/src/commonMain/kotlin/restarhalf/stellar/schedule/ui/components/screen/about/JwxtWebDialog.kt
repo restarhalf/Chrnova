@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Button
@@ -26,9 +25,9 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  * @param onMobile 打开手机端教务系统回调
  */
 @Composable
-fun JwxtWebDialog(show: MutableState<Boolean>, onPc: () -> Unit, onMobile: () -> Unit) {
+fun JwxtWebDialog(show: Boolean, onDismissRequest: () -> Unit, onPc: () -> Unit, onMobile: () -> Unit) {
     OverlayDialog(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = "打开教务系统",
         titleColor = DialogDefaults.titleColor(),
@@ -36,7 +35,7 @@ fun JwxtWebDialog(show: MutableState<Boolean>, onPc: () -> Unit, onMobile: () ->
         summaryColor = DialogDefaults.summaryColor(),
         backgroundColor = DialogDefaults.backgroundColor(),
         enableWindowDim = true,
-        onDismissRequest = { show.value = false },
+        onDismissRequest = onDismissRequest,
         onDismissFinished = null,
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,

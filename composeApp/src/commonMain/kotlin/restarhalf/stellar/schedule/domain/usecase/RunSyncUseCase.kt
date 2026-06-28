@@ -50,7 +50,7 @@ class RunSyncUseCase(
         // 获取校区列表并匹配
         val campuses = academic.fetchCampuses()
         if (campuses.isEmpty()) {
-            AppLogger.log("Sync", "同步失败: 校区列表为空")
+            AppLogger.log("Sync", "同步失败: 校区列表为空", level = AppLogger.Level.ERROR)
             throw IllegalStateException("校区列表为空")
         }
 
@@ -60,7 +60,7 @@ class RunSyncUseCase(
                 ?: campuses.firstOrNull()
 
         if (campus == null || campus.id.isBlank() || campus.name.isBlank()) {
-            AppLogger.log("Sync", "同步失败: 获取校区失败")
+            AppLogger.log("Sync", "同步失败: 获取校区失败", level = AppLogger.Level.ERROR)
             throw IllegalStateException("获取校区失败")
         }
 

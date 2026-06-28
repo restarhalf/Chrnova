@@ -50,9 +50,6 @@ class PERoomRepository(
     }
 
     suspend fun clearAll() {
-        peYearScoreDao.deleteAll()
-        peStudentInfoDao.deleteAll()
-        peDetailDao.deleteAllScores()
-        peDetailDao.deleteAllSummary()
+        peDetailDao.deleteAllPeData()
     }
 }

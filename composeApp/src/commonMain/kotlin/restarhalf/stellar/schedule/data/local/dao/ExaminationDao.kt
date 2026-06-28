@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 
@@ -80,4 +81,12 @@ interface ExaminationDao {
     /** 将未绑定学号的考试绑定到指定学号 */
     @Query("UPDATE examinations SET userNo = :userNo WHERE userNo = ''")
     suspend fun bindUnboundExaminations(userNo: String)
+
+    @Transaction
+    suspend fun replaceBySemester(semesterId: String, examinations: List<ExaminationEntity>) {
+        deleteExaminationsBySemester(semesterId)
+        if (examinations.isNotEmpty()) {
+            insertExaminations(examinations)
+        }
+    }
 }

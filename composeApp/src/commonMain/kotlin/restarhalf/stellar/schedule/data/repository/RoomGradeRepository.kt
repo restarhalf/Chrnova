@@ -37,10 +37,7 @@ class RoomGradeRepository(
      * @param grades 成绩列表
      */
     override suspend fun replaceGrades(semester: String, grades: List<GradeCourse>) {
-        gradeDao.deleteGradesBySemester(semester)
-        if (grades.isNotEmpty()) {
-            gradeDao.insertGrades(grades.map { it.toEntity() })
-        }
+        gradeDao.replaceBySemester(semester, grades.map { it.toEntity() })
     }
 
     /** 清除所有成绩数据 */

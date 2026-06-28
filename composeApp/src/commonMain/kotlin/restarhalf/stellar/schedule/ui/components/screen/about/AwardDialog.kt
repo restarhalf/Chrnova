@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -26,9 +25,9 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  * @param onAlipay 支付宝赞赏回调
  */
 @Composable
-fun AwardDialog(show: MutableState<Boolean>, onWxpay: () -> Unit, onAlipay: () -> Unit) {
+fun AwardDialog(show: Boolean, onDismissRequest: () -> Unit, onWxpay: () -> Unit, onAlipay: () -> Unit) {
     OverlayDialog(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = "赞赏作者",
         titleColor = DialogDefaults.titleColor(),
@@ -36,7 +35,7 @@ fun AwardDialog(show: MutableState<Boolean>, onWxpay: () -> Unit, onAlipay: () -
         summaryColor = DialogDefaults.summaryColor(),
         backgroundColor = DialogDefaults.backgroundColor(),
         enableWindowDim = true,
-        onDismissRequest = { show.value = false },
+        onDismissRequest = onDismissRequest,
         onDismissFinished = null,
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,

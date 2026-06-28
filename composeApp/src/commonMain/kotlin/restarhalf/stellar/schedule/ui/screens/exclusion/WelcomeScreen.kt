@@ -113,7 +113,7 @@ fun WelcomeScreen(
                         settings[SettingsKeys.CONFIRM_PRIVACY] = false
                         exitApp()
                     })
-                    2 -> EnterScreen(show = show, pagerState = pagerState)
+                    2 -> EnterScreen(onDismissRequest = { show.value = false }, pagerState = pagerState)
                 }
             }
         )

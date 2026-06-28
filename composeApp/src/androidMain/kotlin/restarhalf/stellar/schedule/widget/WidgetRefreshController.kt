@@ -28,9 +28,13 @@ internal object WidgetRefreshController {
 
     fun refreshAndScheduleAsync(context: Context) {
         val appContext = context.applicationContext
-        CoroutineScope(Dispatchers.Default).launch {
-            WidgetUpdater.refreshAll(appContext)
-            scheduleIfNeeded(appContext)
+        CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+            try {
+                WidgetUpdater.refreshAll(appContext)
+                scheduleIfNeeded(appContext)
+            } catch (e: Exception) {
+                AppLogger.log("Widget", "刷新小部件失败", e)
+            }
         }
     }
 

@@ -45,7 +45,10 @@ class FetchExaminationsUseCase(
             academic.fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
         }
 
-        val userNo = try { auth.observeProfile().first().userNo } catch (_: Exception) { "" }
+        val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
+            AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
+            ""
+        }
         val boundExams = exams.map { it.copy(userNo = userNo) }
 
         if (nameOrNumber.isBlank()) {

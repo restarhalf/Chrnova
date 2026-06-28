@@ -70,7 +70,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun CourseEditScreen(
     onBack: () -> Unit,
-    isEdit: MutableState<Boolean>,
+    isEdit: Boolean,
+    onEditChanged: (Boolean) -> Unit,
     courseId: Long? = null,
     initialDayOfWeek: Int = 1,
     initialStartSection: Int = 1,
@@ -100,7 +101,7 @@ fun CourseEditScreen(
 
     LaunchedEffect(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek) {
         val formState = vm.buildEditingFormState(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek)
-        isEdit.value = formState.isEdit
+        onEditChanged(formState.isEdit)
         selectedIndex = formState.selectedIndex
         classRoomValue.value = formState.classRoom
         dayOfWeek = formState.dayOfWeek
@@ -194,7 +195,7 @@ fun CourseEditScreen(
             }
         },
         bottomBar = {
-            if (isEdit.value) {
+            if (isEdit) {
                 Button(
                     onClick = {
                         val c = editingCourse ?: return@Button

@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 
@@ -41,4 +42,12 @@ interface GradeDao {
     /** 删除所有成绩 */
     @Query("DELETE FROM grades")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceBySemester(semester: String, grades: List<GradeEntity>) {
+        deleteGradesBySemester(semester)
+        if (grades.isNotEmpty()) {
+            insertGrades(grades)
+        }
+    }
 }
