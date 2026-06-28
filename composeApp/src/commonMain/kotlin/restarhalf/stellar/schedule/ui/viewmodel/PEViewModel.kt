@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -103,7 +104,10 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeScoreList()
-                    .catch { e -> AppLogger.log("PE", "缓存成绩Flow异常", e) }
+                    .catch { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("PE", "缓存成绩Flow异常", e)
+                    }
                     .collect { scores ->
                         if (_yearScores.value.isEmpty()) {
                             _yearScores.value = scores.sortedByDescending { it.schoolYear }
@@ -119,7 +123,10 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeStudentInfo()
-                    .catch { e -> AppLogger.log("PE", "缓存学生信息Flow异常", e) }
+                    .catch { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("PE", "缓存学生信息Flow异常", e)
+                    }
                     .collect { info ->
                         if (_studentInfo.value == null && info != null) {
                             _studentInfo.value = info
@@ -140,7 +147,10 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             try {
                 peUseCase.observeDetailData(schoolYear)
-                    .catch { e -> AppLogger.log("PE", "缓存详情Flow异常", e) }
+                    .catch { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("PE", "缓存详情Flow异常", e)
+                    }
                     .collect { detail ->
                         if (_detailData.value == null && detail != null) {
                             _detailData.value = detail

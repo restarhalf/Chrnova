@@ -127,7 +127,7 @@ class PictureSelectorState(
         when {
             selectedTab == PictureSelectorTab.All && allHasMore -> loadMoreAll()
             selectedTab == PictureSelectorTab.Albums && currentAlbum != null && albumHasMore ->
-                loadMoreAlbum(currentAlbum!!)
+                currentAlbum?.let { loadMoreAlbum(it) }
         }
     }
 

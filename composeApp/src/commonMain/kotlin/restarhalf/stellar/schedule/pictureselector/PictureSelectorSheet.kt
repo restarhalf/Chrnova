@@ -1,4 +1,4 @@
-﻿package restarhalf.stellar.schedule.pictureselector
+package restarhalf.stellar.schedule.pictureselector
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -170,9 +170,10 @@ fun PictureSelectorSheet(
                         onSelectTab = state::selectTab,
                     )
 
-                    if (state.selectedTab == PictureSelectorTab.Albums && state.currentAlbum != null) {
+                    val album = state.currentAlbum
+                    if (state.selectedTab == PictureSelectorTab.Albums && album != null) {
                         AlbumBreadcrumb(
-                            album = state.currentAlbum!!,
+                            album = album,
                             onBack = { state.backToAlbumList() },
                         )
                     }
@@ -431,9 +432,10 @@ private fun SelectorThumbnail(
                 port.loadThumbnail(uri, maxSidePx)
             }
         }
-        if (bitmap != null) {
+        val loadedBitmap = bitmap
+        if (loadedBitmap != null) {
             Image(
-                bitmap = bitmap!!,
+                bitmap = loadedBitmap,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop,
                 modifier = modifier,

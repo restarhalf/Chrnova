@@ -86,6 +86,10 @@ interface CourseDao {
     @Query("UPDATE courses SET userNo = :userNo WHERE userNo = ''")
     suspend fun bindUnboundCourses(userNo: String)
 
+    /** 删除指定学期的同步课程（type=0） */
+    @Query("DELETE FROM courses WHERE type = 0 AND semesterId = :semesterId")
+    suspend fun deleteSyncedCoursesBySemester(semesterId: String)
+
     /** 删除所有同步的课程（type=0） */
     @Query("DELETE FROM courses WHERE type = 0")
     suspend fun deleteSyncedCourses()
@@ -108,14 +112,15 @@ interface CourseDao {
 
     /**
      * 替换同步的课程数据
-     * 
-     * 先删除所有同步课程，再插入新课程。
-     * 
+     *
+     * 先删除指定学期的同步课程，再插入新课程。
+     *
      * @param courses 新课程列表
+     * @param semesterId 学期ID
      */
     @Transaction
-    suspend fun replaceSyncedCourses(courses: List<CourseEntity>) {
-        deleteSyncedCourses()
+    suspend fun replaceSyncedCourses(courses: List<CourseEntity>, semesterId: String) {
+        deleteSyncedCoursesBySemester(semesterId)
         if (courses.isNotEmpty()) {
             insertCourses(courses)
         }

@@ -649,7 +649,7 @@ class SettingsViewModel(
                     }
                 }
             if (result.isFailure) {
-                AppLogger.log("Reminder", "课程提醒调度失败，关闭提醒", result.exceptionOrNull()!!)
+                AppLogger.log("Reminder", "课程提醒调度失败", result.exceptionOrNull()!!)
                 onReminderEnabledChanged(false)
             }
         }
@@ -669,7 +669,7 @@ class SettingsViewModel(
                     }
                 }
             if (result.isFailure) {
-                AppLogger.log("Reminder", "考试提醒调度失败，关闭提醒", result.exceptionOrNull()!!)
+                AppLogger.log("Reminder", "考试提醒调度失败", result.exceptionOrNull()!!)
                 onExamReminderEnabledChanged(false)
             }
         }

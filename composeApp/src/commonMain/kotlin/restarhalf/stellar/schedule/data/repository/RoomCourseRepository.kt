@@ -110,7 +110,7 @@ class RoomCourseRepository(
      * @param semesterId 学期ID
      */
     override suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String) {
-        courseDao.replaceSyncedCourses(courses.map { it.toEntity() })
+        courseDao.replaceSyncedCourses(courses.map { it.toEntity() }, semesterId)
         // 为没有学期ID的手动课程绑定学期
         if (semesterId.isNotBlank()) {
             courseDao.bindManualCoursesWithoutSemester(semesterId)
