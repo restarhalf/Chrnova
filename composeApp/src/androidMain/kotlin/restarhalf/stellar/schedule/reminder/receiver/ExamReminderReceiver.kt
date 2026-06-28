@@ -138,6 +138,7 @@ class ExamReminderReceiver : BroadcastReceiver() {
                 val deps = Deps()
                 deps.rescheduleNextReminderIfEnabled()
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("Reminder", "重新调度下次考试提醒失败", e)
             } finally {
                 result.finish()

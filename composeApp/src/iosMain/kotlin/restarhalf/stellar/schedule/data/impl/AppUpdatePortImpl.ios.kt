@@ -61,6 +61,7 @@ class AppUpdatePortImpl : AppUpdatePort {
                     changelog = latest.body,
                 )
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 lastException = e
                 AppLogger.log("Update", "Mirror $mirror failed for check", e)
             }

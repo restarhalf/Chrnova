@@ -171,10 +171,12 @@ class ExamReminderScheduler(private val context: Context) {
                 )
                 true
             } catch (e2: Exception) {
+                if (e2 is kotlinx.coroutines.CancellationException) throw e2
                 AppLogger.log("Reminder", "设置考试提醒重试失败", e2)
                 false
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             AppLogger.log("Reminder", "设置考试提醒失败", e)
             false
         }

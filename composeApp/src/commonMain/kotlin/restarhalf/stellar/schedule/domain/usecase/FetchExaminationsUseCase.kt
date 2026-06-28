@@ -39,6 +39,7 @@ class FetchExaminationsUseCase(
                 nameOrNumber = nameOrNumber
             )
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e.isNetworkError()) throw e
             AppLogger.log("Fetch", "获取考试安排失败，刷新会话重试", e)
             authWorkflow.refreshSession()
@@ -46,6 +47,7 @@ class FetchExaminationsUseCase(
         }
 
         val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
             ""
         }

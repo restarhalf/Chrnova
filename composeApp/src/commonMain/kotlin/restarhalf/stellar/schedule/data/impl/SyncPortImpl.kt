@@ -60,6 +60,7 @@ class SyncPortImpl(
      */
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
         val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             AppLogger.log("Sync", "获取用户学号失败，使用空值", e)
             ""
         }

@@ -107,6 +107,7 @@ fun ExamEditScreen(
             try {
                 pickerDate = LocalDate.parse(formState.datePart)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("ExamEdit", "日期解析失败: ${formState.datePart}", e)
             }
         }
@@ -126,6 +127,7 @@ fun ExamEditScreen(
                     }
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("ExamEdit", "时间解析失败: ${formState.timePart}", e)
             }
         }

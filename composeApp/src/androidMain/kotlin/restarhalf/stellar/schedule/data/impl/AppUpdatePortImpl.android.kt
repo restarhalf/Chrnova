@@ -89,6 +89,7 @@ class AppUpdatePortImpl(
                         changelog = latest.body,
                     )
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     lastException = e
                     AppLogger.log("Update", "Mirror $mirror failed for check", e)
                 }
@@ -171,6 +172,7 @@ class AppUpdatePortImpl(
                     _apkDownloadState.value = ApkDownloadState.Completed(file.absolutePath)
                     return@launch
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     lastError = e
                     AppLogger.log("Update", "Mirror download failed: $url", e)
                     runCatching { target.delete() }

@@ -36,6 +36,7 @@ internal object WidgetRefreshController {
                 WidgetUpdater.refreshAll(appContext)
                 scheduleIfNeeded(appContext)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("Widget", "刷新小部件失败", e)
             }
         }
@@ -235,6 +236,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
                 }
                 WidgetRefreshController.scheduleIfNeeded(appContext)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("Widget", "刷新小部件失败", e)
             } finally {
                 result.finish()

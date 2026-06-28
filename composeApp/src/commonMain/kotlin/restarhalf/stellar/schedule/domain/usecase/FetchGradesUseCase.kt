@@ -95,6 +95,7 @@ class FetchGradesUseCase(
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e.isNetworkError()) throw e
             AppLogger.log("Fetch", "获取成绩失败，刷新会话重试", e)
             authWorkflow.refreshSession()
