@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +28,7 @@ internal object WidgetRefreshController {
 
     private const val SMALL_REFRESH_PERIOD_MS = 50L * 60_000L
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun refreshAndScheduleAsync(context: Context) {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
@@ -38,6 +41,7 @@ internal object WidgetRefreshController {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     fun scheduleIfNeeded(context: Context) {
         val hasLarge = hasLargePlacedWidget(context)
@@ -79,6 +83,7 @@ internal object WidgetRefreshController {
         return largeIds.isNotEmpty()
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleNextMinuteTick(context: Context) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -165,6 +170,7 @@ internal object WidgetRefreshController {
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleNextSmallPeriodicTick(context: Context) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -201,6 +207,7 @@ internal object WidgetRefreshController {
 }
 
 class WidgetRefreshReceiver : BroadcastReceiver() {
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         val isMinuteTick = action == WidgetRefreshController.ACTION_WIDGET_MINUTE_TICK

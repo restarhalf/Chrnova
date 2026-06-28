@@ -46,7 +46,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
         PESubjectScoreEntity::class,
         PEDetailSummaryEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = true
 )
 @ColumnTypeConverters(Converters::class)
@@ -175,6 +175,17 @@ private val migration13To14 = object : Migration(13, 14) {
     }
 }
 
+/** 数据库迁移：添加常用查询字段索引 */
+private val migration14To15 = object : Migration(14, 15) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_semesterId ON courses(semesterId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_userNo ON courses(userNo)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_examinations_semesterId ON examinations(semesterId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_examinations_userNo ON examinations(userNo)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_grades_semester ON grades(semester)")
+    }
+}
+
 /**
  * 构建应用数据库
  * 
@@ -198,6 +209,7 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration10To11,
             migration11To12,
             migration12To13,
-            migration13To14
+            migration13To14,
+            migration14To15
         )
         .build()

@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.log.AppLogger

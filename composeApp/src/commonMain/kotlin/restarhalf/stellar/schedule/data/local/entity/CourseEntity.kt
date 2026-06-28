@@ -1,14 +1,16 @@
 package restarhalf.stellar.schedule.data.local.entity
 
 import androidx.room3.Entity
+import androidx.room3.Index
 import androidx.room3.PrimaryKey
 
-/**
- * 课程Room实体
- * 
- * 映射到courses表，存储课程信息。
- */
-@Entity(tableName = "courses")
+@Entity(
+    tableName = "courses",
+    indices = [
+        Index("semesterId"),
+        Index("userNo"),
+    ]
+)
 data class CourseEntity(
     /** 课程ID（自动生成） */
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

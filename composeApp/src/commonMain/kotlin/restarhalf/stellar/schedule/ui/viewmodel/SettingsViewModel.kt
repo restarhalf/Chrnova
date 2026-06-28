@@ -579,7 +579,7 @@ class SettingsViewModel(
 
     /**
      * 请求通知权限
-     * 
+     *
      * @param target 通知目标（课程或考试提醒）
      */
     fun requestNotificationPermission(target: NotificationTarget) {
@@ -593,7 +593,7 @@ class SettingsViewModel(
 
     /**
      * 处理通知权限请求结果
-     * 
+     *
      * @param granted 是否授予权限
      * @param campus 当前校区
      * @param termStartMs 学期开始时间戳
@@ -670,7 +670,7 @@ class SettingsViewModel(
                 }
             if (result.isFailure) {
                 AppLogger.log("Reminder", "考试提醒调度失败", result.exceptionOrNull()!!)
-                onExamReminderEnabledChanged(false)
+
             }
         }
     }

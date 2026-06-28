@@ -12,6 +12,7 @@ import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort

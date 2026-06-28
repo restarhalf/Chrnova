@@ -69,9 +69,9 @@ interface ExaminationDao {
     /**
      * 删除单个考试安排
      * 
-     * @param examination 考试安排
+     * @param id exam的id
      */
-    @androidx.room3.Query("DELETE FROM examinations WHERE id = :id")
+    @Query("DELETE FROM examinations WHERE id = :id")
     suspend fun deleteExamination(id: Long)
 
     /** 删除所有考试安排 */
