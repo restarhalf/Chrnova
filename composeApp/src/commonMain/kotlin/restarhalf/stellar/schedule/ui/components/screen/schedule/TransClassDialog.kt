@@ -99,9 +99,10 @@ fun TransClassDialog(
         content = {
             if (showWeekdayPicker.value) {
                 WeekdayPickerBottomSheet(
-                    show = showWeekdayPicker,
+                    show = showWeekdayPicker.value,
                     title = "调课星期",
                     initialDayOfWeek = dayOfWeek,
+                    onDismissRequest = { showWeekdayPicker.value = false },
                     onConfirm = { newDayOfWeek ->
                         onDayOfWeekChange(newDayOfWeek)
                         showWeekdayPicker.value = false
@@ -111,10 +112,11 @@ fun TransClassDialog(
 
             if (showWeekPicker.value) {
                 WeekPickerBottomSheet(
-                    show = showWeekPicker,
+                    show = showWeekPicker.value,
                     title = "调课周数",
                     initialWeek = totalWeeks,
                     weekRange = 1..20,
+                    onDismissRequest = { showWeekPicker.value = false },
                     onConfirm = { week: Int ->
                         onTotalWeeksChange(week)
                         showWeekPicker.value = false
@@ -124,11 +126,12 @@ fun TransClassDialog(
 
             if (showSectionPicker.value) {
                 SectionRangePickerBottomSheet(
-                    show = showSectionPicker,
+                    show = showSectionPicker.value,
                     title = "调课节数",
                     sectionRange = 1..12,
                     initialStartSection = startSection,
                     initialEndSection = endSection,
+                    onDismissRequest = { showSectionPicker.value = false },
                     onConfirm = { newStartSection, newEndSection ->
                         onSectionRangeChange(newStartSection, newEndSection)
                         showSectionPicker.value = false

@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -11,10 +10,10 @@ private val WEEKDAY_ITEMS = listOf("周一", "周二", "周三", "周四", "周�
 
 @Composable
 fun WeekdayPickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
     initialDayOfWeek: Int,
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: (Int) -> Unit,
 ) {
     val days = remember { (1..7).toList() }

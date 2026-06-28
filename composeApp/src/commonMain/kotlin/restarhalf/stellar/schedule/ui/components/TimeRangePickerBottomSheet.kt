@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -25,13 +24,13 @@ private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
  */
 @Composable
 fun TimeRangePickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
     initialStartHour: Int = 8,
     initialStartMinute: Int = 0,
     initialEndHour: Int = 10,
     initialEndMinute: Int = 0,
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: (startHour: Int, startMinute: Int, endHour: Int, endMinute: Int) -> Unit,
 ) {
     val hours = remember { (0..23).toList() }

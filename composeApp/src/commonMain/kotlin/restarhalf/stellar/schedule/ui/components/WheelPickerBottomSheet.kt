@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,14 +45,14 @@ import top.yukonga.miuix.kmp.window.WindowBottomSheet
 
 /**
  * 滚轮选择器底部弹窗
- * 
+ *
  * 提供通用的滚轮选择器弹窗框架，支持：
  * - 自定义内容
  * - 标题显示
  * - 确认/取消操作
  * - 滚动到选中项动画
  * - 触觉反馈
- * 
+ *
  * @param show 是否显示
  * @param title 标题
  * @param onDismissRequest 关闭回调
@@ -62,14 +61,14 @@ import top.yukonga.miuix.kmp.window.WindowBottomSheet
  */
 @Composable
 fun WheelPickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     WindowBottomSheet(
-        show = show.value,
+        show = show,
         modifier = Modifier,
         title = title,
         startAction = null,

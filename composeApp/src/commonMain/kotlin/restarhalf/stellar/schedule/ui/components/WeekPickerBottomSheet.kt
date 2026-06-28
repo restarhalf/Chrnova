@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -9,11 +8,11 @@ import androidx.compose.runtime.setValue
 
 @Composable
 fun WeekPickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
     initialWeek: Int,
     weekRange: IntRange,
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: (Int) -> Unit,
 ) {
     val weeks = remember(weekRange) { weekRange.toList() }

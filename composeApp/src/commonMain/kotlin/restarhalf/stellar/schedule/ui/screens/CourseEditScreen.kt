@@ -167,9 +167,10 @@ fun CourseEditScreen(
         popupHost = {
             if (showWeekdayPicker.value) {
                 WeekdayPickerBottomSheet(
-                    show = showWeekdayPicker,
+                    show = showWeekdayPicker.value,
                     title = "上课星期",
                     initialDayOfWeek = dayOfWeek,
+                    onDismissRequest = { showWeekdayPicker.value = false },
                     onConfirm = { newDayOfWeek ->
                         dayOfWeek = newDayOfWeek
                         showWeekdayPicker.value = false
@@ -179,11 +180,12 @@ fun CourseEditScreen(
 
             if (showSectionPicker.value) {
                 SectionRangePickerBottomSheet(
-                    show = showSectionPicker,
+                    show = showSectionPicker.value,
                     title = "上课时间",
                     sectionRange = 1..12,
                     initialStartSection = startSection,
                     initialEndSection = endSection,
+                    onDismissRequest = { showSectionPicker.value = false },
                     onConfirm = { newStartSection, newEndSection ->
                         startSection = newStartSection
                         endSection = newEndSection

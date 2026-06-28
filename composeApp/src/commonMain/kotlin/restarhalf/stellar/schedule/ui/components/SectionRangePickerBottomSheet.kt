@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -10,12 +9,12 @@ import androidx.compose.runtime.setValue
 
 @Composable
 fun SectionRangePickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
     sectionRange: IntRange,
     initialStartSection: Int,
     initialEndSection: Int,
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: (startSection: Int, endSection: Int) -> Unit,
 ) {
     val sections = remember(sectionRange) { sectionRange.toList() }

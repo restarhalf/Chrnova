@@ -175,9 +175,10 @@ fun ExamEditScreen(
         popupHost = {
             if (showDatePicker.value) {
                 DatePickerBottomSheet(
-                    show = showDatePicker,
+                    show = showDatePicker.value,
                     title = "考试日期",
                     initialDate = pickerDate,
+                    onDismissRequest = { showDatePicker.value = false },
                     onConfirm = { date ->
                         pickerDate = date
                         datePartValue.value = date.toString()
@@ -187,12 +188,13 @@ fun ExamEditScreen(
             }
             if (showTimePicker.value) {
                 TimeRangePickerBottomSheet(
-                    show = showTimePicker,
+                    show = showTimePicker.value,
                     title = "考试时间",
                     initialStartHour = pickerStartHour,
                     initialStartMinute = pickerStartMinute,
                     initialEndHour = pickerEndHour,
                     initialEndMinute = pickerEndMinute,
+                    onDismissRequest = { showTimePicker.value = false },
                     onConfirm = { sh, sm, eh, em ->
                         pickerStartHour = sh
                         pickerStartMinute = sm

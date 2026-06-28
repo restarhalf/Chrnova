@@ -284,12 +284,13 @@ fun SettingsScreen(
             }
             if (showTermStartPicker.value) {
                 DatePickerBottomSheet(
-                    show = showTermStartPicker,
+                    show = showTermStartPicker.value,
                     title = "选择开始上课时间",
                     initialDate =
                         Instant.fromEpochMilliseconds(termStartMs)
                             .toLocalDateTime(TimeZone.currentSystemDefault())
                             .date,
+                    onDismissRequest = { showTermStartPicker.value = false },
                     onConfirm = { date: LocalDate ->
                         val ms = date.atStartOfDayIn(TimeZone.currentSystemDefault())
                             .toEpochMilliseconds()
@@ -300,10 +301,11 @@ fun SettingsScreen(
             }
             if (showTotalWeeksPicker.value) {
                 WeekPickerBottomSheet(
-                    show = showTotalWeeksPicker,
+                    show = showTotalWeeksPicker.value,
                     title = "本学期总周数",
                     initialWeek = totalWeeks,
                     weekRange = 1..20,
+                    onDismissRequest = { showTotalWeeksPicker.value = false },
                     onConfirm = { week: Int ->
                         onTotalWeeksChange(week)
                         showTotalWeeksPicker.value = false

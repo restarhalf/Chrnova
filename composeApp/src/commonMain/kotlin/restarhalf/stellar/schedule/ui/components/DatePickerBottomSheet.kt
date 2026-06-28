@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +46,12 @@ private fun daysInMonth(year: Int, month: Int): Int {
 @OptIn(ExperimentalTime::class)
 @Composable
 fun DatePickerBottomSheet(
-    show: MutableState<Boolean>,
+    show: Boolean,
     title: String,
     initialDate: LocalDate =
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
     yearRange: IntRange = (initialDate.year - 10)..(initialDate.year + 10),
-    onDismissRequest: () -> Unit = { show.value = false },
+    onDismissRequest: () -> Unit,
     onConfirm: (LocalDate) -> Unit,
 ) {
     val years = remember(yearRange) { yearRange.toList() }
