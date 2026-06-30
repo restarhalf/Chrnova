@@ -198,41 +198,6 @@ class PEViewModel(
      */
     fun isLoggedIn(): Boolean = peLoginUseCase.isLoggedIn()
 
-    /**
-     * 用户登录
-     *
-     * @param username 用户名
-     * @param password 密码
-     * @param onSuccess 登录成功回调
-     * @param onError 登录失败回调，参数为错误消息
-     */
-    fun login(username: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
-            _loading.value = true
-            _error.value = null
-            _needsLogin.value = false
-            runCatching {
-                peLoginUseCase(username, password)
-            }.onSuccess {
-                if (it.status == "PASS") {
-                    loadScoreList()
-                    loadStudentInfo()
-                    onSuccess()
-                } else {
-                    AppLogger.log("PE", "体育系统登录失败: ${it.message}", level = AppLogger.Level.ERROR)
-                    _error.value = it.message
-                    onError(it.message)
-                }
-            }.onFailure {
-                val errorMsg = it.message ?: "登录失败"
-                AppLogger.log("PE", "体育系统登录失败", it)
-                _error.value = errorMsg
-                onError(errorMsg)
-            }
-            _loading.value = false
-        }
-    }
-
     /** 加载成绩列表 */
     fun loadScoreList() {
         viewModelScope.launch {
@@ -315,10 +280,5 @@ class PEViewModel(
             _loadedScoreList.value = false
             _loadedDetail.value = false
         }
-    }
-
-    /** 登录对话框关闭回调 */
-    fun onLoginDialogDismissed() {
-        _needsLogin.value = false
     }
 }

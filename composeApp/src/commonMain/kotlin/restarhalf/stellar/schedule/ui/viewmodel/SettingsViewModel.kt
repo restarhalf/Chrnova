@@ -8,13 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
-import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -140,27 +136,6 @@ class SettingsViewModel(
     )
 
     /**
-     * 登录UI状态
-     * 
-     * @param showLoginSheet 是否显示登录弹窗
-     * @param showLogoutConfirm 是否显示登出确认
-     * @param userNo 学号
-     * @param password 密码
-     * @param error 错误消息
-     * @param loading 是否正在加载
-     * @param authVersion 认证版本号（用于触发UI刷新）
-     */
-    data class LoginUiState(
-        val showLoginSheet: Boolean = false,
-        val showLogoutConfirm: Boolean = false,
-        val userNo: String = "",
-        val password: String = "",
-        val error: String = "",
-        val loading: Boolean = false,
-        val authVersion: Int = 0,
-    )
-
-    /**
      * 设置页面完整UI状态
      * 
      * 包含所有设置项的状态和UI数据。
@@ -176,7 +151,6 @@ class SettingsViewModel(
         val authToken: String,
         val profile: AuthProfile,
         val remoteTermItems: List<String>,
-        val loginUiState: LoginUiState,
         val pendingNotificationTarget: NotificationTarget,
     )
 
@@ -197,9 +171,7 @@ class SettingsViewModel(
     }
 
     private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
-    private val _loginUiState = MutableStateFlow(LoginUiState())
     private val _pendingNotificationTarget = MutableStateFlow(NotificationTarget.None)
-    private val loginMutex = Mutex()
 
     private val prefsFlow =
         combine(
@@ -237,11 +209,7 @@ class SettingsViewModel(
             .combine(_remoteTermItems) { prefsAuth, remoteTermItems ->
                 Triple(prefsAuth.first, prefsAuth.second, remoteTermItems)
             }
-            .combine(_loginUiState) { prefsAuthRemote, loginUiState ->
-                prefsAuthRemote to loginUiState
-            }
-            .combine(_pendingNotificationTarget) { prefsBundle, pendingNotificationTarget ->
-                val (prefsAuthRemote, loginUiState) = prefsBundle
+            .combine(_pendingNotificationTarget) { prefsAuthRemote, pendingNotificationTarget ->
                 val (prefs, auth, remoteTermItems) = prefsAuthRemote
                 SettingsUiState(
                     showNonCurrentWeek = prefs.showNonCurrentWeek,
@@ -254,7 +222,6 @@ class SettingsViewModel(
                     authToken = auth.authToken,
                     profile = auth.profile,
                     remoteTermItems = remoteTermItems,
-                    loginUiState = loginUiState,
                     pendingNotificationTarget = pendingNotificationTarget,
                 )
             }
@@ -273,7 +240,6 @@ class SettingsViewModel(
                         authToken = "",
                         profile = AuthProfile(),
                         remoteTermItems = emptyList(),
-                        loginUiState = LoginUiState(),
                         pendingNotificationTarget = NotificationTarget.None,
                     ),
             )
@@ -485,96 +451,6 @@ class SettingsViewModel(
 
     fun onLogEnabledChanged(enabled: Boolean) {
         setLogEnabledUseCase.invoke(enabled)
-    }
-
-    /** 显示登录弹窗 */
-    fun showLoginSheet() {
-        _loginUiState.value = _loginUiState.value.copy(showLoginSheet = true)
-    }
-
-    /** 隐藏登录弹窗 */
-    fun dismissLoginSheet() {
-        _loginUiState.value =
-            _loginUiState.value.copy(showLoginSheet = false, loading = false, error = "")
-    }
-
-    /**
-     * 学号输入变更
-     * 
-     * @param value 学号
-     */
-    fun onLoginUserNoChange(value: String) {
-        _loginUiState.value = _loginUiState.value.copy(userNo = value, error = "")
-    }
-
-    /**
-     * 密码输入变更
-     * 
-     * @param value 密码
-     */
-    fun onLoginPasswordChange(value: String) {
-        _loginUiState.value = _loginUiState.value.copy(password = value, error = "")
-    }
-
-    /** 请求登出确认 */
-    fun requestLogoutConfirm() {
-        _loginUiState.value = _loginUiState.value.copy(showLogoutConfirm = true)
-    }
-
-    /** 隐藏登出确认 */
-    fun dismissLogoutConfirm() {
-        _loginUiState.value = _loginUiState.value.copy(showLogoutConfirm = false)
-    }
-
-    /**
-     * 确认登出
-     * 
-     * @param onLogout 登出回调
-     */
-    fun confirmLogout(onLogout: () -> Unit) {
-        _loginUiState.value = _loginUiState.value.copy(showLogoutConfirm = false)
-        onLogout()
-        _loginUiState.value =
-            _loginUiState.value.copy(authVersion = _loginUiState.value.authVersion + 1)
-    }
-
-    /**
-     * 提交登录
-     * 
-     * @param onLogin 登录回调函数
-     */
-    fun submitLogin(onLogin: suspend (userNo: String, password: String) -> Unit) {
-        viewModelScope.launch {
-            loginMutex.withLock {
-                val current = _loginUiState.value
-                if (current.loading) return@withLock
-                val userNo = current.userNo.trim()
-                val password = current.password
-                if (userNo.isBlank() || password.isBlank()) return@withLock
-
-                _loginUiState.value = current.copy(loading = true, error = "")
-                runCatching { onLogin(userNo, password) }
-                    .onSuccess {
-                        val latest = _loginUiState.value
-                        _loginUiState.value =
-                            latest.copy(
-                                showLoginSheet = false,
-                                password = "",
-                                loading = false,
-                                authVersion = latest.authVersion + 1,
-                            )
-                    }
-                    .onFailure {
-                        AppLogger.log("Auth", "登录失败 userNo=$userNo", it)
-                        val latest = _loginUiState.value
-                        _loginUiState.value =
-                            latest.copy(
-                                loading = false,
-                                error = it.toUserFacingMessage(UserFacingErrorKind.Login)
-                            )
-                    }
-            }
-        }
     }
 
     /**

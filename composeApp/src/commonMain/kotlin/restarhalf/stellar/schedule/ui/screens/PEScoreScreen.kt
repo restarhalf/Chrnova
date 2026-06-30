@@ -34,14 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
@@ -62,7 +58,6 @@ import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -85,6 +80,7 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 fun PEScoreScreen(
     vm: PEViewModel,
     onNavigateToDetail: (String) -> Unit,
+    onLogin: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -94,19 +90,16 @@ fun PEScoreScreen(
     val yearScores = uiState.yearScores
     val loading = uiState.loading
     val error = uiState.error
-    val studentInfo = uiState.studentInfo
     val needsLogin = uiState.needsLogin
-    var showLoginDialog by remember { mutableStateOf(false) }
+    val studentInfo = uiState.studentInfo
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val showPeQrCode = remember { mutableStateOf(false) }
     val loggedIn = vm.isLoggedIn()
-
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
-            showLoginDialog = true
+            onLogin()
         }
     }
-
     LaunchedEffect(loggedIn) {
         if (loggedIn) {
             vm.loadScoreList()
@@ -201,26 +194,6 @@ fun PEScoreScreen(
                     }
                 }
             }
-            if (showLoginDialog) {
-                PELoginDialog(
-                    onDismiss = {
-                        showLoginDialog = false
-                        vm.onLoginDialogDismissed()
-                    },
-                    onLogin = { username, password ->
-                        vm.login(
-                            username, password,
-                            onSuccess = {
-                                showLoginDialog = false
-                                vm.onLoginDialogDismissed()
-                            },
-                            onError = {}
-                        )
-                    },
-                    loading = loading,
-                    error = error
-                )
-            }
         }
     ) { paddingValues ->
         PullToRefresh(
@@ -258,7 +231,8 @@ fun PEScoreScreen(
                             ArrowPreference(
                                 title = "登录",
                                 summary = "用于获取体测成绩",
-                                onClick = { showLoginDialog = true })
+                                onClick = onLogin
+                            )
                         }
                     }
                 }
@@ -300,64 +274,6 @@ fun PEScoreScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun PELoginDialog(
-    onDismiss: () -> Unit,
-    onLogin: (String, String) -> Unit,
-    loading: Boolean,
-    error: String?
-) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    OverlayDialog(
-        show = true,
-        title = "登录体测系统",
-        onDismissRequest = onDismiss
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            TextField(
-                label = "学号",
-                value = username,
-                onValueChange = { username = it },
-                modifier = Modifier.fillMaxWidth().semantics {
-                    contentType = ContentType.Username
-                }
-            )
-            TextField(
-                label = "密码",
-                value = password,
-                onValueChange = { password = it },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth().semantics {
-                    contentType = ContentType.Password
-                }
-            )
-            if (error != null) {
-                Text(
-                    text = error,
-                    color = MiuixTheme.colorScheme.error,
-                    fontSize = 12.sp
-                )
-            }
-            Button(
-                onClick = { onLogin(username, password) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = username.isNotBlank() && password.isNotBlank() && !loading,
-                colors = ButtonDefaults.buttonColorsPrimary()
-            ) {
-                Text(
-                    text = if (loading) "登录中..." else "登录",
-                    color = MiuixTheme.colorScheme.onPrimary
-                )
             }
         }
     }

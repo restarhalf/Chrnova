@@ -552,6 +552,16 @@ val viewModelModule = module {
         )
     }
     factory {
+        restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel(
+            loginUseCase = get(),
+        )
+    }
+    factory {
+        restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel(
+            peLoginUseCase = get(),
+        )
+    }
+    factory {
         PapersViewModel(
             fetchPapers = get(),
             fetchPaperFolders = get(),

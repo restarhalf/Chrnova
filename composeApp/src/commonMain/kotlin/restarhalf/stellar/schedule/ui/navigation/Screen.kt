@@ -82,4 +82,12 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PapersUpload : Screen
 
+    /** 教务系统登录页面 */
+    @Serializable
+    data object JWLogin : Screen
+
+    /** 体育系统登录页面 */
+    @Serializable
+    data object PELogin : Screen
+
 }

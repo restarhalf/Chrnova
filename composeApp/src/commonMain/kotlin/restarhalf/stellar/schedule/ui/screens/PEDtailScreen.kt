@@ -26,9 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,10 +46,8 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
@@ -71,7 +66,8 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 fun PEDetailScreen(
     vm: PEViewModel,
     schoolYear: String,
-    onBack : () -> Unit
+    onBack: () -> Unit,
+    onLogin: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -81,15 +77,13 @@ fun PEDetailScreen(
     val detailData = uiState.detailData
     val loading = uiState.loading
     val needsLogin = uiState.needsLogin
-    val error = uiState.error
     val statusText = vm.buildStatusText(isDetail = true)
     val colors = MiuixTheme.colorScheme
-    var showLoginDialog by remember { mutableStateOf(false) }
     val loggedIn = vm.isLoggedIn()
 
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
-            showLoginDialog = true
+            onLogin()
         }
     }
 
@@ -141,27 +135,6 @@ fun PEDetailScreen(
             }
         },
         popupHost = {
-            if (showLoginDialog) {
-                PELoginDialog(
-                    onDismiss = {
-                        showLoginDialog = false
-                        vm.onLoginDialogDismissed()
-                    },
-                    onLogin = { username, password ->
-                        vm.login(
-                            username, password,
-                            onSuccess = {
-                                showLoginDialog = false
-                                vm.onLoginDialogDismissed()
-                                vm.loadScoreDetail(schoolYear)
-                            },
-                            onError = {}
-                        )
-                    },
-                    loading = loading,
-                    error = error
-                )
-            }
         }
     ) { paddingValues ->
         PullToRefresh(
@@ -192,18 +165,6 @@ fun PEDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     overscrollEffect = overscrollEffect
                 ) {
-                    if (!loggedIn) {
-                        item {
-                            SmallTitle(text = "账号")
-                            AppCard {
-                                ArrowPreference(
-                                    title = "登录",
-                                    summary = "用于获取体测详情",
-                                    onClick = { showLoginDialog = true })
-                            }
-                        }
-                    }
-
                     detailData?.let { data ->
                     item {
                         Box(

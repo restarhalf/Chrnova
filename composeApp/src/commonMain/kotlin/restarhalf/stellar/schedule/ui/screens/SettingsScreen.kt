@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,14 +18,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -40,7 +35,6 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.icons.Logout
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -56,7 +50,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -104,7 +97,7 @@ fun SettingsScreen(
     totalWeeks: Int,
     onSync: suspend () -> Unit,
     onLogout: () -> Unit,
-    onLogin: suspend (userNo: String, password: String) -> Unit,
+    onLogin: () -> Unit,
     ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     onCampusChange: (Campus) -> Unit,
@@ -116,8 +109,8 @@ fun SettingsScreen(
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val vm: SettingsViewModel = koinViewModel()
     val overscrollEffect = MiuixOverscrollEffect()
+    var showLogoutConfirm by remember { mutableStateOf(false) }
 
     val settingsUiState by vm.uiState.collectAsState()
 
@@ -135,7 +128,7 @@ fun SettingsScreen(
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
 
-    LaunchedEffect(settingsUiState.loginUiState.authVersion) {
+    LaunchedEffect(Unit) {
         vm.refreshAuth()
         vm.refreshRemoteTerms()
     }
@@ -163,88 +156,9 @@ fun SettingsScreen(
             AppPageTopBar(title = "课程表设置", scrollBehavior = topAppBarScrollBehavior)
         },
         popupHost = {
-            if (settingsUiState.loginUiState.showLoginSheet) {
+            if (showLogoutConfirm) {
                 OverlayDialog(
-                    show = settingsUiState.loginUiState.showLoginSheet,
-                    modifier = Modifier,
-                    title = "登录",
-                    titleColor = DialogDefaults.titleColor(),
-                    summary = null,
-                    summaryColor = DialogDefaults.summaryColor(),
-                    backgroundColor = DialogDefaults.backgroundColor(),
-                    enableWindowDim = true,
-                    onDismissRequest = {
-                        vm.dismissLoginSheet()
-                    },
-                    onDismissFinished = null,
-                    outsideMargin = DialogDefaults.outsideMargin,
-                    insideMargin = DialogDefaults.insideMargin,
-                    defaultWindowInsetsPadding = true,
-                    renderInRootScaffold = true,
-                    content = {
-                        LazyColumn(
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            item {
-                                Column {
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    TextField(
-                                        label = "账号",
-                                        value = settingsUiState.loginUiState.userNo,
-                                        onValueChange = {
-                                            vm.onLoginUserNoChange(it)
-                                        },
-                                        modifier = Modifier.fillMaxWidth().semantics {
-                                            contentType = ContentType.Username
-                                        }
-                                    )
-                                }
-                            }
-                            item {
-                                Column {
-                                    TextField(
-                                        label = "密码",
-                                        value = settingsUiState.loginUiState.password,
-                                        onValueChange = {
-                                            vm.onLoginPasswordChange(it)
-                                        },
-                                        visualTransformation = PasswordVisualTransformation(),
-                                        modifier = Modifier.fillMaxWidth().semantics {
-                                            contentType = ContentType.Password
-                                        }
-                                    )
-                                }
-                            }
-                            if (settingsUiState.loginUiState.error.isNotBlank()) {
-                                item { Text(text = settingsUiState.loginUiState.error) }
-                            }
-                            item {
-                                Button(
-                                    enabled =
-                                        !settingsUiState.loginUiState.loading &&
-                                                settingsUiState.loginUiState.userNo.isNotBlank() &&
-                                                settingsUiState.loginUiState.password.isNotBlank(),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColorsPrimary(),
-                                    onClick = {
-                                        vm.submitLogin(onLogin)
-                                    }) {
-                                    Text(
-                                        text =
-                                            if (settingsUiState.loginUiState.loading) "登录中..."
-                                            else "登录",
-                                        color = MiuixTheme.colorScheme.onPrimary
-                                    )
-                                }
-                            }
-                        }
-                    })
-            }
-
-            if (settingsUiState.loginUiState.showLogoutConfirm) {
-                OverlayDialog(
-                    show = settingsUiState.loginUiState.showLogoutConfirm,
+                    show = showLogoutConfirm,
                     modifier = Modifier,
                     title = "确认退出登录",
                     titleColor = DialogDefaults.titleColor(),
@@ -252,7 +166,7 @@ fun SettingsScreen(
                     summaryColor = DialogDefaults.summaryColor(),
                     backgroundColor = DialogDefaults.backgroundColor(),
                     enableWindowDim = true,
-                    onDismissRequest = { vm.dismissLogoutConfirm() },
+                    onDismissRequest = { showLogoutConfirm = false },
                     onDismissFinished = null,
                     outsideMargin = DialogDefaults.outsideMargin,
                     insideMargin = DialogDefaults.insideMargin,
@@ -265,7 +179,7 @@ fun SettingsScreen(
                         ) {
                             Button(
                                 modifier = Modifier.weight(1f),
-                                onClick = { vm.dismissLogoutConfirm() }) {
+                                onClick = { showLogoutConfirm = false }) {
                                 Text(text = "取消")
                             }
 
@@ -274,7 +188,8 @@ fun SettingsScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColorsPrimary(),
                                 onClick = {
-                                    vm.confirmLogout(onLogout)
+                                    onLogout()
+                                    showLogoutConfirm = false
                                 }) {
                                 Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
                             }
@@ -345,7 +260,7 @@ fun SettingsScreen(
                             title = accountUi.title,
                             summary = accountUi.summary,
                             endActions = {
-                                IconButton(onClick = { vm.requestLogoutConfirm() }) {
+                                IconButton(onClick = { showLogoutConfirm = true }) {
                                     Icon(
                                         imageVector = Logout,
                                         contentDescription = "退出",
@@ -358,7 +273,7 @@ fun SettingsScreen(
                         ArrowPreference(
                             title = "登录",
                             summary = "用于获取课表",
-                            onClick = { vm.showLoginSheet() })
+                            onClick = { onLogin() })
                     }
                 }
             }

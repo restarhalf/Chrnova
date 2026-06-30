@@ -55,8 +55,10 @@ import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
+import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.PEDetailScreen
+import restarhalf.stellar.schedule.ui.screens.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
@@ -72,6 +74,8 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -115,6 +119,10 @@ fun AppContent(
     paperVm: PapersViewModel,
     /** 体育ViewModel */
     peVm: PEViewModel,
+    /** 教务登录ViewModel */
+    jwLoginVm: JWLoginViewModel,
+    /** 体育登录ViewModel */
+    peLoginVm: PELoginViewModel,
     /** 课表ViewModel */
     scheduleVm: ScheduleViewModel,
     /** 设置ViewModel */
@@ -201,6 +209,8 @@ fun AppContent(
             homeVm,
             paperVm,
             peVm,
+            jwLoginVm,
+            peLoginVm,
             scheduleVm,
             settingsVm,
             runSync,
@@ -306,7 +316,8 @@ fun AppContent(
                     PEDetailScreen(
                         vm = peVm,
                         schoolYear = screen.schoolYear,
-                        onBack = { navigator.pop() }
+                        onBack = { navigator.pop() },
+                        onLogin = { navigator.push(Screen.PELogin) }
                     )
                 }
                 entry(Screen.Papers) {
@@ -333,6 +344,20 @@ fun AppContent(
                         onBack = { navigator.pop() },
                         onResult = { showMessage(it) },
                         pdfFilePickerHost = pdfFilePickerHost,
+                    )
+                }
+                entry(Screen.JWLogin) {
+                    JWLoginScreen(
+                        vm = jwLoginVm,
+                        onBack = { navigator.pop() },
+                        onLoginSuccess = { navigator.pop() },
+                    )
+                }
+                entry(Screen.PELogin) {
+                    PELoginScreen(
+                        vm = peLoginVm,
+                        onBack = { navigator.pop() },
+                        onLoginSuccess = { navigator.pop() },
                     )
                 }
             }
@@ -526,7 +551,8 @@ private fun MainRouteContent(
                     vm = peVm,
                     onNavigateToDetail = { schoolYear ->
                         navigator.push(Screen.PEDetail(schoolYear))
-                    }
+                    },
+                    onLogin = { navigator.push(Screen.PELogin) }
                 )
             }
 
@@ -539,9 +565,6 @@ private fun MainRouteContent(
                     totalWeeks = appState.totalWeeks,
                     onSync = runSync,
                     onLogout = { vm.logout() },
-                    onLogin = { userNo, password ->
-                        vm.login(userNo = userNo, password = password)
-                    },
                     ensureCourseReminderPermission = ensureNotificationPermission,
                     ensureExamReminderPermission = ensureNotificationPermission,
                     onCampusChange = { campus ->
@@ -558,7 +581,8 @@ private fun MainRouteContent(
                     },
                     onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                     onAbout = { navigator.push(Screen.About) },
-                    onPaper = { navigator.push(Screen.Papers) }
+                    onPaper = { navigator.push(Screen.Papers) },
+                    onLogin = { navigator.push(Screen.JWLogin) }
                 )
             }
 

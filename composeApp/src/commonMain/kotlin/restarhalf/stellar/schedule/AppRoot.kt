@@ -32,6 +32,8 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -87,6 +89,8 @@ fun AppRoot(
     val homeVm: HomeViewModel = koinViewModel()
     val paperVm: PapersViewModel = koinViewModel()
     val peVm: PEViewModel = koinViewModel()
+    val jwLoginVm: JWLoginViewModel = koinViewModel()
+    val peLoginVm: PELoginViewModel = koinViewModel()
     val scheduleVm: ScheduleViewModel = koinViewModel()
     val settingsVm: SettingsViewModel = koinViewModel()
     val appUpdate: AppUpdatePort = koinInject()
@@ -235,6 +239,8 @@ fun AppRoot(
             homeVm = homeVm,
             paperVm = paperVm,
             peVm = peVm,
+            jwLoginVm = jwLoginVm,
+            peLoginVm = peLoginVm,
             scheduleVm = scheduleVm,
             settingsVm = settingsVm,
             appUpdate = appUpdate,
