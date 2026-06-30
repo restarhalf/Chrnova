@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.di
 
-import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -16,6 +15,7 @@ import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.BackgroundSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.PEPasswordEncryptionPortImpl
+import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
@@ -26,6 +26,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.PEGateway
+import restarhalf.stellar.schedule.data.remote.PapersApi
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
@@ -36,6 +37,7 @@ import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
@@ -57,6 +59,7 @@ import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCas
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.EnsureLoggedInUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
@@ -73,6 +76,8 @@ import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
@@ -83,13 +88,9 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveComponentsAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
-import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
-import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
@@ -101,6 +102,7 @@ import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEn
 import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveLabCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
@@ -124,17 +126,14 @@ import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCas
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ChangeBackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
-import restarhalf.stellar.schedule.data.remote.PapersApi
-import restarhalf.stellar.schedule.domain.port.PapersPort
 
 /**
  * 端口实现模块
@@ -520,7 +519,6 @@ val viewModelModule = module {
         )
     }
     factory { AboutViewModel(appUpdate = get()) }
-    factory { ChangeBackgroundViewModel() }
     factory { restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(peUseCase = get()) }
     factory {
         PapersViewModel(

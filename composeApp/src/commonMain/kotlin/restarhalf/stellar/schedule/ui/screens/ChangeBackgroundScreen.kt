@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +26,6 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ChangeBackgroundViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -53,22 +52,25 @@ fun ChangeBackgroundScreen(
     pictureSelectorHost: @Composable (show: Boolean, onDismissRequest: () -> Unit, onPicked: (String) -> Unit) -> Unit = { _, _, _ -> },
 ) {
     val vm: BackgroundViewModel = koinViewModel()
-    val previewVm: ChangeBackgroundViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val showPictureSelector = remember { mutableStateOf(false) }
 
     val backgroundUiState by vm.uiState.collectAsState()
 
-    LaunchedEffect(backgroundUiState) {
-        previewVm.updateBackground(
-            backgroundImageUri = backgroundUiState.backgroundImageUri,
-            backgroundAlpha = backgroundUiState.backgroundAlpha,
-            backgroundBlur = backgroundUiState.backgroundBlur,
-            componentsAlpha = backgroundUiState.componentsAlpha,
-        )
+    val screenUi by remember(backgroundUiState) {
+        derivedStateOf {
+            val s = backgroundUiState
+            val hasCustomImage = !s.backgroundImageUri.isNullOrBlank()
+            BackgroundViewModel.ScreenUi(
+                hasCustomImage = hasCustomImage,
+                imageSummary = if (hasCustomImage) "当前：自定义背景" else "当前：纯色背景",
+                backgroundAlphaPercent = "${(s.backgroundAlpha * 100).toInt()}%",
+                backgroundBlurPercent = "${(s.backgroundBlur * 100).toInt()}%",
+                componentsAlphaPercent = "${(s.componentsAlpha * 100).toInt()}%",
+            )
+        }
     }
-    val screenUi by previewVm.uiState.collectAsState()
 
 
     Scaffold(

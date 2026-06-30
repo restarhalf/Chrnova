@@ -50,6 +50,14 @@ class BackgroundViewModel(
         val componentsAlpha: Float,
     )
 
+    data class ScreenUi(
+        val hasCustomImage: Boolean,
+        val imageSummary: String,
+        val backgroundAlphaPercent: String,
+        val backgroundBlurPercent: String,
+        val componentsAlphaPercent: String,
+    )
+
     private val _uiState: StateFlow<BackgroundUiState> =
         combine(
             observeBackgroundImageUri(),
