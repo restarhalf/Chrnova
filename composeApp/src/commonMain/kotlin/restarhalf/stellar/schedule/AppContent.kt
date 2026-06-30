@@ -38,7 +38,6 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
 import restarhalf.stellar.schedule.ui.navigation.AppChromeState
 import restarhalf.stellar.schedule.ui.navigation.AppNavigator
@@ -57,6 +56,7 @@ import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
+import restarhalf.stellar.schedule.ui.screens.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
@@ -64,9 +64,18 @@ import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
+import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -90,6 +99,26 @@ fun AppContent(
     vm: AppViewModel,
     /** 背景ViewModel，管理背景图片相关状态 */
     bgVm: BackgroundViewModel,
+    /** 关于页面ViewModel */
+    aboutVm: AboutViewModel,
+    /** 课程编辑ViewModel */
+    courseEditVm: CourseEditViewModel,
+    /** 考试编辑ViewModel */
+    examEditVm: ExamEditViewModel,
+    /** 考试ViewModel */
+    examVm: ExaminationViewModel,
+    /** 成绩ViewModel */
+    gradeVm: GradeViewModel,
+    /** 首页ViewModel */
+    homeVm: HomeViewModel,
+    /** 试卷ViewModel */
+    paperVm: PapersViewModel,
+    /** 体育ViewModel */
+    peVm: PEViewModel,
+    /** 课表ViewModel */
+    scheduleVm: ScheduleViewModel,
+    /** 设置ViewModel */
+    settingsVm: SettingsViewModel,
     /** 应用更新端口，处理版本检查和下载 */
     appUpdate: AppUpdatePort,
     /** 应用图标，用于关于页面展示 */
@@ -163,11 +192,29 @@ fun AppContent(
             saveAwardPicture,
             appUpdate,
             vm,
+            bgVm,
+            aboutVm,
+            courseEditVm,
+            examEditVm,
+            examVm,
+            gradeVm,
+            homeVm,
+            paperVm,
+            peVm,
+            scheduleVm,
+            settingsVm,
             runSync,
         ) {
             entryProvider<NavKey> {
                 entry(Screen.Main) {
                     MainRouteContent(
+                        homeVm = homeVm,
+                        scheduleVm = scheduleVm,
+                        examVm = examVm,
+                        gradeVm = gradeVm,
+                        peVm = peVm,
+                        bgVm = bgVm,
+                        settingsVm = settingsVm,
                         vm = vm,
                         runSync = runSync,
                         ensureNotificationPermission = ensureNotificationPermission,
@@ -175,12 +222,14 @@ fun AppContent(
                 }
                 entry(Screen.ChangeBackground) {
                     ChangeBackgroundScreen(
+                        vm = bgVm,
                         onBack = { navigator.pop() },
                         pictureSelectorHost = pictureSelectorHost,
                     )
                 }
                 entry(Screen.About) {
                     AboutScreen(
+                        vm = aboutVm,
                         onBack = { navigator.pop() },
                         appIcon = appIcon,
                         showMessage = showMessage,
@@ -222,6 +271,7 @@ fun AppContent(
                 entry<Screen.ClassEdit> { screen ->
                     val isEdit = remember(screen.courseId) { screen.courseId != null }
                     CourseEditScreen(
+                        vm = courseEditVm,
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
                         onEditChanged = { },
@@ -234,6 +284,7 @@ fun AppContent(
                 entry<Screen.ExamEdit> { screen ->
                     val isEdit = remember(screen.examinationId) { screen.examinationId != null }
                     ExamEditScreen(
+                        vm = examEditVm,
                         onBack = { navigator.pop() },
                         isEdit = isEdit,
                         onEditChanged = { },
@@ -252,16 +303,17 @@ fun AppContent(
                     )
                 }
                 entry<Screen.PEDetail> { screen ->
-                    restarhalf.stellar.schedule.ui.screens.PEDetailScreen(
+                    PEDetailScreen(
+                        vm = peVm,
                         schoolYear = screen.schoolYear,
                         onBack = { navigator.pop() }
                     )
                 }
                 entry(Screen.Papers) {
                     PapersListScreen(
-                        vm = koinViewModel<PapersViewModel>(),
+                        vm = paperVm,
                         onBack = { navigator.pop() },
-                        onPaperClick = { paperId ->
+                        onPaperDetail = { paperId ->
                             navigator.push(Screen.PapersDetail(paperId))
                         },
                         onUploadClick = { navigator.push(Screen.PapersUpload) },
@@ -269,15 +321,15 @@ fun AppContent(
                 }
                 entry<Screen.PapersDetail> { screen ->
                     PapersDetailScreen(
+                        vm = paperVm,
                         paperId = screen.paperId,
-                        vm = koinViewModel<PapersViewModel>(),
                         onBack = { navigator.pop() },
                         onDownload = { url, title -> openUri(url) },
                     )
                 }
                 entry(Screen.PapersUpload) {
                     PapersUploadScreen(
-                        vm = koinViewModel<PapersViewModel>(),
+                        vm = paperVm,
                         onBack = { navigator.pop() },
                         onResult = { showMessage(it) },
                         pdfFilePickerHost = pdfFilePickerHost,
@@ -397,6 +449,20 @@ fun AppContent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainRouteContent(
+    /** 首页ViewModel */
+    homeVm: HomeViewModel,
+    /** 课表ViewModel */
+    scheduleVm: ScheduleViewModel,
+    /** 考试ViewModel */
+    examVm: ExaminationViewModel,
+    /** 成绩ViewModel */
+    gradeVm: GradeViewModel,
+    /** 体育ViewModel */
+    peVm: PEViewModel,
+    /** 背景ViewModel */
+    bgVm: BackgroundViewModel,
+    /** 应用ViewModel */
+    settingsVm: SettingsViewModel,
     /** 应用ViewModel */
     vm: AppViewModel,
     /** 同步教务系统的挂起函数 */
@@ -417,15 +483,20 @@ private fun MainRouteContent(
     ) { page ->
         when (rootTabAt(page)) {
             Screen.Home -> {
+                val bgUiState by bgVm.uiState.collectAsState()
                 HomeScreen(
+                    vm = homeVm,
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
                     totalWeeks = appState.totalWeeks,
+                    componentsAlpha = bgUiState.componentsAlpha,
+                    hasBackground = bgUiState.backgroundImageUri != null
                 )
             }
 
             Screen.Schedule -> {
                 ScheduleScreen(
+                    vm = scheduleVm,
                     onSync = runSync,
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
@@ -441,6 +512,8 @@ private fun MainRouteContent(
 
             Screen.EMS -> {
                 EMSScreen(
+                    examVm = examVm,
+                    gradeVm = gradeVm,
                     onLoadExaminations = { vm.fetchExaminationArrangements() },
                     onLoadGrades = { vm.fetchGradeReport() },
                     onAddExam = { navigator.push(Screen.ExamEdit()) },
@@ -450,6 +523,7 @@ private fun MainRouteContent(
 
             Screen.PEScore -> {
                 PEScoreScreen(
+                    vm = peVm,
                     onNavigateToDetail = { schoolYear ->
                         navigator.push(Screen.PEDetail(schoolYear))
                     }
@@ -458,6 +532,7 @@ private fun MainRouteContent(
 
             Screen.Settings -> {
                 SettingsScreen(
+                    vm = settingsVm,
                     syncUiState = appState.syncUiState,
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
@@ -483,6 +558,7 @@ private fun MainRouteContent(
                     },
                     onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                     onAbout = { navigator.push(Screen.About) },
+                    onPaper = { navigator.push(Screen.Papers) }
                 )
             }
 

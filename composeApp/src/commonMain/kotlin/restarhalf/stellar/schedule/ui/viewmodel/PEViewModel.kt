@@ -2,10 +2,10 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -19,7 +19,11 @@ import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
 import restarhalf.stellar.schedule.data.remote.PEYearScore
-import restarhalf.stellar.schedule.domain.usecase.PEUseCase
+import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.PELogoutUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEStudentInfoUseCase
 
 /**
  * 体育成绩UI状态
@@ -53,7 +57,13 @@ data class PeUiState(
  * - 用户登录和登出
  * - 本地缓存读取
  */
-class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
+class PEViewModel(
+    private val peLoginUseCase: PELoginUseCase,
+    private val peLogoutUseCase: PELogoutUseCase,
+    private val peScoreListUseCase: PEScoreListUseCase,
+    private val peScoreDetailUseCase: PEScoreDetailUseCase,
+    private val peStudentInfoUseCase: PEStudentInfoUseCase,
+) : ViewModel() {
 
     private val _yearScores = MutableStateFlow<List<PEYearScore>>(emptyList())
     private val _detailData = MutableStateFlow<PEDetailData?>(null)
@@ -103,7 +113,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
     private fun observeCachedScores() {
         viewModelScope.launch {
             try {
-                peUseCase.observeScoreList()
+                peScoreListUseCase.observeScoreList()
                     .catch { e ->
                         if (e is CancellationException) throw e
                         AppLogger.log("PE", "缓存成绩Flow异常", e)
@@ -122,7 +132,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
     private fun observeCachedStudentInfo() {
         viewModelScope.launch {
             try {
-                peUseCase.observeStudentInfo()
+                peStudentInfoUseCase.observeStudentInfo()
                     .catch { e ->
                         if (e is CancellationException) throw e
                         AppLogger.log("PE", "缓存学生信息Flow异常", e)
@@ -146,7 +156,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
     fun observeCachedDetailData(schoolYear: String) {
         viewModelScope.launch {
             try {
-                peUseCase.observeDetailData(schoolYear)
+                peScoreDetailUseCase.observeDetailData(schoolYear)
                     .catch { e ->
                         if (e is CancellationException) throw e
                         AppLogger.log("PE", "缓存详情Flow异常", e)
@@ -186,7 +196,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
      *
      * @return 是否已登录
      */
-    fun isLoggedIn(): Boolean = peUseCase.isLoggedIn()
+    fun isLoggedIn(): Boolean = peLoginUseCase.isLoggedIn()
 
     /**
      * 用户登录
@@ -202,7 +212,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
             _error.value = null
             _needsLogin.value = false
             runCatching {
-                peUseCase.login(username, password)
+                peLoginUseCase(username, password)
             }.onSuccess {
                 if (it.status == "PASS") {
                     loadScoreList()
@@ -231,7 +241,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                 _error.value = null
                 _needsLogin.value = false
                 runCatching {
-                    peUseCase.getScoreList()
+                    peScoreListUseCase()
                 }.onSuccess { result ->
                     _yearScores.value = result.dataArr.sortedByDescending { it.schoolYear }
                     _loadedScoreList.value = true
@@ -259,7 +269,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
                 _error.value = null
                 _needsLogin.value = false
                 runCatching {
-                    peUseCase.getScoreDetail(schoolYear)
+                    peScoreDetailUseCase(schoolYear)
                 }.onSuccess {
                     _detailData.value = it.data
                     _loadedDetail.value = true
@@ -280,7 +290,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
         viewModelScope.launch {
             _needsLogin.value = false
             runCatching {
-                peUseCase.getStudentInfo()
+                peStudentInfoUseCase()
             }.onSuccess {
                 _studentInfo.value = it.data
             }.onFailure {
@@ -296,7 +306,7 @@ class PEViewModel(private val peUseCase: PEUseCase) : ViewModel() {
     /** 用户登出，清除所有数据 */
     fun logout() {
         viewModelScope.launch {
-            peUseCase.logout()
+            peLogoutUseCase()
             _yearScores.value = emptyList()
             _detailData.value = null
             _studentInfo.value = null

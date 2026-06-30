@@ -22,9 +22,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,7 +48,6 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.pe.PEQRCode
 import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.icons.QrCode
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -84,14 +83,14 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
  */
 @Composable
 fun PEScoreScreen(
+    vm: PEViewModel,
     onNavigateToDetail: (String) -> Unit,
 ) {
-    val viewModel: PEViewModel = koinViewModel()
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val overscrollEffect = MiuixOverscrollEffect()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by vm.uiState.collectAsState()
     val yearScores = uiState.yearScores
     val loading = uiState.loading
     val error = uiState.error
@@ -100,7 +99,7 @@ fun PEScoreScreen(
     var showLoginDialog by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val showPeQrCode = remember { mutableStateOf(false) }
-    val loggedIn = viewModel.isLoggedIn()
+    val loggedIn = vm.isLoggedIn()
 
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
@@ -110,12 +109,12 @@ fun PEScoreScreen(
 
     LaunchedEffect(loggedIn) {
         if (loggedIn) {
-            viewModel.loadScoreList()
-            viewModel.loadStudentInfo()
+            vm.loadScoreList()
+            vm.loadStudentInfo()
         }
     }
 
-    val statusText = viewModel.buildStatusText()
+    val statusText = vm.buildStatusText()
     val colors = MiuixTheme.colorScheme
 
     Scaffold(
@@ -193,9 +192,10 @@ fun PEScoreScreen(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
-                                viewModel.logout()
+                                vm.logout()
                                 showLogoutConfirm = false
-                            },) {
+                            },
+                        ) {
                             Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
                         }
                     }
@@ -205,14 +205,14 @@ fun PEScoreScreen(
                 PELoginDialog(
                     onDismiss = {
                         showLoginDialog = false
-                        viewModel.onLoginDialogDismissed()
+                        vm.onLoginDialogDismissed()
                     },
                     onLogin = { username, password ->
-                        viewModel.login(
+                        vm.login(
                             username, password,
                             onSuccess = {
                                 showLoginDialog = false
-                                viewModel.onLoginDialogDismissed()
+                                vm.onLoginDialogDismissed()
                             },
                             onError = {}
                         )
@@ -225,7 +225,7 @@ fun PEScoreScreen(
     ) { paddingValues ->
         PullToRefresh(
             isRefreshing = loading,
-            onRefresh = { viewModel.loadScoreList() },
+            onRefresh = { vm.loadScoreList() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
             modifier = Modifier.fillMaxSize().padding(

@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -64,7 +63,6 @@ import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailIte
 import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
 import restarhalf.stellar.schedule.ui.icons.Add
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -104,6 +102,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param onEditLabCourse 编辑实验课回调
  */
 fun ScheduleScreen(
+    vm: ScheduleViewModel,
     onSync: suspend () -> Unit,
     campus: Campus,
     termStartMs: Long,
@@ -111,7 +110,6 @@ fun ScheduleScreen(
     onAddLabCourse: (dayOfWeek: Int, startSection: Int, selectedWeek: Int) -> Unit,
     onEditLabCourse: (Long) -> Unit
 ) {
-    val vm: ScheduleViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pageBottomPadding =

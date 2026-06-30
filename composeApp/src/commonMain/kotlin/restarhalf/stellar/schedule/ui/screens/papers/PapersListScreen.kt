@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens.papers
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -26,7 +27,6 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -48,14 +48,13 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 fun PapersListScreen(
     vm: PapersViewModel,
     onBack: () -> Unit,
-    onPaperClick: (String) -> Unit,
+    onPaperDetail: (String) -> Unit,
     onUploadClick: () -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
-    val navigator = LocalNavigator.current
     val expandedFolders = remember { mutableStateSetOf<String>() }
 
     LaunchedEffect(Unit) {
@@ -81,7 +80,7 @@ fun PapersListScreen(
             defaultWindowInsetsPadding = true,
             renderInRootScaffold = true,
             content = {
-                androidx.compose.foundation.layout.Column(
+                Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -239,7 +238,7 @@ fun PapersListScreen(
                         ) {
                             BasicComponent(
                                 title = paper.title.ifEmpty { "未命名试卷" },
-                                onClick = { onPaperClick(paper.id) },
+                                onClick = { onPaperDetail(paper.id) },
                             )
                         }
                     }
@@ -256,7 +255,7 @@ fun PapersListScreen(
                     ) {
                         BasicComponent(
                             title = paper.title.ifEmpty { "未命名试卷" },
-                            onClick = { onPaperClick(paper.id) },
+                            onClick = { onPaperDetail(paper.id) },
                         )
                     }
                 }

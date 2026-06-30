@@ -30,7 +30,6 @@ import restarhalf.stellar.schedule.ui.components.TimeRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Check
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -56,13 +55,13 @@ private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
 @OptIn(ExperimentalTime::class)
 @Composable
 fun ExamEditScreen(
+    vm: ExamEditViewModel,
     onBack: () -> Unit,
     isEdit: Boolean,
     onEditChanged: (Boolean) -> Unit,
     examinationId: Long? = null,
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
-    val vm: ExamEditViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val examEditUiState by vm.uiState.collectAsState()

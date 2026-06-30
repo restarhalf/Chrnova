@@ -28,7 +28,6 @@ import restarhalf.stellar.schedule.ui.components.WeekdayPickerBottomSheet
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Check
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -68,6 +67,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  */
 @Composable
 fun CourseEditScreen(
+    vm: CourseEditViewModel,
     onBack: () -> Unit,
     isEdit: Boolean,
     onEditChanged: (Boolean) -> Unit,
@@ -77,7 +77,6 @@ fun CourseEditScreen(
     initialSelectedWeek: Int = 1,
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
-    val vm: CourseEditViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val courseEditUiState by vm.uiState.collectAsState()

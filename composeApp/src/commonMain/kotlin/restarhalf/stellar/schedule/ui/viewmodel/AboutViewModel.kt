@@ -15,8 +15,8 @@ import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
-import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
+import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -42,7 +42,7 @@ sealed interface AboutUiEvent {
  * - 外部链接跳转（GitHub、教务系统、赞赏等）
  */
 class AboutViewModel(
-    private val appUpdate: AppUpdatePort,
+    private val checkAppUpdate: CheckAppUpdateUseCase,
 ) : ViewModel() {
 
     /**
@@ -143,7 +143,7 @@ class AboutViewModel(
             runCatching {
                 val latest =
                     withContext(AppIoDispatcher) {
-                        appUpdate.check(currentVersionName = currentVersionName)
+                        checkAppUpdate(currentVersionName)
                     }
 
                 if (latest == null) {

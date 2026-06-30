@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
-import restarhalf.stellar.schedule.core.log.AppLogger
 import org.koin.compose.koinInject
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.about.AwardDialog
@@ -38,7 +38,6 @@ import restarhalf.stellar.schedule.ui.components.screen.about.DetailHeader
 import restarhalf.stellar.schedule.ui.components.screen.about.JwxtWebDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -75,6 +74,7 @@ import top.yukonga.miuix.kmp.utils.platform
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AboutScreen(
+    vm: AboutViewModel,
     onBack: () -> Unit,
     onHandleEvent: (AboutUiEvent) -> Unit = {},
     onStartDownload: (AppUpdateInfo) -> Unit = {},
@@ -84,7 +84,6 @@ fun AboutScreen(
     onSaveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     onIconTap: () -> Unit = {},
 ) {
-    val vm: AboutViewModel = koinViewModel()
     val appInfo: AppInfoPort = koinInject()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()

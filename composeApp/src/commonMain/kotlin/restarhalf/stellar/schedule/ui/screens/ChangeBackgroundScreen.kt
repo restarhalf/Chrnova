@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.TitleSlider
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -41,17 +40,18 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * - 调整背景透明度
  * - 调整背景模糊度
  * - 调整组件透明度
- * 
+ *
+ * @param vm 背景ViewModel
  * @param onBack 返回回调
  * @param pictureSelectorHost 图片选择器宿主组件
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChangeBackgroundScreen(
+    vm: BackgroundViewModel,
     onBack: () -> Unit,
     pictureSelectorHost: @Composable (show: Boolean, onDismissRequest: () -> Unit, onPicked: (String) -> Unit) -> Unit = { _, _, _ -> },
 ) {
-    val vm: BackgroundViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val showPictureSelector = remember { mutableStateOf(false) }

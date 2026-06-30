@@ -48,8 +48,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -57,7 +57,6 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.ExamItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -93,13 +92,13 @@ import kotlin.time.ExperimentalTime
          * @param onLoadGrades 加载成绩的挂起函数
          */
 fun EMSScreen(
+    examVm: ExaminationViewModel,
+    gradeVm: GradeViewModel,
     onLoadExaminations: suspend () -> List<Examination>,
     onLoadGrades: suspend () -> TermGradeReport,
     onAddExam: () -> Unit = {},
     onEditExam: (Long) -> Unit = {},
 ) {
-    val examVm: ExaminationViewModel = koinViewModel()
-    val gradeVm: GradeViewModel = koinViewModel()
     val examUiState by examVm.uiState.collectAsState()
     val gradeUiState by gradeVm.uiState.collectAsState()
 

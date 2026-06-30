@@ -34,6 +34,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
@@ -42,13 +43,10 @@ import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
-import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
@@ -99,6 +97,7 @@ import kotlin.time.Instant
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SettingsScreen(
+    vm: SettingsViewModel,
     syncUiState: SyncUiState,
     campus: Campus,
     termStartMs: Long,
@@ -113,9 +112,9 @@ fun SettingsScreen(
     onTotalWeeksChange: (Int) -> Unit,
     onChangeBackground: () -> Unit,
     onAbout: () -> Unit,
+    onPaper: () -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val navigator = LocalNavigator.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val vm: SettingsViewModel = koinViewModel()
     val overscrollEffect = MiuixOverscrollEffect()
@@ -415,7 +414,7 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "试卷共享",
                         summary = "校园试卷与学习资料共享",
-                        onClick = { navigator.push(Screen.Papers) },
+                        onClick = onPaper,
                     )
                 }
             }

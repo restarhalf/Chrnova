@@ -10,8 +10,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Paper
-import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.usecase.DownloadPaperUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPaperDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPaperFoldersUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPapersUseCase
+import restarhalf.stellar.schedule.domain.usecase.UploadPaperUseCase
+import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 
 data class PapersUiState(
     val loading: Boolean = false,
@@ -37,8 +41,12 @@ data class PapersUiState(
 }
 
 class PapersViewModel(
-    private val papersPort: PapersPort,
-    private val settingsPort: SettingsPort,
+    private val fetchPapers: FetchPapersUseCase,
+    private val fetchPaperFolders: FetchPaperFoldersUseCase,
+    private val fetchPaperDetail: FetchPaperDetailUseCase,
+    private val downloadPaperUseCase: DownloadPaperUseCase,
+    private val uploadPaperUseCase: UploadPaperUseCase,
+    private val verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PapersUiState())
@@ -47,7 +55,7 @@ class PapersViewModel(
     private val loadMutex = Mutex()
 
     init {
-        val verified = settingsPort.getStarVerified()
+        val verified = verifyGitHubStar.isStarVerified()
         if (verified) {
             _uiState.value = PapersUiState(isStarVerified = true)
         }
@@ -58,7 +66,7 @@ class PapersViewModel(
             loadMutex.withLock {
                 _uiState.update { it.copy(loading = true, error = null) }
                 runCatching {
-                    papersPort.listPapers()
+                    fetchPapers()
                 }.onSuccess { papers ->
                     _uiState.update { it.copy(allPapers = papers, loading = false) }
                 }.onFailure { e ->
@@ -72,7 +80,7 @@ class PapersViewModel(
     fun loadFolders() {
         viewModelScope.launch {
             runCatching {
-                papersPort.getFolders()
+                fetchPaperFolders()
             }.onSuccess { folders ->
                 _uiState.update { it.copy(folders = folders) }
             }.onFailure {
@@ -85,7 +93,7 @@ class PapersViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
             runCatching {
-                papersPort.getPaper(id)
+                fetchPaperDetail(id)
             }.onSuccess { paper ->
                 _uiState.update { it.copy(selectedPaper = paper, loading = false) }
             }.onFailure { e ->
@@ -99,7 +107,7 @@ class PapersViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
             runCatching {
-                papersPort.downloadPaper(id)
+                downloadPaperUseCase(id)
             }.onSuccess { url ->
                 _uiState.update { it.copy(loading = false, downloadUrl = "https://v4.gh-proxy.org/$url") }
             }.onFailure { e ->
@@ -119,7 +127,7 @@ class PapersViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(uploading = true, error = null) }
             runCatching {
-                papersPort.uploadPaper(
+                uploadPaperUseCase(
                     fileBytes = fileBytes,
                     fileName = fileName,
                     mimeType = mimeType,
@@ -160,11 +168,8 @@ class PapersViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(verifyingStar = true, error = null) }
             runCatching {
-                papersPort.verifyStar(username)
+                verifyGitHubStar(username)
             }.onSuccess { starred ->
-                if (starred) {
-                    settingsPort.setStarVerified(true)
-                }
                 _uiState.update {
                     it.copy(
                         verifyingStar = false,

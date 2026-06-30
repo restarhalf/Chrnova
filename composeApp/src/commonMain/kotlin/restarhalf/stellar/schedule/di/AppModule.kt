@@ -57,14 +57,19 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.DownloadPaperUseCase
 import restarhalf.stellar.schedule.domain.usecase.EnsureLoggedInUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPaperDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPaperFoldersUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchPapersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesOnceUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
@@ -96,6 +101,11 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCa
 import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveThemeModeUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
+import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.PELogoutUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEStudentInfoUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
@@ -123,6 +133,8 @@ import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
+import restarhalf.stellar.schedule.domain.usecase.UploadPaperUseCase
+import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
@@ -390,7 +402,18 @@ val useCaseModule = module {
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
     single { TransCourseUseCase() }
     single { TransCourseWithConflictsUseCase(getAllCoursesOnce = get(), transCourse = get()) }
-    single { restarhalf.stellar.schedule.domain.usecase.PEUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    single { PELoginUseCase(repository = get(), peAuth = get()) }
+    single { PELogoutUseCase(peAuth = get(), roomRepository = get()) }
+    single { PEScoreListUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    single { PEScoreDetailUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    single { PEStudentInfoUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    single { FetchPapersUseCase(papersPort = get()) }
+    single { FetchPaperFoldersUseCase(papersPort = get()) }
+    single { FetchPaperDetailUseCase(papersPort = get()) }
+    single { DownloadPaperUseCase(papersPort = get()) }
+    single { UploadPaperUseCase(papersPort = get()) }
+    single { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
+    single { CheckAppUpdateUseCase(appUpdate = get()) }
 }
 
 /**
@@ -518,12 +541,24 @@ val viewModelModule = module {
             buildHomeSurfaceUiUseCase = get(),
         )
     }
-    factory { AboutViewModel(appUpdate = get()) }
-    factory { restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(peUseCase = get()) }
+    factory { AboutViewModel(checkAppUpdate = get()) }
+    factory {
+        restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(
+            peLoginUseCase = get(),
+            peLogoutUseCase = get(),
+            peScoreListUseCase = get(),
+            peScoreDetailUseCase = get(),
+            peStudentInfoUseCase = get(),
+        )
+    }
     factory {
         PapersViewModel(
-            papersPort = get(),
-            settingsPort = get(),
+            fetchPapers = get(),
+            fetchPaperFolders = get(),
+            fetchPaperDetail = get(),
+            downloadPaperUseCase = get(),
+            uploadPaperUseCase = get(),
+            verifyGitHubStar = get(),
         )
     }
 }

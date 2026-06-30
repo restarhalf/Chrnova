@@ -23,14 +23,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomeExamSection
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
@@ -47,30 +44,36 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  */
 @Composable
 fun HomeScreen(
+    vm: HomeViewModel,
+    hasBackground: Boolean = false,
+    componentsAlpha: Float,
     campus: Campus,
     termStartMs: Long,
     totalWeeks: Int,
 ) {
-    val bgVm: BackgroundViewModel = koinInject()
-    val vm: HomeViewModel = koinViewModel()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val backgroundUiState by bgVm.uiState.collectAsState()
-    val hasBackground = backgroundUiState.backgroundImageUri != null
     val colors = MiuixTheme.colorScheme
     val textPrimary = colors.onBackground
     val textSecondary = colors.onSurfaceVariantSummary
     val dividerColor = colors.surfaceContainerHigh
-
     val homeUiState by vm.uiState.collectAsState()
     val renderState =
-        remember(homeUiState.courses, campus, termStartMs, totalWeeks, hasBackground, backgroundUiState.componentsAlpha, homeUiState.nowMs) {
+        remember(
+            homeUiState.courses,
+            campus,
+            termStartMs,
+            totalWeeks,
+            hasBackground,
+            componentsAlpha,
+            homeUiState.nowMs
+        ) {
             vm.buildHomeRenderState(
                 courses = homeUiState.courses,
                 campus = campus,
                 termStartMs = termStartMs,
                 totalWeeks = totalWeeks,
                 hasBackground = hasBackground,
-                componentsAlpha = backgroundUiState.componentsAlpha,
+                componentsAlpha = componentsAlpha,
                 nowMs = homeUiState.nowMs
             )
         }
