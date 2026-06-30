@@ -90,4 +90,8 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PELogin : Screen
 
+    /** 体育二维码页面 */
+    @Serializable
+    data object PEQRCode : Screen
+
 }

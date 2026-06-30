@@ -59,6 +59,7 @@ import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.PELoginScreen
+import restarhalf.stellar.schedule.ui.screens.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
@@ -565,6 +566,7 @@ private fun MainRouteContent(
                     onNavigateToDetail = { schoolYear ->
                         navigator.push(Screen.PEDetail(schoolYear))
                     },
+                    onQRCode = { navigator.push(Screen.PEQRCode) },
                     onLogin = { navigator.push(Screen.PELogin) },
                     authProfile = settingsUiState.profile
                 )

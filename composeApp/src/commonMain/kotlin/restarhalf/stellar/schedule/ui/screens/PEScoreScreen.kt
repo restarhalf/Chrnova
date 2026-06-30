@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.components.screen.pe.PEQRCode
 import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.icons.QrCode
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -67,21 +66,23 @@ import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 /**
  * 体育成绩屏幕
- * 
+ *
  * 显示体测成绩列表，支持：
  * - 登录体育系统
  * - 查看年度体测成绩
  * - 点击查看详情
  * - 下拉刷新
  * - 登出功能
- * 
+ *
  * @param onNavigateToDetail 导航到成绩详情页面的回调
+ * @param onQRCode 导航到二维码页面的回调
  */
 @Composable
 fun PEScoreScreen(
     vm: PEViewModel,
     onNavigateToDetail: (String) -> Unit,
     onLogin: () -> Unit,
+    onQRCode: () -> Unit = {},
     authProfile: AuthProfile? = null,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -93,10 +94,10 @@ fun PEScoreScreen(
     val loading = uiState.loading
     val error = uiState.error
     val needsLogin = uiState.needsLogin
-    val studentInfo = uiState.studentInfo
     var showLogoutConfirm by remember { mutableStateOf(false) }
-    val showPeQrCode = remember { mutableStateOf(false) }
     val loggedIn = vm.isLoggedIn()
+    val hasQRCodeInfo =
+        loggedIn || (authProfile?.userNo?.isNotBlank() == true && authProfile.name.isNotBlank())
     LaunchedEffect(needsLogin) {
         if (needsLogin) {
             onLogin()
@@ -120,8 +121,10 @@ fun PEScoreScreen(
                     title = "体测",
                     scrollBehavior = topAppBarScrollBehavior,
                     navigationIcon = {
-                        IconButton(onClick = { showPeQrCode.value = true }) {
-                            Icon(imageVector = QrCode, contentDescription = "二维码")
+                        if (hasQRCodeInfo) {
+                            IconButton(onClick = onQRCode) {
+                                Icon(imageVector = QrCode, contentDescription = "二维码")
+                            }
                         }
                     },
                     actions = {
@@ -153,21 +156,6 @@ fun PEScoreScreen(
             }
         },
         popupHost = {
-            val qrId = studentInfo?.stdNumber ?: authProfile?.userNo
-            val qrName = studentInfo?.stuName ?: authProfile?.name
-            if (showPeQrCode.value && qrId != null && qrName != null) {
-                OverlayDialog(
-                    show = showPeQrCode.value,
-                    title = "体测二维码",
-                    onDismissRequest = { showPeQrCode.value = false }
-                ) {
-                    Box(modifier = Modifier.background(Color.White))
-                    {
-                        PEQRCode(id = qrId, name = qrName)
-                    }
-
-                }
-            }
             if (showLogoutConfirm) {
                 OverlayDialog(
                     show = showLogoutConfirm,
