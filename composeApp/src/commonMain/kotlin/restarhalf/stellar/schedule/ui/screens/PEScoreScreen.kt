@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.pe.PEQRCode
 import restarhalf.stellar.schedule.ui.icons.Logout
@@ -81,6 +82,7 @@ fun PEScoreScreen(
     vm: PEViewModel,
     onNavigateToDetail: (String) -> Unit,
     onLogin: () -> Unit,
+    authProfile: AuthProfile? = null,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -151,7 +153,9 @@ fun PEScoreScreen(
             }
         },
         popupHost = {
-            if (showPeQrCode.value && studentInfo != null) {
+            val qrId = studentInfo?.stdNumber ?: authProfile?.userNo
+            val qrName = studentInfo?.stuName ?: authProfile?.name
+            if (showPeQrCode.value && qrId != null && qrName != null) {
                 OverlayDialog(
                     show = showPeQrCode.value,
                     title = "体测二维码",
@@ -159,7 +163,7 @@ fun PEScoreScreen(
                 ) {
                     Box(modifier = Modifier.background(Color.White))
                     {
-                        PEQRCode(id = studentInfo.stdNumber, name = studentInfo.stuName)
+                        PEQRCode(id = qrId, name = qrName)
                     }
 
                 }

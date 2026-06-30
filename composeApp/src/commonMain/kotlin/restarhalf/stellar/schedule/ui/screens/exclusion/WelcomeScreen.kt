@@ -33,6 +33,10 @@ import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
+import restarhalf.stellar.schedule.ui.screens.PELoginScreen
+import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -45,13 +49,15 @@ fun WelcomeScreen(
 ) {
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val coroutineScope = rememberCoroutineScope()
+    val jwLoginVm: JWLoginViewModel = koinInject()
+    val peLoginVm: PELoginViewModel = koinInject()
     
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .background(colorScheme.background),
+            .background(colorScheme.surface),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -113,7 +119,50 @@ fun WelcomeScreen(
                         settings[SettingsKeys.CONFIRM_PRIVACY] = false
                         exitApp()
                     })
-                    2 -> EnterScreen(onDismissRequest = { show.value = false }, pagerState = pagerState)
+                    2 -> JWLoginScreen(
+                        vm = jwLoginVm,
+                        onBack = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage - 1)
+                            }
+                        },
+                        onLoginSuccess = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage + 1)
+                            }
+                        },
+                        inWel = true,
+                        next = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage + 1)
+                            }
+                        }
+                    )
+
+                    3 -> PELoginScreen(
+                        vm = peLoginVm,
+                        onBack = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage - 1)
+                            }
+                        },
+                        onLoginSuccess = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage + 1)
+                            }
+                        },
+                        inWel = true,
+                        next = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage + 1)
+                            }
+                        }
+                    )
+
+                    4 -> EnterScreen(
+                        onDismissRequest = { show.value = false },
+                        pagerState = pagerState
+                    )
                 }
             }
         )

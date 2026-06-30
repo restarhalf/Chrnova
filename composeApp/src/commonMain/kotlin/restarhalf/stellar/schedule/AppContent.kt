@@ -320,6 +320,14 @@ fun AppContent(
                         onLogin = { navigator.push(Screen.PELogin) }
                     )
                 }
+                entry(Screen.PEQRCode) {
+                    val settingsUiState by settingsVm.uiState.collectAsState()
+                    PEQRCodeScreen(
+                        vm = peVm,
+                        authProfile = settingsUiState.profile,
+                        onBack = { navigator.pop() },
+                    )
+                }
                 entry(Screen.Papers) {
                     PapersListScreen(
                         vm = paperVm,
@@ -351,6 +359,8 @@ fun AppContent(
                         vm = jwLoginVm,
                         onBack = { navigator.pop() },
                         onLoginSuccess = { navigator.pop() },
+                        inWel = false,
+                        next = {}
                     )
                 }
                 entry(Screen.PELogin) {
@@ -358,6 +368,8 @@ fun AppContent(
                         vm = peLoginVm,
                         onBack = { navigator.pop() },
                         onLoginSuccess = { navigator.pop() },
+                        inWel = false,
+                        next = {}
                     )
                 }
             }
@@ -547,12 +559,14 @@ private fun MainRouteContent(
             }
 
             Screen.PEScore -> {
+                val settingsUiState by settingsVm.uiState.collectAsState()
                 PEScoreScreen(
                     vm = peVm,
                     onNavigateToDetail = { schoolYear ->
                         navigator.push(Screen.PEDetail(schoolYear))
                     },
-                    onLogin = { navigator.push(Screen.PELogin) }
+                    onLogin = { navigator.push(Screen.PELogin) },
+                    authProfile = settingsUiState.profile
                 )
             }
 

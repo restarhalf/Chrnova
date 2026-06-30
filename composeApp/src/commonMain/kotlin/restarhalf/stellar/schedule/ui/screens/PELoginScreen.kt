@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -20,9 +21,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -31,6 +35,8 @@ import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
@@ -49,6 +55,8 @@ fun PELoginScreen(
     vm: PELoginViewModel,
     onBack: () -> Unit,
     onLoginSuccess: () -> Unit,
+    inWel: Boolean,
+    next: () -> Unit
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -58,7 +66,51 @@ fun PELoginScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(title = "登录体测系统", scrollBehavior = topAppBarScrollBehavior)
+            AppPageTopBar(
+                title = "登录体测系统",
+                scrollBehavior = topAppBarScrollBehavior,
+                navigationIcon = {
+                    if (!inWel) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回",
+                                tint = MiuixTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+
+                },
+            )
+        },
+        bottomBar = {
+            Column {
+                if (inWel) {
+                    Button(
+                        onClick = { next() },
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                        colors = ButtonDefaults.buttonColors()
+                    ) {
+                        Text(
+                            text = "跳过",
+                            color = MiuixTheme.colorScheme.onSecondary
+                        )
+                    }
+                }
+                Button(
+                    onClick = { vm.submitLogin(onSuccess = onLoginSuccess) },
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp).imePadding(),
+                    enabled = uiState.username.isNotBlank() && uiState.password.isNotBlank() && !uiState.loading,
+                    colors = ButtonDefaults.buttonColorsPrimary()
+                ) {
+                    Text(
+                        text = if (uiState.loading) "登录中..." else "登录",
+                        color = MiuixTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -68,7 +120,7 @@ fun PELoginScreen(
                         top = paddingValues.calculateTopPadding(),
                         start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                         end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp
+                        bottom = paddingValues.calculateBottomPadding()
                     )
                 )
                 .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
@@ -104,22 +156,28 @@ fun PELoginScreen(
                             contentType = ContentType.Password
                         }
                     )
-                    if (uiState.error != null) {
                         Text(
                             text = uiState.error ?: "",
                             color = MiuixTheme.colorScheme.error,
                             fontSize = 12.sp
                         )
-                    }
-                    Button(
-                        onClick = { vm.submitLogin(onSuccess = onLoginSuccess) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = uiState.username.isNotBlank() && uiState.password.isNotBlank() && !uiState.loading,
-                        colors = ButtonDefaults.buttonColorsPrimary()
+                }
+            }
+            item {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = if (uiState.loading) "登录中..." else "登录",
-                            color = MiuixTheme.colorScheme.onPrimary
+                            text = "此为体测平台账号登录",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "账号是你的学号，密码是体测平台的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取体测成绩与体测二维码等\n体测平台默认密码为111111",
+                            fontSize = 12.sp,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     }
                 }
