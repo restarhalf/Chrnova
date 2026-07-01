@@ -2,14 +2,10 @@ package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +29,6 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
-import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -43,19 +37,11 @@ import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -106,11 +92,11 @@ fun SettingsScreen(
     onChangeBackground: () -> Unit,
     onAbout: () -> Unit,
     onPaper: () -> Unit,
+    onProfile: () -> Unit = {},
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val overscrollEffect = MiuixOverscrollEffect()
-    var showLogoutConfirm by remember { mutableStateOf(false) }
 
     val settingsUiState by vm.uiState.collectAsState()
 
@@ -156,46 +142,6 @@ fun SettingsScreen(
             AppPageTopBar(title = "课程表设置", scrollBehavior = topAppBarScrollBehavior)
         },
         popupHost = {
-            if (showLogoutConfirm) {
-                OverlayDialog(
-                    show = showLogoutConfirm,
-                    modifier = Modifier,
-                    title = "确认退出登录",
-                    titleColor = DialogDefaults.titleColor(),
-                    summary = null,
-                    summaryColor = DialogDefaults.summaryColor(),
-                    backgroundColor = DialogDefaults.backgroundColor(),
-                    enableWindowDim = true,
-                    onDismissRequest = { showLogoutConfirm = false },
-                    onDismissFinished = null,
-                    outsideMargin = DialogDefaults.outsideMargin,
-                    insideMargin = DialogDefaults.insideMargin,
-                    defaultWindowInsetsPadding = true,
-                    renderInRootScaffold = true,
-                    content = {
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                onClick = { showLogoutConfirm = false }) {
-                                Text(text = "取消")
-                            }
-
-                            Spacer(modifier = Modifier.size(16.dp))
-                            Button(
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColorsPrimary(),
-                                onClick = {
-                                    onLogout()
-                                    showLogoutConfirm = false
-                                }) {
-                                Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
-                            }
-                        }
-                    })
-            }
             if (showTermStartPicker.value) {
                 DatePickerBottomSheet(
                     show = showTermStartPicker.value,
@@ -259,14 +205,8 @@ fun SettingsScreen(
                         BasicComponent(
                             title = accountUi.title,
                             summary = accountUi.summary,
-                            endActions = {
-                                IconButton(onClick = { showLogoutConfirm = true }) {
-                                    Icon(
-                                        imageVector = Logout,
-                                        contentDescription = "退出",
-                                    )
-                                }
-                            })
+                            onClick = onProfile,
+                        )
                     }
                 } else {
                     AppCard {

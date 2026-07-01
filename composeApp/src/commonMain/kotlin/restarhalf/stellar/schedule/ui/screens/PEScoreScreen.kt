@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,9 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.icons.QrCode
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
@@ -50,8 +44,6 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
@@ -59,7 +51,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
@@ -94,7 +85,6 @@ fun PEScoreScreen(
     val loading = uiState.loading
     val error = uiState.error
     val needsLogin = uiState.needsLogin
-    var showLogoutConfirm by remember { mutableStateOf(false) }
     val loggedIn = vm.isLoggedIn()
     val hasQRCodeInfo =
         loggedIn || (authProfile?.userNo?.isNotBlank() == true && authProfile.name.isNotBlank())
@@ -127,13 +117,6 @@ fun PEScoreScreen(
                             }
                         }
                     },
-                    actions = {
-                        if (loggedIn) {
-                            IconButton(onClick = { showLogoutConfirm = true }) {
-                                Icon(imageVector = Logout, contentDescription = "退出登录")
-                            }
-                        }
-                    }
                 )
                 AnimatedVisibility(
                     visible = statusText != null,
@@ -156,36 +139,6 @@ fun PEScoreScreen(
             }
         },
         popupHost = {
-            if (showLogoutConfirm) {
-                OverlayDialog(
-                    show = showLogoutConfirm,
-                    title = "确认退出账号",
-                    onDismissRequest = { showLogoutConfirm = false }
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            onClick = { showLogoutConfirm=false }) {
-                            Text(text = "取消")
-                        }
-
-                        Spacer(modifier = Modifier.size(16.dp))
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColorsPrimary(),
-                            onClick = {
-                                vm.logout()
-                                showLogoutConfirm = false
-                            },
-                        ) {
-                            Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
-                        }
-                    }
-                }
-            }
         }
     ) { paddingValues ->
         PullToRefresh(

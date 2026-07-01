@@ -61,6 +61,7 @@ import restarhalf.stellar.schedule.ui.screens.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.PEScoreScreen
+import restarhalf.stellar.schedule.ui.screens.ProfileScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
@@ -327,6 +328,15 @@ fun AppContent(
                         vm = peVm,
                         authProfile = settingsUiState.profile,
                         onBack = { navigator.pop() },
+                    )
+                }
+                entry(Screen.Profile) {
+                    val settingsUiState by settingsVm.uiState.collectAsState()
+                    ProfileScreen(
+                        peVm = peVm,
+                        authProfile = settingsUiState.profile,
+                        onBack = { navigator.pop() },
+                        onLogoutJW = { vm.logout() },
                     )
                 }
                 entry(Screen.Papers) {
@@ -598,7 +608,8 @@ private fun MainRouteContent(
                     onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                     onAbout = { navigator.push(Screen.About) },
                     onPaper = { navigator.push(Screen.Papers) },
-                    onLogin = { navigator.push(Screen.JWLogin) }
+                    onLogin = { navigator.push(Screen.JWLogin) },
+                    onProfile = { navigator.push(Screen.Profile) }
                 )
             }
 
