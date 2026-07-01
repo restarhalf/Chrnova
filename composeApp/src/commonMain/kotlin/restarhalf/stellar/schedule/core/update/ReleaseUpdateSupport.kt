@@ -3,11 +3,11 @@ package restarhalf.stellar.schedule.core.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private const val PRIMARY_GITHUB_MIRROR = "https://v4.gh-proxy.org"
+private const val PRIMARY_GITHUB_MIRROR = "https://gh.felicity.ac.cn"
 private val FALLBACK_GITHUB_MIRRORS = listOf(
     "https://github.dpik.top",
     "https://gh.927223.xyz",
-    "https://gh.felicity.ac.cn",
+    "https://v4.gh-proxy.org",
     "https://ghfile.geekertao.top"
 )
 private val ALL_GITHUB_MIRRORS = listOf(PRIMARY_GITHUB_MIRROR) + FALLBACK_GITHUB_MIRRORS

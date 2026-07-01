@@ -171,9 +171,9 @@ fun AppRoot(
 
     LaunchedEffect(apkDownloadState) {
         if (platform() != Platform.Android) return@LaunchedEffect
-        if (backgroundDownload) return@LaunchedEffect
         when (val state = apkDownloadState) {
             is ApkDownloadState.Downloading -> {
+                if (backgroundDownload) return@LaunchedEffect
                 updateAppState { current -> current.copy(showApkDownloadDialog = true) }
             }
 
