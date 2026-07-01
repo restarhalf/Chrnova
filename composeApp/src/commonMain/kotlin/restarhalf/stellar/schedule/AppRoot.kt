@@ -167,15 +167,18 @@ fun AppRoot(
     }
 
     val apkDownloadState by appUpdate.apkDownloadState.collectAsState()
+    var backgroundDownload by remember { mutableStateOf(false) }
 
     LaunchedEffect(apkDownloadState) {
         if (platform() != Platform.Android) return@LaunchedEffect
+        if (backgroundDownload) return@LaunchedEffect
         when (val state = apkDownloadState) {
             is ApkDownloadState.Downloading -> {
                 updateAppState { current -> current.copy(showApkDownloadDialog = true) }
             }
 
             is ApkDownloadState.Completed -> {
+                backgroundDownload = false
                 if (!appUpdate.canRequestInstallPackages()) {
                     showMessage("请允许安装未知应用后重试安装")
                     appUpdate.openUnknownSourcesSettings()
@@ -192,11 +195,13 @@ fun AppRoot(
             }
 
             is ApkDownloadState.Error -> {
+                backgroundDownload = false
                 showMessage(state.message)
                 updateAppState { current -> current.copy(showApkDownloadDialog = false) }
             }
 
             ApkDownloadState.Idle -> {
+                backgroundDownload = false
                 updateAppState { current -> current.copy(showApkDownloadDialog = false) }
             }
         }
@@ -297,6 +302,7 @@ fun AppRoot(
                     updateAppState { current -> current.copy(showApkDownloadDialog = false) }
                 },
                 onBackGround = {
+                    backgroundDownload = true
                     updateAppState { current -> current.copy(showApkDownloadDialog = false) }
                 },
             )
