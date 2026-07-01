@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -37,6 +38,7 @@ import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -84,6 +86,7 @@ fun SettingsScreen(
     onSync: suspend () -> Unit,
     onLogout: () -> Unit,
     onLogin: () -> Unit,
+    isPeLoggedIn: Boolean = false,
     ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     onCampusChange: (Campus) -> Unit,
@@ -200,20 +203,29 @@ fun SettingsScreen(
         ) {
             item {
                 SmallTitle(text = "账号")
-                if (accountUi.loggedIn) {
-                    AppCard {
+                AppCard {
+                    if (accountUi.loggedIn) {
                         BasicComponent(
                             title = accountUi.title,
                             summary = accountUi.summary,
                             onClick = onProfile,
                         )
-                    }
-                } else {
-                    AppCard {
+                    } else {
                         ArrowPreference(
-                            title = "登录",
+                            title = "登录教务系统",
                             summary = "用于获取课表",
                             onClick = { onLogin() })
+                    }
+                    if (!accountUi.loggedIn && isPeLoggedIn) {
+                        HorizontalDivider()
+                        Box(modifier = Modifier.fillMaxSize())
+                        {
+                            ArrowPreference(
+                                title = "账号管理",
+                                summary = "管理体测平台账号",
+                                onClick = onProfile,
+                            )
+                        }
                     }
                 }
             }

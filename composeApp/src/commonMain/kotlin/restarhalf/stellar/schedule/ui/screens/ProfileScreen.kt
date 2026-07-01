@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +58,12 @@ fun ProfileScreen(
 
     val isLoggedIn = authProfile?.userNo?.isNotBlank() == true
     val isPeLoggedIn = peVm.isLoggedIn()
+
+    LaunchedEffect(isLoggedIn, isPeLoggedIn) {
+        if (!isLoggedIn && !isPeLoggedIn) {
+            onBack()
+        }
+    }
 
     var showLogoutJWConfirm by remember { mutableStateOf(false) }
     var showLogoutPEConfirm by remember { mutableStateOf(false) }
