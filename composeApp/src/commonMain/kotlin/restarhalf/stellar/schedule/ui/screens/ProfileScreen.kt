@@ -67,6 +67,7 @@ fun ProfileScreen(
 
     var showLogoutJWConfirm by remember { mutableStateOf(false) }
     var showLogoutPEConfirm by remember { mutableStateOf(false) }
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -79,7 +80,7 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Back,
                             contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 },
@@ -112,7 +113,7 @@ fun ProfileScreen(
                                 showLogoutJWConfirm = false
                             }
                         ) {
-                            Text(text = "确认退出", color = MiuixTheme.colorScheme.onPrimary)
+                            Text(text = "确认退出", color = colors.onPrimary)
                         }
                     }
                 }
@@ -143,7 +144,7 @@ fun ProfileScreen(
                                 showLogoutPEConfirm = false
                             }
                         ) {
-                            Text(text = "确认", color = MiuixTheme.colorScheme.onPrimary)
+                            Text(text = "确认", color = colors.onPrimary)
                         }
                     }
                 }
@@ -199,13 +200,13 @@ fun ProfileScreen(
                                 Text(
                                     text = "退出登录",
                                     fontSize = 15.sp,
-                                    color = MiuixTheme.colorScheme.error,
+                                    color = colors.error,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Logout,
                                     contentDescription = "退出教务系统",
-                                    tint = MiuixTheme.colorScheme.error,
+                                    tint = colors.error,
                                 )
                             }
                         }
@@ -239,13 +240,13 @@ fun ProfileScreen(
                                 Text(
                                     text = "退出登录",
                                     fontSize = 15.sp,
-                                    color = MiuixTheme.colorScheme.error,
+                                    color = colors.error,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Icon(
                                     imageVector = Logout,
                                     contentDescription = "退出体测平台",
-                                    tint = MiuixTheme.colorScheme.error,
+                                    tint = colors.error,
                                 )
                             }
                         }
@@ -265,6 +266,7 @@ private fun ProfileInfoRow(
     label: String,
     value: String,
 ) {
+    val colors = MiuixTheme.colorScheme
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -273,13 +275,13 @@ private fun ProfileInfoRow(
         Text(
             text = label,
             fontSize = 15.sp,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = colors.onSurfaceVariantSummary,
         )
         Text(
             text = value,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
-            color = MiuixTheme.colorScheme.onBackground,
+            color = colors.onBackground,
         )
     }
 }

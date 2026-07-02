@@ -113,8 +113,8 @@ fun HomeScreen(
                                 Brush.verticalGradient(
                                     colors =
                                         listOf(
-                                            MiuixTheme.colorScheme.primary.copy(0.8f),
-                                            MiuixTheme.colorScheme.primary.copy(0.8f)
+                                            colors.primary.copy(0.8f),
+                                            colors.primary.copy(0.8f)
                                         )
                                 )
                             }
@@ -132,7 +132,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = headerUi.greeting,
-                        color = MiuixTheme.colorScheme.onPrimary,
+                        color = colors.onPrimary,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold
                     )

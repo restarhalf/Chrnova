@@ -58,6 +58,7 @@ fun PEQRCodeScreen(
 
     val id = studentInfo?.stdNumber ?: authProfile?.userNo
     val name = studentInfo?.stuName ?: authProfile?.name
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -70,7 +71,7 @@ fun PEQRCodeScreen(
                         Icon(
                             imageVector = Back,
                             contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 },
@@ -109,7 +110,7 @@ fun PEQRCodeScreen(
                             text = "体测二维码",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiuixTheme.colorScheme.onBackground,
+                            color = colors.onBackground,
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -117,7 +118,7 @@ fun PEQRCodeScreen(
                         Text(
                             text = "请将此二维码展示给体测老师扫描",
                             fontSize = 13.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
@@ -164,7 +165,7 @@ fun PEQRCodeScreen(
                                     Text(
                                         text = "学号",
                                         fontSize = 14.sp,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        color = colors.onSurfaceVariantSummary,
                                     )
                                     Text(
                                         text = id,
@@ -179,7 +180,7 @@ fun PEQRCodeScreen(
                                     Text(
                                         text = "姓名",
                                         fontSize = 14.sp,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        color = colors.onSurfaceVariantSummary,
                                     )
                                     Text(
                                         text = name,
@@ -207,13 +208,13 @@ fun PEQRCodeScreen(
                         Text(
                             text = "暂无学生信息",
                             fontSize = 16.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "请先登录教务系统或体测系统",
                             fontSize = 13.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
                     }
                 }

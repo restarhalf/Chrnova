@@ -1,14 +1,13 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,29 +26,6 @@ import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEStudentInfoUseCase
 
 /**
- * 体育成绩UI状态
- *
- * @param yearScores 年度成绩列表
- * @param detailData 体测详情数据
- * @param studentInfo 学生信息
- * @param loading 是否正在加载
- * @param error 错误消息
- * @param needsLogin 是否需要登录
- * @param loadedScoreList 是否已加载成绩列表
- * @param loadedDetail 是否已加载详情数据
- */
-data class PeUiState(
-    val yearScores: List<PEYearScore> = emptyList(),
-    val detailData: PEDetailData? = null,
-    val studentInfo: PEStudentInfo? = null,
-    val loading: Boolean = false,
-    val error: String? = null,
-    val needsLogin: Boolean = false,
-    val loadedScoreList: Boolean = false,
-    val loadedDetail: Boolean = false,
-)
-
-/**
  * 体育成绩ViewModel
  *
  * 管理体育成绩查询页面的UI状态，包括：
@@ -66,45 +42,36 @@ class PEViewModel(
     private val peStudentInfoUseCase: PEStudentInfoUseCase,
 ) : ViewModel() {
 
-    private val _yearScores = MutableStateFlow<List<PEYearScore>>(emptyList())
-    private val _detailData = MutableStateFlow<PEDetailData?>(null)
-    private val _studentInfo = MutableStateFlow<PEStudentInfo?>(null)
-    private val _loading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
-    private val _needsLogin = MutableStateFlow(false)
-    private val _loadedScoreList = MutableStateFlow(false)
-    private val _loadedDetail = MutableStateFlow(false)
+    /**
+     * 体育成绩UI状态
+     *
+     * @param yearScores 年度成绩列表
+     * @param detailData 体测详情数据
+     * @param studentInfo 学生信息
+     * @param loading 是否正在加载
+     * @param error 错误消息
+     * @param needsLogin 是否需要登录
+     * @param loadedScoreList 是否已加载成绩列表
+     * @param loadedDetail 是否已加载详情数据
+     */
+    @Immutable
+    data class PeUiState(
+        val yearScores: List<PEYearScore> = emptyList(),
+        val detailData: PEDetailData? = null,
+        val studentInfo: PEStudentInfo? = null,
+        val loading: Boolean = false,
+        val error: String? = null,
+        val needsLogin: Boolean = false,
+        val loadedScoreList: Boolean = false,
+        val loadedDetail: Boolean = false,
+    )
 
-    private val loadMutex = Mutex()
+    private val _uiState = MutableStateFlow(PeUiState())
 
     /** 统一的UI状态流 */
-    val uiState: StateFlow<PeUiState> =
-        combine(
-            _yearScores,
-            _detailData,
-            _studentInfo,
-            _loading,
-            _error,
-            _needsLogin,
-            _loadedScoreList,
-            _loadedDetail,
-        ) { values ->
-            @Suppress("UNCHECKED_CAST")
-            PeUiState(
-                yearScores = values[0] as List<PEYearScore>,
-                detailData = values[1] as PEDetailData?,
-                studentInfo = values[2] as PEStudentInfo?,
-                loading = values[3] as Boolean,
-                error = values[4] as String?,
-                needsLogin = values[5] as Boolean,
-                loadedScoreList = values[6] as Boolean,
-                loadedDetail = values[7] as Boolean,
-            )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = PeUiState(),
-        )
+    val uiState: StateFlow<PeUiState> = _uiState
+
+    private val loadMutex = Mutex()
 
     init {
         observeCachedScores()
@@ -120,8 +87,10 @@ class PEViewModel(
                         AppLogger.log("PE", "缓存成绩Flow异常", e)
                     }
                     .collect { scores ->
-                        if (_yearScores.value.isEmpty()) {
-                            _yearScores.value = scores.sortedByDescending { it.schoolYear }
+                        _uiState.update { state ->
+                            if (state.yearScores.isEmpty()) {
+                                state.copy(yearScores = scores.sortedByDescending { it.schoolYear })
+                            } else state
                         }
                     }
             } catch (e: Exception) {
@@ -139,8 +108,10 @@ class PEViewModel(
                         AppLogger.log("PE", "缓存学生信息Flow异常", e)
                     }
                     .collect { info ->
-                        if (_studentInfo.value == null && info != null) {
-                            _studentInfo.value = info
+                        _uiState.update { state ->
+                            if (state.studentInfo == null && info != null) {
+                                state.copy(studentInfo = info)
+                            } else state
                         }
                     }
             } catch (e: Exception) {
@@ -163,8 +134,10 @@ class PEViewModel(
                         AppLogger.log("PE", "缓存详情Flow异常", e)
                     }
                     .collect { detail ->
-                        if (_detailData.value == null && detail != null) {
-                            _detailData.value = detail
+                        _uiState.update { state ->
+                            if (state.detailData == null && detail != null) {
+                                state.copy(detailData = detail)
+                            } else state
                         }
                     }
             } catch (e: Exception) {
@@ -203,14 +176,16 @@ class PEViewModel(
     fun loadScoreList() {
         viewModelScope.launch {
             loadMutex.withLock {
-                _loading.value = true
-                _error.value = null
-                _needsLogin.value = false
+                _uiState.update { it.copy(loading = true, error = null, needsLogin = false) }
                 runCatching {
                     peScoreListUseCase()
                 }.onSuccess { result ->
-                    _yearScores.value = result.dataArr.sortedByDescending { it.schoolYear }
-                    _loadedScoreList.value = true
+                    _uiState.update {
+                        it.copy(
+                            yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear },
+                            loadedScoreList = true,
+                        )
+                    }
                 }.onFailure {
                     if (it is PETokenExpiredException || it is SerializationException) {
                         val reloginResult = peLoginUseCase.autoLogin()
@@ -218,12 +193,12 @@ class PEViewModel(
                             loadScoreList()
                             return@withLock
                         }
-                        _needsLogin.value = true
+                        _uiState.update { s -> s.copy(needsLogin = true) }
                     }
                     AppLogger.log("PE", "加载体育成绩失败", it)
-                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)
+                    _uiState.update { s -> s.copy(error = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
                 }
-                _loading.value = false
+                _uiState.update { it.copy(loading = false) }
             }
         }
     }
@@ -236,14 +211,11 @@ class PEViewModel(
     fun loadScoreDetail(schoolYear: String) {
         viewModelScope.launch {
             loadMutex.withLock {
-                _loading.value = true
-                _error.value = null
-                _needsLogin.value = false
+                _uiState.update { it.copy(loading = true, error = null, needsLogin = false) }
                 runCatching {
                     peScoreDetailUseCase(schoolYear)
                 }.onSuccess {
-                    _detailData.value = it.data
-                    _loadedDetail.value = true
+                    _uiState.update { s -> s.copy(detailData = it.data, loadedDetail = true) }
                 }.onFailure {
                     if (it is PETokenExpiredException || it is SerializationException) {
                         val reloginResult = peLoginUseCase.autoLogin()
@@ -251,12 +223,12 @@ class PEViewModel(
                             loadScoreDetail(schoolYear)
                             return@withLock
                         }
-                        _needsLogin.value = true
+                        _uiState.update { s -> s.copy(needsLogin = true) }
                     }
                     AppLogger.log("PE", "加载体测详情失败", it)
-                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)
+                    _uiState.update { s -> s.copy(error = it.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)) }
                 }
-                _loading.value = false
+                _uiState.update { it.copy(loading = false) }
             }
         }
     }
@@ -264,11 +236,11 @@ class PEViewModel(
     /** 加载学生信息 */
     fun loadStudentInfo() {
         viewModelScope.launch {
-            _needsLogin.value = false
+            _uiState.update { it.copy(needsLogin = false) }
             runCatching {
                 peStudentInfoUseCase()
             }.onSuccess {
-                _studentInfo.value = it.data
+                _uiState.update { s -> s.copy(studentInfo = it.data) }
             }.onFailure {
                 if (it is PETokenExpiredException || it is SerializationException) {
                     val reloginResult = peLoginUseCase.autoLogin()
@@ -276,10 +248,10 @@ class PEViewModel(
                         loadStudentInfo()
                         return@launch
                     }
-                    _needsLogin.value = true
+                    _uiState.update { s -> s.copy(needsLogin = true) }
                 }
                 AppLogger.log("PE", "加载学生信息失败", it)
-                _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)
+                _uiState.update { s -> s.copy(error = it.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
             }
         }
     }
@@ -288,13 +260,7 @@ class PEViewModel(
     fun logout() {
         viewModelScope.launch {
             peLogoutUseCase()
-            _yearScores.value = emptyList()
-            _detailData.value = null
-            _studentInfo.value = null
-            _needsLogin.value = false
-            _error.value = null
-            _loadedScoreList.value = false
-            _loadedDetail.value = false
+            _uiState.value = PeUiState()
         }
     }
 }

@@ -235,7 +235,7 @@ fun PEDetailScreen(
                                             Text(
                                                 text = "未参加",
                                                 fontSize = 14.sp,
-                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                                color = colors.onSurfaceVariantSummary
                                             )
                                         }
                                     }
@@ -247,7 +247,7 @@ fun PEDetailScreen(
                                             Text(
                                                 text = "成绩",
                                                 fontSize = 14.sp,
-                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                                color = colors.onSurfaceVariantSummary
                                             )
                                             Text(
                                                 text = "${subject.result ?: "--"}${subject.unit}",
@@ -261,7 +261,7 @@ fun PEDetailScreen(
                                             Text(
                                                 text = "等级",
                                                 fontSize = 14.sp,
-                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                                color = colors.onSurfaceVariantSummary
                                             )
                                             Text(text = subject.grade ?: "--", fontSize = 14.sp)
                                         }
@@ -273,7 +273,7 @@ fun PEDetailScreen(
                                         Text(
                                             text = "占比",
                                             fontSize = 14.sp,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                            color = colors.onSurfaceVariantSummary
                                         )
                                         Text(text = "${subject.subRatio}%", fontSize = 14.sp)
                                     }

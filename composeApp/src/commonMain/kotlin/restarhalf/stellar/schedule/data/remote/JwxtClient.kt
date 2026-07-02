@@ -26,6 +26,10 @@ class JwxtClient(
     private val passwordEncryption: PasswordEncryptionPort,
 ) : JwxtGateway {
 
+    private companion object {
+        const val BASE_URL = "http://jwyd.dlnu.edu.cn/njwhd"
+    }
+
     private suspend fun executePostEmpty(url: String): String =
         withContext(AppIoDispatcher) {
             val response: HttpResponse = httpClient.post(url)
@@ -54,7 +58,7 @@ class JwxtClient(
                     if (!p.isNullOrBlank()) append("p", p)
                 }
 
-            val url = "http://jwyd.dlnu.edu.cn/njwhd/login"
+            val url = "$BASE_URL/login"
 
             val response: HttpResponse =
                 httpClient.submitForm(url = url, formParameters = parameters)
@@ -80,7 +84,7 @@ class JwxtClient(
 
     override suspend fun getCurrentTerm(): JwxtCurrentTermResponse =
         withContext(AppIoDispatcher) {
-            val body = executePostEmpty("http://jwyd.dlnu.edu.cn/njwhd/currentTerm")
+            val body = executePostEmpty("$BASE_URL/currentTerm")
             json.decodeFromString(
                 JwxtApiResponse.serializer(ListSerializer(JwxtCurrentTermItem.serializer())), body
             )
@@ -88,25 +92,25 @@ class JwxtClient(
 
     override suspend fun getSemesterList(): List<JwxtSemesterItem> =
         withContext(AppIoDispatcher) {
-            val body = executePostEmpty("http://jwyd.dlnu.edu.cn/njwhd/getXnxqList")
+            val body = executePostEmpty("$BASE_URL/getXnxqList")
             json.decodeFromString(ListSerializer(JwxtSemesterItem.serializer()), body)
         }
 
     override suspend fun getTeachingWeek(): JwxtTeachingWeekResponse =
         withContext(AppIoDispatcher) {
-            val body = executePostEmpty("http://jwyd.dlnu.edu.cn/njwhd/teachingWeek")
+            val body = executePostEmpty("$BASE_URL/teachingWeek")
             json.decodeFromString(JwxtTeachingWeekResponse.serializer(), body)
         }
 
     override suspend fun getCampusList(): JwxtCampusResponse =
         withContext(AppIoDispatcher) {
-            val body = executePostEmpty("http://jwyd.dlnu.edu.cn/njwhd/Get_sjkbms")
+            val body = executePostEmpty("$BASE_URL/Get_sjkbms")
             json.decodeFromString(JwxtCampusResponse.serializer(), body)
         }
 
     override suspend fun fetchCurriculum(fields: Map<String, String>): JwxtCurriculumResponse =
         withContext(AppIoDispatcher) {
-            val url = "http://jwyd.dlnu.edu.cn/njwhd/student/curriculum"
+            val url = "$BASE_URL/student/curriculum"
 
             val response: HttpResponse =
                 httpClient.post(url) {
@@ -128,7 +132,7 @@ class JwxtClient(
         nameOrNumber: String
     ): JwxtExaminationResponse =
         withContext(AppIoDispatcher) {
-            val url = "http://jwyd.dlnu.edu.cn/njwhd/student/examinationArrangement"
+            val url = "$BASE_URL/student/examinationArrangement"
 
             val response: HttpResponse =
                 httpClient.post(url) {
@@ -144,7 +148,7 @@ class JwxtClient(
 
     override suspend fun fetchTermGradeReport(semester: String): JwxtTermGradeResponse =
         withContext(AppIoDispatcher) {
-            val url = "http://jwyd.dlnu.edu.cn/njwhd/student/termGPA"
+            val url = "$BASE_URL/student/termGPA"
 
             val response: HttpResponse =
                 httpClient.post(url) {

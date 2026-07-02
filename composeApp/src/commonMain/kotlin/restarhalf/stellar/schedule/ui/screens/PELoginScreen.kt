@@ -62,6 +62,7 @@ fun PELoginScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -75,7 +76,7 @@ fun PELoginScreen(
                             Icon(
                                 imageVector = Back,
                                 contentDescription = "返回",
-                                tint = MiuixTheme.colorScheme.onBackground
+                                tint = colors.onBackground
                             )
                         }
                     }
@@ -94,7 +95,7 @@ fun PELoginScreen(
                     ) {
                         Text(
                             text = "跳过",
-                            color = MiuixTheme.colorScheme.onSecondary
+                            color = colors.onSecondary
                         )
                     }
                 }
@@ -107,7 +108,7 @@ fun PELoginScreen(
                 ) {
                     Text(
                         text = if (uiState.loading) "登录中..." else "登录",
-                        color = MiuixTheme.colorScheme.onPrimary
+                        color = colors.onPrimary
                     )
                 }
             }
@@ -158,7 +159,7 @@ fun PELoginScreen(
                     )
                         Text(
                             text = uiState.error ?: "",
-                            color = MiuixTheme.colorScheme.error,
+                            color = colors.error,
                             fontSize = 12.sp
                         )
                 }
@@ -177,7 +178,7 @@ fun PELoginScreen(
                         Text(
                             text = "账号是你的学号，密码是体测平台的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取体测成绩与体测二维码等\n体测平台默认密码为111111",
                             fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
                     }
                 }

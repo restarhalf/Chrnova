@@ -74,6 +74,7 @@ fun LogScreen(
     val entries by AppLogger.entries.collectAsState()
     val listState = rememberLazyListState()
     var selectedEntry by remember { mutableStateOf<AppLogger.LogEntry?>(null) }
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         topBar = {
@@ -85,7 +86,7 @@ fun LogScreen(
                         Icon(
                             imageVector = Back,
                             contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 },
@@ -170,7 +171,7 @@ fun LogScreen(
                         onExport(fileName, text)
                     },
                 ) {
-                    Text(text = "导出", color = MiuixTheme.colorScheme.onPrimary)
+                    Text(text = "导出", color = colors.onPrimary)
                 }
             }
         }
@@ -189,11 +190,12 @@ private fun LogEntryCard(
     entry: AppLogger.LogEntry,
     onClick: () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
     val levelColor = when (entry.level) {
-        AppLogger.Level.DEBUG -> MiuixTheme.colorScheme.secondary
-        AppLogger.Level.INFO -> MiuixTheme.colorScheme.onSurfaceVariantSummary
+        AppLogger.Level.DEBUG -> colors.secondary
+        AppLogger.Level.INFO -> colors.onSurfaceVariantSummary
         AppLogger.Level.WARN -> Color(0xFFFF9800)
-        AppLogger.Level.ERROR -> MiuixTheme.colorScheme.error
+        AppLogger.Level.ERROR -> colors.error
     }
 
     AppCard(
@@ -233,7 +235,7 @@ private fun LogEntryCard(
                             fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace,
                         ),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+                        color = colors.onSurfaceVariantSummary.copy(alpha = 0.6f),
                     )
                 }
                 Text(
@@ -242,7 +244,7 @@ private fun LogEntryCard(
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                     ),
-                    color = MiuixTheme.colorScheme.onSurface,
+                    color = colors.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -256,12 +258,13 @@ private fun LogDetailBottomSheet(
     entry: AppLogger.LogEntry,
     onDismiss: () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
     val show = remember { mutableStateOf(true) }
     val levelColor = when (entry.level) {
-        AppLogger.Level.DEBUG -> MiuixTheme.colorScheme.secondary
-        AppLogger.Level.INFO -> MiuixTheme.colorScheme.onSurfaceVariantSummary
+        AppLogger.Level.DEBUG -> colors.secondary
+        AppLogger.Level.INFO -> colors.onSurfaceVariantSummary
         AppLogger.Level.WARN -> Color(0xFFFF9800)
-        AppLogger.Level.ERROR -> MiuixTheme.colorScheme.error
+        AppLogger.Level.ERROR -> colors.error
     }
 
     WindowBottomSheet(
@@ -282,7 +285,7 @@ private fun LogDetailBottomSheet(
         outsideMargin = BottomSheetDefaults.outsideMargin,
         insideMargin = BottomSheetDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        dragHandleColor = MiuixTheme.colorScheme.surface,
+        dragHandleColor = colors.surface,
         allowDismiss = true,
         enableNestedScroll = true,
         content = {
@@ -299,7 +302,7 @@ private fun LogDetailBottomSheet(
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                     ),
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = colors.onSurfaceVariantSummary,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
                 Column(
@@ -309,7 +312,7 @@ private fun LogDetailBottomSheet(
                             .heightIn(max = 400.dp)
                             .verticalScroll(rememberScrollState())
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .background(colors.surfaceContainerHigh)
                             .padding(12.dp),
                 ) {
                     Text(

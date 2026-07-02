@@ -15,16 +15,6 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 
 /**
- * JW登录UI状态
- */
-data class JWLoginUiState(
-    val userNo: String = "",
-    val password: String = "",
-    val error: String = "",
-    val loading: Boolean = false,
-)
-
-/**
  * 教务系统登录ViewModel
  *
  * 管理教务系统登录页面的UI状态：
@@ -35,6 +25,16 @@ data class JWLoginUiState(
 class JWLoginViewModel(
     private val loginUseCase: LoginUseCase,
 ) : ViewModel() {
+
+    /**
+     * JW登录UI状态
+     */
+    data class JWLoginUiState(
+        val userNo: String = "",
+        val password: String = "",
+        val error: String = "",
+        val loading: Boolean = false,
+    )
 
     private val _uiState = MutableStateFlow(JWLoginUiState())
     val uiState: StateFlow<JWLoginUiState> = _uiState.asStateFlow()

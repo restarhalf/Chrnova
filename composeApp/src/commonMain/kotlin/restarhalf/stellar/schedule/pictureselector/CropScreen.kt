@@ -58,6 +58,7 @@ fun CropScreen(
     onCropped: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val colors = MiuixTheme.colorScheme
     var isSaving by rememberSaveable(imageUri) { mutableStateOf(false) }
     val imageState by produceState<CropImageState>(
         initialValue = CropImageState.Loading,
@@ -83,7 +84,7 @@ fun CropScreen(
                         Icon(
                             imageVector = Close,
                             contentDescription = "关闭",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 },
@@ -117,7 +118,7 @@ fun CropScreen(
                         Icon(
                             imageVector = Check,
                             contentDescription = "确定",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 }

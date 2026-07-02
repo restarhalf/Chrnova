@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -159,9 +160,10 @@ fun AppContent(
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
 ) {
     val appState = LocalAppState.current
+    val colors = MiuixTheme.colorScheme
 
     val backgroundUiState by bgVm.uiState.collectAsState()
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = colors.surface
     val backdrop = rememberLayerBackdrop{
         drawRect(surfaceColor)
         drawContent()
@@ -190,32 +192,20 @@ fun AppContent(
             )
         }
 
+    // 将不稳定 lambda 用 rememberUpdatedState 包装，避免每次重组都使 remember 失效
+    val pictureSelectorHostState by rememberUpdatedState(pictureSelectorHost)
+    val ensureNotificationPermissionState by rememberUpdatedState(ensureNotificationPermission)
+    val openUriState by rememberUpdatedState(openUri)
+    val showMessageState by rememberUpdatedState(showMessage)
+    val saveAwardPictureState by rememberUpdatedState(saveAwardPicture)
+    val runSyncState by rememberUpdatedState(runSync)
+
     val entryProvider =
         remember(
             backStack,
             appIcon,
-            pictureSelectorHost,
-            ensureNotificationPermission,
-            openUri,
-            showMessage,
             canSaveAwardPicture,
-            saveAwardPicture,
             appUpdate,
-            vm,
-            bgVm,
-            aboutVm,
-            courseEditVm,
-            examEditVm,
-            examVm,
-            gradeVm,
-            homeVm,
-            paperVm,
-            peVm,
-            jwLoginVm,
-            peLoginVm,
-            scheduleVm,
-            settingsVm,
-            runSync,
         ) {
             entryProvider<NavKey> {
                 entry(Screen.Main) {
@@ -228,15 +218,15 @@ fun AppContent(
                         bgVm = bgVm,
                         settingsVm = settingsVm,
                         vm = vm,
-                        runSync = runSync,
-                        ensureNotificationPermission = ensureNotificationPermission,
+                        runSync = runSyncState,
+                        ensureNotificationPermission = ensureNotificationPermissionState,
                     )
                 }
                 entry(Screen.ChangeBackground) {
                     ChangeBackgroundScreen(
                         vm = bgVm,
                         onBack = { navigator.pop() },
-                        pictureSelectorHost = pictureSelectorHost,
+                        pictureSelectorHost = pictureSelectorHostState,
                     )
                 }
                 entry(Screen.About) {
@@ -244,27 +234,27 @@ fun AppContent(
                         vm = aboutVm,
                         onBack = { navigator.pop() },
                         appIcon = appIcon,
-                        showMessage = showMessage,
+                        showMessage = showMessageState,
                         canSaveAwardPicture = canSaveAwardPicture,
-                        onSaveAwardPicture = saveAwardPicture,
+                        onSaveAwardPicture = saveAwardPictureState,
                         onIconTap = { navigator.push(Screen.Log) },
                         onHandleEvent = { event ->
                             when (event) {
                                 is AboutUiEvent.OpenUri -> {
-                                    if (!openUri(event.uri)) {
-                                        showMessage("无法打开链接")
+                                    if (!openUriState(event.uri)) {
+                                        showMessageState("无法打开链接")
                                     }
                                 }
 
                                 is AboutUiEvent.JoinQqGroup -> {
                                     if (!appUpdate.joinQqGroup(key = event.key)) {
-                                        showMessage("请检查是否安装了 QQ")
+                                        showMessageState("请检查是否安装了 QQ")
                                     }
                                 }
 
                                 AboutUiEvent.WxPayAwardRequested -> {
                                     val saved = appUpdate.saveWxpayToPictures()
-                                    showMessage(
+                                    showMessageState(
                                         if (saved) {
                                             "赞赏码已保存到相册，即将跳转到微信扫一扫"
                                         } else {
@@ -272,7 +262,7 @@ fun AppContent(
                                         },
                                     )
                                     if (!appUpdate.openWeChatScanDirect()) {
-                                        showMessage("微信启动失败，请检查是否安装微信")
+                                        showMessageState("微信启动失败，请检查是否安装微信")
                                     }
                                 }
                             }
@@ -309,7 +299,7 @@ fun AppContent(
                         onExport = { fileName, content ->
                             scope.launch {
                                 val path = saveLog(fileName, content)
-                                showMessage(if (path != null) "已保存: $path" else "保存失败")
+                                showMessageState(if (path != null) "已保存: $path" else "保存失败")
                             }
                         },
                     )
@@ -354,14 +344,14 @@ fun AppContent(
                         vm = paperVm,
                         paperId = screen.paperId,
                         onBack = { navigator.pop() },
-                        onDownload = { url, title -> openUri(url) },
+                        onDownload = { url, title -> openUriState(url) },
                     )
                 }
                 entry(Screen.PapersUpload) {
                     PapersUploadScreen(
                         vm = paperVm,
                         onBack = { navigator.pop() },
-                        onResult = { showMessage(it) },
+                        onResult = { showMessageState(it) },
                         pdfFilePickerHost = pdfFilePickerHost,
                     )
                 }
@@ -419,10 +409,10 @@ fun AppContent(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .background(MiuixTheme.colorScheme.surface),
+                    .background(colors.surface),
         ) {
             Scaffold(
-                containerColor = MiuixTheme.colorScheme.background.copy(alpha = 0f),
+                containerColor = colors.background.copy(alpha = 0f),
                 bottomBar = {
                     AppBottomBar(backdrop = backdrop)
                 },
@@ -432,7 +422,7 @@ fun AppContent(
                         Modifier
                             .fillMaxSize()
                             .layerBackdrop(backdrop)
-                            .background(MiuixTheme.colorScheme.surface),
+                            .background(colors.surface),
                 ) {
                     backgroundUiState.backgroundImageUri?.let { uri ->
                         AsyncImage(

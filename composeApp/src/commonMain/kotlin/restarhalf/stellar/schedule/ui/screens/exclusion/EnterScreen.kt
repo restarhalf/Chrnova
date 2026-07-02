@@ -15,9 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +43,7 @@ fun EnterScreen(
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val appName = remember(appInfo.appName) { appInfo.appName }
     val go = remember { mutableStateOf(false) }
+    val colors = MiuixTheme.colorScheme
     val easing = CubicBezierEasing(.42f, 0f, 0.26f, .85f)
     
     val animatedY = animateDpAsState(
@@ -74,12 +75,12 @@ fun EnterScreen(
             Icon(
                 imageVector = AppIcon,
                 contentDescription = "App Icon",
-                tint = MiuixTheme.colorScheme.onBackground,
+                tint = colors.onBackground,
                 modifier = Modifier.size(90.dp)
             )
             Text(
                 text = appName,
-                color = MiuixTheme.colorScheme.onBackground,
+                color = colors.onBackground,
                 fontSize = 39.sp,
                 fontWeight = FontWeight(560)
             )
@@ -104,7 +105,7 @@ fun EnterScreen(
                 text = "进入软件",
                 modifier = Modifier.padding(horizontal = 12.dp),
                 fontSize = 18.sp,
-                color = MiuixTheme.colorScheme.onPrimary,
+                color = colors.onPrimary,
                 fontWeight = FontWeight.Bold
             )
         }

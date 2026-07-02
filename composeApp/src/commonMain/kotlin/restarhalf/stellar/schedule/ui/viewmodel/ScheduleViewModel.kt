@@ -1,22 +1,24 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.WeeksFormatter
 import restarhalf.stellar.schedule.core.time.AcademicCalendar
+import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
@@ -26,7 +28,6 @@ import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -45,8 +46,7 @@ import kotlin.time.ExperimentalTime
  */
 class ScheduleViewModel(
     observeShowNonCurrentWeek: ObserveShowNonCurrentWeekUseCase,
-    private val setShowNonCurrentWeekUseCase: SetShowNonCurrentWeekUseCase,
-    private val observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
     private val buildScheduleUiStateUseCase: BuildScheduleUiStateUseCase,
     private val transCourseWithConflicts: TransCourseWithConflictsUseCase,
     private val insertCourseUseCase: InsertCourseUseCase,
@@ -62,6 +62,7 @@ class ScheduleViewModel(
      * @param dates 对应日期列表（如"9/01"）
      * @param todayIndex 今日在该周中的索引，不在该周时为null
      */
+    @Immutable
     data class WeekHeaderUi(
         val days: List<String>,
         val dates: List<String>,
@@ -74,6 +75,7 @@ class ScheduleViewModel(
      * @param actualWeek 实际周次
      * @param dayRenderData 每天的渲染数据映射
      */
+    @Immutable
     data class PageRenderUi(
         val actualWeek: Int,
         val dayRenderData: Map<Int, DayRenderData>,
@@ -87,12 +89,12 @@ class ScheduleViewModel(
      * @param transConflictUiState 调课冲突状态
      * @param detailSheetUiState 课程详情弹窗状态
      */
+    @Immutable
     data class ScheduleUiState(
         val showNonCurrentWeek: Boolean,
         val transDialogUiState: TransDialogUiState,
         val transConflictUiState: TransConflictUiState,
         val detailSheetUiState: DetailSheetUiState,
-        val selectedEmptyCell: SelectedEmptyCell? = null,
     )
 
     /**
@@ -115,6 +117,7 @@ class ScheduleViewModel(
      * @param tagText 标签文本（如"实验课"、"调课"）
      * @param tagStyle 标签样式
      */
+    @Immutable
     data class CourseDetailUi(
         val weekLine: String,
         val locationLine: String,
@@ -134,6 +137,7 @@ class ScheduleViewModel(
      * @param startSection 开始节次
      * @param endSection 结束节次
      */
+    @Immutable
     data class TransDialogUiState(
         val show: Boolean = false,
         val course: Course? = null,
@@ -152,6 +156,7 @@ class ScheduleViewModel(
      * @param conflicts 冲突的课程列表
      * @param pendingOverride 待覆盖的课程
      */
+    @Immutable
     data class TransConflictUiState(
         val show: Boolean = false,
         val conflicts: List<Course> = emptyList(),
@@ -164,6 +169,7 @@ class ScheduleViewModel(
      * @param show 是否显示
      * @param courses 该时间段的课程列表
      */
+    @Immutable
     data class DetailSheetUiState(
         val show: Boolean = false,
         val courses: List<Course> = emptyList(),
@@ -180,6 +186,7 @@ class ScheduleViewModel(
      * @param startSection 开始节次
      * @param endSection 结束节次
      */
+    @Immutable
     data class TransOperationInput(
         val course: Course,
         val originWeek: Int,
@@ -191,37 +198,7 @@ class ScheduleViewModel(
     )
 
     private companion object {
-        val WEEKDAYS = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
-    }
-
-    /**
-     * 选中的空单元格状态
-     * 
-     * @param dayOfWeek 星期几（1-7）
-     * @param section 节次（1-12）
-     */
-    data class SelectedEmptyCell(val dayOfWeek: Int, val section: Int)
-
-    private val _selectedEmptyCell = MutableStateFlow<SelectedEmptyCell?>(null)
-
-    /** 对外暴露的选中空单元格状态流 */
-    val selectedEmptyCell: StateFlow<SelectedEmptyCell?> = _selectedEmptyCell
-
-    /**
-     * 设置选中的空单元格
-     * 
-     * @param dayOfWeek 星期几（1-7）
-     * @param section 节次（1-12）
-     */
-    fun selectEmptyCell(dayOfWeek: Int, section: Int) {
-        _selectedEmptyCell.value = SelectedEmptyCell(dayOfWeek, section)
-    }
-
-    /**
-     * 清除选中的空单元格
-     */
-    fun clearSelectedEmptyCell() {
-        _selectedEmptyCell.value = null
+        val WEEKDAYS = ClockTime.weekDays
     }
 
     private val _transDialogUiState = MutableStateFlow(TransDialogUiState())
@@ -234,14 +211,12 @@ class ScheduleViewModel(
             _transDialogUiState,
             _transConflictUiState,
             _detailSheetUiState,
-            _selectedEmptyCell,
-        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState, selectedEmptyCell ->
+        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState ->
             ScheduleUiState(
                 showNonCurrentWeek = showNonCurrentWeek,
                 transDialogUiState = transDialogUiState,
                 transConflictUiState = transConflictUiState,
                 detailSheetUiState = detailSheetUiState,
-                selectedEmptyCell = selectedEmptyCell,
             )
         }
             .stateIn(
@@ -259,17 +234,14 @@ class ScheduleViewModel(
     /** 对外暴露的UI状态流 */
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
-    /**
-     * 设置是否显示非本周课程
-     * 
-     * @param show 是否显示
-     */
-    fun onShowNonCurrentWeekChanged(show: Boolean) {
-        setShowNonCurrentWeekUseCase.invoke(show)
-    }
-
     /** 观察所有课程变化 */
-    fun observeAllCourses(): Flow<List<Course>> = observeAllCoursesUseCase()
+    val allCourses: StateFlow<List<Course>> = observeAllCoursesUseCase()
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
 
     /**
      * 构建调课课程并检查冲突
@@ -421,13 +393,15 @@ class ScheduleViewModel(
         heightForSections: (Int) -> Dp,
         cellInset: Dp,
         contentCardAlpha: Float,
+        effectiveCourses: List<Course>? = null,
     ): PageRenderUi {
         val actualWeek = pageToWeek(page = page, includeWeek0 = includeWeek0)
-        val effectiveCourses = effectiveCoursesForWeek(all = courses, week = actualWeek)
+        val weekCourses =
+            effectiveCourses ?: effectiveCoursesForWeek(all = courses, week = actualWeek)
         val dayRenderData =
             (1..dayCount).associateWith { day ->
                 buildDayRenderData(
-                    dayCourses = effectiveCourses.filter { it.dayOfWeek == day },
+                    dayCourses = weekCourses.filter { it.dayOfWeek == day },
                     page = actualWeek,
                     showNonCurrentWeek = showNonCurrentWeek,
                     isDarkMode = isDarkMode,
@@ -489,40 +463,19 @@ class ScheduleViewModel(
         _transDialogUiState.value = TransDialogUiState()
     }
 
-    /**
-     * 更新调课目标周次
-     * 
-     * @param week 目标周次
-     */
     fun updateTransTargetWeek(week: Int) {
         _transDialogUiState.value = _transDialogUiState.value.copy(targetWeek = week)
     }
 
-    /**
-     * 更新调课新教室
-     * 
-     * @param value 新教室名称
-     */
     fun updateTransNewClassRoom(value: String) {
         _transDialogUiState.value = _transDialogUiState.value.copy(newClassRoom = value)
     }
 
-    /**
-     * 更新调课星期几
-     * 
-     * @param dayOfWeek 星期几（1-7）
-     */
     fun updateTransDayOfWeek(dayOfWeek: Int) {
         _transDialogUiState.value =
             _transDialogUiState.value.copy(dayOfWeek = dayOfWeek.coerceIn(1, 7))
     }
 
-    /**
-     * 更新调课节次范围
-     * 
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     */
     fun updateTransSectionRange(startSection: Int, endSection: Int) {
         _transDialogUiState.value =
             _transDialogUiState.value.copy(

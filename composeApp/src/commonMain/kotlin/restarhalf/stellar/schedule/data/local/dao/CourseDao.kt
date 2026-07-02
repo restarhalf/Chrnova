@@ -36,6 +36,25 @@ interface CourseDao {
     fun getCoursesByUserNo(userNo: String): Flow<List<CourseEntity>>
 
     /**
+     * 按学号和学期观察课程
+     *
+     * @param userNo 学号
+     * @param semesterId 学期ID
+     * @return 课程列表Flow
+     */
+    @Query("SELECT * FROM courses WHERE userNo = :userNo AND semesterId = :semesterId")
+    fun getCoursesByUserNoAndSemester(userNo: String, semesterId: String): Flow<List<CourseEntity>>
+
+    /**
+     * 按学期观察课程（不限学号）
+     *
+     * @param semesterId 学期ID
+     * @return 课程列表Flow
+     */
+    @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
+    fun getCoursesBySemester(semesterId: String): Flow<List<CourseEntity>>
+
+    /**
      * 根据ID观察课程
      * 
      * @param id 课程ID
@@ -104,11 +123,20 @@ interface CourseDao {
 
     /**
      * 一次性获取所有课程
-     * 
+     *
      * @return 课程列表
      */
     @Query("SELECT * FROM courses")
     suspend fun getAllCoursesOnce(): List<CourseEntity>
+
+    /**
+     * 一次性按学期获取课程
+     *
+     * @param semesterId 学期ID
+     * @return 课程列表
+     */
+    @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
+    suspend fun getCoursesBySemesterOnce(semesterId: String): List<CourseEntity>
 
     /**
      * 替换同步的课程数据

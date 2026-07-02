@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
@@ -119,7 +121,7 @@ fun ScheduleScreen(
         )
             .calculateBottomPadding()
     val scope = rememberCoroutineScope()
-    val courses by vm.observeAllCourses().collectAsState(initial = emptyList())
+    val courses by vm.allCourses.collectAsState()
     val uiState =
         remember(campus, termStartMs, totalWeeks) {
             vm.buildScheduleUiState(
@@ -156,6 +158,9 @@ fun ScheduleScreen(
     val restHeight = 24.dp
     val cellInset = 0.5.dp
     val restBarTextMeasurer = rememberTextMeasurer()
+
+    val effectiveCoursesCache =
+        remember(courses) { mutableMapOf<Int, List<restarhalf.stellar.schedule.domain.model.Course>>() }
 
     fun yForSection(section: Int): Dp {
         val base = (rowHeight + rowGap) * (section - 1)
@@ -296,8 +301,7 @@ fun ScheduleScreen(
                             ),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            items(conflicts.size) { idx ->
-                                val c = conflicts[idx]
+                            items(conflicts, key = { it.id }) { c ->
                                 Text(
                                     text = "${c.name} \n@${c.location}   |   第${c.startSection}-${c.startSection + c.sectionCount - 1}节",
                                     fontSize = 16.sp
@@ -335,7 +339,7 @@ fun ScheduleScreen(
                                     ) {
                                         Text(
                                             text = "强制保存",
-                                            color = MiuixTheme.colorScheme.onPrimary
+                                            color = colors.onPrimary
                                         )
                                     }
                                 }
@@ -364,7 +368,7 @@ fun ScheduleScreen(
                     outsideMargin = BottomSheetDefaults.outsideMargin,
                     insideMargin = BottomSheetDefaults.insideMargin,
                     defaultWindowInsetsPadding = true,
-                    dragHandleColor = MiuixTheme.colorScheme.background,
+                    dragHandleColor = colors.background,
                     allowDismiss = true,
                     enableNestedScroll = true,
                     renderInRootScaffold = true,
@@ -461,9 +465,14 @@ fun ScheduleScreen(
                         .padding(horizontal = 8.dp)
                         .then(Modifier) ,
                 ) { page: Int ->
+                    val actualWeek = vm.pageToWeek(page = page, includeWeek0 = uiState.includeWeek0)
+                    val weekCourses = effectiveCoursesCache.getOrPut(actualWeek) {
+                        effectiveCoursesForWeek(all = courses, week = actualWeek)
+                    }
+
                     val pageRenderUi =
                         remember(
-                            courses,
+                            weekCourses,
                             page,
                             uiState.includeWeek0,
                             dayCount,
@@ -488,7 +497,8 @@ fun ScheduleScreen(
                                 yForSection = ::yForSection,
                                 heightForSections = ::heightForSections,
                                 cellInset = cellInset,
-                                contentCardAlpha = contentCardAlpha
+                                contentCardAlpha = contentCardAlpha,
+                                effectiveCourses = weekCourses
                             )
                         }
                     val pageScrollState =
@@ -633,13 +643,28 @@ fun ScheduleScreen(
                                                         })
                                                 }
 
-                                                (1..12).forEach { section ->
-                                                    val isOccupied = renderItems.any { item ->
-                                                        val courseStart = (item.model.topOffsetY.value / (rowHeight + rowGap).value).toInt() + 1
-                                                        val courseSections = (item.model.height.value / rowHeight.value).toInt().coerceAtLeast(1)
-                                                        section in courseStart until (courseStart + courseSections)
+                                                // 预计算已占用节次集合，避免每次重组都遍历
+                                                val occupiedSections = remember(renderItems) {
+                                                    val rowHeightPx = rowHeight.value
+                                                    val rowGapPx = (rowHeight + rowGap).value
+                                                    buildSet {
+                                                        for (item in renderItems) {
+                                                            val courseStart =
+                                                                (item.model.topOffsetY.value / rowGapPx).toInt() + 1
+                                                            val courseSections =
+                                                                (item.model.height.value / rowHeightPx).toInt()
+                                                                    .coerceAtLeast(1)
+                                                            for (s in courseStart until (courseStart + courseSections)) {
+                                                                add(s)
+                                                            }
+                                                        }
                                                     }
-                                                    if (!isOccupied) {
+                                                }
+                                                val emptyCellInteractionSource =
+                                                    remember { MutableInteractionSource() }
+
+                                                (1..12).forEach { section ->
+                                                    if (section !in occupiedSections) {
                                                         val isSelected = selectedEmptyCell == Pair(day, section)
                                                         Box(
                                                             modifier = Modifier
@@ -648,7 +673,7 @@ fun ScheduleScreen(
                                                                 .padding(horizontal = 2.5.dp)
                                                                 .offset(y = yForSection(section))
                                                                 .clickable(
-                                                                    interactionSource = remember { MutableInteractionSource() },
+                                                                    interactionSource = emptyCellInteractionSource,
                                                                     indication = null
                                                                 ) {
                                                                     if (isSelected) {

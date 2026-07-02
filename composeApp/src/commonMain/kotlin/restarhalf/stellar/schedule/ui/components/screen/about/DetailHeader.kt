@@ -30,6 +30,7 @@ fun DetailHeader(
     onIconTap: () -> Unit = {},
 ) {
     var tapCount by remember { mutableIntStateOf(0) }
+    val colors = MiuixTheme.colorScheme
 
     Box(
         modifier =
@@ -59,7 +60,7 @@ fun DetailHeader(
     Spacer(modifier = Modifier.height(8.dp))
     Text(
         text = "版本: $version",
-        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        color = colors.onSurfaceVariantSummary,
         style = MiuixTheme.textStyles.body2,
     )
 }

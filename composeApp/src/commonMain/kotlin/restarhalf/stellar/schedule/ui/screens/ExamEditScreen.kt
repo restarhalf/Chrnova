@@ -90,8 +90,16 @@ fun ExamEditScreen(
     var pickerStartMinute by remember { mutableIntStateOf(0) }
     var pickerEndHour by remember { mutableIntStateOf(10) }
     var pickerEndMinute by remember { mutableIntStateOf(0) }
+    val colors = MiuixTheme.colorScheme
 
-    LaunchedEffect(examinationId, editingExamination, courseNames, courses) {
+    LaunchedEffect(
+        examinationId,
+        editingExamination,
+        courseNames.size,
+        courseNames.hashCode(),
+        courses.size,
+        courses.hashCode()
+    ) {
         val formState = vm.buildEditingFormState(examinationId, editingExamination, courseNames)
         onEditChanged(formState.isEdit)
         selectedIndex = formState.selectedIndex
@@ -226,7 +234,7 @@ fun ExamEditScreen(
                             .fillMaxWidth()
                             .padding(bottom = 25.dp, start = 10.dp, end = 10.dp)
                 ) {
-                    Text(text = "删除考试", color = MiuixTheme.colorScheme.onPrimary)
+                    Text(text = "删除考试", color = colors.onPrimary)
                 }
             }
         },
@@ -270,7 +278,9 @@ fun ExamEditScreen(
                                     inputCourseName.value = it
                                     courseNameError = false
                                 },
-                                colors = if (courseNameError) TextFieldDefaults.textFieldColors(borderColor = MiuixTheme.colorScheme.error) else TextFieldDefaults.textFieldColors()
+                                colors = if (courseNameError) TextFieldDefaults.textFieldColors(
+                                    borderColor = colors.error
+                                ) else TextFieldDefaults.textFieldColors()
                             )
                         }
                         IconButton(

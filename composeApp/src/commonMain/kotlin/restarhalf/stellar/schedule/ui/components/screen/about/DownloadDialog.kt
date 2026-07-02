@@ -38,6 +38,7 @@ fun DownloadDialog(
     onStop: () -> Unit,
     onBackGround: () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
     WindowDialog(
         show = show,
         modifier = Modifier,
@@ -78,7 +79,7 @@ fun DownloadDialog(
                         colors = ButtonDefaults.buttonColorsPrimary(),
                         onClick = onBackGround
                     ) {
-                        Text(text = "后台下载", color = MiuixTheme.colorScheme.onPrimary)
+                        Text(text = "后台下载", color = colors.onPrimary)
                     }
                 }
             }

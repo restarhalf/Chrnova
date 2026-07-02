@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
@@ -30,7 +32,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * - 保存和删除操作
  */
 class CourseEditViewModel(
-    private val observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
     private val observeCourseByIdUseCase: ObserveCourseByIdUseCase,
     private val saveLabCourseUseCase: SaveLabCourseUseCase,
     private val deleteCourseUseCase: DeleteCourseUseCase,
@@ -39,7 +41,7 @@ class CourseEditViewModel(
 
     /**
      * 课程编辑UI状态
-     * 
+     *
      * @param courses 所有课程列表
      * @param courseNames 课程名称列表（用于下拉选择）
      */
@@ -50,7 +52,7 @@ class CourseEditViewModel(
 
     /**
      * 编辑表单状态
-     * 
+     *
      * @param isEdit 是否为编辑模式（false表示新建）
      * @param selectedIndex 选中的课程名称索引
      * @param classRoom 教室
@@ -93,33 +95,12 @@ class CourseEditViewModel(
         )
 
     /**
-     * 构建课程名称列表
-     * 
-     * @param courses 所有课程列表
-     * @return 去重的普通课程名称列表
-     */
-    fun buildCourseNames(courses: List<Course>): List<String> {
-        return courses.filter { it.type == 0 }.map { it.name }.distinct()
-    }
-
-    /**
      * 将星期数转换为中文文本
-     * 
+     *
      * @param dayOfWeek 星期数（1-7）
      * @return 中文星期文本
      */
-    fun weekdayText(dayOfWeek: Int): String {
-        return when (dayOfWeek) {
-            1 -> "周一"
-            2 -> "周二"
-            3 -> "周三"
-            4 -> "周四"
-            5 -> "周五"
-            6 -> "周六"
-            7 -> "周日"
-            else -> "周一"
-        }
-    }
+    fun weekdayText(dayOfWeek: Int): String = ClockTime.weekdayText(dayOfWeek)
 
     /**
      * 构建禁用的周次集合
@@ -287,17 +268,6 @@ class CourseEditViewModel(
     fun sectionSummary(startSection: Int, endSection: Int): String {
         return "第${startSection}-${endSection}节"
     }
-
-    /** 观察所有课程 */
-    fun observeAllCourses(): Flow<List<Course>> = observeAllCoursesUseCase()
-
-    /**
-     * 观察指定ID的课程
-     * 
-     * @param id 课程ID
-     * @return 课程Flow
-     */
-    fun observeCourseById(id: Long): Flow<Course?> = observeCourseByIdUseCase(id)
 
     /**
      * 保存实验课

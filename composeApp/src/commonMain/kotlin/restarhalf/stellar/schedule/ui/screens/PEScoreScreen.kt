@@ -92,7 +92,6 @@ fun PEScoreScreen(
             vm.loadStudentInfo()
         }
     }
-
     val statusText = vm.buildStatusText()
     val colors = MiuixTheme.colorScheme
 
@@ -198,7 +197,7 @@ fun PEScoreScreen(
                                     Text(
                                         text = "已测 ${score.done}/${score.nums}",
                                         fontSize = 12.sp,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                        color = colors.onSurfaceVariantSummary
                                     )
                                 }
                                 Text(

@@ -1,12 +1,14 @@
 package restarhalf.stellar.schedule.domain.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 /**
  * 课程成绩数据模型
- * 
+ *
  * 表示一门课程的详细成绩信息，包括分数、绩点、学分等。
  */
+@Immutable
 @Serializable
 data class GradeCourse(
     /** 课程代码 */
@@ -43,9 +45,10 @@ data class GradeCourse(
 
 /**
  * 学期成绩报告数据模型
- * 
+ *
  * 包含学生基本信息和该学期所有课程的成绩列表。
  */
+@Immutable
 @Serializable
 data class TermGradeReport(
     /** 学号 */

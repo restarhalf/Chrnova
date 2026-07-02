@@ -56,6 +56,7 @@ fun PapersListScreen(
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
     val expandedFolders = remember { mutableStateSetOf<String>() }
+    val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(Unit) {
         if (!uiState.isStarVerified) {
@@ -94,7 +95,7 @@ fun PapersListScreen(
                         Text(
                             text = error,
                             fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.error,
+                            color = colors.error,
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -106,7 +107,7 @@ fun PapersListScreen(
                     ) {
                         Text(
                             text = if (uiState.verifyingStar) "验证中..." else "验证",
-                            color = MiuixTheme.colorScheme.onPrimary,
+                            color = colors.onPrimary,
                         )
                     }
                 }
@@ -143,7 +144,7 @@ fun PapersListScreen(
                 colors = ButtonDefaults.buttonColorsPrimary(),
                 onClick = onUploadClick,
             ) {
-                Text(text = "上传试卷", color = MiuixTheme.colorScheme.onPrimary)
+                Text(text = "上传试卷", color = colors.onPrimary)
             }
         }
     ) { paddingValues ->
@@ -185,7 +186,7 @@ fun PapersListScreen(
                         text = "加载中...",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = colors.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -196,7 +197,7 @@ fun PapersListScreen(
                         text = "暂无试卷",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = colors.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -207,7 +208,7 @@ fun PapersListScreen(
                         text = uiState.error ?: "",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.error,
+                        color = colors.error,
                     )
                 }
             }

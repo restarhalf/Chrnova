@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
@@ -110,23 +111,13 @@ class ExamEditViewModel(
         )
 
     /**
-     * 构建课程名称列表
-     * 
-     * @param courses 所有课程列表
-     * @return 去重的普通课程名称列表
-     */
-    fun buildCourseNames(courses: List<Course>): List<String> {
-        return courses.filter { it.type == 0 }.map { it.name }.distinct()
-    }
-
-    /**
      * 根据课程名称查找课程编号
      * 
      * @param courses 所有课程列表
      * @param courseName 课程名称
      * @return 课程编号，如果没有找到则返回自动生成的编号
      */
-    fun findCourseNumber(courses: List<Course>, courseName: String): String {
+    private fun findCourseNumber(courses: List<Course>, courseName: String): String {
         val course = courses.firstOrNull { it.name == courseName && it.type == 0 }
         return course?.remoteKey?.ifBlank { null }
             ?: "EXAM_${courseName.hashCode().toUInt()}"

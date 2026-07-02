@@ -62,6 +62,7 @@ fun JWLoginScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -75,7 +76,7 @@ fun JWLoginScreen(
                             Icon(
                                 imageVector = Back,
                                 contentDescription = "返回",
-                                tint = MiuixTheme.colorScheme.onBackground
+                                tint = colors.onBackground
                             )
                         }
                     }
@@ -94,7 +95,7 @@ fun JWLoginScreen(
                     ) {
                         Text(
                             text = "跳过",
-                            color = MiuixTheme.colorScheme.onSecondary
+                            color = colors.onSecondary
                         )
                     }
                 }
@@ -111,7 +112,7 @@ fun JWLoginScreen(
                 ) {
                     Text(
                         text = if (uiState.loading) "登录中..." else "登录",
-                        color = MiuixTheme.colorScheme.onPrimary
+                        color = colors.onPrimary
                     )
                 }
             }
@@ -162,7 +163,7 @@ fun JWLoginScreen(
                     )
                         Text(
                             text = uiState.error,
-                            color = MiuixTheme.colorScheme.error,
+                            color = colors.error,
                         )
                 }
             }
@@ -180,7 +181,7 @@ fun JWLoginScreen(
                         Text(
                             text = "账号是你的学号，密码是新教务系统的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取课程和考务等",
                             fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
                     }
                 }

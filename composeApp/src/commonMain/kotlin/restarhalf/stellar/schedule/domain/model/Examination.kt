@@ -1,12 +1,14 @@
 package restarhalf.stellar.schedule.domain.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 /**
  * 考试安排数据模型
- * 
+ *
  * 表示一门课程的考试信息，包括时间、地点、座位号等。
  */
+@Immutable
 @Serializable
 data class Examination(
     /** 数据库ID */

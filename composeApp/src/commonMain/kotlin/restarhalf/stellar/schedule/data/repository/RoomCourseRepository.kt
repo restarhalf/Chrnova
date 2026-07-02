@@ -2,9 +2,10 @@ package restarhalf.stellar.schedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
@@ -30,34 +31,30 @@ class RoomCourseRepository(
 ) : CourseRepository {
 
     /**
-     * 按学期过滤课程
-     * 
-     * @param courses 课程列表
-     * @param semesterId 学期ID
-     * @return 过滤后的课程列表
-     */
-    private fun filterCoursesBySemester(courses: List<Course>, semesterId: String): List<Course> {
-        if (semesterId.isBlank()) return courses
-        return courses.filter { it.semesterId == semesterId }
-    }
-
-    /**
      * 观察所有课程
-     * 
+     *
      * @return 课程列表Flow，自动按当前学期和用户过滤
      */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun observeAllCourses(): Flow<List<Course>> =
         combine(
-            courseDao.getAllCourses().map { list: List<CourseEntity> -> list.map { it.toDomain() } },
             settings.observeActiveScheduleTerm(),
             auth.observeProfile().map { it.userNo },
-        ) { courses, semesterId, userNo ->
-            val filtered = if (userNo.isNotBlank()) {
-                courses.filter { it.userNo == userNo }
-            } else {
-                courses
-            }
-            filterCoursesBySemester(courses = filtered, semesterId = semesterId)
+        ) { semesterId, userNo ->
+            semesterId to userNo
+        }.distinctUntilChanged().flatMapLatest { (semesterId, userNo) ->
+            val hasUser = userNo.isNotBlank()
+            val hasSemester = semesterId.isNotBlank()
+            when {
+                hasUser && hasSemester -> courseDao.getCoursesByUserNoAndSemester(
+                    userNo,
+                    semesterId
+                )
+
+                hasUser -> courseDao.getCoursesByUserNo(userNo)
+                hasSemester -> courseDao.getCoursesBySemester(semesterId)
+                else -> courseDao.getAllCourses()
+            }.map { list -> list.map { it.toDomain() } }
         }
 
     /**
@@ -92,15 +89,16 @@ class RoomCourseRepository(
 
     /**
      * 一次性获取所有课程
-     * 
+     *
      * @return 课程列表，按当前学期过滤
      */
     override suspend fun getAllCoursesOnce(): List<Course> {
         val semesterId = settings.observeActiveScheduleTerm().first()
-        return filterCoursesBySemester(
-            courses = courseDao.getAllCoursesOnce().map { it.toDomain() },
-            semesterId = semesterId
-        )
+        return if (semesterId.isNotBlank()) {
+            courseDao.getCoursesBySemesterOnce(semesterId).map { it.toDomain() }
+        } else {
+            courseDao.getAllCoursesOnce().map { it.toDomain() }
+        }
     }
 
     /**

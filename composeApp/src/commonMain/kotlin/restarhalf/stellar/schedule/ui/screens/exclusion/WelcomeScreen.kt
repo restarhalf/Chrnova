@@ -39,7 +39,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun WelcomeScreen(
@@ -51,13 +51,14 @@ fun WelcomeScreen(
     val coroutineScope = rememberCoroutineScope()
     val jwLoginVm: JWLoginViewModel = koinInject()
     val peLoginVm: PELoginViewModel = koinInject()
-    
+    val colors = MiuixTheme.colorScheme
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .background(colorScheme.surface),
+            .background(colors.surface),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -99,7 +100,7 @@ fun WelcomeScreen(
                     Icon(
                         imageVector = Back,
                         contentDescription = "back",
-                        tint = colorScheme.onBackground
+                        tint = colors.onBackground
                     )
                 }
             }

@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -52,6 +53,7 @@ class AboutViewModel(
      * @param updateSummary 更新状态摘要
      * @param pendingUpdate 待处理的更新信息
      */
+    @Immutable
     data class AboutUiState(
         val updateChecking: Boolean,
         val updateSummary: String,
@@ -66,6 +68,7 @@ class AboutViewModel(
      * @param updateActionSummary 更新操作摘要
      * @param canCheckUpdate 是否可以检查更新
      */
+    @Immutable
     data class AboutScreenUi(
         val versionDisplay: String,
         val currentVersionForCheck: String,
@@ -170,7 +173,7 @@ class AboutViewModel(
      * 
      * @param key QQ群加群链接中的key参数
      */
-    fun requestJoinQqGroup(key: String) {
+    private fun requestJoinQqGroup(key: String) {
         _events.tryEmit(AboutUiEvent.JoinQqGroup(key))
     }
 

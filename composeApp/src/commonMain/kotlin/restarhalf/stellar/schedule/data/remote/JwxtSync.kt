@@ -36,6 +36,12 @@ class JwxtSync(private val gateway: JwxtGateway) {
                 throw IllegalStateException(response.msg.ifBlank { "课表接口返回失败" })
             }
 
-            response.data.flatMap { it.item }.flatMap { JwxtTimeParser.parseToCourses(it) }
+            buildList {
+                for (group in response.data) {
+                    for (item in group.item) {
+                        addAll(JwxtTimeParser.parseToCourses(item))
+                    }
+                }
+            }
         }
 }

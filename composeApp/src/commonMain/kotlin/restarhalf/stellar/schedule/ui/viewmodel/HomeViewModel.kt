@@ -1,11 +1,13 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -28,6 +30,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 /**
  * 首页ViewModel
@@ -58,6 +61,7 @@ class HomeViewModel(
      * @param exams 考试列表
      * @param nowMs 当前时间戳（毫秒）
      */
+    @Immutable
     data class HomeUiState(
         val courses: List<Course>,
         val exams: List<Examination>,
@@ -70,6 +74,7 @@ class HomeViewModel(
      * @param title 时间段标题（如"上午"、"下午"）
      * @param rows 该时间段内的课程行列表
      */
+    @Immutable
     data class SectionRenderUi(
         val title: String,
         val rows: List<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
@@ -80,6 +85,7 @@ class HomeViewModel(
      * 
      * 包含首页所有需要渲染的UI数据。
      */
+    @Immutable
     data class HomeRenderState(
         /** 头部UI（问候语、日期等） */
         val headerUi: BuildHomeHeaderUiUseCase.HeaderUi,
@@ -108,7 +114,7 @@ class HomeViewModel(
     private val _userNo = observeAuthProfile().map { it.userNo }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(5_000),
             initialValue = "",
         )
 
@@ -122,6 +128,7 @@ class HomeViewModel(
             }
             HomeUiState(courses = courses, exams = filteredExams, nowMs = nowMs)
         }
+            .distinctUntilChanged()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -145,7 +152,7 @@ class HomeViewModel(
      * @param nowMs 当前时间戳
      * @return 时钟快照，包含日期、星期等信息
      */
-    fun buildClockSnapshot(nowMs: Long): BuildHomeClockSnapshotUseCase.Snapshot {
+    private fun buildClockSnapshot(nowMs: Long): BuildHomeClockSnapshotUseCase.Snapshot {
         return buildHomeClockSnapshotUseCase(nowMs)
     }
 
@@ -159,7 +166,7 @@ class HomeViewModel(
      * @param nowMs 当前时间戳
      * @return 今日课程安排
      */
-    fun buildTodaySchedule(
+    private fun buildTodaySchedule(
         courses: List<Course>,
         totalWeeks: Int,
         termStartMs: Long,
@@ -183,7 +190,7 @@ class HomeViewModel(
      * @param hasFirstClass 是否有第一节课程
      * @return 头部UI数据
      */
-    fun buildHeaderUi(
+    private fun buildHeaderUi(
         dateLabel: String,
         courseCount: Int,
         hasFirstClass: Boolean,
@@ -202,7 +209,7 @@ class HomeViewModel(
      * @param todaySchedule 今日课程安排
      * @return 头部UI数据
      */
-    fun buildHeaderUi(
+    private fun buildHeaderUi(
         clockSnapshot: BuildHomeClockSnapshotUseCase.Snapshot,
         todaySchedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
     ): BuildHomeHeaderUiUseCase.HeaderUi {
@@ -269,7 +276,7 @@ class HomeViewModel(
      * @param schedule 今日课程安排
      * @return 时间段列表（上午、下午、晚上）
      */
-    fun buildSections(
+    private fun buildSections(
         schedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
     ): List<BuildHomePeriodSectionsUseCase.SectionUi> {
         return buildHomePeriodSectionsUseCase(schedule)
@@ -282,7 +289,7 @@ class HomeViewModel(
      * @param componentsAlpha 组件透明度
      * @return 表面UI数据
      */
-    fun buildSurfaceUi(
+    private fun buildSurfaceUi(
         hasBackground: Boolean,
         componentsAlpha: Float,
     ): BuildHomeSurfaceUiUseCase.SurfaceUi {
@@ -300,7 +307,7 @@ class HomeViewModel(
      * @param nowMinutes 当前时间的分钟数
      * @return 课程行渲染数据列表
      */
-    fun buildPeriodRenderRows(
+    private fun buildPeriodRenderRows(
         items: List<BuildHomeTodayScheduleUseCase.PeriodItem>,
         timetable: List<TimetableSlot>,
         nowMinutes: Int,
@@ -316,7 +323,8 @@ class HomeViewModel(
      * 获取当天的考试列表
      */
     fun getTodayExams(exams: List<Examination>, nowMs: Long): List<Examination> {
-        val todayDate = Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
+        val todayDate = Instant.fromEpochMilliseconds(nowMs)
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
         return exams
             .filter { it.time.startsWith(todayDate) }
             .sortedBy { it.time.substringAfter(" ").ifBlank { "00:00" } }
@@ -349,11 +357,16 @@ class HomeViewModel(
      * 检查考试是否已开始
      */
     private fun isExamStarted(rawTime: String, nowMs: Long): Boolean {
-        val date = Regex("(\\d{4}-\\d{2}-\\d{2})").find(rawTime)?.groupValues?.getOrNull(1) ?: return false
-        val start = Regex("(\\d{1,2}:\\d{2})[~-]").find(rawTime)?.groupValues?.getOrNull(1) ?: return false
+        val date = DATE_REGEX.find(rawTime)?.groupValues?.getOrNull(1) ?: return false
+        val start = TIME_REGEX.find(rawTime)?.groupValues?.getOrNull(1) ?: return false
         val normalized = "${date}T${start.padStart(5, '0')}"
         val startDateTime = runCatching { kotlinx.datetime.LocalDateTime.parse(normalized) }.getOrNull() ?: return false
         val startMs = startDateTime.toInstant(kotlinx.datetime.TimeZone.currentSystemDefault()).toEpochMilliseconds()
         return nowMs >= startMs
+    }
+
+    private companion object {
+        val DATE_REGEX = Regex("(\\d{4}-\\d{2}-\\d{2})")
+        val TIME_REGEX = Regex("(\\d{1,2}:\\d{2})[~-]")
     }
 }

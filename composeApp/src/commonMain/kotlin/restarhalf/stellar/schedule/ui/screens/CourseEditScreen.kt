@@ -96,8 +96,17 @@ fun CourseEditScreen(
     var startSection by remember { mutableIntStateOf(1) }
     var endSection by remember { mutableIntStateOf(2) }
     var selectedWeeks by remember { mutableStateOf(emptySet<Int>()) }
+    val colors = MiuixTheme.colorScheme
 
-    LaunchedEffect(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek) {
+    LaunchedEffect(
+        courseId,
+        editingCourse,
+        courseNames.size,
+        courseNames.hashCode(),
+        initialDayOfWeek,
+        initialStartSection,
+        initialSelectedWeek
+    ) {
         val formState = vm.buildEditingFormState(courseId, editingCourse, courseNames, initialDayOfWeek, initialStartSection, initialSelectedWeek)
         onEditChanged(formState.isEdit)
         selectedIndex = formState.selectedIndex
@@ -206,7 +215,7 @@ fun CourseEditScreen(
                             .fillMaxWidth()
                             .padding(bottom = 25.dp, start = 10.dp, end = 10.dp)
                 ) {
-                    Text(text = "删除课程", color = MiuixTheme.colorScheme.onPrimary)
+                    Text(text = "删除课程", color = colors.onPrimary)
                 }
             }
         },
@@ -251,7 +260,9 @@ fun CourseEditScreen(
                                     inputCourseName.value=it
                                     courseNameError=false
                                 },
-                                colors = if(courseNameError) TextFieldDefaults.textFieldColors(borderColor = MiuixTheme.colorScheme.error) else TextFieldDefaults.textFieldColors()
+                                colors = if (courseNameError) TextFieldDefaults.textFieldColors(
+                                    borderColor = colors.error
+                                ) else TextFieldDefaults.textFieldColors()
                             )
                         }
                             IconButton(

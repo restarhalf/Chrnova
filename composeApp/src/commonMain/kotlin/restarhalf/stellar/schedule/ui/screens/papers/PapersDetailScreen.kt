@@ -62,6 +62,7 @@ fun PapersDetailScreen(
     }
 
     val paper = uiState.selectedPaper
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -86,7 +87,7 @@ fun PapersDetailScreen(
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     onClick = { vm.downloadPaper(paper.id) },
                 ) {
-                    Text(text = "下载", color = MiuixTheme.colorScheme.onPrimary)
+                    Text(text = "下载", color = colors.onPrimary)
                 }
             }
         }
@@ -119,7 +120,7 @@ fun PapersDetailScreen(
                         text = "加载中...",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = colors.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -130,7 +131,7 @@ fun PapersDetailScreen(
                         text = uiState.error ?: "",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.error,
+                        color = colors.error,
                     )
                 }
             }

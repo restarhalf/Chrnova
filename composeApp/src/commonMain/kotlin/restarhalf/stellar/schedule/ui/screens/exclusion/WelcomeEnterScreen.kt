@@ -55,6 +55,7 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
     )
     val appInfo: AppInfoPort = koinInject()
     val appName = remember(appInfo.appName) { appInfo.appName }
+    val colors = MiuixTheme.colorScheme
     LaunchedEffect(pagerState.currentPage) {
         go.value = pagerState.currentPage == 0
     }
@@ -77,12 +78,12 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
                 text = "欢迎使用",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Medium,
-                color = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.75f)
+                color = colors.onBackground.copy(alpha = 0.75f)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = appName,
-                color = MiuixTheme.colorScheme.onBackground,
+                color = colors.onBackground,
                 fontSize = 39.sp,
                 fontWeight = FontWeight(560)
             )
@@ -102,7 +103,7 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
             Icon(
                 imageVector = Forward,
                 contentDescription = "",
-                tint = MiuixTheme.colorScheme.primary,
+                tint = colors.primary,
                 modifier = Modifier.size(32.dp)
             )
         }

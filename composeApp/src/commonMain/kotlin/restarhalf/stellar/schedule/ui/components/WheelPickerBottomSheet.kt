@@ -15,11 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -67,6 +67,7 @@ fun WheelPickerBottomSheet(
     onConfirm: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
     WindowBottomSheet(
         show = show,
         modifier = Modifier,
@@ -82,7 +83,7 @@ fun WheelPickerBottomSheet(
         outsideMargin = BottomSheetDefaults.outsideMargin,
         insideMargin = BottomSheetDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        dragHandleColor = MiuixTheme.colorScheme.surface,
+        dragHandleColor = colors.surface,
         allowDismiss = false,
         enableNestedScroll = true,
         content = {
@@ -108,7 +109,7 @@ fun WheelPickerBottomSheet(
                     onClick = onConfirm,
                     colors = ButtonDefaults.buttonColorsPrimary(),
                 ) {
-                    Text(text = "确定", color = MiuixTheme.colorScheme.onPrimary)
+                    Text(text = "确定", color = colors.onPrimary)
                 }
             }
         })
@@ -154,6 +155,7 @@ fun WheelPickerColumn(
     val haptic = LocalHapticFeedback.current
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
     val onSelectedIndexChangeState by rememberUpdatedState(onSelectedIndexChange)
+    val colors = MiuixTheme.colorScheme
 
     val centerIndex by remember {
         derivedStateOf {
@@ -204,8 +206,8 @@ fun WheelPickerColumn(
                         modifier = Modifier.alpha(if (isSelected) 1f else 0.22f),
                         textAlign = TextAlign.Center,
                         color =
-                            if (isSelected) MiuixTheme.colorScheme.primary
-                            else MiuixTheme.colorScheme.onSurface,
+                            if (isSelected) colors.primary
+                            else colors.onSurface,
                         fontSize = if (isSelected) 30.sp else 20.sp,
                         fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                     )
@@ -220,7 +222,7 @@ fun WheelPickerColumn(
                     .align(Alignment.TopCenter)
                     .background(
                         Brush.verticalGradient(
-                            0f to MiuixTheme.colorScheme.background,
+                            0f to colors.background,
                             1f to Color.Transparent,
                         ),
                     ),
@@ -233,7 +235,7 @@ fun WheelPickerColumn(
                     .background(
                         Brush.verticalGradient(
                             0f to Color.Transparent,
-                            1f to MiuixTheme.colorScheme.background,
+                            1f to colors.background,
                         ),
                     ),
         )

@@ -1,11 +1,13 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,6 +78,7 @@ class SettingsViewModel(
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
 ) : ViewModel() {
     /** 设置偏好状态 */
+    @Immutable
     private data class SettingsPrefsState(
         val showNonCurrentWeek: Boolean,
         val reminderEnabled: Boolean,
@@ -87,6 +90,7 @@ class SettingsViewModel(
     )
 
     /** 认证状态 */
+    @Immutable
     private data class SettingsAuthState(
         val authToken: String,
         val profile: AuthProfile,
@@ -102,6 +106,7 @@ class SettingsViewModel(
      * @param termStartSummary 学期开始日期摘要
      * @param syncSummary 同步状态摘要
      */
+    @Immutable
     data class SettingsScreenUi(
         val campusOptions: List<String>,
         val campusSelectedIndex: Int,
@@ -117,6 +122,7 @@ class SettingsViewModel(
      * @param items 学期选项列表
      * @param selectedIndex 选中的索引
      */
+    @Immutable
     data class TermSelectionUi(
         val items: List<String>,
         val selectedIndex: Int,
@@ -129,6 +135,7 @@ class SettingsViewModel(
      * @param title 标题（用户名或"已登录"）
      * @param summary 摘要（学号、班级等）
      */
+    @Immutable
     data class AccountUi(
         val loggedIn: Boolean,
         val title: String,
@@ -140,6 +147,7 @@ class SettingsViewModel(
      * 
      * 包含所有设置项的状态和UI数据。
      */
+    @Immutable
     data class SettingsUiState(
         val showNonCurrentWeek: Boolean,
         val reminderEnabled: Boolean,
@@ -151,18 +159,7 @@ class SettingsViewModel(
         val authToken: String,
         val profile: AuthProfile,
         val remoteTermItems: List<String>,
-        val pendingNotificationTarget: NotificationTarget,
     )
-
-    /** 通知权限请求目标枚举 */
-    enum class NotificationTarget {
-        /** 无目标 */
-        None,
-        /** 课程提醒 */
-        Course,
-        /** 考试提醒 */
-        Exam,
-    }
 
     private companion object {
         val CAMPUS_OPTIONS = listOf("开发区", "金石滩")
@@ -171,60 +168,64 @@ class SettingsViewModel(
     }
 
     private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
-    private val _pendingNotificationTarget = MutableStateFlow(NotificationTarget.None)
 
-    private val prefsFlow =
-        combine(
-            observeShowNonCurrentWeek(),
-            observeCourseReminderEnabled(),
-            observeExamReminderEnabled(),
-            observeThemeMode(),
-            observeFloatingBar(),
-        ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
-            SettingsPrefsState(
-                showNonCurrentWeek = showNonCurrentWeek,
-                reminderEnabled = reminderEnabled,
-                examReminderEnabled = examReminderEnabled,
-                themeMode = themeMode,
-                floatingBar = floatingBar,
-                selectedTerm = "",
-                logEnabled = false,
-            )
-        }
-            .combine(observeSelectedTerm()) { prefs, selectedTerm ->
-                prefs.copy(selectedTerm = selectedTerm)
-            }
-            .combine(observeLogEnabled()) { prefs, logEnabled ->
-                prefs.copy(logEnabled = logEnabled)
-            }
+    private val basePrefsFlow = combine(
+        observeShowNonCurrentWeek(),
+        observeCourseReminderEnabled(),
+        observeExamReminderEnabled(),
+        observeThemeMode(),
+        observeFloatingBar(),
+    ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
+        SettingsPrefsState(
+            showNonCurrentWeek = showNonCurrentWeek,
+            reminderEnabled = reminderEnabled,
+            examReminderEnabled = examReminderEnabled,
+            themeMode = themeMode,
+            floatingBar = floatingBar,
+            selectedTerm = "",
+            logEnabled = false,
+        )
+    }
+
+    private val extraPrefsFlow = combine(
+        observeSelectedTerm(),
+        observeLogEnabled(),
+    ) { selectedTerm, logEnabled ->
+        selectedTerm to logEnabled
+    }
+
+    private val prefsFlow = combine(
+        basePrefsFlow,
+        extraPrefsFlow,
+    ) { base, (selectedTerm, logEnabled) ->
+        base.copy(selectedTerm = selectedTerm, logEnabled = logEnabled)
+    }.distinctUntilChanged()
 
     private val authFlow =
         combine(observeAuthToken(), observeAuthProfile()) { authToken, profile ->
             SettingsAuthState(authToken = authToken, profile = profile)
-        }
+        }.distinctUntilChanged()
 
     private val _uiState: StateFlow<SettingsUiState> =
-        prefsFlow
-            .combine(authFlow) { prefs, auth -> prefs to auth }
-            .combine(_remoteTermItems) { prefsAuth, remoteTermItems ->
-                Triple(prefsAuth.first, prefsAuth.second, remoteTermItems)
-            }
-            .combine(_pendingNotificationTarget) { prefsAuthRemote, pendingNotificationTarget ->
-                val (prefs, auth, remoteTermItems) = prefsAuthRemote
-                SettingsUiState(
-                    showNonCurrentWeek = prefs.showNonCurrentWeek,
-                    reminderEnabled = prefs.reminderEnabled,
-                    examReminderEnabled = prefs.examReminderEnabled,
-                    themeMode = prefs.themeMode,
-                    floatingBar = prefs.floatingBar,
-                    selectedTerm = prefs.selectedTerm,
-                    logEnabled = prefs.logEnabled,
-                    authToken = auth.authToken,
-                    profile = auth.profile,
-                    remoteTermItems = remoteTermItems,
-                    pendingNotificationTarget = pendingNotificationTarget,
-                )
-            }
+        combine(
+            prefsFlow,
+            authFlow,
+            _remoteTermItems,
+        ) { prefs, auth, remoteTermItems ->
+            SettingsUiState(
+                showNonCurrentWeek = prefs.showNonCurrentWeek,
+                reminderEnabled = prefs.reminderEnabled,
+                examReminderEnabled = prefs.examReminderEnabled,
+                themeMode = prefs.themeMode,
+                floatingBar = prefs.floatingBar,
+                selectedTerm = prefs.selectedTerm,
+                logEnabled = prefs.logEnabled,
+                authToken = auth.authToken,
+                profile = auth.profile,
+                remoteTermItems = remoteTermItems,
+            )
+        }
+            .distinctUntilChanged()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -240,7 +241,6 @@ class SettingsViewModel(
                         authToken = "",
                         profile = AuthProfile(),
                         remoteTermItems = emptyList(),
-                        pendingNotificationTarget = NotificationTarget.None,
                     ),
             )
 
@@ -451,58 +451,6 @@ class SettingsViewModel(
 
     fun onLogEnabledChanged(enabled: Boolean) {
         setLogEnabledUseCase.invoke(enabled)
-    }
-
-    /**
-     * 请求通知权限
-     *
-     * @param target 通知目标（课程或考试提醒）
-     */
-    fun requestNotificationPermission(target: NotificationTarget) {
-        _pendingNotificationTarget.value = target
-    }
-
-    /** 清除待处理的通知权限请求 */
-    fun clearPendingNotificationTarget() {
-        _pendingNotificationTarget.value = NotificationTarget.None
-    }
-
-    /**
-     * 处理通知权限请求结果
-     *
-     * @param granted 是否授予权限
-     * @param campus 当前校区
-     * @param termStartMs 学期开始时间戳
-     * @param totalWeeks 学期总周数
-     * @param selectedTerm 选中的学期
-     */
-    fun handleNotificationPermissionResult(
-        granted: Boolean,
-        campus: Campus,
-        termStartMs: Long,
-        totalWeeks: Int,
-        selectedTerm: String,
-    ) {
-        val target = _pendingNotificationTarget.value
-        _pendingNotificationTarget.value = NotificationTarget.None
-        if (!granted) return
-        when (target) {
-            NotificationTarget.Course -> {
-                onReminderEnabledChanged(true)
-                scheduleCourseReminder(
-                    campus = campus,
-                    termStartMs = termStartMs,
-                    totalWeeks = totalWeeks
-                )
-            }
-
-            NotificationTarget.Exam -> {
-                onExamReminderEnabledChanged(true)
-                scheduleExamReminder(selectedTerm = selectedTerm)
-            }
-
-            NotificationTarget.None -> Unit
-        }
     }
 
     /**

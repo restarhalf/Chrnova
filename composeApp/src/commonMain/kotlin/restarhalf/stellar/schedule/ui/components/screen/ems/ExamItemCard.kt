@@ -54,7 +54,8 @@ fun ExamItemCard(
     onClick: () -> Unit = {},
 ) {
     val animProgress = remember { Animatable(0f) }
-    val summary = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val colors = MiuixTheme.colorScheme
+    val summary = colors.onSurfaceVariantSummary
     val exam = card.exam
     val accentColor = pickCourseSubColor(card.title.ifBlank { exam.courseNumber }, false)
     LaunchedEffect(Unit) {
@@ -125,7 +126,7 @@ fun ExamItemCard(
                         Box(
                             modifier =
                                 Modifier.clip(RoundedCornerShape(6.dp))
-                                    .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                                    .background(colors.surfaceContainerHigh)
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                                     .align(Alignment.End)
                         ) {
@@ -139,7 +140,7 @@ fun ExamItemCard(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.6f))
+                        .background(colors.surface.copy(alpha = 0.6f))
                 ) {
                     Box(
                         modifier = Modifier

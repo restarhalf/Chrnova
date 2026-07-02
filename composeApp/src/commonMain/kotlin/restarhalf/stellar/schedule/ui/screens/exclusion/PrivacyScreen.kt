@@ -44,6 +44,7 @@ fun PrivacyScreen(
 ) {
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+    val colors = MiuixTheme.colorScheme
 
     Column(
         modifier = Modifier
@@ -56,7 +57,7 @@ fun PrivacyScreen(
         Icon(
             painter = painterResource(Res.drawable.ic_privacy),
             contentDescription = "Privacy",
-            tint = MiuixTheme.colorScheme.primary,
+            tint = colors.primary,
             modifier = Modifier.size(90.dp)
         )
 
@@ -112,11 +113,11 @@ fun PrivacyScreen(
                             "2. 本声明可能随时更新，请定期查阅最新版本。\n" +
                             "3. 如您不同意本声明的任何内容，请立即停止使用并卸载本软件。\n",
                     colors = DefaultMarkdownColors(
-                        text = MiuixTheme.colorScheme.onSurfaceContainer,
-                        codeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        inlineCodeBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        dividerColor = MiuixTheme.colorScheme.dividerLine,
-                        tableBackground = MiuixTheme.colorScheme.surfaceContainerHigh,
+                        text = colors.onSurfaceContainer,
+                        codeBackground = colors.surfaceContainerHigh,
+                        inlineCodeBackground = colors.surfaceContainerHigh,
+                        dividerColor = colors.dividerLine,
+                        tableBackground = colors.surfaceContainerHigh,
                     ),
                     typography = DefaultMarkdownTypography(
                         h1 = MiuixTheme.textStyles.title2.copy(fontWeight = FontWeight.Bold),
@@ -135,7 +136,7 @@ fun PrivacyScreen(
                         list = MiuixTheme.textStyles.body1,
                         textLink = TextLinkStyles(
                             style = SpanStyle(
-                                color = MiuixTheme.colorScheme.primary,
+                                color = colors.primary,
                                 textDecoration = TextDecoration.Underline,
                             ),
                         ),

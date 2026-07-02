@@ -66,6 +66,7 @@ fun TransClassDialog(
     val showWeekdayPicker = remember { mutableStateOf(false) }
     val showWeekPicker = remember { mutableStateOf(false) }
     val showSectionPicker = remember { mutableStateOf(false) }
+    val colors = MiuixTheme.colorScheme
 
     val weekdayText =
         remember(dayOfWeek) {
@@ -196,7 +197,7 @@ fun TransClassDialog(
                             onClick = onTrans,
                             colors = ButtonDefaults.buttonColorsPrimary()
                         ) {
-                            Text(text = "确定", color = MiuixTheme.colorScheme.onPrimary)
+                            Text(text = "确定", color = colors.onPrimary)
                         }
                     }
                 }

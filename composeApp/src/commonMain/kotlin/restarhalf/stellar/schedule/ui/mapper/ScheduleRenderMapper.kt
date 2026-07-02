@@ -25,17 +25,19 @@ private data class CourseVisual(val cardColor: Color, val titleColor: Color, val
 
 /**
  * 每日渲染数据
- * 
+ *
  * @param items 课程渲染项列表
  */
+@Immutable
 data class DayRenderData(val items: List<CourseRenderItem>)
 
 /**
  * 课程渲染项
- * 
+ *
  * @param model 课程卡片模型
  * @param overlaps 重叠的课程列表
  */
+@Immutable
 data class CourseRenderItem(val model: CourseCardModel, val overlaps: List<Course>)
 
 /**

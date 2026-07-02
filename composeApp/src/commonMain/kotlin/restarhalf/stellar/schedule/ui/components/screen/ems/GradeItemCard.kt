@@ -54,7 +54,8 @@ fun GradeItemCard(
     onClick: () -> Unit,
 ) {
     val animProgress = remember { Animatable(0f) }
-    val summary = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val colors = MiuixTheme.colorScheme
+    val summary = colors.onSurfaceVariantSummary
     val grade = card.grade
     val accentColor = pickCourseSubColor(grade.courseName.ifBlank { grade.courseCode }, false)
 
@@ -101,7 +102,7 @@ fun GradeItemCard(
                                 Text(
                                     text = "补考",
                                     fontSize = 11.sp,
-                                    color = MiuixTheme.colorScheme.onSecondary
+                                    color = colors.onSecondary
                                 )
                             }
                         }

@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -10,11 +11,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.LocalDate
+import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
@@ -46,6 +48,7 @@ class ExaminationViewModel(
      * @param seatText 座位号文本
      * @param remarkText 备注文本
      */
+    @Immutable
     data class ExamCardUi(
         val idKey: String,
         val exam: Examination,
@@ -64,6 +67,7 @@ class ExaminationViewModel(
      * @param cards 考试卡片列表
      * @param statusText 状态文本（如"暂无考试安排"）
      */
+    @Immutable
     data class ExaminationScreenUi(
         val cards: List<ExamCardUi>,
         val statusText: String?,
@@ -76,6 +80,7 @@ class ExaminationViewModel(
      * @param error 错误消息
      * @param items 考试列表
      */
+    @Immutable
     data class ExaminationUiState(
         val loading: Boolean,
         val error: String,
@@ -212,15 +217,5 @@ class ExaminationViewModel(
             isEnded = isEnded)
     }
 
-    private fun weekdayText(dayOfWeek: DayOfWeek): String {
-        return when (dayOfWeek) {
-            DayOfWeek.MONDAY -> "一"
-            DayOfWeek.TUESDAY -> "二"
-            DayOfWeek.WEDNESDAY -> "三"
-            DayOfWeek.THURSDAY -> "四"
-            DayOfWeek.FRIDAY -> "五"
-            DayOfWeek.SATURDAY -> "六"
-            DayOfWeek.SUNDAY -> "日"
-        }
-    }
+    private fun weekdayText(dayOfWeek: DayOfWeek): String = ClockTime.weekdayShort(dayOfWeek)
 }

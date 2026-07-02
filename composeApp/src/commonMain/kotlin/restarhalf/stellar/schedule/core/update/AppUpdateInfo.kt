@@ -1,10 +1,13 @@
 package restarhalf.stellar.schedule.core.update
 
+import androidx.compose.runtime.Immutable
+
 /**
  * 应用更新信息数据类
- * 
+ *
  * 存储从GitHub Release获取的最新版本信息。
  */
+@Immutable
 data class AppUpdateInfo(
     /** 最新版本号（如"1.2.0"） */
     val latestVersion: String,

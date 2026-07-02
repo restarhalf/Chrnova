@@ -124,6 +124,7 @@ fun AboutScreen(
                 updateSummary = aboutUiState.updateSummary,
             )
         }
+    val colors = MiuixTheme.colorScheme
 
     Scaffold(
         topBar = {
@@ -135,7 +136,7 @@ fun AboutScreen(
                         Icon(
                             imageVector = Back,
                             contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = colors.onBackground,
                         )
                     }
                 },

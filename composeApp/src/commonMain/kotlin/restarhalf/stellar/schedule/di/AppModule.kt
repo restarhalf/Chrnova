@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.di
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
@@ -156,6 +158,19 @@ import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
  * - 数据存储仓库
  * - 端口实现（认证、设置、同步等）
  */
+private const val USER_AGENT =
+    "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+
+/** 为 HttpClient 安装公共模块：JSON 序列化 + 超时配置 */
+private fun HttpClientConfig<*>.installCommonModules(json: Json) {
+    install(ContentNegotiation) { json(json) }
+    install(HttpTimeout) {
+        requestTimeoutMillis = 30_000
+        connectTimeoutMillis = 10_000
+        socketTimeoutMillis = 15_000
+    }
+}
+
 val portModule = module {
     // JSON序列化配置，忽略未知键
     single { Json { ignoreUnknownKeys = true } }
@@ -169,14 +184,12 @@ val portModule = module {
     // 教务系统HTTP客户端，配置JSON序列化和认证插件
     single(named("jwxt")) {
         HttpClient {
-            install(ContentNegotiation) {
-                json(get<Json>())
-            }
+            installCommonModules(get())
             install(JwxtAuthPlugin) {
                 authStore = get()
             }
             defaultRequest {
-                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                header(HttpHeaders.UserAgent, USER_AGENT)
                 header("Referer", "http://jwyd.dlnu.edu.cn/sjd/#/login")
             }
         }
@@ -185,11 +198,9 @@ val portModule = module {
     // 体育系统HTTP客户端
     single(named("pe")) {
         HttpClient {
-            install(ContentNegotiation) {
-                json(get<Json>())
-            }
+            installCommonModules(get())
             defaultRequest {
-                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                header(HttpHeaders.UserAgent, USER_AGENT)
             }
         }
     }
@@ -230,9 +241,7 @@ val portModule = module {
     // 课件系统HTTP客户端
     single(named("papers")) {
         HttpClient {
-            install(ContentNegotiation) {
-                json(get<Json>())
-            }
+            installCommonModules(get())
         }
     }
 
@@ -293,7 +302,7 @@ val useCaseModule = module {
         )
     }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
-    single { ObserveAllExaminationsUseCase(repository = get()) }
+    single { ObserveAllExaminationsUseCase(repository = get(), auth = get()) }
     single { ObserveExaminationByIdUseCase(repository = get()) }
     single { SaveExaminationUseCase(repository = get()) }
     single { DeleteExaminationUseCase(repository = get()) }
@@ -467,7 +476,6 @@ val viewModelModule = module {
     factory {
         ScheduleViewModel(
             observeShowNonCurrentWeek = get(),
-            setShowNonCurrentWeekUseCase = get(),
             observeAllCoursesUseCase = get(),
             buildScheduleUiStateUseCase = get(),
             transCourseWithConflicts = get(),

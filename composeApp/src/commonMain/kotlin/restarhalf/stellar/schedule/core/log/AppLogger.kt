@@ -16,6 +16,9 @@ object AppLogger {
     private const val MAX_LOG_FILE_SIZE = 512 * 1024L
     private const val ROTATE_KEEP_LINES = 500
 
+    /** 内部缓冲区，避免每次 log 都创建新 List */
+    private val buffer = ArrayList<LogEntry>(MAX_ENTRIES + 1)
+
     enum class Level(val tag: String) {
         DEBUG("D"),
         INFO("I"),
@@ -39,7 +42,7 @@ object AppLogger {
     fun log(tag: String, message: String, level: Level = Level.INFO) {
         if (!enabled) return
         val entry = createEntry(tag, message, level)
-        _entries.value = (_entries.value + entry).takeLast(MAX_ENTRIES)
+        appendEntry(entry)
         appendToFile(entry)
     }
 
@@ -56,7 +59,7 @@ object AppLogger {
             }
         }
         val entry = createEntry(tag, fullMessage, level)
-        _entries.value = (_entries.value + entry).takeLast(MAX_ENTRIES)
+        appendEntry(entry)
         appendToFile(entry)
     }
 
@@ -76,9 +79,18 @@ object AppLogger {
             }
         }
         val entry = createEntry("FATAL", fullMessage, Level.ERROR)
-        _entries.value = (_entries.value + entry).takeLast(MAX_ENTRIES)
+        appendEntry(entry)
         appendToFile(entry)
         runCatching { LogFileStorage.sync() }
+    }
+
+    /** 向缓冲区追加条目，超出上限时移除最旧的，然后发布快照 */
+    private fun appendEntry(entry: LogEntry) {
+        buffer.add(entry)
+        if (buffer.size > MAX_ENTRIES) {
+            buffer.subList(0, buffer.size - MAX_ENTRIES).clear()
+        }
+        _entries.value = buffer.toList()
     }
 
     private fun createEntry(tag: String, message: String, level: Level): LogEntry {
@@ -122,7 +134,9 @@ object AppLogger {
                 }
             }
             val parsed = joined.mapNotNull { parseLogLine(it) }
-            _entries.value = parsed.takeLast(MAX_ENTRIES)
+            buffer.clear()
+            buffer.addAll(parsed.takeLast(MAX_ENTRIES))
+            _entries.value = buffer.toList()
         }
     }
 
@@ -141,6 +155,7 @@ object AppLogger {
     }
 
     fun clear() {
+        buffer.clear()
         _entries.value = emptyList()
         if (initialized) {
             runCatching { LogFileStorage.clear() }

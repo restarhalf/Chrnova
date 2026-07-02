@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,11 +21,11 @@ import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
+import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
-import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetCampusUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetTermStartMsUseCase
@@ -75,6 +76,7 @@ class AppViewModel(
      * @param termStartMs 学期开始时间戳（毫秒）
      * @param totalWeeks 学期总周数
      */
+    @Immutable
     data class AppUiState(
         val campus: Campus,
         val termStartMs: Long,

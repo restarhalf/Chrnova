@@ -84,6 +84,22 @@ class GradeViewModel(
 
     private val _summary = MutableStateFlow(TermGradeReport())
 
+    // 缓存排序后的学期列表，避免每次 combine 都重新排序
+    private var cachedGradesRef: List<GradeCourse>? = null
+    private var cachedSortedSemesters: List<String>? = null
+
+    private fun sortedSemesters(allGrades: List<GradeCourse>): List<String> {
+        if (allGrades === cachedGradesRef) return cachedSortedSemesters ?: emptyList()
+        val result = allGrades
+            .map { it.semester }
+            .distinct()
+            .filter { it.isNotBlank() }
+            .sortedWith(SemesterComparator)
+        cachedGradesRef = allGrades
+        cachedSortedSemesters = result
+        return result
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<GradeUiState> =
         combine(
@@ -105,13 +121,7 @@ class GradeViewModel(
                 }
                 // 断网状态且本地没当前学期数据，尝试寻找本地最新的其他学期数据作为回退
                 allGrades.isNotEmpty() -> {
-                    val latestSemester = allGrades
-                        .map { it.semester }
-                        .distinct()
-                        .filter { it.isNotBlank() }
-                        .sortedWith(SemesterComparator)
-                        .lastOrNull()
-                    
+                    val latestSemester = sortedSemesters(allGrades).lastOrNull()
                     val fallbackItems = allGrades.filter { it.semester == latestSemester }
                     summary.copy(achievements = fallbackItems)
                 }
@@ -214,7 +224,7 @@ class GradeViewModel(
      * @param grade 成绩数据
      * @return 包含课程代码和学分的副标题
      */
-    fun buildGradeSubtitle(grade: GradeCourse): String {
+    private fun buildGradeSubtitle(grade: GradeCourse): String {
         return listOf(
             grade.courseCode.takeIf { it.isNotBlank() },
             "学分:${grade.credit.displayOrDash()}",
@@ -253,7 +263,7 @@ class GradeViewModel(
      * @param grade 成绩数据
      * @return 分数、等级或通过状态
      */
-    fun buildGradeScoreText(grade: GradeCourse): String {
+    private fun buildGradeScoreText(grade: GradeCourse): String {
         return grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } }
     }
 

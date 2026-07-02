@@ -17,29 +17,6 @@ import restarhalf.stellar.schedule.domain.usecase.FetchPapersUseCase
 import restarhalf.stellar.schedule.domain.usecase.UploadPaperUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 
-data class PapersUiState(
-    val loading: Boolean = false,
-    val error: String? = null,
-    val successMessage: String? = null,
-    val allPapers: List<Paper> = emptyList(),
-    val folders: List<String> = emptyList(),
-    val selectedFolder: String = "",
-    val searchQuery: String = "",
-    val selectedPaper: Paper? = null,
-    val uploading: Boolean = false,
-    val downloadUrl: String? = null,
-    val githubUsername: String = "",
-    val isStarVerified: Boolean = false,
-    val verifyingStar: Boolean = false,
-    val showStarDialog: Boolean = false,
-) {
-    val papers: List<Paper>
-        get() = allPapers.filter { paper ->
-            (selectedFolder.isEmpty() || paper.folder == selectedFolder) &&
-                (searchQuery.isEmpty() || paper.title.contains(searchQuery, ignoreCase = true))
-        }
-}
-
 class PapersViewModel(
     private val fetchPapers: FetchPapersUseCase,
     private val fetchPaperFolders: FetchPaperFoldersUseCase,
@@ -48,6 +25,27 @@ class PapersViewModel(
     private val uploadPaperUseCase: UploadPaperUseCase,
     private val verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
+
+    data class PapersUiState(
+        val loading: Boolean = false,
+        val error: String? = null,
+        val successMessage: String? = null,
+        val allPapers: List<Paper> = emptyList(),
+        val folders: List<String> = emptyList(),
+        val searchQuery: String = "",
+        val selectedPaper: Paper? = null,
+        val uploading: Boolean = false,
+        val downloadUrl: String? = null,
+        val githubUsername: String = "",
+        val isStarVerified: Boolean = false,
+        val verifyingStar: Boolean = false,
+        val showStarDialog: Boolean = false,
+    ) {
+        val papers: List<Paper>
+            get() = allPapers.filter { paper ->
+                searchQuery.isEmpty() || paper.title.contains(searchQuery, ignoreCase = true)
+            }
+    }
 
     private val _uiState = MutableStateFlow(PapersUiState())
     val uiState: StateFlow<PapersUiState> = _uiState
@@ -147,10 +145,6 @@ class PapersViewModel(
 
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-    }
-
-    fun onFolderFilter(folder: String) {
-        _uiState.update { it.copy(selectedFolder = folder) }
     }
 
     fun onGitHubUsernameChange(username: String) {

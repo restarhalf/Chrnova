@@ -78,6 +78,7 @@ fun PictureSelectorSheet(
     val scope = rememberCoroutineScope()
     val currentOnPicked by rememberUpdatedState(onPicked)
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
+    val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(show, hasPermission) {
         if (!show) {
@@ -132,7 +133,7 @@ fun PictureSelectorSheet(
         outsideMargin = BottomSheetDefaults.outsideMargin,
         insideMargin = BottomSheetDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        dragHandleColor = MiuixTheme.colorScheme.surface,
+        dragHandleColor = colors.surface,
         allowDismiss = false,
         enableNestedScroll = true,
     ) {
@@ -228,18 +229,20 @@ private fun PermissionContent(
     summary: String,
     onRequestPermission: () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
+
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = summary, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+            Text(text = summary, color = colors.onSurfaceVariantSummary)
             Button(
                 colors = ButtonDefaults.buttonColorsPrimary(),
                 onClick = onRequestPermission,
             ) {
-                Text(text = "授予权限", color = MiuixTheme.colorScheme.onPrimary)
+                Text(text = "授予权限", color = colors.onPrimary)
             }
         }
     }
@@ -264,12 +267,13 @@ private fun AlbumBreadcrumb(
     album: MediaAlbum,
     onBack: () -> Unit,
 ) {
+    val colors = MiuixTheme.colorScheme
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(MiuixTheme.colorScheme.surface)
+                .background(colors.surface)
                 .clickable(onClick = onBack)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -277,12 +281,12 @@ private fun AlbumBreadcrumb(
     ) {
         Text(
             text = "返回相册列表",
-            color = MiuixTheme.colorScheme.primary,
+            color = colors.primary,
             fontWeight = FontWeight.Medium,
         )
         Text(
             text = album.bucketName,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = colors.onSurfaceVariantSummary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -319,6 +323,7 @@ private fun AlbumRow(
     onClick: () -> Unit,
     port: PictureSelectorPort,
 ) {
+    val colors = MiuixTheme.colorScheme
     AppCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -333,7 +338,7 @@ private fun AlbumRow(
                     Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MiuixTheme.colorScheme.surface),
+                        .background(colors.surface),
                 maxSidePx = 192,
             )
 
@@ -348,7 +353,7 @@ private fun AlbumRow(
                 )
                 Text(
                     text = "${album.count} 张",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = colors.onSurfaceVariantSummary,
                 )
             }
         }
@@ -365,6 +370,7 @@ private fun ImageGrid(
     modifier: Modifier = Modifier,
     port: PictureSelectorPort,
 ) {
+    val colors = MiuixTheme.colorScheme
     when {
         isRefreshing && images.isEmpty() -> PlaceholderText("正在读取图片...", modifier)
         images.isEmpty() -> PlaceholderText("没有找到图片", modifier)
@@ -393,7 +399,7 @@ private fun ImageGrid(
                                 .fillMaxWidth()
                                 .aspectRatio(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(MiuixTheme.colorScheme.surface)
+                                .background(colors.surface)
                                 .clickable { onImageClick(image) },
                         maxSidePx = 360,
                     )
@@ -404,7 +410,7 @@ private fun ImageGrid(
                         Text(
                             text = "加载更多中...",
                             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = colors.onSurfaceVariantSummary,
                         )
                     }
                 }
@@ -474,10 +480,11 @@ private fun PlaceholderText(
     text: String,
     modifier: Modifier = Modifier,
 ) {
+    val colors = MiuixTheme.colorScheme
     Box(
         modifier = modifier.fillMaxWidth().heightIn(min = 320.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = text, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+        Text(text = text, color = colors.onSurfaceVariantSummary)
     }
 }

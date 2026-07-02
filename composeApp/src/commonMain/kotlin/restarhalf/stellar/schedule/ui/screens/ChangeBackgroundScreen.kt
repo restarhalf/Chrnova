@@ -55,6 +55,7 @@ fun ChangeBackgroundScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val showPictureSelector = remember { mutableStateOf(false) }
+    val colors = MiuixTheme.colorScheme
 
     val backgroundUiState by vm.uiState.collectAsState()
 
@@ -84,7 +85,7 @@ fun ChangeBackgroundScreen(
                         Icon(
                             imageVector = Back,
                             contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground
+                            tint = colors.onBackground
                         )
                     }
                 })
