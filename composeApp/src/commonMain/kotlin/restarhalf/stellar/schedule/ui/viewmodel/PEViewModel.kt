@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerializationException
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
@@ -211,7 +212,12 @@ class PEViewModel(
                     _yearScores.value = result.dataArr.sortedByDescending { it.schoolYear }
                     _loadedScoreList.value = true
                 }.onFailure {
-                    if (it is PETokenExpiredException) {
+                    if (it is PETokenExpiredException || it is SerializationException) {
+                        val reloginResult = peLoginUseCase.autoLogin()
+                        if (reloginResult?.status == "PASS") {
+                            loadScoreList()
+                            return@withLock
+                        }
                         _needsLogin.value = true
                     }
                     AppLogger.log("PE", "加载体育成绩失败", it)
@@ -239,7 +245,12 @@ class PEViewModel(
                     _detailData.value = it.data
                     _loadedDetail.value = true
                 }.onFailure {
-                    if (it is PETokenExpiredException) {
+                    if (it is PETokenExpiredException || it is SerializationException) {
+                        val reloginResult = peLoginUseCase.autoLogin()
+                        if (reloginResult?.status == "PASS") {
+                            loadScoreDetail(schoolYear)
+                            return@withLock
+                        }
                         _needsLogin.value = true
                     }
                     AppLogger.log("PE", "加载体测详情失败", it)
@@ -259,7 +270,12 @@ class PEViewModel(
             }.onSuccess {
                 _studentInfo.value = it.data
             }.onFailure {
-                if (it is PETokenExpiredException) {
+                if (it is PETokenExpiredException || it is SerializationException) {
+                    val reloginResult = peLoginUseCase.autoLogin()
+                    if (reloginResult?.status == "PASS") {
+                        loadStudentInfo()
+                        return@launch
+                    }
                     _needsLogin.value = true
                 }
                 AppLogger.log("PE", "加载学生信息失败", it)

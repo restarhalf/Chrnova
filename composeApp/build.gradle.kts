@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidMultiplatform)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.multiplatform)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.androidx.room3)
@@ -34,7 +34,7 @@ val localSecretsPapersBaseUrl =
     (localProps.getProperty("PAPERS_BASE_URL") ?: System.getenv("PAPERS_BASE_URL"))
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-        ?: "http://localhost:8080"
+        ?: error("PAPERS_BASE_URL missing in local.properties or environment")
 
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
@@ -90,7 +90,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 }
 
 val generateLocalSecrets = tasks.register<GenerateLocalSecretsTask>("generateLocalSecrets") {
-    description = ""
+    description = "生成LocalSecrets"
     aesKey.set(localSecretsAesKey)
     signKey.set(localSecretsSignKey)
     papersBaseUrl.set(localSecretsPapersBaseUrl)
@@ -166,7 +166,6 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.client.logging)
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.multiplatform.markdown.renderer)
@@ -192,7 +191,5 @@ kotlin {
 }
 
 dependencies {
-    add("kspAndroid", libs.room3.compiler)
-    add("kspIosArm64", libs.room3.compiler)
-    add("kspIosSimulatorArm64", libs.room3.compiler)
+    ksp(libs.room3.compiler)
 }

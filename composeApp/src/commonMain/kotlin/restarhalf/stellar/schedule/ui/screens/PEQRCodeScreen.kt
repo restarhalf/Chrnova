@@ -29,6 +29,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.alexzhirkevich.qrose.options.QrErrorCorrectionLevel
+import io.github.alexzhirkevich.qrose.options.QrOptions
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.ktor.http.encodeURLParameter
 import restarhalf.stellar.schedule.domain.model.AuthProfile
@@ -136,7 +138,12 @@ fun PEQRCodeScreen(
                             val codeContent = "id=$id&name=$urlName"
                             Image(
                                 modifier = Modifier.size(240.dp),
-                                painter = rememberQrCodePainter(data = codeContent),
+                                painter = rememberQrCodePainter(
+                                    data = codeContent,
+                                    options = QrOptions(
+                                        errorCorrectionLevel = QrErrorCorrectionLevel.High,
+                                    ),
+                                ),
                                 contentDescription = "体测二维码",
                             )
                         }

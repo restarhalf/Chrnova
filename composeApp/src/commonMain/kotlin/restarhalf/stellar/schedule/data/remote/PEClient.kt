@@ -6,6 +6,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -93,7 +94,12 @@ class PEClient(
                 throw IllegalStateException("获取成绩列表失败（HTTP ${response.status.value}）")
             }
 
-            val parsed = json.decodeFromString(PEScoreListResponse.serializer(), response.body())
+            val body = response.bodyAsText()
+            if (body.isBlank()) {
+                throw PETokenExpiredException("登录已过期，请重新登录")
+            }
+
+            val parsed = json.decodeFromString(PEScoreListResponse.serializer(), body)
             if (parsed.status != "PASS") {
                 throw PETokenExpiredException("登录已过期，请重新登录")
             }
@@ -126,7 +132,12 @@ class PEClient(
                 throw IllegalStateException("获取成绩详情失败（HTTP ${response.status.value}）")
             }
 
-            val parsed = json.decodeFromString(PEDetailResponse.serializer(), response.body())
+            val body = response.bodyAsText()
+            if (body.isBlank()) {
+                throw PETokenExpiredException("登录已过期，请重新登录")
+            }
+
+            val parsed = json.decodeFromString(PEDetailResponse.serializer(), body)
             if (parsed.status != "PASS") {
                 throw PETokenExpiredException("登录已过期，请重新登录")
             }
@@ -157,7 +168,12 @@ class PEClient(
                 throw IllegalStateException("获取学生信息失败（HTTP ${response.status.value}）")
             }
 
-            val parsed = json.decodeFromString(PEStudentInfoResponse.serializer(), response.body())
+            val body = response.bodyAsText()
+            if (body.isBlank()) {
+                throw PETokenExpiredException("登录已过期，请重新登录")
+            }
+
+            val parsed = json.decodeFromString(PEStudentInfoResponse.serializer(), body)
             if (parsed.status != "PASS") {
                 throw PETokenExpiredException("登录已过期，请重新登录")
             }

@@ -1,7 +1,7 @@
 ﻿import java.util.Properties
 
 plugins {
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.android.application)
 }
 val localProps = Properties().apply {
     runCatching { load(rootProject.file("local.properties").inputStream()) }

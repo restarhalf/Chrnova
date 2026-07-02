@@ -83,7 +83,6 @@ fun PEScoreScreen(
     val uiState by vm.uiState.collectAsState()
     val yearScores = uiState.yearScores
     val loading = uiState.loading
-    val error = uiState.error
     val loggedIn = vm.isLoggedIn()
     val hasQRCodeInfo =
         loggedIn || (authProfile?.userNo?.isNotBlank() == true && authProfile.name.isNotBlank())
@@ -104,7 +103,7 @@ fun PEScoreScreen(
                 AppPageTopBar(
                     title = "体测",
                     scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
+                    actions = {
                         if (hasQRCodeInfo) {
                             IconButton(onClick = onQRCode) {
                                 Icon(imageVector = QrCode, contentDescription = "二维码")
@@ -132,8 +131,6 @@ fun PEScoreScreen(
                 }
             }
         },
-        popupHost = {
-        }
     ) { paddingValues ->
         PullToRefresh(
             isRefreshing = loading,
