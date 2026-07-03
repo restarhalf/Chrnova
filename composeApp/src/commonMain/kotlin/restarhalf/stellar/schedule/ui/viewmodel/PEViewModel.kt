@@ -71,6 +71,11 @@ class PEViewModel(
     /** 统一的UI状态流 */
     val uiState: StateFlow<PeUiState> = _uiState
 
+    private val _isLoggedIn = MutableStateFlow(peLoginUseCase.isLoggedIn())
+
+    /** 是否已登录（响应式） */
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+
     private val loadMutex = Mutex()
 
     init {
@@ -170,7 +175,7 @@ class PEViewModel(
      *
      * @return 是否已登录
      */
-    fun isLoggedIn(): Boolean = peLoginUseCase.isLoggedIn()
+    fun isLoggedIn(): Boolean = _isLoggedIn.value
 
     /** 加载成绩列表 */
     fun loadScoreList() {
@@ -190,9 +195,11 @@ class PEViewModel(
                     if (it is PETokenExpiredException || it is SerializationException) {
                         val reloginResult = peLoginUseCase.autoLogin()
                         if (reloginResult?.status == "PASS") {
+                            _isLoggedIn.value = true
                             loadScoreList()
                             return@withLock
                         }
+                        _isLoggedIn.value = false
                         _uiState.update { s -> s.copy(needsLogin = true) }
                     }
                     AppLogger.log("PE", "加载体育成绩失败", it)
@@ -220,9 +227,11 @@ class PEViewModel(
                     if (it is PETokenExpiredException || it is SerializationException) {
                         val reloginResult = peLoginUseCase.autoLogin()
                         if (reloginResult?.status == "PASS") {
+                            _isLoggedIn.value = true
                             loadScoreDetail(schoolYear)
                             return@withLock
                         }
+                        _isLoggedIn.value = false
                         _uiState.update { s -> s.copy(needsLogin = true) }
                     }
                     AppLogger.log("PE", "加载体测详情失败", it)
@@ -245,9 +254,11 @@ class PEViewModel(
                 if (it is PETokenExpiredException || it is SerializationException) {
                     val reloginResult = peLoginUseCase.autoLogin()
                     if (reloginResult?.status == "PASS") {
+                        _isLoggedIn.value = true
                         loadStudentInfo()
                         return@launch
                     }
+                    _isLoggedIn.value = false
                     _uiState.update { s -> s.copy(needsLogin = true) }
                 }
                 AppLogger.log("PE", "加载学生信息失败", it)
@@ -260,6 +271,7 @@ class PEViewModel(
     fun logout() {
         viewModelScope.launch {
             peLogoutUseCase()
+            _isLoggedIn.value = false
             _uiState.value = PeUiState()
         }
     }

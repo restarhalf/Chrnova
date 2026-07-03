@@ -573,7 +573,7 @@ private fun MainRouteContent(
             }
 
             Screen.Settings -> {
-                val isPeLoggedIn = peVm.isLoggedIn()
+                val isPeLoggedIn by peVm.isLoggedIn.collectAsState()
                 SettingsScreen(
                     vm = settingsVm,
                     syncUiState = appState.syncUiState,

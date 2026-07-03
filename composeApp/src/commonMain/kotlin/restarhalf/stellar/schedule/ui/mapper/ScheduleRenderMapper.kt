@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.core.course.filterNonOverlapping
-import restarhalf.stellar.schedule.core.course.filterNonOverlappingForPreview
 import restarhalf.stellar.schedule.core.course.findOverlappingCourses
 import restarhalf.stellar.schedule.core.course.hasOverlapWith
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
@@ -103,7 +102,7 @@ fun buildDayRenderData(
 
     val shown =
         if (page == 0) {
-            filterNonOverlappingForPreview(dayCourses)
+            filterNonOverlapping(dayCourses)
         } else {
             val current = dayCourses.filter { isCourseActiveInWeek(it, page) }
             if (!showNonCurrentWeek) {

@@ -65,6 +65,7 @@ import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailIte
 import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
 import restarhalf.stellar.schedule.ui.icons.Add
+import restarhalf.stellar.schedule.ui.mapper.CourseRenderItem
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -566,63 +567,14 @@ fun ScheduleScreen(
                                 }
 
                                 Row(modifier = Modifier.fillMaxWidth()) {
-
-
-                                    Column(
-                                        modifier = Modifier.width(36.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        (1..12).forEach { section ->
-                                            val slot = timetable.getOrNull(section - 1)
-
-                                            Box(
-                                                modifier = Modifier.height(rowHeight),
-                                                contentAlignment = Alignment.TopCenter
-                                            ) {
-                                                Column(
-                                                    modifier = Modifier.padding(top = 6.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
-                                                ) {
-                                                    Text(
-                                                        text = section.toString(),
-                                                        fontSize = 14.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = textSecondary
-                                                    )
-
-                                                    Spacer(modifier = Modifier.height(2.dp))
-
-                                                    Text(
-                                                        text = slot?.start ?: "",
-                                                        fontSize = 9.sp,
-                                                        color = textHint
-                                                    )
-
-                                                    Text(
-                                                        text = slot?.end ?: "",
-                                                        fontSize = 9.sp,
-                                                        color = textHint
-                                                    )
-                                                }
-                                            }
-
-                                            if (section == 4 || section == 8) {
-
-                                                Spacer(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .height(restHeight)
-                                                )
-                                            }
-
-                                            if (section != 12) {
-
-                                                Spacer(modifier = Modifier.height(rowGap))
-                                            }
-                                        }
-                                    }
-
-
+                                    ScheduleSectionLabels(
+                                        timetable = timetable,
+                                        rowHeight = rowHeight,
+                                        rowGap = rowGap,
+                                        restHeight = restHeight,
+                                        textSecondary = textSecondary,
+                                        textHint = textHint,
+                                    )
 
                                     Row(modifier = Modifier.weight(1f)) {
                                         (1..dayCount).forEach { day ->
@@ -632,86 +584,170 @@ fun ScheduleScreen(
                                                     .fillMaxHeight()
                                             ) {
                                                 val dayData = pageRenderData[day]
-
                                                 val renderItems = dayData?.items.orEmpty()
-                                                renderItems.forEach { item ->
-                                                    CourseCard(
-                                                        model = item.model,
-                                                        onClick = {
+
+                                                ScheduleDayContent(
+                                                    renderItems = renderItems,
+                                                    day = day,
+                                                    rowHeight = rowHeight,
+                                                    rowGap = rowGap,
+                                                    selectedEmptyCell = selectedEmptyCell,
+                                                    onEmptyCellClick = { d, s ->
+                                                        if (selectedEmptyCell == Pair(d, s)) {
+                                                            onAddLabCourse(d, s, currentWeek)
                                                             selectedEmptyCell = null
-                                                            vm.openDetailSheet(item.overlaps)
-                                                        })
-                                                }
-
-                                                // 预计算已占用节次集合，避免每次重组都遍历
-                                                val occupiedSections = remember(renderItems) {
-                                                    val rowHeightPx = rowHeight.value
-                                                    val rowGapPx = (rowHeight + rowGap).value
-                                                    buildSet {
-                                                        for (item in renderItems) {
-                                                            val courseStart =
-                                                                (item.model.topOffsetY.value / rowGapPx).toInt() + 1
-                                                            val courseSections =
-                                                                (item.model.height.value / rowHeightPx).toInt()
-                                                                    .coerceAtLeast(1)
-                                                            for (s in courseStart until (courseStart + courseSections)) {
-                                                                add(s)
-                                                            }
+                                                        } else {
+                                                            selectedEmptyCell = Pair(d, s)
                                                         }
-                                                    }
-                                                }
-                                                val emptyCellInteractionSource =
-                                                    remember { MutableInteractionSource() }
-
-                                                (1..12).forEach { section ->
-                                                    if (section !in occupiedSections) {
-                                                        val isSelected = selectedEmptyCell == Pair(day, section)
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .height(rowHeight)
-                                                                .padding(horizontal = 2.5.dp)
-                                                                .offset(y = yForSection(section))
-                                                                .clickable(
-                                                                    interactionSource = emptyCellInteractionSource,
-                                                                    indication = null
-                                                                ) {
-                                                                    if (isSelected) {
-                                                                        onAddLabCourse(day, section, currentWeek)
-                                                                        selectedEmptyCell = null
-                                                                    } else {
-                                                                        selectedEmptyCell = Pair(day, section)
-                                                                    }
-                                                                },
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            if (isSelected) {
-                                                                Box(
-                                                                    modifier = Modifier
-                                                                        .fillMaxSize()
-                                                                        .background(
-                                                                            color = colors.surfaceContainerHighest,
-                                                                            shape = RoundedCornerShape(8.dp)
-                                                                        ),
-                                                                    contentAlignment = Alignment.Center
-                                                                ) {
-                                                                    Icon(
-                                                                        imageVector = Add,
-                                                                        contentDescription = "添加课程",
-                                                                        tint = colors.surfaceVariant,
-                                                                        modifier = Modifier.size(24.dp)
-                                                                    )
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                    },
+                                                    onCourseClick = { item ->
+                                                        selectedEmptyCell = null
+                                                        vm.openDetailSheet(item.overlaps)
+                                                    },
+                                                    yForSection = ::yForSection,
+                                                )
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleSectionLabels(
+    timetable: List<TimetableSlot>,
+    rowHeight: Dp,
+    rowGap: Dp,
+    restHeight: Dp,
+    textSecondary: Color,
+    textHint: Color,
+) {
+    Column(
+        modifier = Modifier.width(36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        (1..12).forEach { section ->
+            val slot = timetable.getOrNull(section - 1)
+
+            Box(
+                modifier = Modifier.height(rowHeight),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = section.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = slot?.start ?: "",
+                        fontSize = 9.sp,
+                        color = textHint
+                    )
+                    Text(
+                        text = slot?.end ?: "",
+                        fontSize = 9.sp,
+                        color = textHint
+                    )
+                }
+            }
+
+            if (section == 4 || section == 8) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(restHeight)
+                )
+            }
+
+            if (section != 12) {
+                Spacer(modifier = Modifier.height(rowGap))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleDayContent(
+    renderItems: List<CourseRenderItem>,
+    day: Int,
+    rowHeight: Dp,
+    rowGap: Dp,
+    selectedEmptyCell: Pair<Int, Int>?,
+    onEmptyCellClick: (day: Int, section: Int) -> Unit,
+    onCourseClick: (CourseRenderItem) -> Unit,
+    yForSection: (Int) -> Dp,
+) {
+    val colors = MiuixTheme.colorScheme
+    renderItems.forEach { item ->
+        CourseCard(
+            model = item.model,
+            onClick = { onCourseClick(item) }
+        )
+    }
+
+    val occupiedSections = remember(renderItems) {
+        val rowHeightPx = rowHeight.value
+        val rowGapPx = (rowHeight + rowGap).value
+        buildSet {
+            for (item in renderItems) {
+                val courseStart =
+                    (item.model.topOffsetY.value / rowGapPx).toInt() + 1
+                val courseSections =
+                    (item.model.height.value / rowHeightPx).toInt()
+                        .coerceAtLeast(1)
+                for (s in courseStart until (courseStart + courseSections)) {
+                    add(s)
+                }
+            }
+        }
+    }
+    val emptyCellInteractionSource = remember { MutableInteractionSource() }
+
+    (1..12).forEach { section ->
+        if (section !in occupiedSections) {
+            val isSelected = selectedEmptyCell == Pair(day, section)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(rowHeight)
+                    .padding(horizontal = 2.5.dp)
+                    .offset(y = yForSection(section))
+                    .clickable(
+                        interactionSource = emptyCellInteractionSource,
+                        indication = null
+                    ) {
+                        onEmptyCellClick(day, section)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                color = colors.surfaceContainerHighest,
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Add,
+                            contentDescription = "添加课程",
+                            tint = colors.surfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }

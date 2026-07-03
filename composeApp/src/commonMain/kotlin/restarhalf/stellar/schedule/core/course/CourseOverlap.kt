@@ -58,5 +58,3 @@ fun filterNonOverlapping(courses: List<Course>): List<Course> {
     return result
 }
 
-fun filterNonOverlappingForPreview(courses: List<Course>): List<Course> =
-    filterNonOverlapping(courses)

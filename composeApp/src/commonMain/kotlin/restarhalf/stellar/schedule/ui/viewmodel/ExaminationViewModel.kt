@@ -94,7 +94,7 @@ class ExaminationViewModel(
     private val _userNo = observeAuthProfile().map { it.userNo }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(5_000),
             initialValue = "",
         )
 
