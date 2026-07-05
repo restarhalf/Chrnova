@@ -63,7 +63,8 @@ class AcademicPortImpl(
      * @return 学期ID列表（去重）
      */
     override suspend fun fetchSemesterIds(): List<String> {
-        return gateway.getSemesterList().map { it.xnxq01id }.filter { it.isNotBlank() }.distinct()
+        return gateway.getSemesterListFromEndpoint().map { it.semesterId }
+            .filter { it.isNotBlank() }.distinct()
     }
 
     /**

@@ -25,6 +25,7 @@ import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.data.local.getCampusTimetable
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -116,11 +117,21 @@ internal object WidgetDataRepository {
             val totalWeeks = prefs.getTotalWeeks()
             val termStartMs = prefs.getTermStartMs()
 
+            // 读取当前激活的学期，按学期过滤课程
+            val appSettings =
+                SharedPreferencesSettings.Factory(context).create(SettingsKeys.PREFS_NAME)
+            val activeScheduleTerm = appSettings.getString(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
+            val filteredCourses = if (activeScheduleTerm.isNotBlank()) {
+                db.courseDao().getCoursesBySemesterOnce(activeScheduleTerm).map { it.toDomain() }
+            } else {
+                courses
+            }
+
             val now =
                 Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val nowMinutes = now.hour * 60 + now.minute
 
-            val today = loadDayCourses(courses, timetable, totalWeeks, termStartMs, now, 0)
+            val today = loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 0)
             val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
 
             if (todayRemaining.isNotEmpty()) {
@@ -130,7 +141,8 @@ internal object WidgetDataRepository {
                 )
             }
 
-            val tomorrow = loadDayCourses(courses, timetable, totalWeeks, termStartMs, now, 1)
+            val tomorrow =
+                loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 1)
             if (tomorrow.sessions.isNotEmpty()) {
                 return@withContext WidgetSnapshot(
                     small = buildSmallFromTomorrow(tomorrow),
@@ -143,7 +155,14 @@ internal object WidgetDataRepository {
             val remainingDays =
                 if (remainingDaysCount > 0) {
                     (2..remainingDaysCount).map { offset ->
-                        loadDayCourses(courses, timetable, totalWeeks, termStartMs, now, offset)
+                        loadDayCourses(
+                            filteredCourses,
+                            timetable,
+                            totalWeeks,
+                            termStartMs,
+                            now,
+                            offset
+                        )
                     }
                 } else {
                     emptyList()

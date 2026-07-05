@@ -63,7 +63,7 @@ data class JwxtCurrentTermItem(
 /** 当前学期响应类型别名 */
 typealias JwxtCurrentTermResponse = JwxtApiResponse<List<JwxtCurrentTermItem>>
 
-/** 学期项 */
+/** 学期项（getXnxqList接口） */
 @Serializable
 data class JwxtSemesterItem(
     @SerialName("num") val num: String = "",
@@ -76,6 +76,16 @@ data class JwxtSemesterItem(
     @SerialName("xqmc") val xqmc: String = ""
 ) {
     fun isCurrent(): Boolean = isCurrentTerm == "1"
+}
+
+/** 学期列表项（semesterList接口） */
+@Serializable
+data class JwxtSemesterListItem(
+    @SerialName("semesterId") val semesterId: String = "",
+    @SerialName("semesterName") val semesterName: String = "",
+    @SerialName("nowXq") val nowXq: String = ""
+) {
+    fun isCurrent(): Boolean = nowXq == "1"
 }
 
 /** 教学周项 */

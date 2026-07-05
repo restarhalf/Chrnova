@@ -193,10 +193,11 @@ class ElectiveCreditViewModel(
      * @return 学分类别列表
      */
     private fun calculateCredits(courses: List<GradeCourse>): List<CreditCategory> {
-        // 按类别分组
+        // 按类别分组，只统计及格的课程
         val categorizedCourses = mutableMapOf<String, MutableList<GradeCourse>>()
 
         for (course in courses) {
+            if (!isCoursePassed(course)) continue
             val code = extractCategoryCode(course.courseCode)
             if (code != null) {
                 val xCode = convertToXCode(code)
@@ -215,6 +216,18 @@ class ElectiveCreditViewModel(
                 courses = coursesInCategory,
             )
         }
+    }
+
+    /**
+     * 判断课程是否及格
+     *
+     * 及格条件：成绩分数 >= 60 或 通过状态为"合格"
+     */
+    private fun isCoursePassed(course: GradeCourse): Boolean {
+        val score = course.score.toDoubleOrNull()
+        if (score != null && score >= 60.0) return true
+        if (course.passStatus == "合格") return true
+        return false
     }
 
     /**

@@ -40,6 +40,13 @@ interface JwxtGateway {
     suspend fun getSemesterList(): List<JwxtSemesterItem>
 
     /**
+     * 获取学期列表（semesterList接口）
+     * 
+     * @return 学期列表
+     */
+    suspend fun getSemesterListFromEndpoint(): List<JwxtSemesterListItem>
+
+    /**
      * 获取教学周信息
      * 
      * @return 教学周响应

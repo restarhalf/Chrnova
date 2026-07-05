@@ -96,6 +96,19 @@ class JwxtClient(
             json.decodeFromString(ListSerializer(JwxtSemesterItem.serializer()), body)
         }
 
+    override suspend fun getSemesterListFromEndpoint(): List<JwxtSemesterListItem> =
+        withContext(AppIoDispatcher) {
+            val body = executePostEmpty("$BASE_URL/semesterList")
+            val response = json.decodeFromString(
+                JwxtApiResponse.serializer(ListSerializer(JwxtSemesterListItem.serializer())), body
+            )
+            if (!response.isSuccess()) {
+                throw IllegalStateException(
+                    response.messageOrEmpty().ifBlank { "获取学期列表失败" })
+            }
+            response.data ?: emptyList()
+        }
+
     override suspend fun getTeachingWeek(): JwxtTeachingWeekResponse =
         withContext(AppIoDispatcher) {
             val body = executePostEmpty("$BASE_URL/teachingWeek")
