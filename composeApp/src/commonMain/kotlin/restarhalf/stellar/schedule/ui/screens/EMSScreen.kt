@@ -57,6 +57,8 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.ExamItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
+import restarhalf.stellar.schedule.ui.components.screen.ems.GradeSummaryCard
+import restarhalf.stellar.schedule.ui.icons.Credit
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -64,6 +66,8 @@ import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
@@ -147,19 +151,20 @@ fun EMSScreen(
                     title = "考务",
                     scrollBehavior = topAppBarScrollBehavior,
                     actions = {
-                        Text(
-                            text = "学分统计",
-                            fontSize = 14.sp,
-                            color = colors.primary,
-                            modifier = Modifier.clickable { onNavigateToElectiveCredit() }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        IconButton(
+                            onClick = onNavigateToElectiveCredit
+                        ) {
+                            Icon(
+                                imageVector = Credit,
+                                contentDescription = "选修学分"
+                            )
+                        }
                     }
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
                     TabRowWithContour(
                         tabs = listOf("考试", "成绩"),
                         selectedTabIndex = selectedTab,
@@ -257,7 +262,10 @@ fun EMSScreen(
                             item(key = "add_exam_card") {
                                 val animProgress = remember { Animatable(0f) }
                                 LaunchedEffect(Unit) {
-                                    animProgress.animateTo(targetValue = 1f, animationSpec = tween(durationMillis = 300))
+                                    animProgress.animateTo(
+                                        targetValue = 1f,
+                                        animationSpec = tween(durationMillis = 300)
+                                    )
                                 }
                                 Box(
                                     modifier = Modifier.animateItem(
@@ -273,7 +281,8 @@ fun EMSScreen(
                                             .clickable { onAddExam() }
                                     ) {
                                         Row(
-                                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(14.dp),
+                                            modifier = Modifier.fillMaxWidth()
+                                                .height(IntrinsicSize.Min).padding(14.dp),
                                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
                                             Column(
@@ -295,7 +304,7 @@ fun EMSScreen(
                                                     text = "添加考试",
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 15.sp,
-                                                    color=colors.primary
+                                                    color = colors.primary
                                                 )
                                                 Text(
                                                     text = "",
@@ -313,19 +322,27 @@ fun EMSScreen(
                                 }
                             }
                         }
-                        1 -> items(gradeScreenUi.cards, key = { it.idKey }) { card ->
-                            Box(
-                                modifier = Modifier.animateItem(
-                                    placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+
+                        1 -> {
+                            item(key = "grade_summary") {
+                                GradeSummaryCard(
+                                    summary = gradeScreenUi.summary,
                                 )
-                            ) {
-                                GradeItemCard(
-                                    card = card,
-                                    onClick = {
-                                        selectedGrade = card.grade
-                                        showGradeDetailsDialog.value = true
-                                    }
-                                )
+                            }
+                            items(gradeScreenUi.cards, key = { it.idKey }) { card ->
+                                Box(
+                                    modifier = Modifier.animateItem(
+                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                    )
+                                ) {
+                                    GradeItemCard(
+                                        card = card,
+                                        onClick = {
+                                            selectedGrade = card.grade
+                                            showGradeDetailsDialog.value = true
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

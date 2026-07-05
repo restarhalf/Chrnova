@@ -132,7 +132,11 @@ fun GradeItemCard(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp
                     )
-                    Text(text = card.attrText, fontSize = 12.sp, color = summary)
+                    Text(
+                        text = card.jdText,
+                        fontSize = 12.sp,
+                        color = summary,
+                    )
                 }
             }
         }

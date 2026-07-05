@@ -47,13 +47,28 @@ class GradeViewModel(
     )
 
     /**
+     * 成绩汇总信息
+     *
+     * @param earnedCredits 已获得学分
+     * @param totalGradePoints 总绩点
+     * @param averageCreditGradePoint 平均学分绩点
+     */
+    data class GradeSummary(
+        val earnedCredits: String = "",
+        val totalGradePoints: String = "",
+        val averageCreditGradePoint: String = "",
+    )
+
+    /**
      * 成绩页面UI
      * 
      * @param cards 成绩卡片列表
+     * @param summary 成绩汇总信息
      * @param statusText 状态文本（如"暂无成绩数据"）
      */
     data class GradeScreenUi(
         val cards: List<GradeCardUi>,
+        val summary: GradeSummary,
         val statusText: String?,
     )
 
@@ -65,7 +80,7 @@ class GradeViewModel(
      * @param title 课程名称
      * @param subtitle 副标题（课程代码、学分等）
      * @param scoreText 成绩文本
-     * @param attrText 课程属性
+     * @param jdText 课程绩点
      * @param isRetakeExam 是否为补考
      */
     data class GradeCardUi(
@@ -74,7 +89,7 @@ class GradeViewModel(
         val title: String,
         val subtitle: String,
         val scoreText: String,
-        val attrText: String,
+        val jdText: String,
         val isRetakeExam: Boolean,
     )
 
@@ -201,13 +216,18 @@ class GradeViewModel(
     ): GradeScreenUi {
         val courses = report.achievements
         val cards = courses.map { buildGradeCardUi(it) }
+        val summary = GradeSummary(
+            earnedCredits = report.earnedCredits,
+            totalGradePoints = report.totalGradePoints,
+            averageCreditGradePoint = report.averageCreditGradePoint,
+        )
         val statusText =
             when {
                 error.isNotBlank() -> error
                 !loading && cards.isEmpty() -> "暂无成绩数据"
                 else -> null
             }
-        return GradeScreenUi(cards = cards, statusText = statusText)
+        return GradeScreenUi(cards = cards, summary = summary, statusText = statusText)
     }
 
     /**
@@ -244,6 +264,7 @@ class GradeViewModel(
             appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")
             appendLine("成绩：${buildGradeScoreText(grade)}")
             appendLine("学分：${grade.credit.displayOrDash()}")
+            appendLine("绩点：${DecimalFormatter.format(grade.gradePoint, 1)}")
             appendLine("课程属性：${grade.curriculumAttributes.ifBlank { "暂无" }}")
             appendLine("课程性质：${grade.courseNature.ifBlank { "暂无" }}")
             appendLine("考核方式：${grade.examName.ifBlank { "暂无" }}")
@@ -268,6 +289,15 @@ class GradeViewModel(
     }
 
     /**
+     * 构建绩点文本
+     *
+     * @param grade 成绩数据
+     * @retrun 绩点信息
+     */
+    private fun buildGradeJdText(grade: GradeCourse): String {
+        return "绩点：${DecimalFormatter.format(grade.gradePoint, 1)}"
+    }
+    /**
      * 构建成绩卡片UI
      * 
      * @param grade 成绩数据
@@ -280,7 +310,7 @@ class GradeViewModel(
             title = buildGradeTitle(grade),
             subtitle = buildGradeSubtitle(grade),
             scoreText = buildGradeScoreText(grade),
-            attrText = grade.curriculumAttributes,
+            jdText = buildGradeJdText(grade),
             isRetakeExam = grade.examinationNature.contains("补考")
         )
     }

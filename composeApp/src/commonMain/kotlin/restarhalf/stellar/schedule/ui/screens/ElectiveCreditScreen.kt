@@ -269,7 +269,7 @@ private fun buildGradeCardUi(grade: GradeCourse): GradeViewModel.GradeCardUi {
             "学分:${grade.credit}",
         ).joinToString(" · ").ifBlank { "暂无补充信息" },
         scoreText = grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } },
-        attrText = grade.curriculumAttributes,
+        jdText = "绩点：${DecimalFormatter.format(grade.gradePoint, 1)}",
         isRetakeExam = grade.examinationNature.contains("补考")
     )
 }
@@ -293,6 +293,7 @@ private fun buildGradeDetailsSummary(grade: GradeCourse): String {
         appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")
         appendLine("成绩：${grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } }}")
         appendLine("学分：${grade.credit}")
+        appendLine("绩点：${DecimalFormatter.format(grade.gradePoint, 1)}")
         appendLine("课程属性：${grade.curriculumAttributes.ifBlank { "暂无" }}")
         appendLine("课程性质：${grade.courseNature.ifBlank { "暂无" }}")
         appendLine("考核方式：${grade.examName.ifBlank { "暂无" }}")
