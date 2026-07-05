@@ -98,4 +98,8 @@ sealed interface Screen : NavKey {
     @Serializable
     data object Profile : Screen
 
+    /** 选修课学分统计页面 */
+    @Serializable
+    data object ElectiveCredit : Screen
+
 }

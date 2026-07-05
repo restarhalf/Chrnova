@@ -98,6 +98,7 @@ fun EMSScreen(
     onLoadGrades: suspend () -> TermGradeReport,
     onAddExam: () -> Unit = {},
     onEditExam: (Long) -> Unit = {},
+    onNavigateToElectiveCredit: () -> Unit = {},
 ) {
     val examUiState by examVm.uiState.collectAsState()
     val gradeUiState by gradeVm.uiState.collectAsState()
@@ -142,7 +143,19 @@ fun EMSScreen(
         containerColor = Color.Transparent,
         topBar = {
             Column {
-                AppPageTopBar(title = "考务", scrollBehavior = topAppBarScrollBehavior)
+                AppPageTopBar(
+                    title = "考务",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    actions = {
+                        Text(
+                            text = "学分统计",
+                            fontSize = 14.sp,
+                            color = colors.primary,
+                            modifier = Modifier.clickable { onNavigateToElectiveCredit() }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically

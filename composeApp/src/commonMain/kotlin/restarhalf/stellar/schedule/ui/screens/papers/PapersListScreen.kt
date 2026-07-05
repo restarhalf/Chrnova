@@ -1,5 +1,10 @@
 package restarhalf.stellar.schedule.ui.screens.papers
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -221,26 +226,36 @@ fun PapersListScreen(
                     AppCard(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        BasicComponent(
-                            title = folder,
-                            summary = "${folderPapers.size}份试卷",
-                            onClick = {
-                                if (isExpanded) expandedFolders.remove(folder)
-                                else expandedFolders.add(folder)
-                            },
-                        )
-                    }
-                }
-
-                if (isExpanded) {
-                    items(folderPapers, key = { it.id }) { paper ->
-                        AppCard(
-                            modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
-                        ) {
+                        Column {
                             BasicComponent(
-                                title = paper.title.ifEmpty { "未命名试卷" },
-                                onClick = { onPaperDetail(paper.id) },
+                                title = folder,
+                                summary = "${folderPapers.size}份试卷",
+                                onClick = {
+                                    if (isExpanded) expandedFolders.remove(folder)
+                                    else expandedFolders.add(folder)
+                                },
                             )
+
+                            AnimatedVisibility(
+                                visible = isExpanded,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Column {
+                                    folderPapers.forEach { paper ->
+                                        AppCard(
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(start = 8.dp, end = 8.dp)
+                                                .padding(vertical = 2.dp),
+                                        ) {
+                                            BasicComponent(
+                                                title = paper.title.ifEmpty { "未命名试卷" },
+                                                onClick = { onPaperDetail(paper.id) },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

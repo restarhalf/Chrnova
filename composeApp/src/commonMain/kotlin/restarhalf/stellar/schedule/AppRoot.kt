@@ -28,6 +28,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
@@ -93,6 +94,7 @@ fun AppRoot(
     val peLoginVm: PELoginViewModel = koinViewModel()
     val scheduleVm: ScheduleViewModel = koinViewModel()
     val settingsVm: SettingsViewModel = koinViewModel()
+    val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
     val appUpdate: AppUpdatePort = koinInject()
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
@@ -248,6 +250,7 @@ fun AppRoot(
             peLoginVm = peLoginVm,
             scheduleVm = scheduleVm,
             settingsVm = settingsVm,
+            electiveCreditVm = electiveCreditVm,
             appUpdate = appUpdate,
             appIcon = appIcon,
             pictureSelectorHost = pictureSelectorHost,

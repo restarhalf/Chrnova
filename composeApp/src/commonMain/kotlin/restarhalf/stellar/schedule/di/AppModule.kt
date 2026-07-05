@@ -141,6 +141,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
@@ -577,6 +578,12 @@ val viewModelModule = module {
             downloadPaperUseCase = get(),
             uploadPaperUseCase = get(),
             verifyGitHubStar = get(),
+        )
+    }
+    factory {
+        ElectiveCreditViewModel(
+            authWorkflow = get(),
+            academic = get(),
         )
     }
 }

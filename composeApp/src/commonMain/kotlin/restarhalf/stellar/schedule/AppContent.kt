@@ -54,6 +54,7 @@ import restarhalf.stellar.schedule.ui.screens.AboutScreen
 import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
+import restarhalf.stellar.schedule.ui.screens.ElectiveCreditScreen
 import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
@@ -73,6 +74,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
@@ -130,6 +132,8 @@ fun AppContent(
     scheduleVm: ScheduleViewModel,
     /** 设置ViewModel */
     settingsVm: SettingsViewModel,
+    /** 选修课学分统计ViewModel */
+    electiveCreditVm: ElectiveCreditViewModel,
     /** 应用更新端口，处理版本检查和下载 */
     appUpdate: AppUpdatePort,
     /** 应用图标，用于关于页面展示 */
@@ -373,6 +377,12 @@ fun AppContent(
                         next = {}
                     )
                 }
+                entry(Screen.ElectiveCredit) {
+                    ElectiveCreditScreen(
+                        vm = electiveCreditVm,
+                        onBack = { navigator.pop() },
+                    )
+                }
             }
         }
 
@@ -556,6 +566,7 @@ private fun MainRouteContent(
                     onLoadGrades = { vm.fetchGradeReport() },
                     onAddExam = { navigator.push(Screen.ExamEdit()) },
                     onEditExam = { examId -> navigator.push(Screen.ExamEdit(examinationId = examId)) },
+                    onNavigateToElectiveCredit = { navigator.push(Screen.ElectiveCredit) },
                 )
             }
 
