@@ -93,4 +93,10 @@ class RoomExaminationRepository(
     override suspend fun bindUnboundExaminations(userNo: String) {
         examinationDao.bindUnboundExaminations(userNo)
     }
+
+    /** 修复无效的学期ID（空或"manual"）为正确的学期ID */
+    override suspend fun fixInvalidSemesterIds(correctSemesterId: String) {
+        examinationDao.updateSemesterId("", correctSemesterId)
+        examinationDao.updateSemesterId("manual", correctSemesterId)
+    }
 }

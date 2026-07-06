@@ -178,6 +178,30 @@ class JwxtClient(
             )
         }
 
+    override suspend fun fetchGuidanceTeachingCourses(
+        kcxz: String,
+        kcsx: String,
+        kcmc: String
+    ): JwxtGuidanceTeachingResponse =
+        withContext(AppIoDispatcher) {
+            val url = "$BASE_URL/student/guidanceTeaching"
+
+            val response: HttpResponse =
+                httpClient.post(url) {
+                    parameter("kcxz", kcxz)
+                    parameter("kcsx", kcsx)
+                    parameter("kcmc", kcmc)
+                }
+
+            if (!response.status.isSuccess()) {
+                throw IllegalStateException("指导教学课程请求失败（HTTP ${response.status.value}）")
+            }
+            json.decodeFromString(
+                JwxtGuidanceTeachingResponse.serializer(),
+                response.body<String>()
+            )
+        }
+
     private fun extractServerIdFromSetCookie(setCookies: List<String>): String? {
         for (header in setCookies) {
             val parts = header.split(';')

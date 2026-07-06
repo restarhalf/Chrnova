@@ -10,6 +10,7 @@ import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.GradeCourse
+import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 
@@ -84,6 +85,15 @@ class ElectiveCreditViewModel(
         )
 
         /**
+         * 指导教学课程类别映射
+         * key: 课程性质代码, value: Pair(类别代码, 类别名称)
+         */
+        private val GUIDANCE_CATEGORY_MAP = mapOf(
+            "54" to Pair("创新创业选修", "创新创业教育平台专业选修"),
+            "61" to Pair("专业选修", "专业教育平台选修"),
+        )
+
+        /**
          * 从课程代码前两位提取X/Z类别代码
          *
          * @param courseCode 课程代码
@@ -110,7 +120,8 @@ class ElectiveCreditViewModel(
     /**
      * 加载选修课学分数据
      *
-     * 获取当前学期往前3年到往后3年的成绩数据，统计X1-X5类别的学分
+     * 获取当前学期往前3年到往后3年的成绩数据，统计X1-X5类别的学分，
+     * 同时获取创新创业专业融合选修和专业选修的课程列表
      */
     fun load() {
         if (_uiState.value.loading) return
@@ -169,11 +180,51 @@ class ElectiveCreditViewModel(
                 }
 
                 // 统计X1-X5学分
-                val categories = calculateCredits(allCourses)
+                val xCategories = calculateCredits(allCourses)
+
+                // 获取创新创业专业融合选修课程列表
+                val innovationCourses = try {
+                    academic.fetchGuidanceTeachingCourses(kcxz = "54")
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    AppLogger.log("ElectiveCredit", "获取创新创业专业融合选修课程失败", e)
+                    emptyList()
+                }
+
+                // 获取专业选修课程列表
+                val professionalCourses = try {
+                    academic.fetchGuidanceTeachingCourses(kcxz = "61")
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    AppLogger.log("ElectiveCredit", "获取专业选修课程失败", e)
+                    emptyList()
+                }
+
+                // 将指导教学课程转换为GradeCourse格式并过滤已通过的课程
+                val innovationInfo =
+                    GUIDANCE_CATEGORY_MAP["54"] ?: Pair("创新创业选修", "创新创业教育平台专业选修")
+                val innovationCategory = buildGuidanceCategory(
+                    code = innovationInfo.first,
+                    name = innovationInfo.second,
+                    guidanceCourses = innovationCourses,
+                    gradeCourses = allCourses
+                )
+
+                val professionalInfo =
+                    GUIDANCE_CATEGORY_MAP["61"] ?: Pair("专业选修", "专业教育平台选修")
+                val professionalCategory = buildGuidanceCategory(
+                    code = professionalInfo.first,
+                    name = professionalInfo.second,
+                    guidanceCourses = professionalCourses,
+                    gradeCourses = allCourses
+                )
+
+                // 合并所有类别
+                val allCategories = xCategories + listOf(innovationCategory, professionalCategory)
 
                 _uiState.value = _uiState.value.copy(
                     loading = false,
-                    categories = categories,
+                    categories = allCategories,
                 )
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -228,6 +279,63 @@ class ElectiveCreditViewModel(
         if (score != null && score >= 60.0) return true
         if (course.passStatus == "合格") return true
         return false
+    }
+
+    /**
+     * 构建指导教学课程类别
+     *
+     * 将指导教学课程与成绩数据匹配，筛选出已通过的课程
+     *
+     * @param code 类别代码（54或61）
+     * @param name 类别名称
+     * @param guidanceCourses 指导教学课程列表（来自API）
+     * @param gradeCourses 成绩课程列表（用于匹配已通过的课程）
+     * @return 学分类别
+     */
+    private fun buildGuidanceCategory(
+        code: String,
+        name: String,
+        guidanceCourses: List<GuidanceTeachingCourse>,
+        gradeCourses: List<GradeCourse>
+    ): CreditCategory {
+        // 构建课程代码到成绩的映射
+        val gradeMap = gradeCourses.associateBy { it.courseCode }
+
+        // 筛选已通过的指导教学课程
+        val passedCourses = guidanceCourses.filter { guidance ->
+            val grade = gradeMap[guidance.courseCode]
+            grade != null && isCoursePassed(grade)
+        }
+
+        // 将指导教学课程转换为GradeCourse格式
+        val courses = passedCourses.map { guidance ->
+            val grade = gradeMap[guidance.courseCode]
+            GradeCourse(
+                courseCode = guidance.courseCode,
+                courseName = guidance.courseName,
+                score = grade?.score ?: "",
+                gradePoint = grade?.gradePoint ?: 0.0,
+                credit = guidance.credit.toDoubleOrNull() ?: 0.0,
+                curriculumAttributes = guidance.courseAttribute,
+                courseNature = guidance.kclbmc,
+                examName = guidance.evaluationMode,
+                examinationNature = "",
+                passStatus = "及格",
+                gradeLevel = "",
+                markFlag = "",
+                repeatSemester = "",
+                gradeId = "",
+                semester = guidance.openSemester
+            )
+        }
+
+        val credits = courses.sumOf { it.credit }
+        return CreditCategory(
+            code = code,
+            name = name,
+            credits = credits,
+            courses = courses,
+        )
     }
 
     /**

@@ -21,6 +21,7 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 
 /**
  * 考试安排ViewModel
@@ -34,6 +35,7 @@ class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
     observeAuthProfile: ObserveAuthProfileUseCase,
+    observeSelectedTerm: ObserveSelectedTermUseCase,
 ) : ViewModel() {
 
     /**
@@ -98,17 +100,25 @@ class ExaminationViewModel(
             initialValue = "",
         )
 
+    private val _selectedTerm = observeSelectedTerm()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = "",
+        )
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<ExaminationUiState> =
-        combine(_loading, _error, _userNo) { loading, error, userNo ->
-            Triple(loading, error, userNo)
+        combine(_loading, _error, _userNo, _selectedTerm) { loading, error, userNo, term ->
+            Triple(loading, error, userNo) to term
         }
-            .combine(observeAllExaminations()) { triple, exams ->
-                val (loading, error, userNo) = triple
-                val filtered = if (userNo.isNotBlank()) {
-                    exams.filter { it.userNo == userNo }
-                } else {
-                    exams
+            .combine(observeAllExaminations()) { pair, exams ->
+                val (loading, error, userNo) = pair.first
+                val term = pair.second
+                val filtered = exams.filter { exam ->
+                    val userMatch = if (userNo.isNotBlank()) exam.userNo == userNo else true
+                    val termMatch = if (term.isNotBlank()) exam.semesterId == term else true
+                    userMatch && termMatch
                 }
                 ExaminationUiState(loading = loading, error = error, items = filtered)
             }

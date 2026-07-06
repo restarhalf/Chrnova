@@ -274,3 +274,40 @@ data class JwxtTermGradeDataItem(
 
 /** 学期成绩响应类型别名 */
 typealias JwxtTermGradeResponse = JwxtApiResponse<List<JwxtTermGradeDataItem>>
+
+/** 指导教学课程项（创新创业专业融合选修/专业选修） */
+@Serializable
+data class JwxtGuidanceTeachingItem(
+    @SerialName("courseAttribute") val courseAttribute: String = "",
+    @SerialName("openSemester") val openSemester: String = "",
+    @SerialName("courseName") val courseName: String = "",
+    @SerialName("totalHours") val totalHours: String = "",
+    @SerialName("courseCode") val courseCode: String = "",
+    @SerialName("kclbmc") val kclbmc: String = "",
+    @SerialName("classHourClassification") val classHourClassification: List<ClassHourClassification> = emptyList(),
+    @SerialName("courseUnits") val courseUnits: String = "",
+    @SerialName("whetherTest") val whetherTest: String = "",
+    @SerialName("credit") val credit: String = "",
+    @SerialName("evaluationMode") val evaluationMode: String = ""
+)
+
+/** 学时分类 */
+@Serializable
+data class ClassHourClassification(
+    @SerialName("xsflid") val xsflid: String = "",
+    @SerialName("name") val name: String = "",
+    @SerialName("classHour") val classHour: String = ""
+)
+
+/** 指导教学课程响应 */
+@Serializable
+data class JwxtGuidanceTeachingResponse(
+    @SerialName("Msg") val msg: String = "",
+    @SerialName("msg") val msgAlt: String = "",
+    @SerialName("code") val code: String = "",
+    @SerialName("data") val data: List<JwxtGuidanceTeachingItem> = emptyList()
+) {
+    fun isSuccess(): Boolean = code == "1"
+
+    fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
+}

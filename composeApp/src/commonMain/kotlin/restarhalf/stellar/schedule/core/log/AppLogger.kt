@@ -170,9 +170,15 @@ object AppLogger {
     }
 
     data class LogEntry(
+        val id: Long = nextId(),
         val timestamp: String,
         val tag: String,
         val level: Level = Level.INFO,
         val message: String,
-    )
+    ) {
+        companion object {
+            private var counter = 0L
+            private fun nextId() = counter++
+        }
+    }
 }

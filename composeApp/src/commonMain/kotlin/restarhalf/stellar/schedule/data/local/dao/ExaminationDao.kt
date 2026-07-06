@@ -82,6 +82,14 @@ interface ExaminationDao {
     @Query("UPDATE examinations SET userNo = :userNo WHERE userNo = ''")
     suspend fun bindUnboundExaminations(userNo: String)
 
+    /** 将指定学期ID的考试更新为新的学期ID */
+    @Query("UPDATE examinations SET semesterId = :newSemesterId WHERE semesterId = :oldSemesterId")
+    suspend fun updateSemesterId(oldSemesterId: String, newSemesterId: String)
+
+    /** 查找所有semesterId为空或"manual"的考试数量 */
+    @Query("SELECT COUNT(*) FROM examinations WHERE semesterId = '' OR semesterId = 'manual'")
+    suspend fun countExamsWithInvalidSemester(): Int
+
     @Transaction
     suspend fun replaceBySemester(semesterId: String, examinations: List<ExaminationEntity>) {
         deleteExaminationsBySemester(semesterId)

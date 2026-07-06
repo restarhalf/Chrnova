@@ -292,7 +292,15 @@ val useCaseModule = module {
             reminderScheduler = get(),
         )
     }
-    single { FetchExaminationsUseCase(authWorkflow = get(), academic = get(), repository = get(), auth = get()) }
+    single {
+        FetchExaminationsUseCase(
+            authWorkflow = get(),
+            academic = get(),
+            repository = get(),
+            auth = get(),
+            settings = get()
+        )
+    }
     single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
     single {
         FetchGradesUseCase(
@@ -406,7 +414,14 @@ val useCaseModule = module {
     single { SaveLabCourseUseCase(courseRepository = get()) }
     single { DeleteCourseUseCase(courseRepository = get()) }
     single { InsertCourseUseCase(courseRepository = get()) }
-    single { BindUnboundDataUseCase(auth = get(), courseRepository = get(), examinationRepository = get()) }
+    single {
+        BindUnboundDataUseCase(
+            auth = get(),
+            courseRepository = get(),
+            examinationRepository = get(),
+            academic = get()
+        )
+    }
     single { ObserveAllCoursesUseCase(courseRepository = get()) }
     single { ObserveCourseByIdUseCase(courseRepository = get()) }
     single { GetAllCoursesOnceUseCase(courseRepository = get()) }
@@ -517,6 +532,7 @@ val viewModelModule = module {
             isExamNotEnded = get(),
             observeAllExaminations = get(),
             observeAuthProfile = get(),
+            observeSelectedTerm = get(),
         )
     }
     factory {
@@ -527,6 +543,7 @@ val viewModelModule = module {
             deleteExaminationUseCase = get(),
             observeSelectedTerm = get(),
             observeAuthProfile = get(),
+            academic = get(),
         )
     }
     factory {

@@ -82,9 +82,23 @@ interface JwxtGateway {
 
     /**
      * 获取学期成绩报告
-     * 
+     *
      * @param semester 学期
      * @return 成绩报告响应
      */
     suspend fun fetchTermGradeReport(semester: String): JwxtTermGradeResponse
+
+    /**
+     * 获取指导教学课程列表
+     *
+     * @param kcxz 课程性质（54=创新创业专业融合教育选修，61=专业选修）
+     * @param kcsx 课程属性筛选（可选）
+     * @param kcmc 课程名称筛选（可选）
+     * @return 指导教学课程响应
+     */
+    suspend fun fetchGuidanceTeachingCourses(
+        kcxz: String,
+        kcsx: String = "",
+        kcmc: String = ""
+    ): JwxtGuidanceTeachingResponse
 }

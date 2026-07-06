@@ -130,7 +130,7 @@ fun LogScreen(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                items(entries, key = { it.timestamp }) { entry ->
+                items(entries, key = { it.id }) { entry ->
                     LogEntryCard(
                         entry = entry,
                         onClick = { selectedEntry = entry },

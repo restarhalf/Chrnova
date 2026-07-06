@@ -15,6 +15,7 @@ import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
@@ -38,6 +39,7 @@ class ExamEditViewModel(
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
     observeSelectedTerm: ObserveSelectedTermUseCase,
     observeAuthProfile: ObserveAuthProfileUseCase,
+    private val academic: AcademicPort,
 ) : ViewModel() {
 
     /**
@@ -228,19 +230,32 @@ class ExamEditViewModel(
 
     /**
      * 保存考试
-     * 
+     *
      * @param examination 考试数据
      * @param onSaved 保存完成回调
      */
     fun saveExamination(examination: Examination, onSaved: () -> Unit) {
         viewModelScope.launch {
-            val semesterId = selectedTerm.value.ifBlank {
-                examination.time.substringBefore(" ").takeIf { it.isNotBlank() }
-                    ?.let { "manual" } ?: ""
-            }
+            val semesterId = resolveSemesterId()
             runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
                 .onSuccess { onSaved() }
                 .onFailure { AppLogger.log("ExamEdit", "保存考试失败", it) }
+        }
+    }
+
+    /**
+     * 解析学期ID
+     *
+     * 优先级：选中学期 > 当前学期
+     */
+    private suspend fun resolveSemesterId(): String {
+        val selected = selectedTerm.value
+        if (selected.isNotBlank()) return selected
+        return try {
+            academic.fetchCurrentTermId()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            ""
         }
     }
 

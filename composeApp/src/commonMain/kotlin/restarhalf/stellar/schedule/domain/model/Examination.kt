@@ -25,6 +25,8 @@ data class Examination(
     val zwh: String = "",
     /** 考试标志（如"正常"、"缓考"等） */
     val ksbz: String = "",
+    /** 学期ID */
+    val semesterId: String = "",
     /** 数据来源："sync"=教务同步，"manual"=手动添加 */
     val source: String = "sync",
     /** 关联的学号（用户账号） */

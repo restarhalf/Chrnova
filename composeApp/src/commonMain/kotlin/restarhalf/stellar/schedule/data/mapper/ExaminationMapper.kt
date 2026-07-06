@@ -12,12 +12,13 @@ fun ExaminationEntity.toDomain(): Examination {
         examinationPlace = examinationPlace,
         zwh = zwh,
         ksbz = ksbz,
+        semesterId = semesterId,
         source = source,
         userNo = userNo,
     )
 }
 
-fun Examination.toEntity(semesterId: String): ExaminationEntity {
+fun Examination.toEntity(semesterId: String = this.semesterId): ExaminationEntity {
     return ExaminationEntity(
         id = id,
         courseNumber = courseNumber,

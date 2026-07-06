@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.data.impl
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
+import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -139,5 +140,43 @@ class AcademicPortImpl(
                         semester = it.semester
                     )
                 })
+    }
+
+    /**
+     * 获取指导教学课程列表
+     *
+     * @param kcxz 课程性质（54=创新创业专业融合教育选修，61=专业选修）
+     * @param kcsx 课程属性筛选（可选）
+     * @param kcmc 课程名称筛选（可选）
+     * @return 指导教学课程列表
+     * @throws IllegalStateException 获取失败时抛出
+     */
+    override suspend fun fetchGuidanceTeachingCourses(
+        kcxz: String,
+        kcsx: String,
+        kcmc: String
+    ): List<GuidanceTeachingCourse> {
+        val resp = gateway.fetchGuidanceTeachingCourses(
+            kcxz = kcxz,
+            kcsx = kcsx,
+            kcmc = kcmc
+        )
+        if (!resp.isSuccess()) {
+            throw IllegalStateException(resp.messageOrEmpty().ifBlank { "获取指导教学课程失败" })
+        }
+        return resp.data.map {
+            GuidanceTeachingCourse(
+                courseAttribute = it.courseAttribute,
+                openSemester = it.openSemester,
+                courseName = it.courseName,
+                totalHours = it.totalHours,
+                courseCode = it.courseCode,
+                kclbmc = it.kclbmc,
+                courseUnits = it.courseUnits,
+                whetherTest = it.whetherTest,
+                credit = it.credit,
+                evaluationMode = it.evaluationMode
+            )
+        }
     }
 }

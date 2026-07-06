@@ -67,4 +67,11 @@ interface ExaminationRepository {
      * @param userNo 学号
      */
     suspend fun bindUnboundExaminations(userNo: String)
+
+    /**
+     * 修复无效的学期ID（空或"manual"）为正确的学期ID
+     *
+     * @param correctSemesterId 正确的学期ID
+     */
+    suspend fun fixInvalidSemesterIds(correctSemesterId: String)
 }
