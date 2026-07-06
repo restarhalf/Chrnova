@@ -28,6 +28,7 @@ import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
+import restarhalf.stellar.schedule.ui.components.screen.home.ExamUi
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
@@ -333,15 +334,15 @@ class HomeViewModel(
     /**
      * 构建考试UI列表
      */
-    fun buildExamUiList(exams: List<Examination>, nowMs: Long): List<restarhalf.stellar.schedule.ui.components.screen.home.ExamUi> {
+    fun buildExamUiList(exams: List<Examination>, nowMs: Long): List<ExamUi> {
         return exams.map { exam ->
             val isEnded = !isExamNotEnded(exam.time, nowMs)
             val isStarted = isExamStarted(exam.time, nowMs)
-            val timePart = exam.time.substringAfter(" ").ifBlank { "待定" }
+            val timePart = exam.time.substringAfter(" ").substringAfter(" ").ifBlank { "待定" }
             val startTime = timePart.substringBefore("~").substringBefore("-").trim()
             val endTime = timePart.substringAfter("~").substringAfter("-").trim().ifBlank { startTime }
             val location = exam.examinationPlace.ifBlank { "待定" }
-            restarhalf.stellar.schedule.ui.components.screen.home.ExamUi(
+            ExamUi(
                 title = exam.courseName.ifBlank { "未命名课程" },
                 startTime = startTime,
                 endTime = endTime,

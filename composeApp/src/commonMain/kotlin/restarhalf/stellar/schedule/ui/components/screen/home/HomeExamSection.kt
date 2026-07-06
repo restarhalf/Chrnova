@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.ui.components.screen.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +29,6 @@ fun HomeExamSection(
     textPrimary: Color,
     textSecondary: Color,
     dividerColor: Color,
-    onExamClick: () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(text = "考试安排", fontSize = 14.sp, color = textSecondary)
@@ -40,7 +38,6 @@ fun HomeExamSection(
                 textPrimary = textPrimary,
                 textSecondary = textSecondary,
                 dividerColor = dividerColor,
-                onClick = onExamClick
             )
         }
     }
@@ -63,7 +60,6 @@ private fun ExamRow(
     textPrimary: Color,
     textSecondary: Color,
     dividerColor: Color,
-    onClick: () -> Unit
 ) {
     val accentColor = pickCourseSubColor(exam.accentCourseName, false)
     val currentDividerColor = if (exam.isEnded) dividerColor else accentColor
@@ -76,8 +72,7 @@ private fun ExamRow(
 
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(

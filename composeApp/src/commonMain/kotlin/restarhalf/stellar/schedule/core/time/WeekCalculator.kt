@@ -9,7 +9,7 @@ import kotlin.time.ExperimentalTime
  * 周次计算结果数据类
  * 
  * @param isHoliday 是否为假期（学期开始前或结束后）
- * @param week 当前周次（1开始），假期时返回1
+ * @param week 当前周次（1开始），假期时返回0
  * @param diffDays 距离学期开始的天数，负数表示学期开始前
  */
 data class WeekCalcResult(val isHoliday: Boolean, val week: Int, val diffDays: Int)
@@ -40,15 +40,15 @@ object WeekCalculator {
         val diffDays = termStartDate.daysUntil(nowDate)
         return if (diffDays < 0) {
             // 学期还没开始，视为假期
-            WeekCalcResult(isHoliday = true, week = 1, diffDays = diffDays)
+            WeekCalcResult(isHoliday = true, week = 0, diffDays = diffDays)
         } else {
             // 计算当前周次，每周7天
             val week = diffDays / 7 + 1
             WeekCalcResult(
                 // 超过总周数视为假期
                 isHoliday = week > totalWeeks,
-                // 将周次限制在有效范围内
-                week = week.coerceIn(1, totalWeeks),
+                // 假期时返回0，否则限制在有效范围内
+                week = if (week > totalWeeks) 0 else week,
                 diffDays = diffDays
             )
         }

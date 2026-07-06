@@ -341,7 +341,7 @@ class ScheduleViewModel(
         dayCount: Int,
     ): WeekHeaderUi {
         val headerWeek = if (currentWeek == 0) {
-            if (detectedDiffDays < 0) -1 else detectedWeek
+            if (detectedDiffDays < 0 || detectedWeek == 0) -1 else detectedWeek
         } else {
             currentWeek
         }
