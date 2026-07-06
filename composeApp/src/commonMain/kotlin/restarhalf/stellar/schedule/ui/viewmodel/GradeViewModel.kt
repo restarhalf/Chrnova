@@ -73,15 +73,16 @@ class GradeViewModel(
     )
 
     /**
-     * 成绩卡片UI
-     * 
-     * @param idKey 唯一标识符
-     * @param grade 成绩数据
+     * 成绩卡片UI数据
+     *
+     * @param idKey 唯一标识
+     * @param grade 课程成绩数据
      * @param title 课程名称
      * @param subtitle 副标题（课程代码、学分等）
      * @param scoreText 成绩文本
      * @param jdText 课程绩点
      * @param isRetakeExam 是否为补考
+     * @param isFailed 是否挂科（成绩<60）
      */
     data class GradeCardUi(
         val idKey: String,
@@ -91,6 +92,7 @@ class GradeViewModel(
         val scoreText: String,
         val jdText: String,
         val isRetakeExam: Boolean,
+        val isFailed: Boolean = false,
     )
 
     private val _loading = MutableStateFlow(false)
@@ -311,7 +313,8 @@ class GradeViewModel(
             subtitle = buildGradeSubtitle(grade),
             scoreText = buildGradeScoreText(grade),
             jdText = buildGradeJdText(grade),
-            isRetakeExam = grade.examinationNature.contains("补考")
+            isRetakeExam = grade.examinationNature.contains("补考"),
+            isFailed = grade.score.toDoubleOrNull()?.let { it < 60.0 } ?: false
         )
     }
 

@@ -270,7 +270,8 @@ private fun buildGradeCardUi(grade: GradeCourse): GradeViewModel.GradeCardUi {
         ).joinToString(" · ").ifBlank { "暂无补充信息" },
         scoreText = grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } },
         jdText = "绩点：${DecimalFormatter.format(grade.gradePoint, 1)}",
-        isRetakeExam = grade.examinationNature.contains("补考")
+        isRetakeExam = grade.examinationNature.contains("补考"),
+        isFailed = grade.score.toDoubleOrNull()?.let { it < 60.0 } ?: false
     )
 }
 

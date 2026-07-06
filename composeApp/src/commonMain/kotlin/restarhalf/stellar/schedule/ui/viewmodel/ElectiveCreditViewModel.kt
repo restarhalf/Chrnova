@@ -284,12 +284,12 @@ class ElectiveCreditViewModel(
     /**
      * 构建指导教学课程类别
      *
-     * 将指导教学课程与成绩数据匹配，筛选出已通过的课程
+     * 将指导教学课程与成绩数据匹配，直接使用成绩中的GradeCourse对象
      *
-     * @param code 类别代码（54或61）
+     * @param code 类别代码（创新创业选修/专业选修）
      * @param name 类别名称
-     * @param guidanceCourses 指导教学课程列表（来自API）
-     * @param gradeCourses 成绩课程列表（用于匹配已通过的课程）
+     * @param guidanceCourses 指导教学课程列表（来自API，用于确定哪些课程属于此类别）
+     * @param gradeCourses 成绩课程列表（用于匹配并获取完整的成绩详情）
      * @return 学分类别
      */
     private fun buildGuidanceCategory(
@@ -298,35 +298,12 @@ class ElectiveCreditViewModel(
         guidanceCourses: List<GuidanceTeachingCourse>,
         gradeCourses: List<GradeCourse>
     ): CreditCategory {
-        // 构建课程代码到成绩的映射
-        val gradeMap = gradeCourses.associateBy { it.courseCode }
+        // 构建指导教学课程代码集合，用于判断成绩中的课程是否属于此类别
+        val guidanceCourseCodes = guidanceCourses.map { it.courseCode }.toSet()
 
-        // 筛选已通过的指导教学课程
-        val passedCourses = guidanceCourses.filter { guidance ->
-            val grade = gradeMap[guidance.courseCode]
-            grade != null && isCoursePassed(grade)
-        }
-
-        // 将指导教学课程转换为GradeCourse格式
-        val courses = passedCourses.map { guidance ->
-            val grade = gradeMap[guidance.courseCode]
-            GradeCourse(
-                courseCode = guidance.courseCode,
-                courseName = guidance.courseName,
-                score = grade?.score ?: "",
-                gradePoint = grade?.gradePoint ?: 0.0,
-                credit = guidance.credit.toDoubleOrNull() ?: 0.0,
-                curriculumAttributes = guidance.courseAttribute,
-                courseNature = guidance.kclbmc,
-                examName = guidance.evaluationMode,
-                examinationNature = "",
-                passStatus = "及格",
-                gradeLevel = "",
-                markFlag = "",
-                repeatSemester = "",
-                gradeId = "",
-                semester = guidance.openSemester
-            )
+        // 从成绩中筛选出属于此类别且已通过的课程，直接使用GradeCourse对象
+        val courses = gradeCourses.filter { grade ->
+            grade.courseCode in guidanceCourseCodes && isCoursePassed(grade)
         }
 
         val credits = courses.sumOf { it.credit }

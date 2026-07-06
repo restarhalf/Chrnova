@@ -91,7 +91,21 @@ fun GradeItemCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (card.isRetakeExam) {
+                        if (card.isFailed) {
+                            Box(
+                                modifier =
+                                    Modifier.padding(top = 2.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0xFFE57373).copy(0.8f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "挂科",
+                                    fontSize = 11.sp,
+                                    color = colors.onSecondary
+                                )
+                            }
+                        } else if (card.isRetakeExam) {
                             Box(
                                 modifier =
                                     Modifier.padding(top = 2.dp)
