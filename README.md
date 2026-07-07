@@ -1,182 +1,205 @@
-﻿# Chrnova
-![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white) ![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white) ![Android](https://img.shields.io/badge/Android-11%2B-3DDC84?style=flat-square&logo=android&logoColor=white) ![iOS](https://img.shields.io/badge/iOS-18.0%2B-000000?style=flat-square&logo=apple&logoColor=white) ![License](https://img.shields.io/github/license/restarhalf/scheduleKMP?style=flat-square) [![Gitee](https://img.shields.io/badge/dynamic/json?url=https://gitee.com/api/v5/repos/restarhalf/schedule/tags%3Fsort%3Dupdated%26direction%3Ddesc&query=%24%5B0%5D.name&label=Gitee&style=flat-square&logo=gitee)](https://gitee.com/restarhalf/schedule/releases) [![GitHub](https://img.shields.io/github/v/tag/restarhalf/scheduleKMP?label=GitHub&sort=semver&style=flat-square&logo=github)](https://github.com/restarhalf/scheduleKMP/releases) [![QQGroup](https://img.shields.io/badge/QQ%E7%BE%A4-1084761691-blue?style=flat-square&logo=qq&logoColor=white)](https://qm.qq.com/cgi-bin/qm/qr?k=r3OzOC1jNUiLGm_ppUC3a3q0Bb3HPGxl&jump_from=webapi&authKey=XbHnq3HpTWDKTys0xW0E2i5wroL/LwmkqRZR5d1guNPhQL4VUawULXpgYtlCOv93)
+<div align="center">
 
-一个给同学用的课程表应用。
+# Chrnova
 
-它把课表、成绩、考试安排和提醒放到同一个 App 里，尽量做到打开就能看、切学期方便、同步教务直接、界面也别太难看。
+**一款基于 Kotlin Multiplatform 的校园课程表应用,纯本地客户端**
 
-如果你只是想知道这应用能做什么、怎么下、适不适合你用，看前几节就够了。
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg)](https://kotlinlang.org)
+[![Compose Multiplatform](https://img.shields.io/badge/Compose--Multiplatform-1.11.1-4285F4.svg)](https://www.jetbrains.com/lp/compose-multiplatform/)
 
-## 这是个什么应用
+</div>
 
-- 适用于DLNU教务系统使用场景
-- 支持 Android 和 iOS
-- 不是学校官方应用
-- 更偏向“日常真的会打开用”的课程表，而不只是一个查课工具
+---
 
-## 你可以用它做什么
+## 功能特性
 
-- 看今天有什么课，几点开始，在哪上
-- 按周看完整课表，快速切换当前周前后
-- 从教务系统同步最新课表
-- 查考试安排，包括时间、地点、座位号
-- 查成绩和成绩详情
-- 开启课程提醒、考试提醒
-- 添加或编辑实验课、处理调课场景
-- 自定义背景、主题和界面风格
-- 在 Android 上使用桌面小组件
+### 课程管理
 
-## 适合谁
-
-- 想要一个更顺手课程表的民大学生
-- 不想每次都去教务系统翻课表、成绩、考试信息的人
-- 想把课程提醒和考试提醒放到手机里统一处理的人
-
-## 下载与使用
-
-### Android
-
-下载Release的app-release.apk，安装到 Android 11 及以上的设备上即可。
-
-### iOS
-
-下载Release的app-release.ipa，需要自签安装到 iOS 17.0 及以上的设备上。
-
-## 使用前你需要知道
-
-- 课表同步、成绩、考试安排这类功能依赖学校教务系统
-- 首次使用相关功能时，需要登录教务账号
-- 提醒功能需要授予通知权限
-- 某些时间段没有考试、没有成绩或教务接口暂时无数据时，页面为空是正常情况
-
-## 支持平台
-
-| 平台      | 说明                     |
-|---------|------------------------|
-| Android | Android 11 及以上         |
-| iOS     | 当前工程目标版本为 iOS 18.0 及以上 |
-
-## 功能亮点
-
-### 首页
-
-- 直接展示当天日期和今日课程
-- 更适合“打开就看今天有什么”
-
-### 课程表
-
-- 按周查看
-- 自动识别当前周
-- 支持滑动切周
-- 支持实验课补充和调课处理
+- **智能课表** — 按周查看完整课程安排，支持单双周、调课
+- **今日概览** — 首页展示当天课程，一目了然
+- **课程编辑** — 自定义添加实验课，灵活调整课表
 
 ### 考试与成绩
 
-- 课表之外，考试和成绩也能在同一个应用里查
-- 不需要来回切不同入口
+- **考试安排** — 查看考试时间、地点、座位号
+- **成绩查询** — 学期成绩报告，绩点统计
+- **体测成绩** — 体育系统体测数据同步
 
-### 提醒
+### 校园服务
 
-- 课程提醒
-- 考试提醒
+- **教务系统** — 一键登录教务系统同步数据
+- **体育系统** — 体测成绩、二维码展示
+- **选修学分** — 选修课程学分统计
 
 ### 个性化
 
-- 主题模式
-- 底栏样式
-- 背景图片与透明度、模糊度调整
+- **自定义背景** — 上传背景图片，调整透明度
+- **课程颜色** — 为不同课程设置颜色标识
+- **多校区支持** — 支持金石滩校区等多校区配置
 
-## 关于这个仓库
+### 其他功能
 
-这个仓库不仅是下载入口，也是完整源码仓库。
+- **课表提醒** — 课程/考试提醒通知
+- **QR码生成** — 课程信息二维码
+- **Markdown渲染** — 支持Markdown内容展示
+- **日志系统** — 完整的应用日志记录
+- **应用更新** — 自动检查并更新应用
 
-如果你只是普通使用者，其实重点看这些就够了：
+---
 
-- 这应用适不适合你
-- 去哪里下载
-- 支持哪些功能
-- 有没有已知限制
+## 技术架构
 
-如果你是开发者，或者准备自己构建，可以继续往下看。
-
-## 开发者说明
-
-### 项目结构
-
-```text
-.
-├─ composeApp/   # 共享业务逻辑、Compose UI、Android/iOS 平台实现
-├─ androidApp/   # Android 壳工程
-├─ iosApp/       # iOS Xcode 工程
-├─ .github/      # GitHub Actions
-└─ README.md
+```
+┌─────────────────────────────────────────────────────┐
+│                    UI Layer                         │
+│  Compose Multiplatform + Miuix Components           │
+├─────────────────────────────────────────────────────┤
+│                 Navigation Layer                    │
+│              Navigation3 (Jetpack)                  │
+├─────────────────────────────────────────────────────┤
+│                 ViewModel Layer                     │
+│        Koin DI + Lifecycle ViewModel                │
+├─────────────────────────────────────────────────────┤
+│                  Domain Layer                       │
+│          UseCases + Repository Interfaces           │
+├─────────────────────────────────────────────────────┤
+│                   Data Layer                        │
+│  Room Database + Ktor + Multiplatform Settings      │
+├─────────────────────────────────────────────────────┤
+│                  Platform Layer                     │
+│         Android / iOS (expect/actual)               │
+└─────────────────────────────────────────────────────┘
 ```
 
-### 本地运行
+---
 
-- JDK 21
-- Android Studio 或 IntelliJ IDEA
-- Xcode
+## 技术栈
 
-Android：
+| 类别           | 技术                                     |
+|--------------|----------------------------------------|
+| **语言**       | Kotlin 2.4.0                           |
+| **UI框架**     | Compose Multiplatform 1.11.1           |
+| **UI组件**     | Miuix UI 0.9.3                         |
+| **导航**       | Navigation3 1.2.0-alpha05              |
+| **网络**       | Ktor 3.5.1                             |
+| **数据库**      | Room 3.0.0                             |
+| **DI**       | Koin 4.2.2                             |
+| **序列化**      | Kotlinx Serialization 1.11.0           |
+| **异步**       | Kotlinx Coroutines 1.11.0              |
+| **日期**       | Kotlinx DateTime 0.8.0                 |
+| **图片**       | Coil 3.5.0                             |
+| **加密**       | WhyCryptography 0.6.0                  |
+| **二维码**      | QRose 1.1.2                            |
+| **Markdown** | Multiplatform Markdown Renderer 0.43.0 |
+
+---
+
+## 平台支持
+
+| 平台          | 最低版本                 | 状态  |
+|-------------|----------------------|-----|
+| **Android** | API 24 (Android 7.0) | 稳定  |
+| **iOS**     | iOS 16+              | 实验性 |
+
+---
+
+## 项目结构
+
+```
+ChrnovaClient/
+├── composeApp/                    # 共享UI层 (KMP)
+│   └── src/
+│       ├── commonMain/           # 公共代码
+│       │   ├── kotlin/
+│       │   │   └── restarhalf/stellar/schedule/
+│       │   │       ├── core/     # 核心工具
+│       │   │       ├── data/     # 数据层
+│       │   │       ├── di/       # 依赖注入
+│       │   │       ├── domain/   # 领域层
+│       │   │       ├── platform/ # 平台抽象
+│       │   │       └── ui/       # UI层
+│       │   └── composeResources/ # 资源文件
+│       ├── androidMain/          # Android平台代码
+│       └── iosMain/              # iOS平台代码
+├── androidApp/                   # Android应用壳
+├── iosApp/                       # iOS应用壳
+├── worker/                       # Cloudflare Worker (后端)
+└── website/                      # 项目网站
+```
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- JDK 17+
+- Android Studio
+- Xcode 15+ (仅iOS开发)
+- Node.js 18+ (仅Worker开发)
+
+### 配置密钥
+
+在项目根目录创建 `local.properties` 文件：
+
+```properties
+SIGN_KEY=your_sign_key
+AES_KEY=your_aes_key_here
+PAPERS_BASE_URL=https://your-api-url.com
+```
+
+### 运行应用
 
 ```bash
-./gradlew :androidApp:installRelease
+# Android
+./gradlew :composeApp:assembleDebug
+
+# iOS
+# 使用 Xcode 打开 iosApp/ChrnovaClient.xcodeproj
 ```
 
-iOS：
+---
 
-1. 用 Xcode 打开 [iosApp/iosApp.xcodeproj](iosApp/iosApp.xcodeproj)
-2. 选择 `iosApp` scheme
-3. 运行到模拟器或真机
+## 后端服务
 
-### 本地配置
+项目包含一个 Cloudflare Worker 用于试卷共享管理：
 
-项目会在编译前生成 `LocalSecrets.kt`，所以需要提供 `AES_KEY`。
-
-```properties
-# local.properties
-AES_KEY=your_16_byte_key
+```bash
+cd worker
+npm install
+npm run dev    # 本地开发
+npm run deploy # 部署到 Cloudflare
 ```
 
-如果需要本地打 Android 签名包，还可以配置：
+---
 
-```properties
-KEYSTORE_PATH=...
-KEYSTORE_PASS=...
-KEY_ALIAS=...
-KEY_PASSWORD=...
+## 开源协议
+
+本项目采用 [GNU Affero General Public License v3.0](LICENSE) 开源协议。
+
+```
+Copyright (C) 2024 restarhalf
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 ```
 
-### 版本号
-
-版本配置在：
-
-- [AppVersion.xcconfig](iosApp/Configuration/AppVersion.xcconfig)
-
-### 自动构建
-
-仓库内置 GitHub Actions 工作流：
-
-- [build-all-platforms.yml](.github/workflows/build-all-platforms.yml)
-
-CI 里对应配置放在 GitHub 仓库的 **Settings → Secrets and variables → Actions**：
-
-- `AES_KEY`：Secrets
-
-会构建：
-
-- Android APK
-- iOS IPA
-
-## 声明
-
-- 本项目并非大连民族大学官方应用
-- 教务接口、字段格式和可用性可能随学校系统调整而变化
-- 如果你准备把它改成别的学校使用，通常需要先替换教务接口适配层
+---
 
 ## 致谢
 
-本项目使用了以下项目的代码或参考其实现：
+- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) — 跨平台UI框架
+- [miuix](https://github.com/yukonga/miuix) — 小米风格UI组件库
+- [Room3](https://developer.android.com/jetpack/androidx/releases/room3) — 本地数据库
+- [Ktor](https://ktor.io/) — 跨平台HTTP客户端
 
-- [compose-miuix-ui/miuix](https://github.com/compose-miuix-ui/miuix)
+---
+
+<div align="center">
+
+**[回到顶部](#chrnova)**
+
+</div>
