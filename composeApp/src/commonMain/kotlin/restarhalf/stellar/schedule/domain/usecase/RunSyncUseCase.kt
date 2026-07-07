@@ -33,21 +33,24 @@ class RunSyncUseCase(
 
     /**
      * 执行同步操作
-     * 
+     *
+     * 流程：
+     * 1. 确保已登录
+     * 2. 同步当前校区的课程
+     * 3. 如果当前校区课程数为 0，自动切换到另一个校区重试
+     *
      * @return 同步结果
      * @throws IllegalStateException 同步失败时抛出
      */
     suspend operator fun invoke(): SyncResult {
         authWorkflow.ensureLoggedIn()
 
-        // 获取学期ID
         val selectedTerm = settings.observeSelectedTerm().first()
         val semesterId =
             selectedTerm.ifBlank { academic.fetchCurrentTermId() }
 
         val localCampus = timetable.getCampus()
 
-        // 获取校区列表并匹配
         val campuses = academic.fetchCampuses()
         if (campuses.isEmpty()) {
             AppLogger.log("Sync", "同步失败: 校区列表为空", level = AppLogger.Level.ERROR)
@@ -64,31 +67,81 @@ class RunSyncUseCase(
             throw IllegalStateException("获取校区失败")
         }
 
-        // 执行同步，如果失败则刷新会话后重试
-        val firstAttempt =
-            runCatching { sync.sync(semesterId = semesterId, campusId = campus.id, week = "all") }
-        val result =
-            if (firstAttempt.isSuccess) {
-                firstAttempt.getOrThrow()
-            } else {
-                val ex = firstAttempt.exceptionOrNull()
-                if (ex != null)
-                {
-                    if (ex.isNetworkError()) {
-                        AppLogger.log("Sync", "同步网络错误", ex)
-                        throw ex
-                    }
-                    AppLogger.log("Sync", "同步失败，刷新会话重试", ex)
-                }
+        val result = syncWithRetry(semesterId, campus, campuses)
 
-                authWorkflow.refreshSession()
-                sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
-            }
-
-        // 刷新提醒
         reminderScheduler.scheduleNow()
 
+        return result
+    }
+
+    /**
+     * 执行同步，当前校区课程数为 0 时自动切换到另一个校区重试
+     */
+    private suspend fun syncWithRetry(
+        semesterId: String,
+        campus: restarhalf.stellar.schedule.domain.model.RemoteCampus,
+        allCampuses: List<restarhalf.stellar.schedule.domain.model.RemoteCampus>,
+    ): SyncResult {
+        val result = doSync(semesterId, campus)
+
+        if (result.inserted == 0 && allCampuses.size > 1) {
+            val fallback = allCampuses.firstOrNull { it.id != campus.id && it.id.isNotBlank() }
+            if (fallback != null) {
+                AppLogger.log(
+                    "Sync",
+                    "当前校区「${campus.name}」课程数为 0，切换到「${fallback.name}」重试"
+                )
+                val fallbackResult = doSync(semesterId, fallback)
+                if (fallbackResult.inserted > 0) {
+                    val targetCampus = matchLocalCampus(fallback.name)
+                    if (targetCampus != null) {
+                        timetable.setCampus(targetCampus)
+                        AppLogger.log("Sync", "已自动切换校区至「${fallback.name}」")
+                    }
+                    return fallbackResult.copy(campusName = fallback.name)
+                }
+                AppLogger.log("Sync", "备用校区「${fallback.name}」课程数也为 0，保留原校区")
+            }
+        }
+
         return result.copy(campusName = campus.name)
+    }
+
+    /**
+     * 执行单次同步，失败时刷新会话重试
+     */
+    private suspend fun doSync(
+        semesterId: String,
+        campus: restarhalf.stellar.schedule.domain.model.RemoteCampus,
+    ): SyncResult {
+        val firstAttempt =
+            runCatching { sync.sync(semesterId = semesterId, campusId = campus.id, week = "all") }
+        return if (firstAttempt.isSuccess) {
+            firstAttempt.getOrThrow()
+        } else {
+            val ex = firstAttempt.exceptionOrNull()
+            if (ex != null) {
+                if (ex.isNetworkError()) {
+                    AppLogger.log("Sync", "同步网络错误", ex)
+                    throw ex
+                }
+                AppLogger.log("Sync", "同步失败，刷新会话重试", ex)
+            }
+            authWorkflow.refreshSession()
+            sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
+        }
+    }
+
+    /**
+     * 根据远程校区名称反推本地 Campus 枚举
+     */
+    private fun matchLocalCampus(remoteName: String): Campus? {
+        val name = remoteName.trim()
+        return when {
+            name.contains("开发区") -> Campus.Development
+            name.contains("金石滩") -> Campus.Jinshitan
+            else -> null
+        }
     }
 
     /**
