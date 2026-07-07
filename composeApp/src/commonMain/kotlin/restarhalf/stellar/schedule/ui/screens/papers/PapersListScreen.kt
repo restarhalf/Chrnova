@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -41,9 +40,11 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -56,9 +57,9 @@ fun PapersListScreen(
     onPaperDetail: (String) -> Unit,
     onUploadClick: () -> Unit,
 ) {
-    val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val overscrollEffect = MiuixOverscrollEffect()
+    val pullToRefreshState = rememberPullToRefreshState()
     val uiState by vm.uiState.collectAsState()
     val expandedFolders = remember { mutableStateSetOf<String>() }
     val colors = MiuixTheme.colorScheme
@@ -145,7 +146,8 @@ fun PapersListScreen(
         },
         bottomBar = {
             Button(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 25.dp, start = 10.dp, end = 10.dp),
                 colors = ButtonDefaults.buttonColorsPrimary(),
                 onClick = onUploadClick,
             ) {
@@ -153,20 +155,26 @@ fun PapersListScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = paddingValues.calculateBottomPadding(),
-                    )
+        PullToRefresh(
+            isRefreshing = uiState.loading,
+            onRefresh = { vm.refresh() },
+            pullToRefreshState = pullToRefreshState,
+            refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+            modifier = Modifier.fillMaxSize().padding(
+                PaddingValues(
+                    top = paddingValues.calculateTopPadding(),
+                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                    bottom = 0.dp
                 )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+            )
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
             contentPadding = appPageContentPadding(
                 innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 16.dp,
                 extraEnd = 16.dp,
@@ -181,17 +189,6 @@ fun PapersListScreen(
                         value = uiState.searchQuery,
                         onValueChange = { vm.onSearchQueryChange(it) },
                         modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-
-            if (uiState.loading) {
-                item {
-                    Text(
-                        text = "加载中...",
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
-                        color = colors.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -277,6 +274,7 @@ fun PapersListScreen(
                 }
             }
 
+        }
         }
     }
 }

@@ -143,6 +143,11 @@ class PapersViewModel(
         }
     }
 
+    fun refresh() {
+        loadFolders()
+        loadPapers()
+    }
+
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
     }
