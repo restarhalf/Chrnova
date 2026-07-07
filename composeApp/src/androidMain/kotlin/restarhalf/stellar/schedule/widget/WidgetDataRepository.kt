@@ -74,6 +74,7 @@ private data class DayCourses(
     val offset: Int,
     val week: Int,
     val weekday: Int,
+    val isHoliday: Boolean,
     val sessions: List<Session>,
 )
 
@@ -214,7 +215,13 @@ internal object WidgetDataRepository {
                     .toList()
             }
 
-        return DayCourses(offset = dayOffset, week = week, weekday = weekday, sessions = sessions)
+        return DayCourses(
+            offset = dayOffset,
+            week = week,
+            weekday = weekday,
+            isHoliday = weekInfo.isHoliday,
+            sessions = sessions
+        )
     }
 
     private fun buildSmallFromToday(today: DayCourses, nowMinutes: Int): SmallWidgetState {
@@ -222,7 +229,7 @@ internal object WidgetDataRepository {
         val first = todayRemaining.first()
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
-            weekLabel = "第${today.week}周",
+            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
             nextCourse =
                 SmallNextCourse(
                     title = first.title,
@@ -239,7 +246,7 @@ internal object WidgetDataRepository {
         val first = tomorrow.sessions.first()
         return SmallWidgetState(
             dayLabel = "明天",
-            weekLabel = "第${tomorrow.week}周",
+            weekLabel = if (tomorrow.isHoliday) "假期中" else "第${tomorrow.week}周",
             nextCourse =
                 SmallNextCourse(
                     title = first.title,
@@ -258,9 +265,9 @@ internal object WidgetDataRepository {
     ): SmallWidgetState {
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
-            weekLabel = "第${today.week}周",
+            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
             nextCourse = null,
-            emptyText = if (thisWeekLaterHasCourse) "今日课程已上完" else "本周课程已上完"
+            emptyText = if (today.isHoliday) "假期愉快" else if (thisWeekLaterHasCourse) "今日课程已上完" else "本周课程已上完"
         )
     }
 
@@ -280,7 +287,7 @@ internal object WidgetDataRepository {
 
         return LargeWidgetState(
             headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
-            weekLabel = "第${today.week}周",
+            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
             rows = rows,
             emptyText = null
         )
@@ -289,7 +296,7 @@ internal object WidgetDataRepository {
     private fun buildLargeFromTomorrow(tomorrow: DayCourses): LargeWidgetState {
         return LargeWidgetState(
             headerLabel = "明天课程预告 / ${weekdayLabel(tomorrow.weekday)}",
-            weekLabel = "第${tomorrow.week}周",
+            weekLabel = if (tomorrow.isHoliday) "假期中" else "第${tomorrow.week}周",
             rows = tomorrow.sessions.take(2).map { it.toLargeRow(StatusType.NONE, null) },
             emptyText = null
         )
@@ -299,6 +306,14 @@ internal object WidgetDataRepository {
         today: DayCourses,
         thisWeekLaterHasCourse: Boolean,
     ): LargeWidgetState {
+        if (today.isHoliday) {
+            return LargeWidgetState(
+                headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
+                weekLabel = "假期中",
+                rows = emptyList(),
+                emptyText = "假期愉快"
+            )
+        }
         return if (today.sessions.isNotEmpty() || thisWeekLaterHasCourse) {
             LargeWidgetState(
                 headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
