@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
+import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.JwxtTimeParser
@@ -8,7 +9,6 @@ import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import kotlinx.coroutines.flow.first
 
 /**
  * 同步端口实现类
@@ -76,5 +76,9 @@ class SyncPortImpl(
             campusName = "",
             week = week,
         )
+    }
+
+    override suspend fun fetchTermStartDate(semesterId: String, campusId: String): Long? {
+        return jwxtSync.fetchTermStartDate(semesterId = semesterId, campusId = campusId)
     }
 }

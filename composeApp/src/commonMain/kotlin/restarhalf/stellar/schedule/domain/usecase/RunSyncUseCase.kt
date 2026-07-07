@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
@@ -69,6 +70,11 @@ class RunSyncUseCase(
 
         val result = syncWithRetry(semesterId, campus, campuses)
 
+        val termStartMs = sync.fetchTermStartDate(semesterId = semesterId, campusId = campus.id)
+        if (termStartMs != null) {
+            timetable.setTermStartMs(termStartMs)
+        }
+
         reminderScheduler.scheduleNow()
 
         return result
@@ -79,8 +85,8 @@ class RunSyncUseCase(
      */
     private suspend fun syncWithRetry(
         semesterId: String,
-        campus: restarhalf.stellar.schedule.domain.model.RemoteCampus,
-        allCampuses: List<restarhalf.stellar.schedule.domain.model.RemoteCampus>,
+        campus: RemoteCampus,
+        allCampuses: List<RemoteCampus>,
     ): SyncResult {
         val result = doSync(semesterId, campus)
 
@@ -112,7 +118,7 @@ class RunSyncUseCase(
      */
     private suspend fun doSync(
         semesterId: String,
-        campus: restarhalf.stellar.schedule.domain.model.RemoteCampus,
+        campus: RemoteCampus,
     ): SyncResult {
         val firstAttempt =
             runCatching { sync.sync(semesterId = semesterId, campusId = campus.id, week = "all") }
