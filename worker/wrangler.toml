@@ -1,0 +1,14 @@
+name = "chrnova-papers-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chrnova-papers-db"
+database_id = "07928f7d-6690-47ce-bcee-277c0dce06f0"
+
+[vars]
+GITHUB_OWNER = "restarhalf"
+GITHUB_REPO = "ChrnovaPaper"
+GITHUB_STAR_REPO = "Chrnova"
+# GITHUB_TOKEN should be set via `wrangler secret put GITHUB_TOKEN`
