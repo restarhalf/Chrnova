@@ -24,7 +24,7 @@ object SettingsKeys {
     /** 上次自动同步的时间戳（毫秒） */
     const val LAST_AUTO_SYNC_MS = "last_auto_sync_ms"
     /** 是否已确认隐私协议 */
-    const val CONFIRM_PRIVACY = "y"
+    const val CONFIRM_PRIVACY = "confirm_privacy"
     /** 背景图片URI */
     const val BACKGROUND_IMAGE_URI = "background_image_uri"
     /** 背景透明度（0.0-1.0） */

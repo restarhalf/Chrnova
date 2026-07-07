@@ -63,7 +63,7 @@ fun JWLoginScreen(
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
     val colors = MiuixTheme.colorScheme
-
+    
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -95,7 +95,7 @@ fun JWLoginScreen(
                     ) {
                         Text(
                             text = "跳过",
-                            color = colors.onSecondary
+                            color = colors.onBackground
                         )
                     }
                 }

@@ -312,11 +312,12 @@ fun AppRoot(
         }
 
         if (appState.confirmPrivacy) {
-            val welcomePagerState = rememberPagerState(pageCount = { 5 })
+            val welcomePagerState = rememberPagerState(pageCount = { 6 })
             WelcomeScreen(
                 show = confirmPrivacyState,
                 pagerState = welcomePagerState,
                 exitApp = exitApp,
+                openUri = { openUri(it) },
             )
         }
     }

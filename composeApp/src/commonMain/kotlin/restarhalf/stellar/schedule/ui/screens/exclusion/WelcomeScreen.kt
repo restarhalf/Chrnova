@@ -34,7 +34,7 @@ import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
-import restarhalf.stellar.schedule.ui.screens.PELoginScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Icon
@@ -46,6 +46,7 @@ fun WelcomeScreen(
     show: MutableState<Boolean>,
     pagerState: PagerState,
     exitApp : () -> Unit,
+    openUri: (String) -> Boolean = { false },
 ) {
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val coroutineScope = rememberCoroutineScope()
@@ -160,7 +161,16 @@ fun WelcomeScreen(
                         }
                     )
 
-                    4 -> EnterScreen(
+                    4 -> GitHubStarScreen(
+                        pagerState = pagerState,
+                        onStarClick = { openUri("https://github.com/restarhalf/Chrnova") },
+                        onNext = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.settledPage + 1)
+                            }
+                        }
+                    )
+                    5 -> EnterScreen(
                         onDismissRequest = { show.value = false },
                         pagerState = pagerState
                     )

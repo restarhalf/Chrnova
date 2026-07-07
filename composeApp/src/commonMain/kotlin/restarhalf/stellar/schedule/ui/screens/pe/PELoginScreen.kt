@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.screens
+package restarhalf.stellar.schedule.ui.screens.pe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -95,7 +95,7 @@ fun PELoginScreen(
                     ) {
                         Text(
                             text = "跳过",
-                            color = colors.onSecondary
+                            color = colors.onBackground
                         )
                     }
                 }

@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.screens
+package restarhalf.stellar.schedule.ui.screens.pe
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
