@@ -179,4 +179,11 @@ class AcademicPortImpl(
             )
         }
     }
+
+    override suspend fun fetchTeachingWeekTotal(): Int {
+        return runCatching {
+            val resp = gateway.getTeachingWeek()
+            if (resp.isSuccess()) resp.data.size else 0
+        }.getOrDefault(0)
+    }
 }

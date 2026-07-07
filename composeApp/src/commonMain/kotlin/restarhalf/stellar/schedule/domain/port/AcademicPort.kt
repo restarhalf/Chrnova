@@ -46,4 +46,11 @@ interface AcademicPort {
         kcsx: String = "",
         kcmc: String = ""
     ): List<GuidanceTeachingCourse>
+
+    /**
+     * 获取教学周总周数
+     *
+     * @return 总周数，获取失败时返回 0
+     */
+    suspend fun fetchTeachingWeekTotal(): Int
 }

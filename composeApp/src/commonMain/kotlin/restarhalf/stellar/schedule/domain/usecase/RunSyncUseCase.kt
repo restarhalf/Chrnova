@@ -75,6 +75,11 @@ class RunSyncUseCase(
             timetable.setTermStartMs(termStartMs)
         }
 
+        val teachingWeekTotal = academic.fetchTeachingWeekTotal()
+        if (teachingWeekTotal > 0) {
+            timetable.setTotalWeeks(teachingWeekTotal)
+        }
+
         reminderScheduler.scheduleNow()
 
         return result
