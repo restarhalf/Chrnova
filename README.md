@@ -41,8 +41,6 @@
 ### 其他功能
 
 - **课表提醒** — 课程/考试提醒通知
-- **QR码生成** — 课程信息二维码
-- **Markdown渲染** — 支持Markdown内容展示
 - **日志系统** — 完整的应用日志记录
 - **应用更新** — 自动检查并更新应用
 
@@ -153,10 +151,10 @@ PAPERS_BASE_URL=https://your-api-url.com
 
 ```bash
 # Android
-./gradlew :composeApp:assembleDebug
+./gradlew :androidApp:assembleRelease
 
 # iOS
-# 使用 Xcode 打开 iosApp/ChrnovaClient.xcodeproj
+# 使用 Xcode 打开 iosApp/iosApp.xcodeproj
 ```
 
 ---
