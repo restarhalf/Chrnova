@@ -1,12 +1,20 @@
 package restarhalf.stellar.schedule.data.remote
 
+import com.russhwolf.settings.ExperimentalSettingsApi
 import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.coroutines.getStringFlow
 import com.russhwolf.settings.set
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 
+@OptIn(ExperimentalSettingsApi::class)
 class PEAuthStore(private val settings: ObservableSettings) : PEAuthPort {
 
     override fun getToken(): String? = settings.getStringOrNull(KEY_TOKEN)?.takeIf { it.isNotBlank() }
+
+    override fun observeToken(): Flow<String?> =
+        settings.getStringFlow(KEY_TOKEN, "").map { it.ifBlank { null } }
 
     fun setToken(token: String?) {
         settings[KEY_TOKEN] = token

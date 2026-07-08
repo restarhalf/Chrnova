@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.domain.port
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * 体育系统认证端口
  *
@@ -8,6 +10,9 @@ package restarhalf.stellar.schedule.domain.port
 interface PEAuthPort {
     /** 获取当前token */
     fun getToken(): String?
+
+    /** 观察token变化 */
+    fun observeToken(): Flow<String?>
 
     /** 获取保存的用户名 */
     fun getUsername(): String?

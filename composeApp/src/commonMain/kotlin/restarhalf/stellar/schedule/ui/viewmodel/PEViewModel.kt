@@ -7,6 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -19,6 +20,7 @@ import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
 import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.PELogoutUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
@@ -40,6 +42,7 @@ class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
     private val peStudentInfoUseCase: PEStudentInfoUseCase,
+    private val peAuth: PEAuthPort,
 ) : ViewModel() {
 
     /**
@@ -81,6 +84,7 @@ class PEViewModel(
     init {
         observeCachedScores()
         observeCachedStudentInfo()
+        observeTokenChanges()
     }
 
     private fun observeCachedScores() {
@@ -122,6 +126,20 @@ class PEViewModel(
             } catch (e: Exception) {
                 AppLogger.log("PE", "读取缓存学生信息失败", e)
             }
+        }
+    }
+
+    private fun observeTokenChanges() {
+        viewModelScope.launch {
+            peAuth.observeToken()
+                .map { token -> !token.isNullOrBlank() }
+                .catch { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("PE", "观察token变化异常", e)
+                }
+                .collect { loggedIn ->
+                    _isLoggedIn.value = loggedIn
+                }
         }
     }
 

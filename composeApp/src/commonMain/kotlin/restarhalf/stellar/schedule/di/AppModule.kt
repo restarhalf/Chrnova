@@ -575,6 +575,7 @@ val viewModelModule = module {
             peScoreListUseCase = get(),
             peScoreDetailUseCase = get(),
             peStudentInfoUseCase = get(),
+            peAuth = get(),
         )
     }
     factory {
