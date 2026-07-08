@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -96,6 +98,7 @@ fun CourseEditScreen(
     var startSection by remember { mutableIntStateOf(1) }
     var endSection by remember { mutableIntStateOf(2) }
     var selectedWeeks by remember { mutableStateOf(emptySet<Int>()) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(
@@ -200,13 +203,44 @@ fun CourseEditScreen(
                         showSectionPicker.value = false
                     })
             }
+
+            if (showDeleteConfirm) {
+                OverlayDialog(
+                    show = showDeleteConfirm,
+                    title = "确认删除",
+                    summary = "删除后不可恢复，确定要删除这门课程吗？",
+                    onDismissRequest = { showDeleteConfirm = false }
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = { showDeleteConfirm = false }
+                        ) {
+                            Text(text = "取消")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                            onClick = {
+                                val c = editingCourse ?: return@Button
+                                vm.deleteCourse(c, onDeleted = onBack)
+                                showDeleteConfirm = false
+                            }
+                        ) {
+                            Text(text = "确定", color = colors.onPrimary)
+                        }
+                    }
+                }
+            }
         },
         bottomBar = {
             if (isEdit) {
                 Button(
                     onClick = {
-                        val c = editingCourse ?: return@Button
-                        vm.deleteCourse(c, onDeleted = onBack)
+                        showDeleteConfirm = true
                     },
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     cornerRadius = 20.dp,

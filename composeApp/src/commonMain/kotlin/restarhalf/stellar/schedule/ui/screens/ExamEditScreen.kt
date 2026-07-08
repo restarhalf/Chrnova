@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +45,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -83,6 +85,7 @@ fun ExamEditScreen(
 
     val showDatePicker = remember { mutableStateOf(false) }
     val showTimePicker = remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     var pickerDate by remember { mutableStateOf(now) }
@@ -218,14 +221,45 @@ fun ExamEditScreen(
                     },
                 )
             }
+
+            if (showDeleteConfirm) {
+                OverlayDialog(
+                    show = showDeleteConfirm,
+                    title = "确认删除",
+                    summary = "删除后不可恢复，确定要删除这条考试记录吗？",
+                    onDismissRequest = { showDeleteConfirm = false }
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = { showDeleteConfirm = false }
+                        ) {
+                            Text(text = "取消")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                            onClick = {
+                                if (examinationId != null) {
+                                    vm.deleteExamination(examinationId, onDeleted = onBack)
+                                }
+                                showDeleteConfirm = false
+                            }
+                        ) {
+                            Text(text = "确定", color = colors.onPrimary)
+                        }
+                    }
+                }
+            }
         },
         bottomBar = {
             if (isEdit) {
                 Button(
                     onClick = {
-                        if (examinationId != null) {
-                            vm.deleteExamination(examinationId, onDeleted = onBack)
-                        }
+                        showDeleteConfirm = true
                     },
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     cornerRadius = 20.dp,

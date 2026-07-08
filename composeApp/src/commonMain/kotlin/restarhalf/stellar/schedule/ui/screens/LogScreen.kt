@@ -60,6 +60,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import kotlin.time.Clock
@@ -74,6 +75,7 @@ fun LogScreen(
     val entries by AppLogger.entries.collectAsState()
     val listState = rememberLazyListState()
     var selectedEntry by remember { mutableStateOf<AppLogger.LogEntry?>(null) }
+    var showClearConfirm by remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
 
     Scaffold(
@@ -91,6 +93,39 @@ fun LogScreen(
                     }
                 },
             )
+        },
+        popupHost = {
+            if (showClearConfirm) {
+                OverlayDialog(
+                    show = showClearConfirm,
+                    title = "确认清空",
+                    summary = "清空后不可恢复，确定要清空所有日志吗？",
+                    onDismissRequest = { showClearConfirm = false }
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = { showClearConfirm = false }
+                        ) {
+                            Text(text = "取消")
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                            onClick = {
+                                AppLogger.clear()
+                                showClearConfirm = false
+                                onBack()
+                            }
+                        ) {
+                            Text(text = "确定", color = colors.onPrimary)
+                        }
+                    }
+                }
+            }
         },
         containerColor = Color.Transparent,
     ) { paddingValues ->
@@ -154,8 +189,7 @@ fun LogScreen(
                 Button(
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        AppLogger.clear()
-                        onBack()
+                        showClearConfirm = true
                     },
                 ) {
                     Text(text = "清空")
