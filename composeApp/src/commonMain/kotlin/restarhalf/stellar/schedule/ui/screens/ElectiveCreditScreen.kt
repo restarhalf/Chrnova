@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -93,20 +96,41 @@ fun ElectiveCreditScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = "选修课学分统计",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack
+            Column {
+                AppPageTopBar(
+                    title = "选修课学分统计",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack
+                        ) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = ""
+                            )
+                        }
+                    }
+                )
+                AnimatedVisibility(
+                    visible = uiState.error.isNotBlank(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = ""
-                        )
+                        Box(
+                            modifier = Modifier.clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(fontSize = 12.sp, text = uiState.error)
+                        }
                     }
                 }
-            )
+            }
+
         },
         popupHost = {
             if (showGradeDetailsDialog.value) {
@@ -149,22 +173,6 @@ fun ElectiveCreditScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 overscrollEffect = overscrollEffect
             ) {
-                // 错误信息
-                if (uiState.error.isNotBlank()) {
-                    item(key = "error") {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = uiState.error,
-                                fontSize = 14.sp,
-                                color = colors.error
-                            )
-                        }
-                    }
-                }
-
                 // 各类别学分卡片
                 items(uiState.categories, key = { it.code }) { category ->
                     CategoryCard(

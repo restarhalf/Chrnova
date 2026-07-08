@@ -5,7 +5,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -17,13 +19,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -131,18 +136,39 @@ fun PapersListScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(title = "试卷共享", scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack
+            Column {
+                AppPageTopBar(
+                    title = "试卷共享", scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack
+                        ) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回"
+                            )
+                        }
+                    }
+                )
+                AnimatedVisibility(
+                    visible = uiState.error != null && uiState.showStarDialog.not(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回"
-                        )
+                        Box(
+                            modifier = Modifier.clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(fontSize = 12.sp, text = uiState.error ?: "")
+                        }
                     }
                 }
-            )
+            }
         },
         bottomBar = {
             Button(
@@ -200,17 +226,6 @@ fun PapersListScreen(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         fontSize = 14.sp,
                         color = colors.onSurfaceVariantSummary,
-                    )
-                }
-            }
-
-            if (uiState.error != null && uiState.showStarDialog.not()) {
-                item {
-                    Text(
-                        text = uiState.error ?: "",
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
-                        color = colors.error,
                     )
                 }
             }

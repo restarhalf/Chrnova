@@ -77,6 +77,7 @@ fun CourseEditScreen(
     initialDayOfWeek: Int = 1,
     initialStartSection: Int = 1,
     initialSelectedWeek: Int = 1,
+    totalWeeks: Int = 20,
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -346,6 +347,7 @@ fun CourseEditScreen(
                         Text(text = "上课周数")
                         Spacer(Modifier.height(10.dp))
                         WeekPalette(
+                            weeks = totalWeeks,
                             selectedWeeks = selectedWeeks,
                             disabledWeeks = disabledWeeks,
                             onToggleWeek = { week ->

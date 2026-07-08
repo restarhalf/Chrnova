@@ -284,7 +284,7 @@ fun AppContent(
                         courseId = screen.courseId,
                         initialDayOfWeek = screen.dayOfWeek,
                         initialStartSection = screen.startSection,
-                        initialSelectedWeek = screen.selectedWeek,
+                        initialSelectedWeek = screen.selectedWeek, totalWeeks = appState.totalWeeks,
                     )
                 }
                 entry<Screen.ExamEdit> { screen ->

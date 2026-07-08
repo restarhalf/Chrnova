@@ -126,7 +126,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = headerUi.dateLabel,
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = colors.onPrimary,
                         fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
