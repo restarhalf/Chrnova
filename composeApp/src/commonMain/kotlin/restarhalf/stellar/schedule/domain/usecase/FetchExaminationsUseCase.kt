@@ -63,7 +63,7 @@ class FetchExaminationsUseCase(
         }
         val boundExams = exams.map { it.copy(userNo = userNo) }
 
-        if (resolvedNameOrNumber.isBlank()) {
+        if (nameOrNumber.isBlank()) {
             repository.replaceExaminations(resolvedSemester, boundExams)
         }
 
