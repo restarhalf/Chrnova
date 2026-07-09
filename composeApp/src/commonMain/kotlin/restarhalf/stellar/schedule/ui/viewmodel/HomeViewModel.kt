@@ -195,11 +195,13 @@ class HomeViewModel(
         dateLabel: String,
         courseCount: Int,
         hasFirstClass: Boolean,
+        dayOfWeekCount: Int
     ): BuildHomeHeaderUiUseCase.HeaderUi {
         return buildHomeHeaderUiUseCase(
             dateLabel = dateLabel,
             courseCount = courseCount,
-            hasFirstClass = hasFirstClass
+            hasFirstClass = hasFirstClass,
+            dayOfWeekCount = dayOfWeekCount
         )
     }
 
@@ -214,10 +216,12 @@ class HomeViewModel(
         clockSnapshot: BuildHomeClockSnapshotUseCase.Snapshot,
         todaySchedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
     ): BuildHomeHeaderUiUseCase.HeaderUi {
+        val dayOfWeekCount = clockSnapshot.dayOfWeekMon1
         return buildHeaderUi(
             dateLabel = clockSnapshot.dateLabel,
             courseCount = todaySchedule.todayCourses.size,
-            hasFirstClass = todaySchedule.hasFirstClass
+            hasFirstClass = todaySchedule.hasFirstClass,
+            dayOfWeekCount = dayOfWeekCount
         )
     }
 

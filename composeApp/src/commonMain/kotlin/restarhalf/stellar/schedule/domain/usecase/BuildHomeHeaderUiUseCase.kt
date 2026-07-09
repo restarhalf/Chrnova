@@ -13,12 +13,13 @@ class BuildHomeHeaderUiUseCase(
         dateLabel: String,
         courseCount: Int,
         hasFirstClass: Boolean,
+        dayOfWeekCount: Int,
     ): HeaderUi {
         val greeting =
             buildHomeGreetingUseCase(
                 courseCount = courseCount,
                 hasFirstClass = hasFirstClass,
-                seed = dateLabel.hashCode()
+                dayOfWeekCount = dayOfWeekCount
             )
         return HeaderUi(dateLabel = dateLabel, greeting = greeting)
     }
