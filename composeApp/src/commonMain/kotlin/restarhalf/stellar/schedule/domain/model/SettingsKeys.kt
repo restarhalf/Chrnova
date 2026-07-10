@@ -41,4 +41,10 @@ object SettingsKeys {
     const val DEVICE_ID = "device_id"
     /** Star 验证状态 */
     const val STAR_VERIFIED = "star_verified"
+
+    /** 缓存的学期ID列表（JSON字符串） */
+    const val CACHED_SEMESTER_IDS = "cached_semester_ids"
+
+    /** 当前学期ID缓存 */
+    const val CURRENT_TERM_ID = "current_term_id"
 }

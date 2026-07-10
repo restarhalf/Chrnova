@@ -64,4 +64,16 @@ interface SettingsPort {
 
     /** 设置 star 验证状态 */
     fun setStarVerified(verified: Boolean)
+
+    /** 观察缓存的学期ID列表变化 */
+    fun observeCachedSemesterIds(): Flow<List<String>>
+
+    /** 设置缓存的学期ID列表 */
+    fun setCachedSemesterIds(semesterIds: List<String>)
+
+    /** 观察当前学期ID缓存 */
+    fun observeCurrentTermId(): Flow<String>
+
+    /** 设置当前学期ID缓存 */
+    fun setCurrentTermId(termId: String)
 }

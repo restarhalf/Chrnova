@@ -7,6 +7,8 @@ import com.russhwolf.settings.coroutines.getIntFlow
 import com.russhwolf.settings.coroutines.getStringFlow
 import com.russhwolf.settings.set
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 
@@ -193,5 +195,28 @@ class SettingsPortImpl(
 
     override fun setStarVerified(verified: Boolean) {
         settings[SettingsKeys.STAR_VERIFIED] = verified
+    }
+
+    override fun observeCachedSemesterIds(): Flow<List<String>> {
+        return settings.getStringFlow(SettingsKeys.CACHED_SEMESTER_IDS, "[]")
+            .map { json ->
+                try {
+                    Json.decodeFromString<List<String>>(json)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+    }
+
+    override fun setCachedSemesterIds(semesterIds: List<String>) {
+        settings[SettingsKeys.CACHED_SEMESTER_IDS] = Json.encodeToString(semesterIds)
+    }
+
+    override fun observeCurrentTermId(): Flow<String> {
+        return settings.getStringFlow(SettingsKeys.CURRENT_TERM_ID, "")
+    }
+
+    override fun setCurrentTermId(termId: String) {
+        settings[SettingsKeys.CURRENT_TERM_ID] = termId
     }
 }

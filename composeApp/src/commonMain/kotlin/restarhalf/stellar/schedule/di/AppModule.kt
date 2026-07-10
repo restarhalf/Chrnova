@@ -254,7 +254,7 @@ val portModule = module {
         BackgroundSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME)))
     }
     single<AuthPort> { AuthPortImpl(authStore = get()) }
-    single<AcademicPort> { AcademicPortImpl(gateway = get()) }
+    single<AcademicPort> { AcademicPortImpl(gateway = get(), settings = get()) }
     single<AuthWorkflowPort> {
         AuthWorkflowPortImpl(
             gateway = get(),
@@ -317,7 +317,7 @@ val useCaseModule = module {
     single { SaveExaminationUseCase(repository = get()) }
     single { DeleteExaminationUseCase(repository = get()) }
     single { ObserveAllGradesUseCase(repository = get(), auth = get()) }
-    single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
+    single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
     single { GetTermStartMsUseCase(timetable = get()) }

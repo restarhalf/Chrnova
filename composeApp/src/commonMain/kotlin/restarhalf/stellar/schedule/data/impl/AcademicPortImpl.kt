@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
+import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
@@ -7,35 +8,55 @@ import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 
 /**
  * 教务数据端口实现类
- * 
+ *
  * 实现AcademicPort接口，负责从教务系统获取学术数据。
  * 包括学期信息、校区列表、考试安排、成绩报告等。
- * 
+ *
  * @param gateway 教务系统网关客户端
+ * @param settings 设置端口，用于缓存当前学期ID
  */
 class AcademicPortImpl(
     private val gateway: JwxtGateway,
+    private val settings: SettingsPort,
 ) : AcademicPort {
 
     /**
      * 获取当前学期ID
-     * 
+     *
+     * 优先返回缓存值，同时后台更新缓存。
+     * 如果缓存为空且网络请求失败，抛出异常。
+     *
      * @return 当前学期ID
      * @throws IllegalStateException 获取失败时抛出
      */
     override suspend fun fetchCurrentTermId(): String {
-        val term = gateway.getCurrentTerm()
-        if (!term.isSuccess()) {
-            throw IllegalStateException(term.messageOrEmpty().ifBlank { "获取当前学期失败" })
+        // 先尝试网络请求
+        return try {
+            val term = gateway.getCurrentTerm()
+            if (!term.isSuccess()) {
+                throw IllegalStateException(term.messageOrEmpty().ifBlank { "获取当前学期失败" })
+            }
+            val id = term.data?.firstOrNull()?.semesterId.orEmpty()
+            if (id.isBlank()) {
+                throw IllegalStateException("当前学期响应中无学期 ID")
+            }
+            // 成功获取，更新缓存
+            settings.setCurrentTermId(id)
+            id
+        } catch (e: Exception) {
+            // 网络请求失败，尝试从缓存获取
+            val cachedId = settings.observeCurrentTermId().first()
+            if (cachedId.isNotBlank()) {
+                cachedId
+            } else {
+                // 缓存也为空，抛出异常
+                throw e
+            }
         }
-        val id = term.data?.firstOrNull()?.semesterId.orEmpty()
-        if (id.isBlank()) {
-            throw IllegalStateException("当前学期响应中无学期 ID")
-        }
-        return id
     }
 
     /**
