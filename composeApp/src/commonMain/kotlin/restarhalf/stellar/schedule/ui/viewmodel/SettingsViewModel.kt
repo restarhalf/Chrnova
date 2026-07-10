@@ -395,7 +395,9 @@ class SettingsViewModel(
      * @param value 学期值
      */
     fun onSelectedTermChanged(value: String) {
-        setSelectedTermUseCase.invoke(value)
+        viewModelScope.launch {
+            setSelectedTermUseCase.invoke(value)
+        }
     }
 
     /**
