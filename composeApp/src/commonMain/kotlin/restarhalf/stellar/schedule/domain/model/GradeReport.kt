@@ -41,6 +41,8 @@ data class GradeCourse(
     val gradeId: String = "",
     /** 学期（如"2023-2024-1"表示2023-2024学年第一学期） */
     val semester: String = "",
+    /** 关联的学号（用户账号） */
+    val userNo: String = "",
 )
 
 /**

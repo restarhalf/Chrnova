@@ -1,0 +1,532 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 16,
+    "identityHash": "09af161b258c1e9b168bc234b45d4e2d",
+    "entities": [
+      {
+        "tableName": "courses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `semesterId` TEXT NOT NULL, `location` TEXT NOT NULL, `teacher` TEXT NOT NULL, `dayOfWeek` INTEGER NOT NULL, `startSection` INTEGER NOT NULL, `sectionCount` INTEGER NOT NULL, `weeks` TEXT NOT NULL, `color` TEXT NOT NULL, `type` INTEGER NOT NULL, `remoteKey` TEXT NOT NULL, `originRemoteKey` TEXT, `targetWeek` INTEGER NOT NULL, `userNo` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "semesterId",
+            "columnName": "semesterId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "teacher",
+            "columnName": "teacher",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dayOfWeek",
+            "columnName": "dayOfWeek",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startSection",
+            "columnName": "startSection",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sectionCount",
+            "columnName": "sectionCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weeks",
+            "columnName": "weeks",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remoteKey",
+            "columnName": "remoteKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originRemoteKey",
+            "columnName": "originRemoteKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "targetWeek",
+            "columnName": "targetWeek",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userNo",
+            "columnName": "userNo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_courses_semesterId",
+            "unique": false,
+            "columnNames": [
+              "semesterId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_courses_semesterId` ON `${TABLE_NAME}` (`semesterId`)"
+          },
+          {
+            "name": "index_courses_userNo",
+            "unique": false,
+            "columnNames": [
+              "userNo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_courses_userNo` ON `${TABLE_NAME}` (`userNo`)"
+          }
+        ]
+      },
+      {
+        "tableName": "examinations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `courseNumber` TEXT NOT NULL, `courseName` TEXT NOT NULL, `time` TEXT NOT NULL, `examinationPlace` TEXT NOT NULL, `zwh` TEXT NOT NULL, `ksbz` TEXT NOT NULL, `semesterId` TEXT NOT NULL, `source` TEXT NOT NULL, `userNo` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseNumber",
+            "columnName": "courseNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseName",
+            "columnName": "courseName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "examinationPlace",
+            "columnName": "examinationPlace",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zwh",
+            "columnName": "zwh",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ksbz",
+            "columnName": "ksbz",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "semesterId",
+            "columnName": "semesterId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userNo",
+            "columnName": "userNo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_examinations_semesterId",
+            "unique": false,
+            "columnNames": [
+              "semesterId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_examinations_semesterId` ON `${TABLE_NAME}` (`semesterId`)"
+          },
+          {
+            "name": "index_examinations_userNo",
+            "unique": false,
+            "columnNames": [
+              "userNo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_examinations_userNo` ON `${TABLE_NAME}` (`userNo`)"
+          }
+        ]
+      },
+      {
+        "tableName": "grades",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `courseCode` TEXT NOT NULL, `courseName` TEXT NOT NULL, `score` TEXT NOT NULL, `gradePoint` REAL NOT NULL, `credit` REAL NOT NULL, `curriculumAttributes` TEXT NOT NULL, `courseNature` TEXT NOT NULL, `examName` TEXT NOT NULL, `examinationNature` TEXT NOT NULL, `passStatus` TEXT NOT NULL, `gradeLevel` TEXT NOT NULL, `markFlag` TEXT NOT NULL, `repeatSemester` TEXT NOT NULL, `gradeId` TEXT NOT NULL, `semester` TEXT NOT NULL, `userNo` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseCode",
+            "columnName": "courseCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseName",
+            "columnName": "courseName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gradePoint",
+            "columnName": "gradePoint",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "credit",
+            "columnName": "credit",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "curriculumAttributes",
+            "columnName": "curriculumAttributes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "courseNature",
+            "columnName": "courseNature",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "examName",
+            "columnName": "examName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "examinationNature",
+            "columnName": "examinationNature",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passStatus",
+            "columnName": "passStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gradeLevel",
+            "columnName": "gradeLevel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "markFlag",
+            "columnName": "markFlag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "repeatSemester",
+            "columnName": "repeatSemester",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gradeId",
+            "columnName": "gradeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "semester",
+            "columnName": "semester",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userNo",
+            "columnName": "userNo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_grades_semester",
+            "unique": false,
+            "columnNames": [
+              "semester"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_grades_semester` ON `${TABLE_NAME}` (`semester`)"
+          },
+          {
+            "name": "index_grades_userNo",
+            "unique": false,
+            "columnNames": [
+              "userNo"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_grades_userNo` ON `${TABLE_NAME}` (`userNo`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pe_scores",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schoolYear` TEXT NOT NULL, `total` REAL NOT NULL, `isFree` INTEGER NOT NULL, `done` INTEGER NOT NULL, `nums` INTEGER NOT NULL, PRIMARY KEY(`schoolYear`))",
+        "fields": [
+          {
+            "fieldPath": "schoolYear",
+            "columnName": "schoolYear",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "total",
+            "columnName": "total",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFree",
+            "columnName": "isFree",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "done",
+            "columnName": "done",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nums",
+            "columnName": "nums",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schoolYear"
+          ]
+        }
+      },
+      {
+        "tableName": "pe_student_info",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `testCode` TEXT NOT NULL, `stuName` TEXT NOT NULL, `stdNumber` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "testCode",
+            "columnName": "testCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stuName",
+            "columnName": "stuName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stdNumber",
+            "columnName": "stdNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pe_detail_scores",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schoolYear` TEXT NOT NULL, `subjectId` TEXT NOT NULL, `subName` TEXT NOT NULL, `result` TEXT, `score` INTEGER, `unit` TEXT NOT NULL, `subRatio` TEXT NOT NULL, `grade` TEXT, `isJoin` INTEGER NOT NULL, PRIMARY KEY(`schoolYear`, `subjectId`))",
+        "fields": [
+          {
+            "fieldPath": "schoolYear",
+            "columnName": "schoolYear",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subjectId",
+            "columnName": "subjectId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subName",
+            "columnName": "subName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "result",
+            "columnName": "result",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subRatio",
+            "columnName": "subRatio",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "grade",
+            "columnName": "grade",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isJoin",
+            "columnName": "isJoin",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schoolYear",
+            "subjectId"
+          ]
+        }
+      },
+      {
+        "tableName": "pe_detail_summary",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`schoolYear` TEXT NOT NULL, `totalScore` REAL NOT NULL, `totalGrade` TEXT NOT NULL, PRIMARY KEY(`schoolYear`))",
+        "fields": [
+          {
+            "fieldPath": "schoolYear",
+            "columnName": "schoolYear",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalScore",
+            "columnName": "totalScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalGrade",
+            "columnName": "totalGrade",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "schoolYear"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '09af161b258c1e9b168bc234b45d4e2d')"
+    ]
+  }
+}

@@ -19,11 +19,12 @@ fun GradeEntity.toDomain(): GradeCourse {
         markFlag = markFlag,
         repeatSemester = repeatSemester,
         gradeId = gradeId,
-        semester = semester
+        semester = semester,
+        userNo = userNo
     )
 }
 
-fun GradeCourse.toEntity(): GradeEntity {
+fun GradeCourse.toEntity(userNo: String = this.userNo): GradeEntity {
     return GradeEntity(
         courseCode = courseCode,
         courseName = courseName,
@@ -39,6 +40,7 @@ fun GradeCourse.toEntity(): GradeEntity {
         markFlag = markFlag,
         repeatSemester = repeatSemester,
         gradeId = gradeId,
-        semester = semester
+        semester = semester,
+        userNo = userNo
     )
 }

@@ -19,28 +19,30 @@ class RoomGradeRepository(
     private val gradeDao: GradeDao
 ) : GradeRepository {
 
-    /**
-     * 观察所有成绩
-     * 
-     * @return 成绩列表Flow
-     */
     override fun observeAllGrades(): Flow<List<GradeCourse>> {
         return gradeDao.observeAllGrades().map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    /**
-     * 替换成绩数据
-     * 
-     * @param semester 学期
-     * @param grades 成绩列表
-     */
+    override fun observeGradesByUserNo(userNo: String): Flow<List<GradeCourse>> {
+        return gradeDao.observeGradesByUserNo(userNo).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override suspend fun replaceGrades(semester: String, grades: List<GradeCourse>) {
         gradeDao.replaceBySemester(semester, grades.map { it.toEntity() })
     }
 
-    /** 清除所有成绩数据 */
+    override suspend fun replaceGradesByUserNoAndSemester(
+        userNo: String,
+        semester: String,
+        grades: List<GradeCourse>
+    ) {
+        gradeDao.replaceByUserNoAndSemester(userNo, semester, grades.map { it.toEntity(userNo) })
+    }
+
     override suspend fun clearAll() {
         gradeDao.deleteAll()
     }

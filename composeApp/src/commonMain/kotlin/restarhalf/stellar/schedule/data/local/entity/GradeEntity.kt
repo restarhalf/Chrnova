@@ -8,6 +8,7 @@ import androidx.room3.PrimaryKey
     tableName = "grades",
     indices = [
         Index("semester"),
+        Index("userNo"),
     ]
 )
 data class GradeEntity(
@@ -42,5 +43,7 @@ data class GradeEntity(
     /** 成绩ID */
     val gradeId: String = "",
     /** 学期 */
-    val semester: String = ""
+    val semester: String = "",
+    /** 关联的学号（用户账号） */
+    val userNo: String = ""
 )

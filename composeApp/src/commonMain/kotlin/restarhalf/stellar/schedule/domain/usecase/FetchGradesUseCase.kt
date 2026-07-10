@@ -5,13 +5,14 @@ import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
 /**
  * 获取成绩用例
- * 
+ *
  * 从教务系统获取成绩报告，并保存到本地数据库。
  * 支持学期回退：如果当前学期没有成绩，会尝试获取上一学期的成绩。
  */
@@ -20,6 +21,7 @@ class FetchGradesUseCase(
     private val academic: AcademicPort,
     private val settings: SettingsPort,
     private val repository: GradeRepository,
+    private val auth: AuthPort,
 ) {
     /**
      * 获取成绩报告
@@ -105,9 +107,17 @@ class FetchGradesUseCase(
 
         // 保存到本地数据库
         if (report.achievements.isNotEmpty()) {
+            val userNo = try {
+                auth.observeProfile().first().userNo
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
+                ""
+            }
             val sem = report.achievements.firstOrNull()?.semester ?: ""
             if (sem.isNotBlank()) {
-                repository.replaceGrades(sem, report.achievements)
+                val gradesWithUserNo = report.achievements.map { it.copy(userNo = userNo) }
+                repository.replaceGradesByUserNoAndSemester(userNo, sem, gradesWithUserNo)
             }
         }
 

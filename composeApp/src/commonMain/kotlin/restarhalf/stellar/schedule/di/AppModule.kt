@@ -307,7 +307,8 @@ val useCaseModule = module {
             authWorkflow = get(),
             academic = get(),
             settings = get(),
-            repository = get()
+            repository = get(),
+            auth = get()
         )
     }
     single { FetchGradesSimpleUseCase(fetchGrades = get()) }
@@ -315,7 +316,7 @@ val useCaseModule = module {
     single { ObserveExaminationByIdUseCase(repository = get()) }
     single { SaveExaminationUseCase(repository = get()) }
     single { DeleteExaminationUseCase(repository = get()) }
-    single { ObserveAllGradesUseCase(repository = get()) }
+    single { ObserveAllGradesUseCase(repository = get(), auth = get()) }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
