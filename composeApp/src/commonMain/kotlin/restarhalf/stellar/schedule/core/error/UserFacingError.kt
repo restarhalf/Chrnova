@@ -95,7 +95,7 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
     var current: Throwable? = this
     repeat(6) {
         val message = current?.message?.normalizeForDisplay().orEmpty()
-        if (message.isNotBlank() && isBusinessFriendly(message)) {
+        if (message.isNotBlank() && isUserFacingMessage(message)) {
             return message
         }
         current = current?.cause
@@ -103,11 +103,19 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
     return null
 }
 
-private fun isBusinessFriendly(message: String): Boolean {
-    if (message.length > 40) return false
+/**
+ * 判断消息是否适合作为用户可见的错误提示
+ *
+ * 只接受短小的中文业务消息，其余一律视为技术性消息。
+ */
+private fun isUserFacingMessage(message: String): Boolean {
+    if (message.length > 60) return false
     val lower = message.lowercase()
-    if (STACK_TRACE_HINTS.any(lower::contains)) return false
-    return BUSINESS_MESSAGE_HINTS.any(message::contains)
+    // 排除技术性消息
+    if (TECHNICAL_MESSAGE_HINTS.any(lower::contains)) return false
+    if (Regex("""http\s*\d{3}""").containsMatchIn(lower)) return false
+    if (Regex("""\d{1,3}(\.\d{1,3}){3}""").containsMatchIn(message)) return false
+    return true
 }
 
 private fun Throwable.buildHintText(): String {
@@ -137,20 +145,39 @@ private fun isNetworkHint(hints: String): Boolean = NETWORK_HINTS.any(hints::con
 
 private fun isInvalidDataHint(hints: String): Boolean = INVALID_DATA_HINTS.any(hints::contains)
 
-private val BUSINESS_MESSAGE_HINTS =
+/** 技术性消息关键词 — 命中任一则不作为用户提示展示 */
+private val TECHNICAL_MESSAGE_HINTS =
     listOf(
-        "请先登录",
-        "重新登录",
-        "账号",
-        "帐号",
-        "用户名",
-        "密码",
-        "验证码",
-        "登录",
-    )
-
-private val STACK_TRACE_HINTS =
-    listOf(
+        // 连接/网络
+        "fail to connect",
+        "failed to connect",
+        "connection refused",
+        "connection reset",
+        "connection timed out",
+        "connectexception",
+        "socket",
+        "sockettimeout",
+        "unknownhost",
+        "unable to resolve",
+        "unresolved address",
+        "dns",
+        "network is unreachable",
+        "network connection was lost",
+        "not connected to internet",
+        "无法连接",
+        // 超时
+        "timeout",
+        "timed out",
+        "request timeout",
+        "deadline exceeded",
+        // 协议/状态码
+        "http",
+        "https",
+        "ssl",
+        "tls",
+        "status code",
+        "响应码",
+        // 堆栈
         "exception",
         " stack",
         "trace",
@@ -159,6 +186,20 @@ private val STACK_TRACE_HINTS =
         "kotlin.",
         "io.ktor",
         "nsurl",
+        "android.",
+        "com.google",
+        // 序列化
+        "serialization",
+        "deserialize",
+        "encode",
+        "decode",
+        "json",
+        // 其他
+        "null pointer",
+        "index out of",
+        "out of bounds",
+        "class not found",
+        "no such method",
     )
 
 private val LOGIN_STATE_HINTS =

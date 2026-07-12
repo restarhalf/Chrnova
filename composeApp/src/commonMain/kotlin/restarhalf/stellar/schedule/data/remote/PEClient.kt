@@ -13,6 +13,8 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -29,6 +31,23 @@ class PEClient(
     private val passwordEncryption: PEPasswordEncryptionPort,
 ) : PEGateway {
     private val baseUrl = "http://39.100.89.70/service"
+
+    /**
+     * 尝试从响应体中提取服务器返回的错误消息
+     */
+    private suspend fun HttpResponse.extractServerErrorMessage(): String? {
+        return try {
+            val body = bodyAsText()
+            if (body.isBlank()) return null
+            val jsonObj = json.parseToJsonElement(body).jsonObject
+            // 优先取 message，其次取 msg
+            val msg = jsonObj["message"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                ?: jsonObj["msg"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+            msg?.takeIf { it.length <= 50 } // 避免返回过长的消息
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     override suspend fun login(username: String, password: String): PELoginResponse =
         withContext(AppIoDispatcher) {
@@ -56,7 +75,10 @@ class PEClient(
             }
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("登录失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "登录失败（HTTP ${response.status.value}）"
+                )
             }
 
             val parsed = json.decodeFromString(PELoginResponse.serializer(), response.body())
@@ -91,7 +113,10 @@ class PEClient(
                 throw PETokenExpiredException()
             }
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("获取成绩列表失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "获取成绩列表失败（HTTP ${response.status.value}）"
+                )
             }
 
             val body = response.bodyAsText()
@@ -129,7 +154,10 @@ class PEClient(
                 throw PETokenExpiredException()
             }
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("获取成绩详情失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "获取成绩详情失败（HTTP ${response.status.value}）"
+                )
             }
 
             val body = response.bodyAsText()
@@ -165,7 +193,10 @@ class PEClient(
                 throw PETokenExpiredException()
             }
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("获取学生信息失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "获取学生信息失败（HTTP ${response.status.value}）"
+                )
             }
 
             val body = response.bodyAsText()

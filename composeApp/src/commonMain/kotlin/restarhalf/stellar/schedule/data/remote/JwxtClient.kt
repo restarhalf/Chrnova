@@ -6,11 +6,14 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Parameters
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -34,10 +37,31 @@ class JwxtClient(
         withContext(AppIoDispatcher) {
             val response: HttpResponse = httpClient.post(url)
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("请求失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "请求失败（HTTP ${response.status.value}）"
+                )
             }
             response.body()
         }
+
+    /**
+     * 尝试从响应体中提取服务器返回的错误消息
+     */
+    private suspend fun HttpResponse.extractServerErrorMessage(): String? {
+        return try {
+            val body = bodyAsText()
+            if (body.isBlank()) return null
+            val jsonObj = json.parseToJsonElement(body).jsonObject
+            // 优先取 msg，其次取 Msg，最后取 msgAlt
+            val msg = jsonObj["msg"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                ?: jsonObj["Msg"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                ?: jsonObj["message"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+            msg?.takeIf { it.length <= 50 } // 避免返回过长的消息
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     override suspend fun login(
         userNo: String,
@@ -64,7 +88,10 @@ class JwxtClient(
                 httpClient.submitForm(url = url, formParameters = parameters)
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("登录失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "登录失败（HTTP ${response.status.value}）"
+                )
             }
 
             val body: String = response.body()
@@ -135,7 +162,10 @@ class JwxtClient(
                 }
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("课表请求失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "课表请求失败（HTTP ${response.status.value}）"
+                )
             }
             response.body()
         }
@@ -154,7 +184,10 @@ class JwxtClient(
                 }
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("考试安排请求失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "考试安排请求失败（HTTP ${response.status.value}）"
+                )
             }
             response.body()
         }
@@ -170,7 +203,10 @@ class JwxtClient(
                 }
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("成绩请求失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "成绩请求失败（HTTP ${response.status.value}）"
+                )
             }
             json.decodeFromString(
                 JwxtApiResponse.serializer(ListSerializer(JwxtTermGradeDataItem.serializer())),
@@ -194,7 +230,10 @@ class JwxtClient(
                 }
 
             if (!response.status.isSuccess()) {
-                throw IllegalStateException("指导教学课程请求失败（HTTP ${response.status.value}）")
+                throw IllegalStateException(
+                    response.extractServerErrorMessage()
+                        ?: "指导教学课程请求失败（HTTP ${response.status.value}）"
+                )
             }
             json.decodeFromString(
                 JwxtGuidanceTeachingResponse.serializer(),
