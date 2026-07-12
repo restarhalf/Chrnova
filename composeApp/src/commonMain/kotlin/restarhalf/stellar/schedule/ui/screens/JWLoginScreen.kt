@@ -161,10 +161,18 @@ fun JWLoginScreen(
                             contentType = ContentType.Password
                         }
                     )
+                    if (uiState.password.contains(Regex("[^\u0000-\u00ff]"))) {
                         Text(
-                            text = uiState.error,
+                            text = "密码包含中文字符了，确定吗",
                             color = colors.error,
+                            fontSize = 12.sp,
                         )
+                    }
+                    Text(
+                        text = uiState.error,
+                        color = colors.error,
+                        fontSize = 12.sp,
+                    )
                 }
             }
             item {
