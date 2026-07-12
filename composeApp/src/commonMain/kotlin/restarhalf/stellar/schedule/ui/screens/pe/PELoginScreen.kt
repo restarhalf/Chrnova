@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
@@ -63,6 +64,7 @@ fun PELoginScreen(
     val overscrollEffect = MiuixOverscrollEffect()
     val uiState by vm.uiState.collectAsState()
     val colors = MiuixTheme.colorScheme
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -100,7 +102,10 @@ fun PELoginScreen(
                     }
                 }
                 Button(
-                    onClick = { vm.submitLogin(onSuccess = onLoginSuccess) },
+                    onClick = {
+                        focusManager.clearFocus()
+                        vm.submitLogin(onSuccess = onLoginSuccess)
+                    },
                     modifier = Modifier.fillMaxWidth()
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp).imePadding(),
                     enabled = uiState.username.isNotBlank() && uiState.password.isNotBlank() && !uiState.loading,
