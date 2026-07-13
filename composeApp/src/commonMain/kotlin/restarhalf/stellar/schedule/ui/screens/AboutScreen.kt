@@ -46,9 +46,9 @@ import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
-import schedulekmp.composeapp.generated.resources.Res
-import schedulekmp.composeapp.generated.resources.alipay
-import schedulekmp.composeapp.generated.resources.wxpay
+import chrnova.composeapp.generated.resources.Res
+import chrnova.composeapp.generated.resources.alipay
+import chrnova.composeapp.generated.resources.wxpay
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton

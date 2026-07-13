@@ -1,4 +1,4 @@
-rootProject.name = "scheduleKMP"
+rootProject.name = "Chrnova"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

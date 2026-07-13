@@ -194,7 +194,7 @@ class AboutViewModel(
 
     /** 请求打开GitHub仓库 */
     fun requestOpenGithub() {
-        _events.tryEmit(AboutUiEvent.OpenUri("https://github.com/restarhalf/scheduleKMP"))
+        _events.tryEmit(AboutUiEvent.OpenUri("https://github.com/restarhalf/Chrnova"))
     }
 
     /** 请求打开支付宝赞赏码 */

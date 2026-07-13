@@ -28,8 +28,8 @@ import com.mikepenz.markdown.model.DefaultMarkdownColors
 import com.mikepenz.markdown.model.DefaultMarkdownTypography
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import schedulekmp.composeapp.generated.resources.Res
-import schedulekmp.composeapp.generated.resources.ic_privacy
+import chrnova.composeapp.generated.resources.Res
+import chrnova.composeapp.generated.resources.ic_privacy
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
