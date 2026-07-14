@@ -1,10 +1,14 @@
 package restarhalf.stellar.schedule.core.log
 
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.internal.SynchronizedObject
+import kotlinx.coroutines.internal.synchronized
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 
 object AppLogger {
@@ -18,11 +22,23 @@ object AppLogger {
 
     private val buffer = ArrayList<LogEntry>(MAX_ENTRIES + 1)
 
+    @OptIn(InternalCoroutinesApi::class)
+    private val lock = SynchronizedObject()
+    @Volatile
+    private var snapshot: List<LogEntry> = emptyList()
+
     enum class Level(val tag: String) {
-        DEBUG("D"),
-        INFO("I"),
-        WARN("W"),
-        ERROR("E"),
+        DEBUG("DEBUG"),
+        INFO("INFO"),
+        WARN("WARNING"),
+        ERROR("ERROR");
+
+        companion object {
+            private val tagMap = entries.associateBy { it.tag.uppercase() } +
+                mapOf("D" to DEBUG, "I" to INFO, "W" to WARN, "E" to ERROR)
+
+            fun fromTag(tag: String): Level = tagMap[tag.uppercase()] ?: INFO
+        }
     }
 
     fun init(logDir: String = "") {
@@ -83,12 +99,16 @@ object AppLogger {
         runCatching { LogFileStorage.sync() }
     }
 
+    @OptIn(InternalCoroutinesApi::class)
     private fun appendEntry(entry: LogEntry) {
-        buffer.add(entry)
-        if (buffer.size > MAX_ENTRIES) {
-            buffer.subList(0, buffer.size - MAX_ENTRIES).clear()
+        synchronized(lock) {
+            buffer.add(entry)
+            if (buffer.size > MAX_ENTRIES) {
+                buffer.subList(0, buffer.size - MAX_ENTRIES).clear()
+            }
+            snapshot = buffer.toList()
         }
-        _entries.value = buffer.toList()
+        _entries.value = snapshot
     }
 
     private fun createEntry(tag: String, message: String, level: Level): LogEntry {
@@ -118,6 +138,7 @@ object AppLogger {
         }
     }
 
+    @OptIn(InternalCoroutinesApi::class)
     private fun loadLogsFromFile() {
         runCatching {
             val lines = LogFileStorage.readAllLines()
@@ -132,9 +153,12 @@ object AppLogger {
                 }
             }
             val parsed = joined.mapNotNull { parseLogLine(it) }
-            buffer.clear()
-            buffer.addAll(parsed.takeLast(MAX_ENTRIES))
-            _entries.value = buffer.toList()
+            synchronized(lock) {
+                buffer.clear()
+                buffer.addAll(parsed.takeLast(MAX_ENTRIES))
+                snapshot = buffer.toList()
+            }
+            _entries.value = snapshot
         }
     }
 
@@ -148,20 +172,24 @@ object AppLogger {
         val tag = ltMatch.groupValues[2]
         val rawMessage = line.substring(ltMatch.range.last + 2)
         val message = rawMessage.replace("\\n", "\n").replace("\\\\", "\\")
-        val level = Level.entries.find { it.tag == levelTag } ?: Level.INFO
+        val level = Level.fromTag(levelTag)
         return LogEntry(timestamp = timestamp, tag = tag, level = level, message = message)
     }
 
+    @OptIn(InternalCoroutinesApi::class)
     fun clear() {
-        buffer.clear()
-        _entries.value = emptyList()
+        synchronized(lock) {
+            buffer.clear()
+            snapshot = emptyList()
+        }
+        _entries.value = snapshot
         if (initialized) {
             runCatching { LogFileStorage.clear() }
         }
     }
 
     fun toPlainText(): String {
-        return buffer.joinToString("\n") { entry ->
+        return snapshot.joinToString("\n") { entry ->
             val escapedMessage = entry.message.replace("\\", "\\\\").replace("\n", "\\n")
             "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] $escapedMessage"
         }
@@ -176,10 +204,10 @@ object AppLogger {
             for ((key, value) in metadata) {
                 appendLine("$key: $value")
             }
-            appendLine("Log entries: ${buffer.size}")
+            appendLine("Log entries: ${snapshot.size}")
             appendLine("==========================")
         }
-        val body = buffer.joinToString("\n") { entry ->
+        val body = snapshot.joinToString("\n") { entry ->
             "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] ${entry.message}"
         }
         return header + body
