@@ -22,9 +22,12 @@ class BackgroundSettingsPortImpl(
     private val settings: ObservableSettings,
 ) : BackgroundSettingsPort {
 
+    override fun getBackgroundImageUri(): String? =
+        settings.getStringOrNull(SettingsKeys.BACKGROUND_IMAGE_URI)
+
     /**
      * 观察背景图片URI变化
-     * 
+     *
      * @return 背景图片URI Flow
      */
     override fun observeBackgroundImageUri(): Flow<String?> {
@@ -40,9 +43,12 @@ class BackgroundSettingsPortImpl(
         settings[SettingsKeys.BACKGROUND_IMAGE_URI] = uri
     }
 
+    override fun getBackgroundAlpha(): Float =
+        settings.getFloat(SettingsKeys.BACKGROUND_ALPHA, 1f)
+
     /**
      * 观察背景透明度变化
-     * 
+     *
      * @return 背景透明度Flow（0.0-1.0）
      */
     override fun observeBackgroundAlpha(): Flow<Float> {
@@ -58,9 +64,12 @@ class BackgroundSettingsPortImpl(
         settings[SettingsKeys.BACKGROUND_ALPHA] = value
     }
 
+    override fun getBackgroundBlur(): Float =
+        settings.getFloat(SettingsKeys.BACKGROUND_BLUR, 0f)
+
     /**
      * 观察背景模糊度变化
-     * 
+     *
      * @return 背景模糊度Flow（0.0-1.0）
      */
     override fun observeBackgroundBlur(): Flow<Float> {
@@ -76,9 +85,12 @@ class BackgroundSettingsPortImpl(
         settings[SettingsKeys.BACKGROUND_BLUR] = value
     }
 
+    override fun getComponentsAlpha(): Float =
+        settings.getFloat(SettingsKeys.COMPONENTS_ALPHA, 1f)
+
     /**
      * 观察组件透明度变化
-     * 
+     *
      * @return 组件透明度Flow（0.0-1.0）
      */
     override fun observeComponentsAlpha(): Flow<Float> {

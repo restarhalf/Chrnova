@@ -471,6 +471,7 @@ val viewModelModule = module {
     }
     factory {
         BackgroundViewModel(
+            backgroundSettings = get(),
             observeBackgroundImageUri = get(),
             observeBackgroundAlpha = get(),
             observeBackgroundBlur = get(),

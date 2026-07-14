@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
@@ -25,6 +26,7 @@ import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
  * - 组件透明度（控制背景上组件的可见度）
  */
 class BackgroundViewModel(
+    backgroundSettings: BackgroundSettingsPort,
     observeBackgroundImageUri: ObserveBackgroundImageUriUseCase,
     observeBackgroundAlpha: ObserveBackgroundAlphaUseCase,
     observeBackgroundBlur: ObserveBackgroundBlurUseCase,
@@ -77,10 +79,10 @@ class BackgroundViewModel(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue =
                     BackgroundUiState(
-                        backgroundImageUri = null,
-                        backgroundAlpha = 1f,
-                        backgroundBlur = 0f,
-                        componentsAlpha = 1f,
+                        backgroundImageUri = backgroundSettings.getBackgroundImageUri(),
+                        backgroundAlpha = backgroundSettings.getBackgroundAlpha(),
+                        backgroundBlur = backgroundSettings.getBackgroundBlur(),
+                        componentsAlpha = backgroundSettings.getComponentsAlpha(),
                     ),
             )
 
