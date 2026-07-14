@@ -16,7 +16,6 @@ object AppLogger {
     private const val MAX_LOG_FILE_SIZE = 512 * 1024L
     private const val ROTATE_KEEP_LINES = 500
 
-    /** 内部缓冲区，避免每次 log 都创建新 List */
     private val buffer = ArrayList<LogEntry>(MAX_ENTRIES + 1)
 
     enum class Level(val tag: String) {
@@ -48,11 +47,11 @@ object AppLogger {
 
     fun log(tag: String, message: String, throwable: Throwable, level: Level = Level.ERROR) {
         if (!enabled) return
-        val stackTrace = throwable.stackTraceToString()
         val fullMessage = buildString {
             append(message)
             append("\n")
             append(throwable.toString())
+            val stackTrace = throwable.stackTraceToString()
             if (stackTrace.isNotBlank()) {
                 append("\n")
                 append(stackTrace)
@@ -68,11 +67,11 @@ object AppLogger {
             runCatching { LogFileStorage.init("") }
             initialized = true
         }
-        val stackTrace = throwable.stackTraceToString()
         val fullMessage = buildString {
             append("Uncaught exception on $threadName")
             append("\n")
             append(throwable.toString())
+            val stackTrace = throwable.stackTraceToString()
             if (stackTrace.isNotBlank()) {
                 append("\n")
                 append(stackTrace)
@@ -84,7 +83,6 @@ object AppLogger {
         runCatching { LogFileStorage.sync() }
     }
 
-    /** 向缓冲区追加条目，超出上限时移除最旧的，然后发布快照 */
     private fun appendEntry(entry: LogEntry) {
         buffer.add(entry)
         if (buffer.size > MAX_ENTRIES) {
@@ -163,10 +161,28 @@ object AppLogger {
     }
 
     fun toPlainText(): String {
-        return _entries.value.joinToString("\n") { entry ->
+        return buffer.joinToString("\n") { entry ->
             val escapedMessage = entry.message.replace("\\", "\\\\").replace("\n", "\\n")
             "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] $escapedMessage"
         }
+    }
+
+    /**
+     * 导出日志供 bug 反馈，包含设备元数据和可读堆栈。
+     */
+    fun toExportText(metadata: Map<String, String> = emptyMap()): String {
+        val header = buildString {
+            appendLine("=== Chrnova Log Export ===")
+            for ((key, value) in metadata) {
+                appendLine("$key: $value")
+            }
+            appendLine("Log entries: ${buffer.size}")
+            appendLine("==========================")
+        }
+        val body = buffer.joinToString("\n") { entry ->
+            "[${entry.timestamp}] [${entry.level.tag}/${entry.tag}] ${entry.message}"
+        }
+        return header + body
     }
 
     data class LogEntry(

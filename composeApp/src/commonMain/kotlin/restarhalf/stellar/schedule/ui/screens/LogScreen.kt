@@ -45,7 +45,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import top.yukonga.miuix.kmp.utils.Platform
+import top.yukonga.miuix.kmp.utils.platform
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -74,6 +78,7 @@ fun LogScreen(
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val entries by AppLogger.entries.collectAsState()
     val listState = rememberLazyListState()
+    val appInfo: AppInfoPort = koinInject()
     var selectedEntry by remember { mutableStateOf<AppLogger.LogEntry?>(null) }
     var showClearConfirm by remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
@@ -198,7 +203,12 @@ fun LogScreen(
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     onClick = {
-                        val text = AppLogger.toPlainText()
+                        val metadata = mapOf(
+                            "App" to appInfo.appName,
+                            "Version" to appInfo.versionName,
+                            "Platform" to platformName(),
+                        )
+                        val text = AppLogger.toExportText(metadata)
                         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                         val ts = "${now.date}T${now.time.hour.toString().padStart(2, '0')}:${now.time.minute.toString().padStart(2, '0')}:${now.time.second.toString().padStart(2, '0')}.${now.time.nanosecond.toString().take(5)}"
                         val fileName = "Chrnova-$ts.log"
@@ -362,4 +372,10 @@ private fun LogDetailBottomSheet(
             }
         },
     )
+}
+
+private fun platformName(): String = when (platform()) {
+    Platform.Android -> "Android"
+    Platform.IOS -> "iOS"
+    else -> "Unknown"
 }
