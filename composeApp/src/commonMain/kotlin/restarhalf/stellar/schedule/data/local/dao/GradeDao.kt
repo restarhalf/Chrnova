@@ -67,6 +67,15 @@ interface GradeDao {
     @Query("DELETE FROM grades WHERE userNo = :userNo AND semester = :semester")
     suspend fun deleteGradesByUserNoAndSemester(userNo: String, semester: String)
 
+    /**
+     * 按学号查询所有成绩（一次性读取，非观察）
+     *
+     * @param userNo 学号
+     * @return 成绩列表
+     */
+    @Query("SELECT * FROM grades WHERE userNo = :userNo")
+    suspend fun getAllGradesByUserNo(userNo: String): List<GradeEntity>
+
     /** 删除所有成绩 */
     @Query("DELETE FROM grades")
     suspend fun deleteAll()

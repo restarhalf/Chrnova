@@ -25,6 +25,14 @@ interface GradeRepository {
     fun observeGradesByUserNo(userNo: String): Flow<List<GradeCourse>>
 
     /**
+     * 按学号查询所有成绩（一次性读取，用于离线回退）
+     *
+     * @param userNo 学号
+     * @return 成绩列表
+     */
+    suspend fun getAllGradesByUserNo(userNo: String): List<GradeCourse>
+
+    /**
      * 替换成绩数据
      *
      * @param semester 学期

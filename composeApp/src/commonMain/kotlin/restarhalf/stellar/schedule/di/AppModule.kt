@@ -603,6 +603,9 @@ val viewModelModule = module {
         ElectiveCreditViewModel(
             authWorkflow = get(),
             academic = get(),
+            fetchSemesterIds = get(),
+            gradeRepository = get(),
+            auth = get(),
         )
     }
 }

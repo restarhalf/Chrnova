@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
@@ -12,7 +13,10 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
 /**
  * 选修课学分统计ViewModel
@@ -28,6 +32,9 @@ import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 class ElectiveCreditViewModel(
     private val authWorkflow: AuthWorkflowPort,
     private val academic: AcademicPort,
+    private val fetchSemesterIds: FetchSemesterIdsUseCase,
+    private val gradeRepository: GradeRepository,
+    private val auth: AuthPort,
 ) : ViewModel() {
 
     /**
@@ -142,8 +149,8 @@ class ElectiveCreditViewModel(
                     return@launch
                 }
 
-                // 获取所有学期ID
-                val allSemesterIds = academic.fetchSemesterIds()
+                // 获取所有学期ID（使用缓存支持的用例）
+                val allSemesterIds = fetchSemesterIds()
                     .filter { it.isNotBlank() }
                     .distinct()
 
@@ -175,7 +182,19 @@ class ElectiveCreditViewModel(
                         allCourses.addAll(report.achievements)
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
-                        AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败", e)
+                        AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败，尝试本地回退", e)
+                        // 网络失败，从本地数据库回退
+                        try {
+                            val userNo = auth.observeProfile().first().userNo
+                            if (userNo.isNotBlank()) {
+                                val localGrades = gradeRepository.getAllGradesByUserNo(userNo)
+                                    .filter { it.semester == semesterId }
+                                allCourses.addAll(localGrades)
+                            }
+                        } catch (fallback: Exception) {
+                            if (fallback is kotlinx.coroutines.CancellationException) throw fallback
+                            AppLogger.log("ElectiveCredit", "本地回退也失败", fallback)
+                        }
                     }
                 }
 
