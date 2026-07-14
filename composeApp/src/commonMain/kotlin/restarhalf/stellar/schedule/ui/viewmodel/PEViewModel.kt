@@ -193,49 +193,56 @@ class PEViewModel(
      */
     fun isLoggedIn(): Boolean = _isLoggedIn.value
 
+    private suspend fun <T> withAuthRetry(
+        action: suspend () -> T,
+        onSuccess: (T) -> Unit,
+        errorKind: UserFacingErrorKind,
+        logTag: String = "PE",
+    ) {
+        val firstAttempt = runCatching { action() }
+        if (firstAttempt.isSuccess) {
+            onSuccess(firstAttempt.getOrThrow())
+        } else {
+            val ex = firstAttempt.exceptionOrNull()!!
+            if (ex is PETokenExpiredException || ex is SerializationException) {
+                val reloginResult = peLoginUseCase.autoLogin()
+                if (reloginResult?.status == "PASS") {
+                    _isLoggedIn.value = true
+                    runCatching { action() }
+                        .onSuccess { result -> onSuccess(result) }
+                        .onFailure { retryEx ->
+                            AppLogger.log(logTag, "重试失败", retryEx)
+                            _isLoggedIn.value = false
+                            _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(errorKind)) }
+                        }
+                } else {
+                    _isLoggedIn.value = false
+                    _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
+                }
+            } else {
+                AppLogger.log(logTag, "加载失败", ex)
+                _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
+            }
+        }
+    }
+
     /** 加载成绩列表 */
     fun loadScoreList() {
         viewModelScope.launch {
             loadMutex.withLock {
                 _uiState.update { it.copy(loading = true, error = null) }
-                val firstAttempt = runCatching { peScoreListUseCase() }
-                if (firstAttempt.isSuccess) {
-                    val result = firstAttempt.getOrThrow()
-                    _uiState.update {
-                        it.copy(
-                            yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear },
-                            loadedScoreList = true,
-                        )
-                    }
-                } else {
-                    val ex = firstAttempt.exceptionOrNull()!!
-                    if (ex is PETokenExpiredException || ex is SerializationException) {
-                        val reloginResult = peLoginUseCase.autoLogin()
-                        if (reloginResult?.status == "PASS") {
-                            _isLoggedIn.value = true
-                            runCatching { peScoreListUseCase() }
-                                .onSuccess { result ->
-                                    _uiState.update {
-                                        it.copy(
-                                            yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear },
-                                            loadedScoreList = true,
-                                        )
-                                    }
-                                }
-                                .onFailure { retryEx ->
-                                    AppLogger.log("PE", "重试加载体育成绩失败", retryEx)
-                                    _isLoggedIn.value = false
-                                    _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
-                                }
-                        } else {
-                            _isLoggedIn.value = false
-                            _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
+                withAuthRetry(
+                    action = { peScoreListUseCase() },
+                    onSuccess = { result ->
+                        _uiState.update {
+                            it.copy(
+                                yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear },
+                                loadedScoreList = true,
+                            )
                         }
-                    } else {
-                        AppLogger.log("PE", "加载体育成绩失败", ex)
-                        _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
-                    }
-                }
+                    },
+                    errorKind = UserFacingErrorKind.LoadPEScores,
+                )
                 _uiState.update { it.copy(loading = false) }
             }
         }
@@ -250,34 +257,13 @@ class PEViewModel(
         viewModelScope.launch {
             loadMutex.withLock {
                 _uiState.update { it.copy(loading = true, error = null) }
-                val firstAttempt = runCatching { peScoreDetailUseCase(schoolYear) }
-                if (firstAttempt.isSuccess) {
-                    val result = firstAttempt.getOrThrow()
-                    _uiState.update { s -> s.copy(detailData = result.data, loadedDetail = true) }
-                } else {
-                    val ex = firstAttempt.exceptionOrNull()!!
-                    if (ex is PETokenExpiredException || ex is SerializationException) {
-                        val reloginResult = peLoginUseCase.autoLogin()
-                        if (reloginResult?.status == "PASS") {
-                            _isLoggedIn.value = true
-                            runCatching { peScoreDetailUseCase(schoolYear) }
-                                .onSuccess { result ->
-                                    _uiState.update { s -> s.copy(detailData = result.data, loadedDetail = true) }
-                                }
-                                .onFailure { retryEx ->
-                                    AppLogger.log("PE", "重试加载体测详情失败", retryEx)
-                                    _isLoggedIn.value = false
-                                    _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)) }
-                                }
-                        } else {
-                            _isLoggedIn.value = false
-                            _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)) }
-                        }
-                    } else {
-                        AppLogger.log("PE", "加载体测详情失败", ex)
-                        _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEDetail)) }
-                    }
-                }
+                withAuthRetry(
+                    action = { peScoreDetailUseCase(schoolYear) },
+                    onSuccess = { result ->
+                        _uiState.update { s -> s.copy(detailData = result.data, loadedDetail = true) }
+                    },
+                    errorKind = UserFacingErrorKind.LoadPEDetail,
+                )
                 _uiState.update { it.copy(loading = false) }
             }
         }
@@ -286,34 +272,13 @@ class PEViewModel(
     /** 加载学生信息 */
     fun loadStudentInfo() {
         viewModelScope.launch {
-            val firstAttempt = runCatching { peStudentInfoUseCase() }
-            if (firstAttempt.isSuccess) {
-                val result = firstAttempt.getOrThrow()
-                _uiState.update { s -> s.copy(studentInfo = result.data) }
-            } else {
-                val ex = firstAttempt.exceptionOrNull()!!
-                if (ex is PETokenExpiredException || ex is SerializationException) {
-                    val reloginResult = peLoginUseCase.autoLogin()
-                    if (reloginResult?.status == "PASS") {
-                        _isLoggedIn.value = true
-                        runCatching { peStudentInfoUseCase() }
-                            .onSuccess { result ->
-                                _uiState.update { s -> s.copy(studentInfo = result.data) }
-                            }
-                            .onFailure { retryEx ->
-                                AppLogger.log("PE", "重试加载学生信息失败", retryEx)
-                                _isLoggedIn.value = false
-                                _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
-                            }
-                    } else {
-                        _isLoggedIn.value = false
-                        _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
-                    }
-                } else {
-                    AppLogger.log("PE", "加载学生信息失败", ex)
-                    _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEScores)) }
-                }
-            }
+            withAuthRetry(
+                action = { peStudentInfoUseCase() },
+                onSuccess = { result ->
+                    _uiState.update { s -> s.copy(studentInfo = result.data) }
+                },
+                errorKind = UserFacingErrorKind.LoadPEScores,
+            )
         }
     }
 

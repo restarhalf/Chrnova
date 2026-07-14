@@ -16,9 +16,16 @@ import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
-import restarhalf.stellar.schedule.domain.usecase.FetchGradeReportUseCase
-import restarhalf.stellar.schedule.domain.usecase.FetchGuidanceTeachingCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+
+private fun parseSemesterKey(semesterId: String): Triple<Int, Int, Int>? {
+    val parts = semesterId.trim().split("-")
+    if (parts.size < 3) return null
+    val y1 = parts[0].toIntOrNull() ?: return null
+    val y2 = parts[1].toIntOrNull() ?: return null
+    val t = parts[2].toIntOrNull() ?: return null
+    return Triple(y1, y2, t)
+}
 
 /**
  * 选修课学分统计ViewModel
@@ -30,8 +37,6 @@ class ElectiveCreditViewModel(
     private val academic: AcademicPort,
     private val auth: AuthPort,
     private val gradeRepository: GradeRepository,
-    private val fetchGradeReport: FetchGradeReportUseCase,
-    private val fetchGuidanceTeachingCourses: FetchGuidanceTeachingCoursesUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,
 ) : ViewModel() {
@@ -89,7 +94,7 @@ class ElectiveCreditViewModel(
                 val allCourses = fetchCoursesWithFallback(semesterIds)
 
                 val innovationCourses = runCatching {
-                    fetchGuidanceTeachingCourses(kcxz = "54")
+                    academic.fetchGuidanceTeachingCourses(kcxz = "54")
                 }.getOrElse { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     AppLogger.log("ElectiveCredit", "获取创新创业专业融合选修课程失败", e)
@@ -97,7 +102,7 @@ class ElectiveCreditViewModel(
                 }
 
                 val professionalCourses = runCatching {
-                    fetchGuidanceTeachingCourses(kcxz = "61")
+                    academic.fetchGuidanceTeachingCourses(kcxz = "61")
                 }.getOrElse { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     AppLogger.log("ElectiveCredit", "获取专业选修课程失败", e)
@@ -129,7 +134,7 @@ class ElectiveCreditViewModel(
         val allCourses = mutableListOf<GradeCourse>()
         for (semesterId in semesterIds) {
             try {
-                val report = fetchGradeReport(semester = semesterId)
+                val report = academic.fetchGradeReport(semester = semesterId)
                 allCourses.addAll(report.achievements)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -152,8 +157,8 @@ class ElectiveCreditViewModel(
 
     private object SemesterComparator : Comparator<String> {
         override fun compare(a: String, b: String): Int {
-            val ka = parse(a)
-            val kb = parse(b)
+            val ka = parseSemesterKey(a)
+            val kb = parseSemesterKey(b)
             return when {
                 ka != null && kb != null -> {
                     if (ka.first != kb.first) ka.first.compareTo(kb.first)
@@ -165,23 +170,5 @@ class ElectiveCreditViewModel(
                 else -> a.compareTo(b)
             }
         }
-
-        private fun parse(id: String): Triple<Int, Int, Int>? {
-            val parts = id.trim().split("-")
-            if (parts.size < 3) return null
-            val y1 = parts[0].toIntOrNull() ?: return null
-            val y2 = parts[1].toIntOrNull() ?: return null
-            val t = parts[2].toIntOrNull() ?: return null
-            return Triple(y1, y2, t)
-        }
-    }
-
-    private fun parseSemesterKey(semesterId: String): Triple<Int, Int, Int>? {
-        val parts = semesterId.trim().split("-")
-        if (parts.size < 3) return null
-        val y1 = parts[0].toIntOrNull() ?: return null
-        val y2 = parts[1].toIntOrNull() ?: return null
-        val t = parts[2].toIntOrNull() ?: return null
-        return Triple(y1, y2, t)
     }
 }

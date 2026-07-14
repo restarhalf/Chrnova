@@ -65,9 +65,7 @@ import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
-import restarhalf.stellar.schedule.domain.usecase.FetchGradeReportUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
-import restarhalf.stellar.schedule.domain.usecase.FetchGuidanceTeachingCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
@@ -271,8 +269,6 @@ val useCaseModule = module {
     single { DeleteExaminationUseCase(repository = get()) }
     single { ObserveAllGradesUseCase(repository = get(), auth = get()) }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
-    single { FetchGradeReportUseCase(academic = get()) }
-    single { FetchGuidanceTeachingCoursesUseCase(academic = get()) }
     single { LoginUseCase(authWorkflow = get()) }
     single { CalculateElectiveCreditsUseCase() }
     single { BuildScheduleUiStateUseCase(timetable = get()) }
@@ -475,8 +471,6 @@ val viewModelModule = module {
             academic = get(),
             auth = get(),
             gradeRepository = get(),
-            fetchGradeReport = get(),
-            fetchGuidanceTeachingCourses = get(),
             fetchSemesterIds = get(),
             calculateElectiveCredits = get(),
         )
