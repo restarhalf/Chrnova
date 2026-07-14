@@ -16,10 +16,10 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
-import restarhalf.stellar.schedule.domain.usecase.SaveLabCourseUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -34,7 +34,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
 class CourseEditViewModel(
     observeAllCoursesUseCase: ObserveAllCoursesUseCase,
     private val observeCourseByIdUseCase: ObserveCourseByIdUseCase,
-    private val saveLabCourseUseCase: SaveLabCourseUseCase,
+    private val insertCourseUseCase: InsertCourseUseCase,
     private val deleteCourseUseCase: DeleteCourseUseCase,
     observeAuthProfile: ObserveAuthProfileUseCase,
 ) : ViewModel() {
@@ -277,7 +277,7 @@ class CourseEditViewModel(
      */
     fun saveLabCourse(course: Course, onSaved: () -> Unit) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { saveLabCourseUseCase(course) } }
+            runCatching { withContext(AppIoDispatcher) { insertCourseUseCase(course) } }
                 .onSuccess { onSaved() }
                 .onFailure { AppLogger.log("CourseEdit", "保存实验课失败", it) }
         }

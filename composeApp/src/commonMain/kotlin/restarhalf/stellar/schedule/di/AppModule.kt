@@ -48,6 +48,7 @@ import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
+import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeGreetingUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeHeaderUiUseCase
@@ -68,14 +69,19 @@ import restarhalf.stellar.schedule.domain.usecase.EnsureLoggedInUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchGradeReportUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchGuidanceTeachingCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchPaperDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchPaperFoldersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchPapersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesOnceUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetBackgroundSettingsInitialUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetCurrentTermIdUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetLocalGradesByUserNoUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
@@ -85,6 +91,7 @@ import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObservePETokenUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
@@ -115,7 +122,6 @@ import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
-import restarhalf.stellar.schedule.domain.usecase.SaveLabCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.SetBackgroundAlphaUseCase
@@ -318,6 +324,11 @@ val useCaseModule = module {
     single { DeleteExaminationUseCase(repository = get()) }
     single { ObserveAllGradesUseCase(repository = get(), auth = get()) }
     single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
+    single { GetCurrentTermIdUseCase(academic = get()) }
+    single { FetchGradeReportUseCase(academic = get()) }
+    single { FetchGuidanceTeachingCoursesUseCase(academic = get()) }
+    single { ObservePETokenUseCase(peAuth = get()) }
+    single { GetLocalGradesByUserNoUseCase(gradeRepository = get()) }
     single { GetCampusUseCase(timetable = get()) }
     single { SetCampusUseCase(timetable = get()) }
     single { GetTermStartMsUseCase(timetable = get()) }
@@ -348,6 +359,7 @@ val useCaseModule = module {
     single { SetExamReminderEnabledUseCase(settings = get()) }
     single { ShouldAutoSyncAndMarkUseCase(settings = get()) }
     single { GetCampusTimetableUseCase(timetable = get()) }
+    single { CalculateElectiveCreditsUseCase() }
     single { BuildScheduleUiStateUseCase(getCampusTimetable = get()) }
     single { BuildHomeTodayScheduleUseCase() }
     single { BuildHomeClockSnapshotUseCase() }
@@ -403,6 +415,7 @@ val useCaseModule = module {
             authWorkflow = get(),
         )
     }
+    single { GetBackgroundSettingsInitialUseCase(backgroundSettings = get()) }
     single { ObserveBackgroundImageUriUseCase(backgroundSettings = get()) }
     single { SetBackgroundImageUriUseCase(backgroundSettings = get()) }
     single { ObserveBackgroundAlphaUseCase(backgroundSettings = get()) }
@@ -412,7 +425,6 @@ val useCaseModule = module {
     single { ObserveComponentsAlphaUseCase(backgroundSettings = get()) }
     single { SetComponentsAlphaUseCase(backgroundSettings = get()) }
 
-    single { SaveLabCourseUseCase(courseRepository = get()) }
     single { DeleteCourseUseCase(courseRepository = get()) }
     single { InsertCourseUseCase(courseRepository = get()) }
     single {
@@ -471,7 +483,7 @@ val viewModelModule = module {
     }
     factory {
         BackgroundViewModel(
-            backgroundSettings = get(),
+            getBackgroundSettingsInitial = get(),
             observeBackgroundImageUri = get(),
             observeBackgroundAlpha = get(),
             observeBackgroundBlur = get(),
@@ -486,7 +498,7 @@ val viewModelModule = module {
         CourseEditViewModel(
             observeAllCoursesUseCase = get(),
             observeCourseByIdUseCase = get(),
-            saveLabCourseUseCase = get(),
+            insertCourseUseCase = get(),
             deleteCourseUseCase = get(),
             observeAuthProfile = get(),
         )
@@ -545,7 +557,7 @@ val viewModelModule = module {
             deleteExaminationUseCase = get(),
             observeSelectedTerm = get(),
             observeAuthProfile = get(),
-            academic = get(),
+            getCurrentTermId = get(),
         )
     }
     factory {
@@ -577,7 +589,7 @@ val viewModelModule = module {
             peScoreListUseCase = get(),
             peScoreDetailUseCase = get(),
             peStudentInfoUseCase = get(),
-            peAuth = get(),
+            observePEToken = get(),
         )
     }
     factory {
@@ -602,11 +614,14 @@ val viewModelModule = module {
     }
     factory {
         ElectiveCreditViewModel(
-            authWorkflow = get(),
-            academic = get(),
+            ensureLoggedIn = get(),
+            getCurrentTermId = get(),
+            fetchGradeReport = get(),
+            fetchGuidanceTeachingCourses = get(),
             fetchSemesterIds = get(),
-            gradeRepository = get(),
-            auth = get(),
+            observeAuthProfile = get(),
+            getLocalGradesByUserNo = get(),
+            calculateElectiveCredits = get(),
         )
     }
 }

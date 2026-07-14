@@ -48,6 +48,7 @@ import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Icon
@@ -193,7 +194,7 @@ fun ElectiveCreditScreen(
  */
 @Composable
 private fun CategoryCard(
-    category: ElectiveCreditViewModel.CreditCategory,
+    category: CalculateElectiveCreditsUseCase.CreditCategory,
     onCourseClick: (GradeCourse) -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme

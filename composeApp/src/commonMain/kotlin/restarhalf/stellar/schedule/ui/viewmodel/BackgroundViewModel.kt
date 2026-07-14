@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
+import restarhalf.stellar.schedule.domain.usecase.GetBackgroundSettingsInitialUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
@@ -26,7 +26,7 @@ import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
  * - 组件透明度（控制背景上组件的可见度）
  */
 class BackgroundViewModel(
-    backgroundSettings: BackgroundSettingsPort,
+    getBackgroundSettingsInitial: GetBackgroundSettingsInitialUseCase,
     observeBackgroundImageUri: ObserveBackgroundImageUriUseCase,
     observeBackgroundAlpha: ObserveBackgroundAlphaUseCase,
     observeBackgroundBlur: ObserveBackgroundBlurUseCase,
@@ -77,13 +77,15 @@ class BackgroundViewModel(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue =
+                initialValue = run {
+                    val initial = getBackgroundSettingsInitial()
                     BackgroundUiState(
-                        backgroundImageUri = backgroundSettings.getBackgroundImageUri(),
-                        backgroundAlpha = backgroundSettings.getBackgroundAlpha(),
-                        backgroundBlur = backgroundSettings.getBackgroundBlur(),
-                        componentsAlpha = backgroundSettings.getComponentsAlpha(),
-                    ),
+                        backgroundImageUri = initial.backgroundImageUri,
+                        backgroundAlpha = initial.backgroundAlpha,
+                        backgroundBlur = initial.backgroundBlur,
+                        componentsAlpha = initial.componentsAlpha,
+                    )
+                },
             )
 
     /** 对外暴露的UI状态流 */

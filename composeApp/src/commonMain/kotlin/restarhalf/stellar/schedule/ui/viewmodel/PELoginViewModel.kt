@@ -13,12 +13,7 @@ import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 /**
  * PE登录UI状态
  */
-data class PELoginUiState(
-    val username: String = "",
-    val password: String = "",
-    val error: String? = null,
-    val loading: Boolean = false,
-)
+
 
 /**
  * 体育系统登录ViewModel
@@ -31,7 +26,12 @@ data class PELoginUiState(
 class PELoginViewModel(
     private val peLoginUseCase: PELoginUseCase,
 ) : ViewModel() {
-
+    data class PELoginUiState(
+        val username: String = "",
+        val password: String = "",
+        val error: String? = null,
+        val loading: Boolean = false,
+    )
     private val _uiState = MutableStateFlow(PELoginUiState())
     val uiState: StateFlow<PELoginUiState> = _uiState.asStateFlow()
 

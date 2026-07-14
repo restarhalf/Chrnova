@@ -15,8 +15,8 @@ import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
-import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetCurrentTermIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
@@ -39,7 +39,7 @@ class ExamEditViewModel(
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
     observeSelectedTerm: ObserveSelectedTermUseCase,
     observeAuthProfile: ObserveAuthProfileUseCase,
-    private val academic: AcademicPort,
+    private val getCurrentTermId: GetCurrentTermIdUseCase,
 ) : ViewModel() {
 
     /**
@@ -252,7 +252,7 @@ class ExamEditViewModel(
         val selected = selectedTerm.value
         if (selected.isNotBlank()) return selected
         return try {
-            academic.fetchCurrentTermId()
+            getCurrentTermId()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             ""
