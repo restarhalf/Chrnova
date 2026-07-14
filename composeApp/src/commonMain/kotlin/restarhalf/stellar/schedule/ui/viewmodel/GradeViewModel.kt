@@ -15,8 +15,8 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import kotlin.math.roundToInt
 
 /**
@@ -30,7 +30,7 @@ import kotlin.math.roundToInt
  */
 class GradeViewModel(
     observeAllGrades: ObserveAllGradesUseCase,
-    observeSelectedTerm: ObserveSelectedTermUseCase,
+    private val settings: SettingsPort,
 ) : ViewModel() {
 
     /**
@@ -122,7 +122,7 @@ class GradeViewModel(
         combine(
             _loading,
             _error,
-            observeSelectedTerm(),
+            settings.observeSelectedTerm(),
             _summary,
             observeAllGrades()
         ) { loading, error, term, summary, allGrades ->

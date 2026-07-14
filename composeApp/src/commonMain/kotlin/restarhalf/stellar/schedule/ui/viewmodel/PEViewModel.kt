@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
 import restarhalf.stellar.schedule.data.remote.PEYearScore
-import restarhalf.stellar.schedule.domain.usecase.ObservePETokenUseCase
+import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.PELogoutUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
@@ -42,7 +42,7 @@ class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
     private val peStudentInfoUseCase: PEStudentInfoUseCase,
-    private val observePEToken: ObservePETokenUseCase,
+    private val peAuth: PEAuthPort,
 ) : ViewModel() {
 
     /**
@@ -131,7 +131,7 @@ class PEViewModel(
 
     private fun observeTokenChanges() {
         viewModelScope.launch {
-            observePEToken()
+            peAuth.observeToken()
                 .map { token -> !token.isNullOrBlank() }
                 .catch { e ->
                     if (e is CancellationException) throw e

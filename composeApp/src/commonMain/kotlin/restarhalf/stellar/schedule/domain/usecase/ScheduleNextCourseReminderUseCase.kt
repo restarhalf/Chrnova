@@ -2,17 +2,18 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
 /**
  * 安排下次课程提醒用例
  *
  * 根据当前课程和校园设置，安排下一次课程的提醒。
  *
- * @param getAllCoursesOnce 获取所有课程用例
+ * @param courseRepository 课程仓库
  * @param courseReminder 课程提醒端口
  */
 class ScheduleNextCourseReminderUseCase(
-    private val getAllCoursesOnce: GetAllCoursesOnceUseCase,
+    private val courseRepository: CourseRepository,
     private val courseReminder: CourseReminderPort,
 ) {
     /**
@@ -27,7 +28,7 @@ class ScheduleNextCourseReminderUseCase(
         termStartMs: Long,
         totalWeeks: Int,
     ) {
-        val courses = getAllCoursesOnce()
+        val courses = courseRepository.getAllCoursesOnce()
         courseReminder.scheduleNextReminder(
             courses = courses,
             campus = campus,

@@ -22,13 +22,10 @@ import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
-import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ShouldAutoSyncAndMarkUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
@@ -45,13 +42,10 @@ import kotlin.time.ExperimentalTime
  * - 非本周课程显示设置
  */
 class ScheduleViewModel(
-    observeShowNonCurrentWeek: ObserveShowNonCurrentWeekUseCase,
-    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    private val settings: SettingsPort,
+    private val courseRepository: CourseRepository,
     private val buildScheduleUiStateUseCase: BuildScheduleUiStateUseCase,
     private val transCourseWithConflicts: TransCourseWithConflictsUseCase,
-    private val insertCourseUseCase: InsertCourseUseCase,
-    private val deleteCourseUseCase: DeleteCourseUseCase,
-    private val shouldAutoSyncAndMark: ShouldAutoSyncAndMarkUseCase,
     private val refreshCourseRemindersIfEnabledUseCase: RefreshCourseRemindersIfEnabledUseCase,
 ) : ViewModel() {
 
@@ -207,7 +201,7 @@ class ScheduleViewModel(
 
     private val _uiState: StateFlow<ScheduleUiState> =
         combine(
-            observeShowNonCurrentWeek(),
+            settings.observeShowNonCurrentWeek(),
             _transDialogUiState,
             _transConflictUiState,
             _detailSheetUiState,
@@ -235,7 +229,7 @@ class ScheduleViewModel(
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
     /** 观察所有课程变化 */
-    val allCourses: StateFlow<List<Course>> = observeAllCoursesUseCase()
+    val allCourses: StateFlow<List<Course>> = courseRepository.observeAllCourses()
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
@@ -614,7 +608,7 @@ class ScheduleViewModel(
      */
     fun insertCourse(course: Course) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { insertCourseUseCase(course) } }
+            runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
                 .onFailure { AppLogger.log("Schedule", "插入课程失败", it) }
         }
     }
@@ -626,7 +620,7 @@ class ScheduleViewModel(
      */
     fun deleteCourse(course: Course) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { deleteCourseUseCase(course) } }
+            runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
                 .onFailure { AppLogger.log("Schedule", "删除课程失败", it) }
         }
     }
@@ -649,7 +643,7 @@ class ScheduleViewModel(
     suspend fun shouldAutoSync(): Boolean {
         return withContext(AppIoDispatcher) {
             val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-            val result = shouldAutoSyncAndMark(nowMs = now)
+            val result = settings.shouldAutoSyncAndMark(nowMs = now)
             result
         }
     }

@@ -18,10 +18,10 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 
 /**
  * 考试安排ViewModel
@@ -34,8 +34,8 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
-    observeAuthProfile: ObserveAuthProfileUseCase,
-    observeSelectedTerm: ObserveSelectedTermUseCase,
+    private val auth: AuthPort,
+    private val settings: SettingsPort,
 ) : ViewModel() {
 
     /**
@@ -93,14 +93,14 @@ class ExaminationViewModel(
 
     private val _error = MutableStateFlow("")
 
-    private val _userNo = observeAuthProfile().map { it.userNo }
+    private val _userNo = auth.observeProfile().map { it.userNo }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = "",
         )
 
-    private val _selectedTerm = observeSelectedTerm()
+    private val _selectedTerm = settings.observeSelectedTerm()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,

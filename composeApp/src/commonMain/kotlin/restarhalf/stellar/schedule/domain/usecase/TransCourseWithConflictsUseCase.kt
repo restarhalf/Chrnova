@@ -1,6 +1,7 @@
-﻿package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
 /**
  * 带冲突检测的调课用例
@@ -8,7 +9,7 @@ import restarhalf.stellar.schedule.domain.model.Course
  * 封装TransCourseUseCase，提供自动获取课程列表的能力。
  */
 class TransCourseWithConflictsUseCase(
-    private val getAllCoursesOnce: GetAllCoursesOnceUseCase,
+    private val courseRepository: CourseRepository,
     private val transCourse: TransCourseUseCase,
 ) {
     /**
@@ -81,7 +82,7 @@ class TransCourseWithConflictsUseCase(
         endSection: Int,
     ): Result {
         return invoke(
-            allCourses = getAllCoursesOnce(),
+            allCourses = courseRepository.getAllCoursesOnce(),
             originCourse = originCourse,
             originWeek = originWeek,
             targetWeek = targetWeek,

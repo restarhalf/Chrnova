@@ -15,12 +15,12 @@ import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetCurrentTermIdUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -33,13 +33,13 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * - 保存和删除操作
  */
 class ExamEditViewModel(
-    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
-    private val observeExaminationByIdUseCase: ObserveExaminationByIdUseCase,
+    private val courseRepository: CourseRepository,
+    private val examinationRepository: ExaminationRepository,
+    private val auth: AuthPort,
+    private val settings: SettingsPort,
+    private val academic: AcademicPort,
     private val saveExaminationUseCase: SaveExaminationUseCase,
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
-    observeSelectedTerm: ObserveSelectedTermUseCase,
-    observeAuthProfile: ObserveAuthProfileUseCase,
-    private val getCurrentTermId: GetCurrentTermIdUseCase,
 ) : ViewModel() {
 
     /**
@@ -79,7 +79,7 @@ class ExamEditViewModel(
     )
 
     private val _uiState: StateFlow<ExamEditUiState> =
-        observeAllCoursesUseCase()
+        courseRepository.observeAllCourses()
             .combine(MutableStateFlow(Unit)) { courses, _ ->
                 ExamEditUiState(
                     courseNames = buildCourseNames(courses),
@@ -96,7 +96,7 @@ class ExamEditViewModel(
     val uiState: StateFlow<ExamEditUiState> = _uiState
 
     /** 当前选中的学期ID */
-    val selectedTerm: StateFlow<String> = observeSelectedTerm()
+    val selectedTerm: StateFlow<String> = settings.observeSelectedTerm()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -104,7 +104,7 @@ class ExamEditViewModel(
         )
 
     /** 当前登录用户的学号 */
-    private val userNo: StateFlow<String> = observeAuthProfile()
+    private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
             scope = viewModelScope,
@@ -132,7 +132,7 @@ class ExamEditViewModel(
      * @return 考试Flow
      */
     fun observeEditingExamination(examinationId: Long?): Flow<Examination?> {
-        return observeExaminationByIdUseCase(examinationId ?: -1)
+        return examinationRepository.observeExaminationById(examinationId ?: -1)
     }
 
     /**
@@ -252,7 +252,7 @@ class ExamEditViewModel(
         val selected = selectedTerm.value
         if (selected.isNotBlank()) return selected
         return try {
-            getCurrentTermId()
+            academic.fetchCurrentTermId()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             ""

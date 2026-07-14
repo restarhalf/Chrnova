@@ -11,14 +11,14 @@ import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.GradeCourse
+import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
-import restarhalf.stellar.schedule.domain.usecase.EnsureLoggedInUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradeReportUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGuidanceTeachingCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetCurrentTermIdUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetLocalGradesByUserNoUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 
 /**
  * 选修课学分统计ViewModel
@@ -26,13 +26,13 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
  * 统计X1-X5类别的选修课学分，支持Z到X的转换映射。
  */
 class ElectiveCreditViewModel(
-    private val ensureLoggedIn: EnsureLoggedInUseCase,
-    private val getCurrentTermId: GetCurrentTermIdUseCase,
+    private val authWorkflow: AuthWorkflowPort,
+    private val academic: AcademicPort,
+    private val auth: AuthPort,
+    private val gradeRepository: GradeRepository,
     private val fetchGradeReport: FetchGradeReportUseCase,
     private val fetchGuidanceTeachingCourses: FetchGuidanceTeachingCoursesUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
-    private val observeAuthProfile: ObserveAuthProfileUseCase,
-    private val getLocalGradesByUserNo: GetLocalGradesByUserNoUseCase,
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,
 ) : ViewModel() {
 
@@ -52,9 +52,9 @@ class ElectiveCreditViewModel(
 
         viewModelScope.launch {
             try {
-                ensureLoggedIn()
+                authWorkflow.ensureLoggedIn()
 
-                val currentSemester = getCurrentTermId()
+                val currentSemester = academic.fetchCurrentTermId()
                 if (currentSemester.isBlank()) {
                     _uiState.value = _uiState.value.copy(
                         loading = false,
@@ -135,9 +135,9 @@ class ElectiveCreditViewModel(
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败，尝试本地回退", e)
                 try {
-                    val userNo = observeAuthProfile().first().userNo
+                    val userNo = auth.observeProfile().first().userNo
                     if (userNo.isNotBlank()) {
-                        val localGrades = getLocalGradesByUserNo(userNo)
+                        val localGrades = gradeRepository.getAllGradesByUserNo(userNo)
                             .filter { it.semester == semesterId }
                         allCourses.addAll(localGrades)
                     }

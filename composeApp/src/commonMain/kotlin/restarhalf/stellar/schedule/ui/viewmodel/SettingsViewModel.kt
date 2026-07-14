@@ -16,28 +16,14 @@ import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
-import restarhalf.stellar.schedule.domain.usecase.EnsureLoggedInUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthTokenUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveCourseReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveExamReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveFloatingBarUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveSelectedTermUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveShowNonCurrentWeekUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveThemeModeUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetCourseReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetExamReminderEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetFloatingBarUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetLogEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetSelectedTermUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetShowNonCurrentWeekUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetThemeModeUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.time.ExperimentalTime
@@ -54,25 +40,11 @@ import kotlin.time.Instant
  * - 浮动导航栏样式
  */
 class SettingsViewModel(
-    observeAuthToken: ObserveAuthTokenUseCase,
-    observeAuthProfile: ObserveAuthProfileUseCase,
-    observeShowNonCurrentWeek: ObserveShowNonCurrentWeekUseCase,
-    observeCourseReminderEnabled: ObserveCourseReminderEnabledUseCase,
-    observeFloatingBar: ObserveFloatingBarUseCase,
-    observeThemeMode: ObserveThemeModeUseCase,
-    observeExamReminderEnabled: ObserveExamReminderEnabledUseCase,
-    observeSelectedTerm: ObserveSelectedTermUseCase,
-    observeLogEnabled: ObserveLogEnabledUseCase,
-    private val setShowNonCurrentWeekUseCase: SetShowNonCurrentWeekUseCase,
-    private val setCourseReminderEnabled: SetCourseReminderEnabledUseCase,
-    private val setFloatingBarUseCase: SetFloatingBarUseCase,
+    private val auth: AuthPort,
+    private val authWorkflow: AuthWorkflowPort,
+    private val settings: SettingsPort,
     private val cancelAllCourseReminders: CancelAllCourseRemindersUseCase,
-    private val setExamReminderEnabled: SetExamReminderEnabledUseCase,
     private val cancelAllExamReminders: CancelAllExamRemindersUseCase,
-    private val setThemeModeUseCase: SetThemeModeUseCase,
-    private val setSelectedTermUseCase: SetSelectedTermUseCase,
-    private val setLogEnabledUseCase: SetLogEnabledUseCase,
-    private val ensureLoggedIn: EnsureLoggedInUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
@@ -170,11 +142,11 @@ class SettingsViewModel(
     private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
 
     private val basePrefsFlow = combine(
-        observeShowNonCurrentWeek(),
-        observeCourseReminderEnabled(),
-        observeExamReminderEnabled(),
-        observeThemeMode(),
-        observeFloatingBar(),
+        settings.observeShowNonCurrentWeek(),
+        settings.observeCourseReminderEnabled(),
+        settings.observeExamReminderEnabled(),
+        settings.observeThemeMode(),
+        settings.observeFloatingBar(),
     ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
         SettingsPrefsState(
             showNonCurrentWeek = showNonCurrentWeek,
@@ -188,8 +160,8 @@ class SettingsViewModel(
     }
 
     private val extraPrefsFlow = combine(
-        observeSelectedTerm(),
-        observeLogEnabled(),
+        settings.observeSelectedTerm(),
+        settings.observeLogEnabled(),
     ) { selectedTerm, logEnabled ->
         selectedTerm to logEnabled
     }
@@ -202,7 +174,7 @@ class SettingsViewModel(
     }.distinctUntilChanged()
 
     private val authFlow =
-        combine(observeAuthToken(), observeAuthProfile()) { authToken, profile ->
+        combine(auth.observeToken(), auth.observeProfile()) { authToken, profile ->
             SettingsAuthState(authToken = authToken, profile = profile)
         }.distinctUntilChanged()
 
@@ -253,7 +225,7 @@ class SettingsViewModel(
 
         viewModelScope.launch {
             withContext(AppIoDispatcher) {
-                runCatching { ensureLoggedIn() }
+                runCatching { authWorkflow.ensureLoggedIn() }
                     .onFailure {
                         AppLogger.log("Auth", "刷新认证失败", it)
                     }
@@ -396,7 +368,7 @@ class SettingsViewModel(
      */
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
-            setSelectedTermUseCase.invoke(value)
+            settings.setSelectedTerm(value)
         }
     }
 
@@ -406,7 +378,7 @@ class SettingsViewModel(
      * @param mode 主题模式（0=跟随系统，1=浅色，2=深色）
      */
     fun onThemeModeChanged(mode: Int) {
-        setThemeModeUseCase.invoke(mode)
+        settings.setThemeMode(mode)
     }
 
     /**
@@ -415,7 +387,7 @@ class SettingsViewModel(
      * @param mode 模式（0=固定，1=悬浮，2=液态玻璃）
      */
     fun onFloatingBarChanged(mode: Int) {
-        setFloatingBarUseCase.invoke(mode)
+        settings.setFloatingBar(mode)
     }
 
     /**
@@ -424,7 +396,7 @@ class SettingsViewModel(
      * @param show 是否显示
      */
     fun onShowNonCurrentWeekChanged(show: Boolean) {
-        setShowNonCurrentWeekUseCase.invoke(show)
+        settings.setShowNonCurrentWeek(show)
     }
 
     /**
@@ -433,7 +405,7 @@ class SettingsViewModel(
      * @param enabled 是否启用
      */
     fun onReminderEnabledChanged(enabled: Boolean) {
-        setCourseReminderEnabled.invoke(enabled)
+        settings.setCourseReminderEnabled(enabled)
         if (!enabled) {
             cancelAllCourseReminders()
         }
@@ -445,14 +417,14 @@ class SettingsViewModel(
      * @param enabled 是否启用
      */
     fun onExamReminderEnabledChanged(enabled: Boolean) {
-        setExamReminderEnabled.invoke(enabled)
+        settings.setExamReminderEnabled(enabled)
         if (!enabled) {
             cancelAllExamReminders()
         }
     }
 
     fun onLogEnabledChanged(enabled: Boolean) {
-        setLogEnabledUseCase.invoke(enabled)
+        settings.setLogEnabled(enabled)
     }
 
     /**

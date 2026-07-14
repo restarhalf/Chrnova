@@ -17,17 +17,17 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.TimetablePort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeHeaderUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRenderRowsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetCampusTimetableUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.ExamUi
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -43,11 +43,11 @@ import kotlin.time.Instant
  * - 问候语和日期显示
  */
 class HomeViewModel(
-    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
+    private val courseRepository: CourseRepository,
     observeAllExaminations: ObserveAllExaminationsUseCase,
-    observeAuthProfile: ObserveAuthProfileUseCase,
+    private val auth: AuthPort,
     private val isExamNotEnded: IsExamNotEndedUseCase,
-    private val getCampusTimetableUseCase: GetCampusTimetableUseCase,
+    private val timetable: TimetablePort,
     private val buildHomeClockSnapshotUseCase: BuildHomeClockSnapshotUseCase,
     private val buildHomeTodayScheduleUseCase: BuildHomeTodayScheduleUseCase,
     private val buildHomeHeaderUiUseCase: BuildHomeHeaderUiUseCase,
@@ -112,7 +112,7 @@ class HomeViewModel(
         initialValue = Clock.System.now().toEpochMilliseconds(),
     )
 
-    private val _userNo = observeAuthProfile().map { it.userNo }
+    private val _userNo = auth.observeProfile().map { it.userNo }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -121,7 +121,7 @@ class HomeViewModel(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<HomeUiState> =
-        combine(observeAllCoursesUseCase(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
+        combine(courseRepository.observeAllCourses(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
             val filteredExams = if (userNo.isNotBlank()) {
                 exams.filter { it.userNo == userNo }
             } else {
@@ -145,7 +145,7 @@ class HomeViewModel(
      * @param campus 校区
      * @return 时间槽列表
      */
-    fun getCampusTimetable(campus: Campus): List<TimetableSlot> = getCampusTimetableUseCase(campus)
+    fun getCampusTimetable(campus: Campus): List<TimetableSlot> = timetable.getCampusTimetable(campus)
 
     /**
      * 构建时钟快照

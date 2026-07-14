@@ -6,15 +6,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import restarhalf.stellar.schedule.domain.usecase.GetBackgroundSettingsInitialUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundAlphaUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundBlurUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveBackgroundImageUriUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveComponentsAlphaUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetBackgroundAlphaUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetBackgroundBlurUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetBackgroundImageUriUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
+import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 
 /**
  * 背景设置ViewModel
@@ -26,15 +18,7 @@ import restarhalf.stellar.schedule.domain.usecase.SetComponentsAlphaUseCase
  * - 组件透明度（控制背景上组件的可见度）
  */
 class BackgroundViewModel(
-    getBackgroundSettingsInitial: GetBackgroundSettingsInitialUseCase,
-    observeBackgroundImageUri: ObserveBackgroundImageUriUseCase,
-    observeBackgroundAlpha: ObserveBackgroundAlphaUseCase,
-    observeBackgroundBlur: ObserveBackgroundBlurUseCase,
-    observeComponentsAlpha: ObserveComponentsAlphaUseCase,
-    private val setBackgroundImageUriUseCase: SetBackgroundImageUriUseCase,
-    private val setBackgroundAlphaUseCase: SetBackgroundAlphaUseCase,
-    private val setBackgroundBlurUseCase: SetBackgroundBlurUseCase,
-    private val setComponentsAlphaUseCase: SetComponentsAlphaUseCase,
+    private val backgroundSettings: BackgroundSettingsPort,
 ) : ViewModel() {
 
     /**
@@ -62,10 +46,10 @@ class BackgroundViewModel(
 
     private val _uiState: StateFlow<BackgroundUiState> =
         combine(
-            observeBackgroundImageUri(),
-            observeBackgroundAlpha(),
-            observeBackgroundBlur(),
-            observeComponentsAlpha(),
+            backgroundSettings.observeBackgroundImageUri(),
+            backgroundSettings.observeBackgroundAlpha(),
+            backgroundSettings.observeBackgroundBlur(),
+            backgroundSettings.observeComponentsAlpha(),
         ) { backgroundImageUri, backgroundAlpha, backgroundBlur, componentsAlpha ->
             BackgroundUiState(
                 backgroundImageUri = backgroundImageUri,
@@ -78,12 +62,11 @@ class BackgroundViewModel(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = run {
-                    val initial = getBackgroundSettingsInitial()
                     BackgroundUiState(
-                        backgroundImageUri = initial.backgroundImageUri,
-                        backgroundAlpha = initial.backgroundAlpha,
-                        backgroundBlur = initial.backgroundBlur,
-                        componentsAlpha = initial.componentsAlpha,
+                        backgroundImageUri = backgroundSettings.getBackgroundImageUri(),
+                        backgroundAlpha = backgroundSettings.getBackgroundAlpha(),
+                        backgroundBlur = backgroundSettings.getBackgroundBlur(),
+                        componentsAlpha = backgroundSettings.getComponentsAlpha(),
                     )
                 },
             )
@@ -97,7 +80,7 @@ class BackgroundViewModel(
      * @param uri 图片URI，null表示移除背景
      */
     fun onBackgroundImageUriChanged(uri: String?) {
-        setBackgroundImageUriUseCase.invoke(uri)
+        backgroundSettings.setBackgroundImageUri(uri)
     }
 
     /**
@@ -106,7 +89,7 @@ class BackgroundViewModel(
      * @param value 透明度（0.0-1.0）
      */
     fun onBackgroundAlphaChanged(value: Float) {
-        setBackgroundAlphaUseCase.invoke(value)
+        backgroundSettings.setBackgroundAlpha(value)
     }
 
     /**
@@ -115,7 +98,7 @@ class BackgroundViewModel(
      * @param value 模糊度（0.0-1.0）
      */
     fun onBackgroundBlurChanged(value: Float) {
-        setBackgroundBlurUseCase.invoke(value)
+        backgroundSettings.setBackgroundBlur(value)
     }
 
     /**
@@ -124,6 +107,6 @@ class BackgroundViewModel(
      * @param value 透明度（0.0-1.0）
      */
     fun onComponentsAlphaChanged(value: Float) {
-        setComponentsAlphaUseCase.invoke(value)
+        backgroundSettings.setComponentsAlpha(value)
     }
 }

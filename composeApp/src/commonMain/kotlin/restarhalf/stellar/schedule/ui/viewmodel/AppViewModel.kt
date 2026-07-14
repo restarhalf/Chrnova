@@ -14,22 +14,14 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
-import restarhalf.stellar.schedule.domain.usecase.ClearAuthUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetCampusUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetTermStartMsUseCase
-import restarhalf.stellar.schedule.domain.usecase.GetTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveCampusUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveLogEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveTermStartMsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveTotalWeeksUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetCampusUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetTermStartMsUseCase
-import restarhalf.stellar.schedule.domain.usecase.SetTotalWeeksUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
 /**
@@ -39,17 +31,9 @@ import restarhalf.stellar.schedule.ui.sync.SyncUiState
  * 负责处理同步、登录、登出等全局操作。
  */
 class AppViewModel(
-    getCampusUseCase: GetCampusUseCase,
-    observeCampusUseCase: ObserveCampusUseCase,
-    getTotalWeeksUseCase: GetTotalWeeksUseCase,
-    observeTotalWeeksUseCase: ObserveTotalWeeksUseCase,
-    getTermStartMsUseCase: GetTermStartMsUseCase,
-    observeTermStartMsUseCase: ObserveTermStartMsUseCase,
-    observeLogEnabled: ObserveLogEnabledUseCase,
-    private val setCampusUseCase: SetCampusUseCase,
-    private val setTermStartMsUseCase: SetTermStartMsUseCase,
-    private val clearAuth: ClearAuthUseCase,
-    private val setTotalWeeksUseCase: SetTotalWeeksUseCase,
+    private val auth: AuthPort,
+    private val timetable: TimetablePort,
+    private val settings: SettingsPort,
     private val fetchExaminations: FetchExaminationsSimpleUseCase,
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val loginUseCase: LoginUseCase,
@@ -59,7 +43,7 @@ class AppViewModel(
 
     init {
         viewModelScope.launch {
-            observeLogEnabled().collect { enabled ->
+            settings.observeLogEnabled().collect { enabled ->
                 AppLogger.setEnabled(enabled)
             }
         }
@@ -85,9 +69,9 @@ class AppViewModel(
 
     private val _uiState: StateFlow<AppUiState> =
         combine(
-            observeCampusUseCase(),
-            observeTermStartMsUseCase(),
-            observeTotalWeeksUseCase(),
+            timetable.observeCampus(),
+            timetable.observeTermStartMs(),
+            timetable.observeTotalWeeks(),
         ) { campus, termStartMs, totalWeeks ->
             AppUiState(campus = campus, termStartMs = termStartMs, totalWeeks = totalWeeks)
         }
@@ -96,9 +80,9 @@ class AppViewModel(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue =
                     AppUiState(
-                        campus = getCampusUseCase(),
-                        termStartMs = getTermStartMsUseCase(),
-                        totalWeeks = getTotalWeeksUseCase(),
+                        campus = timetable.getCampus(),
+                        termStartMs = timetable.getTermStartMs(),
+                        totalWeeks = timetable.getTotalWeeks(),
                     ),
             )
 
@@ -132,22 +116,22 @@ class AppViewModel(
 
     /** 用户登出，清除认证信息 */
     fun logout() {
-        clearAuth()
+        auth.clear()
     }
 
     /** 校区变更回调 */
     fun onCampusChanged(campus: Campus) {
-        setCampusUseCase(campus)
+        timetable.setCampus(campus)
     }
 
     /** 学期开始时间变更回调 */
     fun onTermStartMsChanged(ms: Long) {
-        setTermStartMsUseCase(ms)
+        timetable.setTermStartMs(ms)
     }
 
     /** 总周数变更回调 */
     fun onTotalWeeksChanged(weeks: Int) {
-        setTotalWeeksUseCase(weeks)
+        timetable.setTotalWeeks(weeks)
     }
 
     /**

@@ -15,11 +15,8 @@ import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
-import restarhalf.stellar.schedule.domain.usecase.InsertCourseUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAuthProfileUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -32,11 +29,8 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * - 保存和删除操作
  */
 class CourseEditViewModel(
-    observeAllCoursesUseCase: ObserveAllCoursesUseCase,
-    private val observeCourseByIdUseCase: ObserveCourseByIdUseCase,
-    private val insertCourseUseCase: InsertCourseUseCase,
-    private val deleteCourseUseCase: DeleteCourseUseCase,
-    observeAuthProfile: ObserveAuthProfileUseCase,
+    private val courseRepository: CourseRepository,
+    private val auth: AuthPort,
 ) : ViewModel() {
 
     /**
@@ -72,7 +66,7 @@ class CourseEditViewModel(
     )
 
     private val _uiState: StateFlow<CourseEditUiState> =
-        observeAllCoursesUseCase()
+        courseRepository.observeAllCourses()
             .combine(MutableStateFlow(Unit)) { courses, _ ->
                 CourseEditUiState(courses = courses, courseNames = buildCourseNames(courses))
             }
@@ -86,7 +80,7 @@ class CourseEditViewModel(
     val uiState: StateFlow<CourseEditUiState> = _uiState
 
     /** 当前登录用户的学号 */
-    private val userNo: StateFlow<String> = observeAuthProfile()
+    private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
             scope = viewModelScope,
@@ -197,7 +191,7 @@ class CourseEditViewModel(
      * @return 课程Flow
      */
     fun observeEditingCourse(courseId: Long?): Flow<Course?> {
-        return observeCourseByIdUseCase(courseId ?: -1)
+        return courseRepository.observeCourseById(courseId ?: -1)
     }
 
     /**
@@ -277,7 +271,7 @@ class CourseEditViewModel(
      */
     fun saveLabCourse(course: Course, onSaved: () -> Unit) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { insertCourseUseCase(course) } }
+            runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
                 .onSuccess { onSaved() }
                 .onFailure { AppLogger.log("CourseEdit", "保存实验课失败", it) }
         }
@@ -291,7 +285,7 @@ class CourseEditViewModel(
      */
     fun deleteCourse(course: Course, onDeleted: () -> Unit) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { deleteCourseUseCase(course) } }
+            runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
                 .onSuccess { onDeleted() }
                 .onFailure { AppLogger.log("CourseEdit", "删除课程失败", it) }
         }

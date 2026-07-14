@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.usecase
 import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.domain.port.TimetablePort
 import kotlin.time.ExperimentalTime
 
 /**
@@ -11,7 +12,7 @@ import kotlin.time.ExperimentalTime
  * 计算课程表页面的初始状态，包括当前周次、页码、时间表等。
  */
 class BuildScheduleUiStateUseCase(
-    private val getCampusTimetable: GetCampusTimetableUseCase,
+    private val timetable: TimetablePort,
 ) {
     /**
      * 检测到的周次信息
@@ -86,7 +87,7 @@ class BuildScheduleUiStateUseCase(
         val includeWeek0 = detected.isHoliday
         val pagerInitialPage = if (includeWeek0) 0 else (detected.week - 1)
         val pagerPageCount = if (includeWeek0) totalWeeks + 1 else totalWeeks
-        val timetable = getCampusTimetable(campus)
+        val timetable = timetable.getCampusTimetable(campus)
         return ScheduleUiState(
             detectedWeekInfo = detected,
             includeWeek0 = includeWeek0,
