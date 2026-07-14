@@ -74,7 +74,7 @@ fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
 
     // 检查登录状态失效
     if (kind.usesLoginState() && isLoginStateHint(hints)) {
-        return "登录状态已失效，请重新登录"
+        return "登录已过期，请刷新重试"
     }
 
     return when {
@@ -96,7 +96,10 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
     repeat(6) {
         val message = current?.message?.normalizeForDisplay().orEmpty()
         if (message.isNotBlank() && isUserFacingMessage(message)) {
-            return message
+            // 如果消息包含登录状态关键词，不作为业务消息返回，交给后续登录状态检查处理
+            if (!isLoginStateHint(message.lowercase())) {
+                return message
+            }
         }
         current = current?.cause
     }
@@ -211,6 +214,7 @@ private val LOGIN_STATE_HINTS =
         "token",
         "请先登录",
         "重新登录",
+        "未授权",
     )
 
 private val TIMEOUT_HINTS =

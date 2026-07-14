@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.domain.model
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * 表示一门课程的完整信息，包括时间、地点、教师等。
  * 支持序列化用于本地存储和网络传输。
  */
-@Immutable
+@Stable
 @Serializable
 data class Course(
     /** 课程本地数据库ID */

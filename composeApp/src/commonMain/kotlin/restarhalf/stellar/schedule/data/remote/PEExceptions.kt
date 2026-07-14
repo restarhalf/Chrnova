@@ -7,4 +7,4 @@ package restarhalf.stellar.schedule.data.remote
  * 
  * @param message 异常消息
  */
-class PETokenExpiredException(message: String = "登录已过期，请重新登录") : Exception(message)
+class PETokenExpiredException(message: String = "登录已过期，请刷新重试") : Exception(message)

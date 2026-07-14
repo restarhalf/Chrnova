@@ -24,21 +24,8 @@ import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialo
 import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
-import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
 
@@ -82,19 +69,6 @@ fun AppRoot(
 ) {
     val vm: AppViewModel = koinViewModel()
     val bgVm: BackgroundViewModel = koinViewModel()
-    val aboutVm: AboutViewModel = koinViewModel()
-    val courseEditVm: CourseEditViewModel = koinViewModel()
-    val examEditVm: ExamEditViewModel = koinViewModel()
-    val examVm: ExaminationViewModel = koinViewModel()
-    val gradeVm: GradeViewModel = koinViewModel()
-    val homeVm: HomeViewModel = koinViewModel()
-    val paperVm: PapersViewModel = koinViewModel()
-    val peVm: PEViewModel = koinViewModel()
-    val jwLoginVm: JWLoginViewModel = koinViewModel()
-    val peLoginVm: PELoginViewModel = koinViewModel()
-    val scheduleVm: ScheduleViewModel = koinViewModel()
-    val settingsVm: SettingsViewModel = koinViewModel()
-    val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
     val appUpdate: AppUpdatePort = koinInject()
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
@@ -237,20 +211,7 @@ fun AppRoot(
     ) {
         AppContent(
             vm = vm,
-            aboutVm = aboutVm,
             bgVm = bgVm,
-            courseEditVm = courseEditVm,
-            examEditVm = examEditVm,
-            examVm = examVm,
-            gradeVm = gradeVm,
-            homeVm = homeVm,
-            paperVm = paperVm,
-            peVm = peVm,
-            jwLoginVm = jwLoginVm,
-            peLoginVm = peLoginVm,
-            scheduleVm = scheduleVm,
-            settingsVm = settingsVm,
-            electiveCreditVm = electiveCreditVm,
             appUpdate = appUpdate,
             appIcon = appIcon,
             pictureSelectorHost = pictureSelectorHost,

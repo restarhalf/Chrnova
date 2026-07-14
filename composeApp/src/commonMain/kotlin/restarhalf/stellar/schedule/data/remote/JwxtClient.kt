@@ -12,8 +12,6 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -45,23 +43,8 @@ class JwxtClient(
             response.body()
         }
 
-    /**
-     * 尝试从响应体中提取服务器返回的错误消息
-     */
-    private suspend fun HttpResponse.extractServerErrorMessage(): String? {
-        return try {
-            val body = bodyAsText()
-            if (body.isBlank()) return null
-            val jsonObj = json.parseToJsonElement(body).jsonObject
-            // 优先取 msg，其次取 Msg，最后取 msgAlt
-            val msg = jsonObj["msg"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
-                ?: jsonObj["Msg"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
-                ?: jsonObj["message"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
-            msg?.takeIf { it.length <= 50 } // 避免返回过长的消息
-        } catch (_: Exception) {
-            null
-        }
-    }
+    private suspend fun HttpResponse.extractServerErrorMessage(): String? =
+        extractServerErrorMessage(json, fieldPriority = listOf("msg", "Msg", "message"))
 
     override suspend fun login(
         userNo: String,

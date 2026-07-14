@@ -69,6 +69,7 @@ import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
+import restarhalf.stellar.schedule.ui.koin.koinViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -108,32 +109,6 @@ fun AppContent(
     vm: AppViewModel,
     /** 背景ViewModel，管理背景图片相关状态 */
     bgVm: BackgroundViewModel,
-    /** 关于页面ViewModel */
-    aboutVm: AboutViewModel,
-    /** 课程编辑ViewModel */
-    courseEditVm: CourseEditViewModel,
-    /** 考试编辑ViewModel */
-    examEditVm: ExamEditViewModel,
-    /** 考试ViewModel */
-    examVm: ExaminationViewModel,
-    /** 成绩ViewModel */
-    gradeVm: GradeViewModel,
-    /** 首页ViewModel */
-    homeVm: HomeViewModel,
-    /** 试卷ViewModel */
-    paperVm: PapersViewModel,
-    /** 体育ViewModel */
-    peVm: PEViewModel,
-    /** 教务登录ViewModel */
-    jwLoginVm: JWLoginViewModel,
-    /** 体育登录ViewModel */
-    peLoginVm: PELoginViewModel,
-    /** 课表ViewModel */
-    scheduleVm: ScheduleViewModel,
-    /** 设置ViewModel */
-    settingsVm: SettingsViewModel,
-    /** 选修课学分统计ViewModel */
-    electiveCreditVm: ElectiveCreditViewModel,
     /** 应用更新端口，处理版本检查和下载 */
     appUpdate: AppUpdatePort,
     /** 应用图标，用于关于页面展示 */
@@ -214,13 +189,7 @@ fun AppContent(
             entryProvider<NavKey> {
                 entry(Screen.Main) {
                     MainRouteContent(
-                        homeVm = homeVm,
-                        scheduleVm = scheduleVm,
-                        examVm = examVm,
-                        gradeVm = gradeVm,
-                        peVm = peVm,
                         bgVm = bgVm,
-                        settingsVm = settingsVm,
                         vm = vm,
                         runSync = runSyncState,
                         ensureNotificationPermission = ensureNotificationPermissionState,
@@ -234,6 +203,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.About) {
+                    val aboutVm: AboutViewModel = koinViewModel()
                     AboutScreen(
                         vm = aboutVm,
                         onBack = { navigator.pop() },
@@ -276,6 +246,7 @@ fun AppContent(
                 }
                 entry<Screen.ClassEdit> { screen ->
                     val isEdit = remember(screen.courseId) { screen.courseId != null }
+                    val courseEditVm: CourseEditViewModel = koinViewModel()
                     CourseEditScreen(
                         vm = courseEditVm,
                         onBack = { navigator.pop() },
@@ -289,6 +260,7 @@ fun AppContent(
                 }
                 entry<Screen.ExamEdit> { screen ->
                     val isEdit = remember(screen.examinationId) { screen.examinationId != null }
+                    val examEditVm: ExamEditViewModel = koinViewModel()
                     ExamEditScreen(
                         vm = examEditVm,
                         onBack = { navigator.pop() },
@@ -309,6 +281,7 @@ fun AppContent(
                     )
                 }
                 entry<Screen.PEDetail> { screen ->
+                    val peVm: PEViewModel = koinViewModel()
                     PEDetailScreen(
                         vm = peVm,
                         schoolYear = screen.schoolYear,
@@ -317,7 +290,9 @@ fun AppContent(
                     )
                 }
                 entry(Screen.PEQRCode) {
+                    val settingsVm: SettingsViewModel = koinViewModel()
                     val settingsUiState by settingsVm.uiState.collectAsState()
+                    val peVm: PEViewModel = koinViewModel()
                     PEQRCodeScreen(
                         vm = peVm,
                         authProfile = settingsUiState.profile,
@@ -325,7 +300,9 @@ fun AppContent(
                     )
                 }
                 entry(Screen.Profile) {
+                    val settingsVm: SettingsViewModel = koinViewModel()
                     val settingsUiState by settingsVm.uiState.collectAsState()
+                    val peVm: PEViewModel = koinViewModel()
                     ProfileScreen(
                         peVm = peVm,
                         authProfile = settingsUiState.profile,
@@ -334,6 +311,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.Papers) {
+                    val paperVm: PapersViewModel = koinViewModel()
                     PapersListScreen(
                         vm = paperVm,
                         onBack = { navigator.pop() },
@@ -344,6 +322,7 @@ fun AppContent(
                     )
                 }
                 entry<Screen.PapersDetail> { screen ->
+                    val paperVm: PapersViewModel = koinViewModel()
                     PapersDetailScreen(
                         vm = paperVm,
                         paperId = screen.paperId,
@@ -352,6 +331,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.PapersUpload) {
+                    val paperVm: PapersViewModel = koinViewModel()
                     PapersUploadScreen(
                         vm = paperVm,
                         onBack = { navigator.pop() },
@@ -360,6 +340,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.JWLogin) {
+                    val jwLoginVm: JWLoginViewModel = koinViewModel()
                     JWLoginScreen(
                         vm = jwLoginVm,
                         onBack = { navigator.pop() },
@@ -369,6 +350,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.PELogin) {
+                    val peLoginVm: PELoginViewModel = koinViewModel()
                     PELoginScreen(
                         vm = peLoginVm,
                         onBack = { navigator.pop() },
@@ -378,6 +360,7 @@ fun AppContent(
                     )
                 }
                 entry(Screen.ElectiveCredit) {
+                    val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
                     ElectiveCreditScreen(
                         vm = electiveCreditVm,
                         onBack = { navigator.pop() },
@@ -497,20 +480,8 @@ fun AppContent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainRouteContent(
-    /** 首页ViewModel */
-    homeVm: HomeViewModel,
-    /** 课表ViewModel */
-    scheduleVm: ScheduleViewModel,
-    /** 考试ViewModel */
-    examVm: ExaminationViewModel,
-    /** 成绩ViewModel */
-    gradeVm: GradeViewModel,
-    /** 体育ViewModel */
-    peVm: PEViewModel,
     /** 背景ViewModel */
     bgVm: BackgroundViewModel,
-    /** 应用ViewModel */
-    settingsVm: SettingsViewModel,
     /** 应用ViewModel */
     vm: AppViewModel,
     /** 同步教务系统的挂起函数 */
@@ -518,6 +489,12 @@ private fun MainRouteContent(
     /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
 ) {
+    val homeVm: HomeViewModel = koinViewModel()
+    val scheduleVm: ScheduleViewModel = koinViewModel()
+    val examVm: ExaminationViewModel = koinViewModel()
+    val gradeVm: GradeViewModel = koinViewModel()
+    val peVm: PEViewModel = koinViewModel()
+    val settingsVm: SettingsViewModel = koinViewModel()
     val appState = LocalAppState.current
     val updateAppState = LocalUpdateAppState.current
     val navigator = LocalNavigator.current

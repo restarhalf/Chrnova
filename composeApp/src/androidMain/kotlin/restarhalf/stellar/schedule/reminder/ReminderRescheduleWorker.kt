@@ -26,8 +26,9 @@ class ReminderRescheduleWorker(appContext: Context, params: WorkerParameters) :
         return try {
             when (rescheduleReminders()) {
                 RescheduleRemindersUseCase.Result.Success -> Result.success()
-                RescheduleRemindersUseCase.Result.Retry -> Result.retry()
-                RescheduleRemindersUseCase.Result.Failure -> Result.failure()
+                RescheduleRemindersUseCase.Result.CourseReminderFailed -> Result.retry()
+                RescheduleRemindersUseCase.Result.ExamReminderFailed -> Result.retry()
+                RescheduleRemindersUseCase.Result.BothRemindersFailed -> Result.retry()
             }
         } catch (e: IOException) {
             AppLogger.log("Reminder", "重新调度提醒IO失败", e)

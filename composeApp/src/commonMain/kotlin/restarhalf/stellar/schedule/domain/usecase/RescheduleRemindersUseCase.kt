@@ -24,8 +24,9 @@ class RescheduleRemindersUseCase(
 
     sealed class Result {
         data object Success : Result()
-        data object Retry : Result()
-        data object Failure : Result()
+        data object CourseReminderFailed : Result()
+        data object ExamReminderFailed : Result()
+        data object BothRemindersFailed : Result()
     }
 
     suspend operator fun invoke(): Result {
@@ -72,7 +73,9 @@ class RescheduleRemindersUseCase(
         }
 
         return when {
-            courseFailed || examFailed -> Result.Retry
+            courseFailed && examFailed -> Result.BothRemindersFailed
+            courseFailed -> Result.CourseReminderFailed
+            examFailed -> Result.ExamReminderFailed
             else -> Result.Success
         }
     }
