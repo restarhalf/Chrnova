@@ -117,19 +117,9 @@ kotlin {
         }
     }
 
-    configurations.all {
-        resolutionStrategy.eachDependency {
-            if (requested.group == "org.jetbrains.kotlin" && requested.name == "compose-group-mapping") {
-                useVersion("2.3.20")
-            }
-        }
-    }
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    iosArm64 {
+        binaries.framework {
             export(libs.lifecycle.viewmodel)
             export(libs.lifecycle.viewmodel.navigation3)
             baseName = "ComposeApp"
@@ -190,5 +180,6 @@ kotlin {
 }
 
 dependencies {
-    ksp(libs.room3.compiler)
+    kspAndroid(libs.room3.compiler)
+    add("kspIosArm64", libs.room3.compiler)
 }
