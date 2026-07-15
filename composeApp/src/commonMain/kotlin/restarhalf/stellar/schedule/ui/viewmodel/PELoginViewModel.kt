@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 
@@ -35,6 +37,8 @@ class PELoginViewModel(
     private val _uiState = MutableStateFlow(PELoginUiState())
     val uiState: StateFlow<PELoginUiState> = _uiState.asStateFlow()
 
+    private val loginMutex = Mutex()
+
     /** 用户名输入变更 */
     fun onUsernameChange(value: String) {
         _uiState.update { it.copy(username = value, error = null) }
@@ -52,25 +56,33 @@ class PELoginViewModel(
      */
     fun submitLogin(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _uiState.update { it.copy(loading = true, error = null) }
-            runCatching {
-                peLoginUseCase(_uiState.value.username, _uiState.value.password)
-            }.onSuccess { response ->
-                if (response.status == "PASS") {
-                    _uiState.update { it.copy(password = "", loading = false) }
-                    onSuccess()
-                } else {
-                    AppLogger.log(
-                        "PE",
-                        "体育系统登录失败: ${response.message}",
-                        level = AppLogger.Level.ERROR
-                    )
-                    _uiState.update { it.copy(loading = false, error = response.message) }
+            loginMutex.withLock {
+                val current = _uiState.value
+                if (current.loading) return@withLock
+                val username = current.username.trim()
+                val password = current.password
+                if (username.isBlank() || password.isBlank()) return@withLock
+
+                _uiState.update { it.copy(loading = true, error = null) }
+                runCatching {
+                    peLoginUseCase(username, password)
+                }.onSuccess { response ->
+                    if (response.status == "PASS") {
+                        _uiState.update { it.copy(password = "", loading = false) }
+                        onSuccess()
+                    } else {
+                        AppLogger.log(
+                            "PE",
+                            "体育系统登录失败: ${response.message}",
+                            level = AppLogger.Level.ERROR
+                        )
+                        _uiState.update { it.copy(loading = false, error = response.message) }
+                    }
+                }.onFailure { throwable ->
+                    val errorMsg = throwable.message ?: "登录失败"
+                    AppLogger.log("PE", "体育系统登录失败", throwable)
+                    _uiState.update { it.copy(loading = false, error = errorMsg) }
                 }
-            }.onFailure { throwable ->
-                val errorMsg = throwable.message ?: "登录失败"
-                AppLogger.log("PE", "体育系统登录失败", throwable)
-                _uiState.update { it.copy(loading = false, error = errorMsg) }
             }
         }
     }

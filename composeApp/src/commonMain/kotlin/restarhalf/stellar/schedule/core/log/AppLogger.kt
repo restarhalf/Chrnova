@@ -26,6 +26,10 @@ object AppLogger {
     private val lock = SynchronizedObject()
     @Volatile
     private var snapshot: List<LogEntry> = emptyList()
+    private var logIdCounter = 0L
+
+    @OptIn(InternalCoroutinesApi::class)
+    private fun nextLogId(): Long = synchronized(lock) { logIdCounter++ }
 
     enum class Level(val tag: String) {
         DEBUG("DEBUG"),
@@ -214,15 +218,10 @@ object AppLogger {
     }
 
     data class LogEntry(
-        val id: Long = nextId(),
+        val id: Long = nextLogId(),
         val timestamp: String,
         val tag: String,
         val level: Level = Level.INFO,
         val message: String,
-    ) {
-        companion object {
-            private var counter = 0L
-            private fun nextId() = counter++
-        }
-    }
+    )
 }

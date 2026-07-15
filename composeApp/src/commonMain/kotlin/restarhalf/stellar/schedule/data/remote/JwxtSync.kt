@@ -1,9 +1,11 @@
 package restarhalf.stellar.schedule.data.remote
 
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -68,7 +70,7 @@ class JwxtSync(private val gateway: JwxtGateway) {
                         fields = mapOf(
                             "xnxq01id" to semesterId,
                             "kbjcmsid" to campusId,
-                            "week" to "1"
+                            "week" to "2"
                         )
                     )
                 if (!response.isSuccess()) return@withContext null
@@ -79,7 +81,7 @@ class JwxtSync(private val gateway: JwxtGateway) {
                     ?.mxrq
                     ?: return@withContext null
 
-                val date = LocalDate.parse(mondayDate)
+                val date = LocalDate.parse(mondayDate).minus(7, DateTimeUnit.DAY)
                 date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
             }.getOrNull()
         }

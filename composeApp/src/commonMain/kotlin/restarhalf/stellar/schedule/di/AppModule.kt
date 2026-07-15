@@ -234,7 +234,7 @@ val portModule = module {
  */
 val useCaseModule = module {
     // 同步用例
-    single {
+    factory {
         RunSyncUseCase(
             authWorkflow = get(),
             academic = get(),
@@ -244,7 +244,7 @@ val useCaseModule = module {
             reminderScheduler = get(),
         )
     }
-    single {
+    factory {
         FetchExaminationsUseCase(
             authWorkflow = get(),
             academic = get(),
@@ -253,8 +253,8 @@ val useCaseModule = module {
             settings = get()
         )
     }
-    single { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
-    single {
+    factory { FetchExaminationsSimpleUseCase(fetchExaminations = get()) }
+    factory {
         FetchGradesUseCase(
             authWorkflow = get(),
             academic = get(),
@@ -263,44 +263,44 @@ val useCaseModule = module {
             auth = get()
         )
     }
-    single { FetchGradesSimpleUseCase(fetchGrades = get()) }
-    single { ObserveAllExaminationsUseCase(repository = get(), auth = get()) }
-    single { SaveExaminationUseCase(repository = get()) }
-    single { DeleteExaminationUseCase(repository = get()) }
-    single { ObserveAllGradesUseCase(repository = get(), auth = get()) }
-    single { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
-    single { LoginUseCase(authWorkflow = get()) }
-    single { CalculateElectiveCreditsUseCase() }
-    single { BuildScheduleUiStateUseCase(timetable = get()) }
-    single { BuildHomeTodayScheduleUseCase() }
-    single { BuildHomeClockSnapshotUseCase() }
-    single { BuildHomeHeaderUiUseCase(buildHomeGreetingUseCase = get()) }
-    single { BuildHomeGreetingUseCase() }
-    single { BuildHomePeriodRowUiUseCase() }
-    single {
+    factory { FetchGradesSimpleUseCase(fetchGrades = get()) }
+    factory { ObserveAllExaminationsUseCase(repository = get(), auth = get()) }
+    factory { SaveExaminationUseCase(repository = get()) }
+    factory { DeleteExaminationUseCase(repository = get()) }
+    factory { ObserveAllGradesUseCase(repository = get(), auth = get()) }
+    factory { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
+    factory { LoginUseCase(authWorkflow = get()) }
+    factory { CalculateElectiveCreditsUseCase() }
+    factory { BuildScheduleUiStateUseCase(timetable = get()) }
+    factory { BuildHomeTodayScheduleUseCase() }
+    factory { BuildHomeClockSnapshotUseCase() }
+    factory { BuildHomeHeaderUiUseCase(buildHomeGreetingUseCase = get()) }
+    factory { BuildHomeGreetingUseCase() }
+    factory { BuildHomePeriodRowUiUseCase() }
+    factory {
         BuildHomePeriodRenderRowsUseCase(
             buildHomeTodayScheduleUseCase = get(),
             resolveCourseStatusUseCase = get(),
             buildHomePeriodRowUiUseCase = get(),
         )
     }
-    single { BuildHomePeriodSectionsUseCase() }
-    single { BuildHomeSurfaceUiUseCase() }
-    single { ResolveCourseStatusUseCase() }
-    single {
+    factory { BuildHomePeriodSectionsUseCase() }
+    factory { BuildHomeSurfaceUiUseCase() }
+    factory { ResolveCourseStatusUseCase() }
+    factory {
         RefreshCourseRemindersIfEnabledUseCase(
             settings = get(),
             courseRepository = get(),
             courseReminder = get()
         )
     }
-    single { ScheduleNextCourseReminderUseCase(courseRepository = get(), courseReminder = get()) }
-    single { ScheduleNextExamReminderUseCase(fetchExaminations = get(), examReminder = get()) }
-    single { CancelAllCourseRemindersUseCase(courseReminder = get()) }
-    single { CancelAllExamRemindersUseCase(examReminder = get()) }
-    single { IsAnyReminderEnabledUseCase(settings = get()) }
-    single { IsExamNotEndedUseCase() }
-    single {
+    factory { ScheduleNextCourseReminderUseCase(courseRepository = get(), courseReminder = get()) }
+    factory { ScheduleNextExamReminderUseCase(fetchExaminations = get(), examReminder = get()) }
+    factory { CancelAllCourseRemindersUseCase(courseReminder = get()) }
+    factory { CancelAllExamRemindersUseCase(examReminder = get()) }
+    factory { IsAnyReminderEnabledUseCase(settings = get()) }
+    factory { IsExamNotEndedUseCase() }
+    factory {
         RescheduleNextCourseReminderIfEnabledUseCase(
             settings = get(),
             timetable = get(),
@@ -308,14 +308,14 @@ val useCaseModule = module {
             courseReminder = get(),
         )
     }
-    single {
+    factory {
         RescheduleNextExamReminderIfEnabledUseCase(
             settings = get(),
             fetchExaminations = get(),
             examReminder = get(),
         )
     }
-    single {
+    factory {
         RescheduleRemindersUseCase(
             settings = get(),
             courseRepository = get(),
@@ -327,7 +327,7 @@ val useCaseModule = module {
         )
     }
 
-    single {
+    factory {
         BindUnboundDataUseCase(
             auth = get(),
             courseRepository = get(),
@@ -335,15 +335,15 @@ val useCaseModule = module {
             academic = get()
         )
     }
-    single { TransCourseUseCase() }
-    single { TransCourseWithConflictsUseCase(courseRepository = get(), transCourse = get()) }
-    single { PELoginUseCase(repository = get(), peAuth = get()) }
-    single { PELogoutUseCase(peAuth = get(), roomRepository = get()) }
-    single { PEScoreListUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
-    single { PEScoreDetailUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
-    single { PEStudentInfoUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
-    single { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
-    single { CheckAppUpdateUseCase(appUpdate = get()) }
+    factory { TransCourseUseCase() }
+    factory { TransCourseWithConflictsUseCase(courseRepository = get(), transCourse = get()) }
+    factory { PELoginUseCase(repository = get(), peAuth = get()) }
+    factory { PELogoutUseCase(peAuth = get(), roomRepository = get()) }
+    factory { PEScoreListUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    factory { PEScoreDetailUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    factory { PEStudentInfoUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
+    factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
+    factory { CheckAppUpdateUseCase(appUpdate = get()) }
 }
 
 /**

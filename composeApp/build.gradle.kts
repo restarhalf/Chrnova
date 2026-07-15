@@ -59,30 +59,33 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
     fun generate() {
         val outputFile =
             outputDir.file("restarhalf/stellar/schedule/config/LocalSecrets.kt").get().asFile
-        val escapedAesKey =
-            aesKey.get()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("$", "\$")
-        val escapedSignKey =
-            signKey.get()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("$", "\$")
-        val escapedPapersBaseUrl =
-            papersBaseUrl.get()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("$", "\$")
+
+        fun String.toHexStringArray(): String {
+            val sb = StringBuilder()
+            for ((i, c) in this.withIndex()) {
+                if (i > 0) sb.append(", ")
+                sb.append("0x%04x".format(c.code))
+            }
+            return sb.toString()
+        }
+
+        val aesChars = aesKey.get().toHexStringArray()
+        val signChars = signKey.get().toHexStringArray()
+        val urlChars = papersBaseUrl.get().toHexStringArray()
+
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
             """
             package restarhalf.stellar.schedule.config
 
             internal object LocalSecrets {
-                const val AES_KEY = "$escapedAesKey"
-                const val SIGN_KEY = "$escapedSignKey"
-                const val PAPERS_BASE_URL = "$escapedPapersBaseUrl"
+                private val _a = intArrayOf($aesChars)
+                private val _s = intArrayOf($signChars)
+                private val _u = intArrayOf($urlChars)
+
+                val AES_KEY: String by lazy { _a.joinToString("") { it.toChar().toString() } }
+                val SIGN_KEY: String by lazy { _s.joinToString("") { it.toChar().toString() } }
+                val PAPERS_BASE_URL: String by lazy { _u.joinToString("") { it.toChar().toString() } }
             }
             """.trimIndent()
         )

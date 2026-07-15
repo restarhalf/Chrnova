@@ -14,18 +14,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
@@ -102,8 +99,6 @@ fun SettingsScreen(
     val overscrollEffect = MiuixOverscrollEffect()
 
     val settingsUiState by vm.uiState.collectAsState()
-
-    val scope = rememberCoroutineScope()
 
     val screenUi =
         remember(syncUiState, campus, termStartMs) {
@@ -241,9 +236,7 @@ fun SettingsScreen(
                             vm.onSelectedTermChanged(
                                 vm.selectedTermValueFromIndex(termSelectionUi.items, index)
                             )
-                            scope.launch { runCatching { onSync() }
-                                .onFailure { AppLogger.log("Sync", "切换学期后同步失败", it) }
-                            }
+                            vm.triggerSync { onSync() }
                         })
                     OverlayDropdownPreference(
                         title = "上课校区",
@@ -252,9 +245,7 @@ fun SettingsScreen(
                         selectedIndex = screenUi.campusSelectedIndex,
                         onSelectedIndexChange = { index: Int ->
                             onCampusChange(vm.campusFromIndex(index))
-                            scope.launch { runCatching { onSync() }
-                                .onFailure { AppLogger.log("Sync", "切换校区后同步失败", it) }
-                            }
+                            vm.triggerSync { onSync() }
                         })
                     ArrowPreference(
                         title = "开始上课时间",
@@ -320,9 +311,7 @@ fun SettingsScreen(
                     ArrowPreference(
                         title = "手动刷新课表",
                         summary = screenUi.syncSummary,
-                        onClick = { scope.launch { runCatching { onSync() }
-                            .onFailure { AppLogger.log("Sync", "手动刷新课表失败", it) }
-                        } })
+                        onClick = { vm.triggerSync { onSync() } })
                     SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",

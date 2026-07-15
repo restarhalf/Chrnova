@@ -369,6 +369,7 @@ class SettingsViewModel(
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
             settings.setSelectedTerm(value)
+            settings.setActiveScheduleTerm(value)
         }
     }
 
@@ -425,6 +426,18 @@ class SettingsViewModel(
 
     fun onLogEnabledChanged(enabled: Boolean) {
         settings.setLogEnabled(enabled)
+    }
+
+    /**
+     * 触发同步
+     *
+     * @param block 同步操作
+     */
+    fun triggerSync(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            runCatching { block() }
+                .onFailure { AppLogger.log("Sync", "同步失败", it) }
+        }
     }
 
     /**
