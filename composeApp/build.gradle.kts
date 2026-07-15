@@ -168,7 +168,6 @@ kotlin {
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.room3.runtime)
                 implementation(libs.androidx.sqlite.bundled)
-                implementation(libs.multiplatform.markdown.renderer)
                 implementation(libs.qrose)
                 implementation(libs.cryptography.core)
                 implementation(libs.cryptography.provider.optimal)
