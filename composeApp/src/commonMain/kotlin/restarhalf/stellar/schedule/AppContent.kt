@@ -140,6 +140,8 @@ fun AppContent(
     runSync: suspend () -> Unit,
     /** 保存日志文件的回调，返回保存路径或null */
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    /** 保存CSV文件的回调，返回保存路径或null */
+    saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
 ) {
     val appState = LocalAppState.current
     val colors = MiuixTheme.colorScheme
@@ -196,6 +198,8 @@ fun AppContent(
                         vm = vm,
                         runSync = runSyncState,
                         ensureNotificationPermission = ensureNotificationPermissionState,
+                        saveCsv = saveCsv,
+                        showMessage = showMessage,
                     )
                 }
                 entry(Screen.ChangeBackground) {
@@ -494,6 +498,10 @@ private fun MainRouteContent(
     runSync: suspend () -> Unit,
     /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
+    /** 保存CSV文件的回调 */
+    saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    /** 显示消息的回调 */
+    showMessage: (String) -> Unit = {},
 ) {
     val homeVm: HomeViewModel = koinViewModel()
     val scheduleVm: ScheduleViewModel = koinViewModel()
@@ -505,6 +513,7 @@ private fun MainRouteContent(
     val updateAppState = LocalUpdateAppState.current
     val navigator = LocalNavigator.current
     val mainPagerState = LocalMainPagerState.current
+    val courses by scheduleVm.allCourses.collectAsState()
 
     HorizontalPager(
         state = mainPagerState.pagerState,
@@ -596,6 +605,9 @@ private fun MainRouteContent(
                     onLogin = { navigator.push(Screen.JWLogin) },
                     onProfile = { navigator.push(Screen.Profile) },
                     isPeLoggedIn = isPeLoggedIn,
+                    onExportCsv = saveCsv,
+                    courses = courses,
+                    showMessage = showMessage,
                 )
             }
 

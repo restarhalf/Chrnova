@@ -115,6 +115,9 @@ fun AppRoot(): UIViewController {
                 saveLog = { fileName, content ->
                     saveLogToFile(fileName, content)
                 },
+                saveCsv = { fileName, content ->
+                    saveLogToFile(fileName, content)
+                },
                 exitApp = {
                     UIApplication.sharedApplication.performSelector(
                         NSSelectorFromString("suspend")

@@ -14,16 +14,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import restarhalf.stellar.schedule.core.text.CsvExporter
 import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
@@ -94,6 +98,9 @@ fun SettingsScreen(
     onAbout: () -> Unit,
     onPaper: () -> Unit,
     onProfile: () -> Unit = {},
+    onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    courses: List<Course> = emptyList(),
+    showMessage: (String) -> Unit = {},
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -112,6 +119,7 @@ fun SettingsScreen(
 
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         vm.refreshAuth()
@@ -326,6 +334,20 @@ fun SettingsScreen(
                         title = "手动刷新课表",
                         summary = screenUi.syncSummary,
                         onClick = { vm.triggerSync { onSync() } })
+                    ArrowPreference(
+                        title = "导出课表CSV",
+                        summary = "将当前课表导出为CSV文件",
+                        onClick = {
+                            scope.launch {
+                                val csv = CsvExporter.export(courses)
+                                val path = onExportCsv("课表.csv", csv)
+                                if (path != null) {
+                                    showMessage("已保存: $path")
+                                } else {
+                                    showMessage("保存失败")
+                                }
+                            }
+                        })
                     SwitchPreference(
                         title = "课程提醒",
                         summary = "上课前15分钟推送通知提醒",

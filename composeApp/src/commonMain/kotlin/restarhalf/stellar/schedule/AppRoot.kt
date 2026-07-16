@@ -67,6 +67,7 @@ fun AppRoot(
     canSaveAwardPicture: Boolean = false,
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     exitApp: () -> Unit = {},
 ) {
     val vm: AppViewModel = koinViewModel()
@@ -224,6 +225,7 @@ fun AppRoot(
             canSaveAwardPicture = canSaveAwardPicture,
             saveAwardPicture = saveAwardPicture,
             saveLog = saveLog,
+            saveCsv = saveCsv,
             runSync = runSync,
         )
 

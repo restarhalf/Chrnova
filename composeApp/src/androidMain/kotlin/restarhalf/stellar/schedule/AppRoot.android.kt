@@ -153,6 +153,26 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                         AppLogger.log("App", "保存日志文件失败: fileName=$fileName", it)
                     }.getOrDefault(null)
                 },
+                saveCsv = { fileName, content ->
+                    runCatching {
+                        val collection =
+                            MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                        val values = ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Chrnova")
+                        }
+                        val uri = contentResolver.insert(collection, values)
+                        uri?.let {
+                            contentResolver.openOutputStream(it)?.use { os ->
+                                os.write(content.toByteArray(Charsets.UTF_8))
+                            }
+                        }
+                        if (uri != null) "${Environment.DIRECTORY_DOCUMENTS}/Chrnova/$fileName" else null
+                    }.onFailure {
+                        AppLogger.log("App", "保存CSV文件失败: fileName=$fileName", it)
+                    }.getOrDefault(null)
+                },
                 exitApp = { finishAffinity() },
             )
         }
