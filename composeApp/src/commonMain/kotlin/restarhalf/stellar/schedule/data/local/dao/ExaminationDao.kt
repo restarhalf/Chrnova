@@ -90,9 +90,13 @@ interface ExaminationDao {
     @Query("SELECT COUNT(*) FROM examinations WHERE semesterId = '' OR semesterId = 'manual'")
     suspend fun countExamsWithInvalidSemester(): Int
 
+    /** 按学期删除同步的考试（保留手动添加的） */
+    @Query("DELETE FROM examinations WHERE semesterId = :semesterId AND source = 'sync'")
+    suspend fun deleteSyncExaminationsBySemester(semesterId: String)
+
     @Transaction
     suspend fun replaceBySemester(semesterId: String, examinations: List<ExaminationEntity>) {
-        deleteExaminationsBySemester(semesterId)
+        deleteSyncExaminationsBySemester(semesterId)
         if (examinations.isNotEmpty()) {
             insertExaminations(examinations)
         }

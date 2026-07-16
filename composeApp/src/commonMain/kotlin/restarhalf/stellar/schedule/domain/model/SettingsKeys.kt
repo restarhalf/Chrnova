@@ -47,4 +47,9 @@ object SettingsKeys {
 
     /** 当前学期ID缓存 */
     const val CURRENT_TERM_ID = "current_term_id"
+
+    /** 用户自定义头像URI */
+    const val USER_AVATAR_URI = "user_avatar_uri"
+    /** 用户自定义昵称 */
+    const val USER_NICKNAME = "user_nickname"
 }

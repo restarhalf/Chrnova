@@ -488,7 +488,7 @@ class SettingsViewModel(
 
     /**
      * 格式化日期为YYYY/MM/DD
-     * 
+     *
      * @param ms 时间戳（毫秒）
      * @return 格式化的日期字符串
      */
@@ -499,5 +499,29 @@ class SettingsViewModel(
         val month = (date.month.ordinal + 1).toString().padStart(2, '0')
         val day = date.day.toString().padStart(2, '0')
         return "${date.year}/$month/$day"
+    }
+
+    /** 个人信息UI状态 */
+    @Immutable
+    data class PersonalInfoUiState(
+        val avatarUri: String? = null,
+        val nickname: String? = null,
+        val hasPersonalInfo: Boolean = false,
+    )
+
+    private val _personalInfoUiState = MutableStateFlow(PersonalInfoUiState())
+    val personalInfoUiState: StateFlow<PersonalInfoUiState> = _personalInfoUiState
+
+    /** 加载个人信息 */
+    fun loadPersonalInfo() {
+        viewModelScope.launch {
+            val avatarUri = settings.getUserAvatarUri()
+            val nickname = settings.getUserNickname()
+            _personalInfoUiState.value = PersonalInfoUiState(
+                avatarUri = avatarUri,
+                nickname = nickname,
+                hasPersonalInfo = avatarUri != null || nickname != null,
+            )
+        }
     }
 }

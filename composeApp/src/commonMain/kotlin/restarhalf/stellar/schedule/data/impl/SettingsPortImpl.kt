@@ -219,4 +219,30 @@ class SettingsPortImpl(
     override fun setCurrentTermId(termId: String) {
         settings[SettingsKeys.CURRENT_TERM_ID] = termId
     }
+
+    override suspend fun getUserAvatarUri(): String? {
+        val uri = settings.getStringOrNull(SettingsKeys.USER_AVATAR_URI)
+        return if (uri.isNullOrBlank()) null else uri
+    }
+
+    override suspend fun setUserAvatarUri(uri: String?) {
+        if (uri != null) {
+            settings[SettingsKeys.USER_AVATAR_URI] = uri
+        } else {
+            settings[SettingsKeys.USER_AVATAR_URI] = ""
+        }
+    }
+
+    override suspend fun getUserNickname(): String? {
+        val nickname = settings.getStringOrNull(SettingsKeys.USER_NICKNAME)
+        return if (nickname.isNullOrBlank()) null else nickname
+    }
+
+    override suspend fun setUserNickname(nickname: String?) {
+        if (nickname != null) {
+            settings[SettingsKeys.USER_NICKNAME] = nickname
+        } else {
+            settings[SettingsKeys.USER_NICKNAME] = ""
+        }
+    }
 }

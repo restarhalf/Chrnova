@@ -61,6 +61,7 @@ import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.ProfileScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
+import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
@@ -118,7 +119,9 @@ fun AppContent(
         show: Boolean,
         onDismissRequest: () -> Unit,
         onPicked: (String) -> Unit,
-    ) -> Unit = { _, _, _ -> },
+        outputWidthPx: Int?,
+        outputHeightPx: Int?,
+    ) -> Unit = { _, _, _, _, _ -> },
     /** PDF文件选择器宿主组件 */
     pdfFilePickerHost: @Composable (
         onPicked: (ByteArray, String, String) -> Unit,
@@ -303,11 +306,14 @@ fun AppContent(
                     val settingsVm: SettingsViewModel = koinViewModel()
                     val settingsUiState by settingsVm.uiState.collectAsState()
                     val peVm: PEViewModel = koinViewModel()
+                    val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
                     ProfileScreen(
                         peVm = peVm,
                         authProfile = settingsUiState.profile,
                         onBack = { navigator.pop() },
                         onLogoutJW = { vm.logout() },
+                        pictureSelectorHost = pictureSelectorHostState,
+                        personalInfoViewModel = personalInfoViewModel,
                     )
                 }
                 entry(Screen.Papers) {

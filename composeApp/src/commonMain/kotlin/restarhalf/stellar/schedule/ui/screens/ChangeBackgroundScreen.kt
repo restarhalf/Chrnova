@@ -50,7 +50,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun ChangeBackgroundScreen(
     vm: BackgroundViewModel,
     onBack: () -> Unit,
-    pictureSelectorHost: @Composable (show: Boolean, onDismissRequest: () -> Unit, onPicked: (String) -> Unit) -> Unit = { _, _, _ -> },
+    pictureSelectorHost: @Composable (show: Boolean, onDismissRequest: () -> Unit, onPicked: (String) -> Unit, outputWidthPx: Int?, outputHeightPx: Int?) -> Unit = { _, _, _, _, _ -> },
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -158,5 +158,7 @@ fun ChangeBackgroundScreen(
             vm.onBackgroundImageUriChanged(croppedUri)
             showPictureSelector.value = false
         },
+        null,
+        null,
     )
 }

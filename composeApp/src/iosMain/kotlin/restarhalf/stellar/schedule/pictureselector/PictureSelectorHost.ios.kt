@@ -1,4 +1,4 @@
-﻿@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 
 package restarhalf.stellar.schedule.pictureselector
 
@@ -40,11 +40,13 @@ fun PictureSelectorHost(
     show: Boolean,
     onDismissRequest: () -> Unit,
     onPicked: (String) -> Unit,
+    outputWidthPx: Int? = null,
+    outputHeightPx: Int? = null,
 ) {
     if (!show) return
 
     val port: PictureSelectorPort = koinInject()
-    val outputSize = rememberIosCropOutputSize(hostViewController)
+    val defaultOutputSize = rememberIosCropOutputSize(hostViewController)
     val scope = rememberCoroutineScope()
     var permissionState by remember(show) { mutableStateOf(currentPhotoPermissionState()) }
 
@@ -63,8 +65,8 @@ fun PictureSelectorHost(
                 permissionState = requestPhotoPermissionState()
             }
         },
-        outputWidthPx = outputSize.widthPx,
-        outputHeightPx = outputSize.heightPx,
+        outputWidthPx = outputWidthPx ?: defaultOutputSize.widthPx,
+        outputHeightPx = outputHeightPx ?: defaultOutputSize.heightPx,
         onDismissRequest = onDismissRequest,
         onPicked = onPicked,
         port = port,

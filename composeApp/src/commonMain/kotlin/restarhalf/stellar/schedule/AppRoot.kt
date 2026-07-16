@@ -55,7 +55,9 @@ fun AppRoot(
         show: Boolean,
         onDismissRequest: () -> Unit,
         onPicked: (String) -> Unit,
-    ) -> Unit = { _, _, _ -> },
+        outputWidthPx: Int?,
+        outputHeightPx: Int?,
+    ) -> Unit = { _, _, _, _, _ -> },
     pdfFilePickerHost: @Composable (
         onPicked: (ByteArray, String, String) -> Unit,
     ) -> Unit = {},

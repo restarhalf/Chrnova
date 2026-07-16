@@ -97,11 +97,13 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
         MiuixTheme(controller = themeController) {
             AppRoot(
                 appIcon = appIcon,
-                pictureSelectorHost = { show, onDismissRequest, onPicked ->
+                pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
                     PictureSelectorHost(
                         show = show,
                         onDismissRequest = onDismissRequest,
                         onPicked = onPicked,
+                        outputWidthPx = outputWidthPx,
+                        outputHeightPx = outputHeightPx,
                     )
                 },
                 pdfFilePickerHost = { onPicked ->

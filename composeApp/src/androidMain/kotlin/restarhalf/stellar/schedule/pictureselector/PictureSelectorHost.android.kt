@@ -23,6 +23,8 @@ fun PictureSelectorHost(
     show: Boolean,
     onDismissRequest: () -> Unit,
     onPicked: (String) -> Unit,
+    outputWidthPx: Int? = null,
+    outputHeightPx: Int? = null,
 ) {
     val context = LocalContext.current
     val port: PictureSelectorPort = koinInject()
@@ -41,15 +43,15 @@ fun PictureSelectorHost(
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             hasPermission = granted
         }
-    val outputSize = context.resolveCropOutputSize()
+    val defaultOutputSize = context.resolveCropOutputSize()
 
     PictureSelectorSheet(
         show = show,
         hasPermission = hasPermission,
         permissionSummary = "需要读取相册权限才能选择图片",
         onRequestPermission = { permissionLauncher.launch(permission) },
-        outputWidthPx = outputSize.widthPx,
-        outputHeightPx = outputSize.heightPx,
+        outputWidthPx = outputWidthPx ?: defaultOutputSize.widthPx,
+        outputHeightPx = outputHeightPx ?: defaultOutputSize.heightPx,
         onDismissRequest = onDismissRequest,
         onPicked = onPicked,
         port = port,

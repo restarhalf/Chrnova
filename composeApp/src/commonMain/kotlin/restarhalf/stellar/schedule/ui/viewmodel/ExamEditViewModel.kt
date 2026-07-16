@@ -99,8 +99,16 @@ class ExamEditViewModel(
     val selectedTerm: StateFlow<String> = settings.observeSelectedTerm()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = "",
+        )
+
+    /** 当前学期ID */
+    val currentTerm: StateFlow<String> = settings.observeCurrentTermId()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ""
         )
 
     /** 当前登录用户的学号 */
@@ -252,10 +260,12 @@ class ExamEditViewModel(
         val selected = selectedTerm.value
         if (selected.isNotBlank()) return selected
         return try {
-            academic.fetchCurrentTermId()
+            val termId = academic.fetchCurrentTermId()
+            val currentId = currentTerm.value
+            termId.ifBlank { currentId }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            ""
+            currentTerm.value
         }
     }
 

@@ -25,6 +25,7 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -134,6 +135,12 @@ fun SettingsScreen(
             vm.buildAccountUi(settingsUiState.authToken, settingsUiState.profile)
         }
 
+    val personalInfoUiState by vm.personalInfoUiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        vm.loadPersonalInfo()
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -199,7 +206,14 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "账号")
                 AppCard {
-                    if (accountUi.loggedIn) {
+                    if (personalInfoUiState.hasPersonalInfo) {
+                        PersonalInfoCard(
+                            avatarUri = personalInfoUiState.avatarUri,
+                            nickname = personalInfoUiState.nickname ?: settingsUiState.profile.name,
+                            academyName = settingsUiState.profile.academyName,
+                            onClick = onProfile,
+                        )
+                    } else if (accountUi.loggedIn) {
                         BasicComponent(
                             title = accountUi.title,
                             summary = accountUi.summary,

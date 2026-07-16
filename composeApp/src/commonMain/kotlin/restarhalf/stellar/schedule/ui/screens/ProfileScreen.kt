@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.PersonalInfoEditCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Logout
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -33,6 +34,7 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -50,6 +52,14 @@ fun ProfileScreen(
     authProfile: AuthProfile?,
     onBack: () -> Unit,
     onLogoutJW: () -> Unit = {},
+    pictureSelectorHost: @Composable (
+        show: Boolean,
+        onDismissRequest: () -> Unit,
+        onPicked: (String) -> Unit,
+        outputWidthPx: Int?,
+        outputHeightPx: Int?,
+    ) -> Unit = { _, _, _, _, _ -> },
+    personalInfoViewModel: PersonalInfoViewModel,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -67,6 +77,8 @@ fun ProfileScreen(
 
     var showLogoutJWConfirm by remember { mutableStateOf(false) }
     var showLogoutPEConfirm by remember { mutableStateOf(false) }
+    var showPictureSelector by remember { mutableStateOf(false) }
+    val personalInfoUiState by personalInfoViewModel.uiState.collectAsState()
     val colors = MiuixTheme.colorScheme
 
     Scaffold(
@@ -149,6 +161,17 @@ fun ProfileScreen(
                     }
                 }
             }
+            // 图片选择器（头像使用 1:1 裁剪）
+            pictureSelectorHost(
+                showPictureSelector,
+                { showPictureSelector = false },
+                { croppedUri ->
+                    personalInfoViewModel.saveAvatar(croppedUri)
+                    showPictureSelector = false
+                },
+                512,
+                512,
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -165,6 +188,20 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // 个人信息编辑卡片
+            item {
+                SmallTitle(text = "个人信息")
+                PersonalInfoEditCard(
+                    avatarUri = personalInfoUiState.avatarUri,
+                    nickname = personalInfoUiState.nickname,
+                    onAvatarClick = { showPictureSelector = true },
+                    onAvatarClear = { personalInfoViewModel.clearAvatar() },
+                    onNicknameChanged = { nickname ->
+                        personalInfoViewModel.saveNickname(nickname)
+                    },
+                )
+            }
+
             // 教务系统信息
             item {
                 if (isLoggedIn) {

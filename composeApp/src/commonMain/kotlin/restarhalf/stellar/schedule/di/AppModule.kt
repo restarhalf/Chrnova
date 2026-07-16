@@ -99,6 +99,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 
@@ -473,6 +474,11 @@ val viewModelModule = module {
             gradeRepository = get(),
             fetchSemesterIds = get(),
             calculateElectiveCredits = get(),
+        )
+    }
+    factory {
+        PersonalInfoViewModel(
+            settingsPort = get(),
         )
     }
 }
