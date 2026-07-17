@@ -54,7 +54,7 @@ fun StarVerificationDialog(
                     label = "GitHub 用户名",
                     value = username,
                     onValueChange = onUsernameChange,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 )
                 error?.let {
                     Text(
@@ -64,7 +64,7 @@ fun StarVerificationDialog(
                     )
                 }
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     enabled = username.isNotBlank() && !isVerifying,
                     onClick = onVerify,

@@ -158,7 +158,7 @@ private fun NicknameEditDialog(
                     }
                 },
                 label = "昵称",
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             )
             
             Row(
