@@ -396,6 +396,7 @@ val viewModelModule = module {
             fetchSemesterIds = get(),
             scheduleNextCourseReminder = get(),
             scheduleNextExamReminder = get(),
+            verifyGitHubStar = get(),
         )
     }
     factory {

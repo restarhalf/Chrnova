@@ -147,7 +147,7 @@ private fun NicknameEditDialog(
         onDismissRequest = onDismiss,
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TextField(
@@ -158,7 +158,7 @@ private fun NicknameEditDialog(
                     }
                 },
                 label = "昵称",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
             )
             
             Row(

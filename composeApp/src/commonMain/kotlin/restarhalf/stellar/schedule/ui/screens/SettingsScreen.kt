@@ -2,10 +2,14 @@ package restarhalf.stellar.schedule.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -20,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -30,6 +35,7 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
+import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -46,6 +52,7 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -120,6 +127,7 @@ fun SettingsScreen(
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val starVerificationState by vm.starVerification.state.collectAsState()
 
     LaunchedEffect(Unit) {
         vm.refreshAuth()
@@ -185,6 +193,15 @@ fun SettingsScreen(
                     },
                 )
             }
+            StarVerificationDialog(
+                show = starVerificationState.showDialog,
+                username = starVerificationState.username,
+                isVerifying = starVerificationState.isVerifying,
+                error = starVerificationState.error,
+                onUsernameChange = { vm.starVerification.onUsernameChange(it) },
+                onVerify = { vm.starVerification.verify() },
+                onDismiss = { vm.starVerification.dismissDialog() },
+            )
         }) { paddingValues ->
         LazyColumn(
             modifier =
@@ -338,13 +355,17 @@ fun SettingsScreen(
                         title = "导出课表CSV",
                         summary = "将当前课表导出为CSV文件",
                         onClick = {
-                            scope.launch {
-                                val csv = CsvExporter.export(courses)
-                                val path = onExportCsv("课表.csv", csv)
-                                if (path != null) {
-                                    showMessage("已保存: $path")
-                                } else {
-                                    showMessage("保存失败")
+                            if (!starVerificationState.isVerified) {
+                                vm.starVerification.showDialog()
+                            } else {
+                                scope.launch {
+                                    val csv = CsvExporter.export(courses)
+                                    val path = onExportCsv("课表.csv", csv)
+                                    if (path != null) {
+                                        showMessage("已保存: $path")
+                                    } else {
+                                        showMessage("保存失败")
+                                    }
                                 }
                             }
                         })

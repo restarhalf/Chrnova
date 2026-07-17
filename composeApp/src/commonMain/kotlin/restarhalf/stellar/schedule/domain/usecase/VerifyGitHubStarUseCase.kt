@@ -7,8 +7,6 @@ class VerifyGitHubStarUseCase(
     private val papersPort: PapersPort,
     private val settingsPort: SettingsPort,
 ) {
-    fun isStarVerified(): Boolean = settingsPort.getStarVerified()
-
     suspend operator fun invoke(username: String): Boolean {
         val starred = papersPort.verifyStar(username)
         if (starred) {

@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.time.ExperimentalTime
@@ -48,7 +49,14 @@ class SettingsViewModel(
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
+    verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
+
+    val starVerification = StarVerificationHolder(
+        verifyGitHubStar = verifyGitHubStar,
+        settings = settings,
+        scope = viewModelScope,
+    )
     /** 设置偏好状态 */
     @Immutable
     private data class SettingsPrefsState(

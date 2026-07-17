@@ -17,8 +17,14 @@ import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 class PapersViewModel(
     private val papersPort: PapersPort,
     private val settings: SettingsPort,
-    private val verifyGitHubStar: VerifyGitHubStarUseCase,
+    verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
+
+    val starVerification = StarVerificationHolder(
+        verifyGitHubStar = verifyGitHubStar,
+        settings = settings,
+        scope = viewModelScope,
+    )
 
     data class PapersUiState(
         val loading: Boolean = false,
@@ -30,10 +36,6 @@ class PapersViewModel(
         val selectedPaper: Paper? = null,
         val uploading: Boolean = false,
         val downloadUrl: String? = null,
-        val githubUsername: String = "",
-        val isStarVerified: Boolean = false,
-        val verifyingStar: Boolean = false,
-        val showStarDialog: Boolean = false,
     ) {
         val papers: List<Paper>
             get() = allPapers.filter { paper ->
@@ -45,13 +47,6 @@ class PapersViewModel(
     val uiState: StateFlow<PapersUiState> = _uiState
 
     private val loadMutex = Mutex()
-
-    init {
-        val verified = settings.getStarVerified()
-        if (verified) {
-            _uiState.value = PapersUiState(isStarVerified = true)
-        }
-    }
 
     fun loadPapers() {
         viewModelScope.launch {
@@ -144,39 +139,5 @@ class PapersViewModel(
 
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-    }
-
-    fun onGitHubUsernameChange(username: String) {
-        _uiState.update { it.copy(githubUsername = username) }
-    }
-
-    fun showStarDialog() {
-        _uiState.update { it.copy(showStarDialog = true) }
-    }
-
-    fun verifyStar() {
-        val username = _uiState.value.githubUsername.trim()
-        if (username.isBlank()) return
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(verifyingStar = true, error = null) }
-            runCatching {
-                verifyGitHubStar(username)
-            }.onSuccess { starred ->
-                _uiState.update {
-                    it.copy(
-                        verifyingStar = false,
-                        isStarVerified = starred,
-                        showStarDialog = !starred,
-                        error = if (!starred) "未检测到 star，请先 star 仓库后再试" else null,
-                    )
-                }
-            }.onFailure { e ->
-                AppLogger.log("Papers", "验证 star 失败", e)
-                _uiState.update {
-                    it.copy(verifyingStar = false, error = e.message ?: "验证失败")
-                }
-            }
-        }
     }
 }

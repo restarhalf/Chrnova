@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -50,8 +51,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
@@ -69,65 +68,26 @@ fun PapersListScreen(
     val expandedFolders = remember { mutableStateSetOf<String>() }
     val colors = MiuixTheme.colorScheme
 
+    val starState by vm.starVerification.state.collectAsState()
+
     LaunchedEffect(Unit) {
-        if (!uiState.isStarVerified) {
-            vm.showStarDialog()
+        if (!starState.isVerified) {
+            vm.starVerification.showDialog()
         }
     }
 
-    if (uiState.showStarDialog) {
-        OverlayDialog(
-            show = true,
-            modifier = Modifier,
-            title = "GitHub Star 验证",
-            titleColor = DialogDefaults.titleColor(),
-            summary = "请先 star Chrnova 仓库后才能使用",
-            summaryColor = DialogDefaults.summaryColor(),
-            backgroundColor = DialogDefaults.backgroundColor(),
-            enableWindowDim = true,
-            onDismissRequest = { onBack() },
-            onDismissFinished = null,
-            outsideMargin = DialogDefaults.outsideMargin,
-            insideMargin = DialogDefaults.insideMargin,
-            defaultWindowInsetsPadding = true,
-            renderInRootScaffold = true,
-            content = {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    TextField(
-                        label = "GitHub 用户名",
-                        value = uiState.githubUsername,
-                        onValueChange = { vm.onGitHubUsernameChange(it) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    uiState.error?.let { error ->
-                        Text(
-                            text = error,
-                            fontSize = 12.sp,
-                            color = colors.error,
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColorsPrimary(),
-                        enabled = uiState.githubUsername.isNotBlank() && !uiState.verifyingStar,
-                        onClick = { vm.verifyStar() },
-                    ) {
-                        Text(
-                            text = if (uiState.verifyingStar) "验证中..." else "验证",
-                            color = colors.onPrimary,
-                        )
-                    }
-                }
-            },
-        )
-    }
+    StarVerificationDialog(
+        show = starState.showDialog,
+        username = starState.username,
+        isVerifying = starState.isVerifying,
+        error = starState.error,
+        onUsernameChange = { vm.starVerification.onUsernameChange(it) },
+        onVerify = { vm.starVerification.verify() },
+        onDismiss = { onBack() },
+    )
 
-    LaunchedEffect(uiState.isStarVerified) {
-        if (uiState.isStarVerified) {
+    LaunchedEffect(starState.isVerified) {
+        if (starState.isVerified) {
             vm.loadFolders()
             vm.loadPapers()
         }
@@ -151,7 +111,7 @@ fun PapersListScreen(
                     }
                 )
                 AnimatedVisibility(
-                    visible = uiState.error != null && uiState.showStarDialog.not(),
+                    visible = uiState.error != null && starState.showDialog.not(),
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
                 ) {
