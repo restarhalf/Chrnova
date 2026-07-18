@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,6 +82,7 @@ class PELoginViewModel(
                         _uiState.update { it.copy(loading = false, error = response.message) }
                     }
                 }.onFailure { throwable ->
+                    if (throwable is CancellationException) throw throwable
                     val errorMsg = throwable.message ?: "登录失败"
                     AppLogger.log("PE", "体育系统登录失败", throwable)
                     _uiState.update { it.copy(loading = false, error = errorMsg) }

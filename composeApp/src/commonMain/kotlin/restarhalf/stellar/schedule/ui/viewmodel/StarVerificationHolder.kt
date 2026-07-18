@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +61,7 @@ class StarVerificationHolder(
                     error = if (!starred) "未检测到 star，请先 star 仓库后再试" else null,
                 )
             }.onFailure { e ->
+                if (e is CancellationException) throw e
                 AppLogger.log("StarVerification", "验证 star 失败", e)
                 _state.value = _state.value.copy(
                     isVerifying = false,

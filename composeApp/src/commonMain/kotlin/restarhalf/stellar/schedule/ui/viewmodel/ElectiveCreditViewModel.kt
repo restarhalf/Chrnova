@@ -1,8 +1,10 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,16 +19,8 @@ import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
+import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-
-private fun parseSemesterKey(semesterId: String): Triple<Int, Int, Int>? {
-    val parts = semesterId.trim().split("-")
-    if (parts.size < 3) return null
-    val y1 = parts[0].toIntOrNull() ?: return null
-    val y2 = parts[1].toIntOrNull() ?: return null
-    val t = parts[2].toIntOrNull() ?: return null
-    return Triple(y1, y2, t)
-}
 
 /**
  * 选修课学分统计ViewModel
@@ -42,7 +36,7 @@ class ElectiveCreditViewModel(
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,
 ) : ViewModel() {
 
-    @Immutable
+    @Stable
     data class ElectiveCreditUiState(
         val loading: Boolean = false,
         val error: String = "",
@@ -70,28 +64,18 @@ class ElectiveCreditViewModel(
                     return@launch
                 }
 
-                val allSemesterIds = fetchSemesterIds()
+                val semesterIds = fetchSemesterIds()
                     .filter { it.isNotBlank() }
                     .distinct()
+                    .sortedWith(SemesterUtils.comparator)
 
-                if (allSemesterIds.isEmpty()) {
+                if (semesterIds.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
                         loading = false,
                         error = "暂无学期数据"
                     )
                     return@launch
                 }
-
-                val currentKey = parseSemesterKey(currentSemester)
-                val semesterIds = allSemesterIds.filter { id ->
-                    val key = parseSemesterKey(id)
-                    if (key != null && currentKey != null) {
-                        val yearDiff = key.first - currentKey.first
-                        yearDiff in -3..0
-                    } else {
-                        false
-                    }
-                }.sortedWith(SemesterComparator)
 
                 val allCourses = fetchCoursesWithFallback(semesterIds)
 
@@ -133,44 +117,32 @@ class ElectiveCreditViewModel(
     }
 
     private suspend fun fetchCoursesWithFallback(semesterIds: List<String>): List<GradeCourse> {
-        val allCourses = mutableListOf<GradeCourse>()
-        for (semesterId in semesterIds) {
-            try {
-                val report = academic.fetchGradeReport(semester = semesterId)
-                allCourses.addAll(report.achievements)
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败，尝试本地回退", e)
-                try {
-                    val userNo = auth.observeProfile().first().userNo
-                    if (userNo.isNotBlank()) {
-                        val localGrades = gradeRepository.getAllGradesByUserNo(userNo)
-                            .filter { it.semester == semesterId }
-                        allCourses.addAll(localGrades)
+        return coroutineScope {
+            semesterIds.map { semesterId ->
+                async {
+                    try {
+                        val report = academic.fetchGradeReport(semester = semesterId)
+                        report.achievements
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败，尝试本地回退", e)
+                        try {
+                            val userNo = auth.observeProfile().first().userNo
+                            if (userNo.isNotBlank()) {
+                                gradeRepository.getAllGradesByUserNo(userNo)
+                                    .filter { it.semester == semesterId }
+                            } else {
+                                emptyList()
+                            }
+                        } catch (fallback: Exception) {
+                            if (fallback is kotlinx.coroutines.CancellationException) throw fallback
+                            AppLogger.log("ElectiveCredit", "本地回退也失败", fallback)
+                            emptyList()
+                        }
                     }
-                } catch (fallback: Exception) {
-                    if (fallback is kotlinx.coroutines.CancellationException) throw fallback
-                    AppLogger.log("ElectiveCredit", "本地回退也失败", fallback)
                 }
-            }
+            }.flatMap { it.await() }
         }
-        return allCourses
     }
 
-    private object SemesterComparator : Comparator<String> {
-        override fun compare(a: String, b: String): Int {
-            val ka = parseSemesterKey(a)
-            val kb = parseSemesterKey(b)
-            return when {
-                ka != null && kb != null -> {
-                    if (ka.first != kb.first) ka.first.compareTo(kb.first)
-                    else if (ka.second != kb.second) ka.second.compareTo(kb.second)
-                    else ka.third.compareTo(kb.third)
-                }
-                ka != null -> 1
-                kb != null -> -1
-                else -> a.compareTo(b)
-            }
-        }
-    }
 }

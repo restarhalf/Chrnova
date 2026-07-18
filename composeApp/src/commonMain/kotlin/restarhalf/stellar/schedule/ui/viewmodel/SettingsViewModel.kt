@@ -1,8 +1,10 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -86,7 +88,7 @@ class SettingsViewModel(
      * @param termStartSummary 学期开始日期摘要
      * @param syncSummary 同步状态摘要
      */
-    @Immutable
+    @Stable
     data class SettingsScreenUi(
         val campusOptions: List<String>,
         val campusSelectedIndex: Int,
@@ -102,7 +104,7 @@ class SettingsViewModel(
      * @param items 学期选项列表
      * @param selectedIndex 选中的索引
      */
-    @Immutable
+    @Stable
     data class TermSelectionUi(
         val items: List<String>,
         val selectedIndex: Int,
@@ -127,7 +129,7 @@ class SettingsViewModel(
      * 
      * 包含所有设置项的状态和UI数据。
      */
-    @Immutable
+    @Stable
     data class SettingsUiState(
         val showNonCurrentWeek: Boolean,
         val reminderEnabled: Boolean,
@@ -234,8 +236,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             withContext(AppIoDispatcher) {
                 runCatching { authWorkflow.ensureLoggedIn() }
-                    .onFailure {
-                        AppLogger.log("Auth", "刷新认证失败", it)
+                    .onFailure { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("Auth", "刷新认证失败", e)
                     }
             }
         }
@@ -255,8 +258,9 @@ class SettingsViewModel(
                         fetchSemesterIds()
                     }
                 _remoteTermItems.value = terms
-            }.onFailure {
-                AppLogger.log("Settings", "刷新远程学期列表失败", it)
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Settings", "刷新远程学期列表失败", e)
             }
         }
     }
@@ -444,7 +448,10 @@ class SettingsViewModel(
     fun triggerSync(block: suspend () -> Unit) {
         viewModelScope.launch {
             runCatching { block() }
-                .onFailure { AppLogger.log("Sync", "同步失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Sync", "同步失败", e)
+                }
         }
     }
 
@@ -468,7 +475,9 @@ class SettingsViewModel(
                     }
                 }
             if (result.isFailure) {
-                AppLogger.log("Reminder", "课程提醒调度失败", result.exceptionOrNull()!!)
+                val e = result.exceptionOrNull()!!
+                if (e is CancellationException) throw e
+                AppLogger.log("Reminder", "课程提醒调度失败", e)
                 onReminderEnabledChanged(false)
             }
         }
@@ -488,8 +497,9 @@ class SettingsViewModel(
                     }
                 }
             if (result.isFailure) {
-                AppLogger.log("Reminder", "考试提醒调度失败", result.exceptionOrNull()!!)
-
+                val e = result.exceptionOrNull()!!
+                if (e is CancellationException) throw e
+                AppLogger.log("Reminder", "考试提醒调度失败", e)
             }
         }
     }

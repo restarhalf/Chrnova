@@ -1,13 +1,13 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -49,7 +49,7 @@ class ExamEditViewModel(
      * @param courseNames 课程名称列表（用于下拉选择，已排除有考试的课程）
      * @param courses 所有课程列表（用于根据名称查找课程编号）
      */
-    @Immutable
+    @Stable
     data class ExamEditUiState(
         val courseNames: List<String>,
         val courses: List<Course>,
@@ -83,7 +83,7 @@ class ExamEditViewModel(
 
     private val _uiState: StateFlow<ExamEditUiState> =
         courseRepository.observeAllCourses()
-            .combine(MutableStateFlow(Unit)) { courses, _ ->
+            .map { courses ->
                 ExamEditUiState(
                     courseNames = buildCourseNames(courses),
                     courses = courses,
@@ -250,7 +250,10 @@ class ExamEditViewModel(
             val semesterId = resolveSemesterId()
             runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
                 .onSuccess { onSaved() }
-                .onFailure { AppLogger.log("ExamEdit", "保存考试失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("ExamEdit", "保存考试失败", e)
+                }
         }
     }
 
@@ -282,7 +285,10 @@ class ExamEditViewModel(
         viewModelScope.launch {
             runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }
                 .onSuccess { onDeleted() }
-                .onFailure { AppLogger.log("ExamEdit", "删除考试失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("ExamEdit", "删除考试失败", e)
+                }
         }
     }
 }

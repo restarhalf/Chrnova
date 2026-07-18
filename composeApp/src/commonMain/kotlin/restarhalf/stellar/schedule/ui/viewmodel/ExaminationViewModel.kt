@@ -1,9 +1,11 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -69,7 +71,7 @@ class ExaminationViewModel(
      * @param cards 考试卡片列表
      * @param statusText 状态文本（如"暂无考试安排"）
      */
-    @Immutable
+    @Stable
     data class ExaminationScreenUi(
         val cards: List<ExamCardUi>,
         val statusText: String?,
@@ -82,7 +84,7 @@ class ExaminationViewModel(
      * @param error 错误消息
      * @param items 考试列表
      */
-    @Immutable
+    @Stable
     data class ExaminationUiState(
         val loading: Boolean,
         val error: String,
@@ -183,9 +185,10 @@ class ExaminationViewModel(
 
         viewModelScope.launch {
             runCatching { loader() }
-                .onFailure {
-                    AppLogger.log("Exams", "加载考试数据失败", it)
-                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Exams", "加载考试数据失败", e)
+                    _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
                 }
             _loading.value = false
         }
@@ -208,7 +211,7 @@ class ExaminationViewModel(
             } }
             ?.let { weekdayText(it.dayOfWeek) }
             ?: ""
-        val hasWeekdayInTime = timePart.contains(Regex("星期[一二三四五六日]"))
+        val hasWeekdayInTime = WEEKDAY_REGEX.containsMatchIn(timePart)
         val dateText = "考试日期:$datePart"
         val timeText = if (weekday.isNotBlank() && !hasWeekdayInTime) {
             "考试时间:星期$weekday $timePart"
@@ -228,4 +231,8 @@ class ExaminationViewModel(
     }
 
     private fun weekdayText(dayOfWeek: DayOfWeek): String = ClockTime.weekdayShort(dayOfWeek)
+
+    private companion object {
+        val WEEKDAY_REGEX = Regex("星期[一二三四五六日]")
+    }
 }

@@ -167,10 +167,8 @@ object AppLogger {
     }
 
     private fun parseLogLine(line: String): LogEntry? {
-        val timestampRegex = Regex("""\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\]""")
-        val levelTagRegex = Regex("""\[(\w+)/([\w.]+)\]""")
-        val tsMatch = timestampRegex.find(line) ?: return null
-        val ltMatch = levelTagRegex.find(line) ?: return null
+        val tsMatch = TIMESTAMP_REGEX.find(line) ?: return null
+        val ltMatch = LEVEL_TAG_REGEX.find(line) ?: return null
         val timestamp = tsMatch.groupValues[1]
         val levelTag = ltMatch.groupValues[1]
         val tag = ltMatch.groupValues[2]
@@ -224,4 +222,7 @@ object AppLogger {
         val level: Level = Level.INFO,
         val message: String,
     )
+
+    private val TIMESTAMP_REGEX = Regex("""\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\]""")
+    private val LEVEL_TAG_REGEX = Regex("""\[(\w+)/([\w.]+)\]""")
 }

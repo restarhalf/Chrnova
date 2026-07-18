@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -62,7 +62,7 @@ class HomeViewModel(
      * @param exams 考试列表
      * @param nowMs 当前时间戳（毫秒）
      */
-    @Immutable
+    @Stable
     data class HomeUiState(
         val courses: List<Course>,
         val exams: List<Examination>,
@@ -75,7 +75,7 @@ class HomeViewModel(
      * @param title 时间段标题（如"上午"、"下午"）
      * @param rows 该时间段内的课程行列表
      */
-    @Immutable
+    @Stable
     data class SectionRenderUi(
         val title: String,
         val rows: List<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
@@ -86,7 +86,7 @@ class HomeViewModel(
      * 
      * 包含首页所有需要渲染的UI数据。
      */
-    @Immutable
+    @Stable
     data class HomeRenderState(
         /** 头部UI（问候语、日期等） */
         val headerUi: BuildHomeHeaderUiUseCase.HeaderUi,

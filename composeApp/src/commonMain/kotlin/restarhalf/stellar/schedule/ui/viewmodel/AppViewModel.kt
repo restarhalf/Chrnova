@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,7 +50,10 @@ class AppViewModel(
         }
         viewModelScope.launch {
             runCatching { bindUnboundData() }
-                .onFailure { AppLogger.log("AppViewModel", "数据绑定失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("AppViewModel", "数据绑定失败", e)
+                }
         }
     }
 
@@ -105,9 +109,10 @@ class AppViewModel(
                             campusName = it.campusName
                         )
                     },
-                    onFailure = {
-                        AppLogger.log("Sync", "同步失败", it)
-                        SyncUiState.Error(it.toUserFacingMessage(UserFacingErrorKind.Sync))
+                    onFailure = { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("Sync", "同步失败", e)
+                        SyncUiState.Error(e.toUserFacingMessage(UserFacingErrorKind.Sync))
                     },
                 )
 

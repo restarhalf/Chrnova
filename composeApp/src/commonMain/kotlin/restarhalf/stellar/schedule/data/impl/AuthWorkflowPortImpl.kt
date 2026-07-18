@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
@@ -106,8 +107,9 @@ class AuthWorkflowPortImpl(
         val (userNo, password) = authStore.getCredentials() ?: return
         val oldToken = authStore.getToken()
         runCatching { login(userNo = userNo, password = password) }
-            .onFailure {
-                AppLogger.log("Auth", "刷新会话失败，恢复旧Token", it)
+            .onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Auth", "刷新会话失败，恢复旧Token", e)
                 if (oldToken != null) authStore.setToken(oldToken)
             }
     }

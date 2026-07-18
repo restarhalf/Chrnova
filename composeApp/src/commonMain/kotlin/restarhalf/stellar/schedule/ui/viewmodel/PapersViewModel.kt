@@ -1,8 +1,9 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -27,7 +28,7 @@ class PapersViewModel(
         scope = viewModelScope,
     )
 
-    @Immutable
+    @Stable
     data class PapersUiState(
         val loading: Boolean = false,
         val error: String? = null,
@@ -59,6 +60,7 @@ class PapersViewModel(
                 }.onSuccess { papers ->
                     _uiState.update { it.copy(allPapers = papers, loading = false) }
                 }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     AppLogger.log("Papers", "加载课件列表失败", e)
                     _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
@@ -72,8 +74,9 @@ class PapersViewModel(
                 papersPort.getFolders()
             }.onSuccess { folders ->
                 _uiState.update { it.copy(folders = folders) }
-            }.onFailure {
-                AppLogger.log("Papers", "加载文件夹列表失败", it)
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Papers", "加载文件夹列表失败", e)
             }
         }
     }
@@ -86,6 +89,7 @@ class PapersViewModel(
             }.onSuccess { paper ->
                 _uiState.update { it.copy(selectedPaper = paper, loading = false) }
             }.onFailure { e ->
+                if (e is CancellationException) throw e
                 AppLogger.log("Papers", "加载课件详情失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
@@ -100,6 +104,7 @@ class PapersViewModel(
             }.onSuccess { url ->
                 _uiState.update { it.copy(loading = false, downloadUrl = "https://v4.gh-proxy.org/$url") }
             }.onFailure { e ->
+                if (e is CancellationException) throw e
                 AppLogger.log("Papers", "下载课件失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "下载失败") }
             }
@@ -128,6 +133,7 @@ class PapersViewModel(
                 loadPapers()
                 loadFolders()
             }.onFailure { e ->
+                if (e is CancellationException) throw e
                 AppLogger.log("Papers", "上传课件失败", e)
                 _uiState.update { it.copy(uploading = false, error = e.message ?: "上传失败") }
             }

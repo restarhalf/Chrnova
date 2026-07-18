@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,6 +80,7 @@ class JWLoginViewModel(
                         onSuccess()
                     }
                     .onFailure { throwable ->
+                        if (throwable is CancellationException) throw throwable
                         AppLogger.log("Auth", "登录失败 userNo=$userNo", throwable)
                         _uiState.update { state ->
                             state.copy(

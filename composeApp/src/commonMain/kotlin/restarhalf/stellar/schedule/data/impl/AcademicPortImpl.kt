@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.model.Examination
@@ -205,6 +206,9 @@ class AcademicPortImpl(
         return runCatching {
             val resp = gateway.getTeachingWeek()
             if (resp.isSuccess()) resp.data.size else 0
-        }.getOrDefault(0)
+        }.getOrElse { e ->
+            if (e is CancellationException) throw e
+            0
+        }
     }
 }

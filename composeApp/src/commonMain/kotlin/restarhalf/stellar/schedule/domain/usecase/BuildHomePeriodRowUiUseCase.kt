@@ -1,9 +1,11 @@
 package restarhalf.stellar.schedule.domain.usecase
 
+import androidx.compose.runtime.Immutable
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase.PeriodItem
 
 class BuildHomePeriodRowUiUseCase {
 
+    @Immutable
     data class RowUi(
         val primaryText: String,
         val secondaryText: String,

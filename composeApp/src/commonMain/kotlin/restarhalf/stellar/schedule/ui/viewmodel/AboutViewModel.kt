@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -159,9 +160,10 @@ class AboutViewModel(
                     _updateSummary.value = "发现新版本 ${latest.latestVersion}"
                 }
             }
-                .onFailure {
-                    AppLogger.log("Update", "检查更新失败", it)
-                    _updateSummary.value = it.toUserFacingMessage(UserFacingErrorKind.CheckUpdate)
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Update", "检查更新失败", e)
+                    _updateSummary.value = e.toUserFacingMessage(UserFacingErrorKind.CheckUpdate)
                 }
 
             _updateChecking.value = false

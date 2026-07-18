@@ -1,13 +1,12 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -40,7 +39,7 @@ class CourseEditViewModel(
      * @param courses 所有课程列表
      * @param courseNames 课程名称列表（用于下拉选择）
      */
-    @Immutable
+    @Stable
     data class CourseEditUiState(
         val courses: List<Course>,
         val courseNames: List<String>,
@@ -57,7 +56,7 @@ class CourseEditViewModel(
      * @param endSection 结束节次
      * @param selectedWeeks 选中的周次集合
      */
-    @Immutable
+    @Stable
     data class EditingFormState(
         val isEdit: Boolean,
         val selectedIndex: Int,
@@ -70,7 +69,7 @@ class CourseEditViewModel(
 
     private val _uiState: StateFlow<CourseEditUiState> =
         courseRepository.observeAllCourses()
-            .combine(MutableStateFlow(Unit)) { courses, _ ->
+            .map { courses ->
                 CourseEditUiState(courses = courses, courseNames = buildCourseNames(courses))
             }
             .stateIn(
@@ -276,7 +275,10 @@ class CourseEditViewModel(
         viewModelScope.launch {
             runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
                 .onSuccess { onSaved() }
-                .onFailure { AppLogger.log("CourseEdit", "保存实验课失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("CourseEdit", "保存实验课失败", e)
+                }
         }
     }
 
@@ -290,7 +292,10 @@ class CourseEditViewModel(
         viewModelScope.launch {
             runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
                 .onSuccess { onDeleted() }
-                .onFailure { AppLogger.log("CourseEdit", "删除课程失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("CourseEdit", "删除课程失败", e)
+                }
         }
     }
 

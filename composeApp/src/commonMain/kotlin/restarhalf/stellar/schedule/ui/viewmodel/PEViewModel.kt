@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -56,7 +56,7 @@ class PEViewModel(
      * @param loadedScoreList 是否已加载成绩列表
      * @param loadedDetail 是否已加载详情数据
      */
-    @Immutable
+    @Stable
     data class PeUiState(
         val yearScores: List<PEYearScore> = emptyList(),
         val detailData: PEDetailData? = null,
@@ -204,6 +204,7 @@ class PEViewModel(
             onSuccess(firstAttempt.getOrThrow())
         } else {
             val ex = firstAttempt.exceptionOrNull()!!
+            if (ex is CancellationException) throw ex
             if (ex is PETokenExpiredException || ex is SerializationException) {
                 val reloginResult = peLoginUseCase.autoLogin()
                 if (reloginResult?.status == "PASS") {
@@ -211,6 +212,7 @@ class PEViewModel(
                     runCatching { action() }
                         .onSuccess { result -> onSuccess(result) }
                         .onFailure { retryEx ->
+                            if (retryEx is CancellationException) throw retryEx
                             AppLogger.log(logTag, "重试失败", retryEx)
                             _isLoggedIn.value = false
                             _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(errorKind)) }

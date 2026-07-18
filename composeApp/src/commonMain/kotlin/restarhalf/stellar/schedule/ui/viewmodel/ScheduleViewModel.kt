@@ -1,10 +1,12 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,7 +58,7 @@ class ScheduleViewModel(
      * @param dates 对应日期列表（如"9/01"）
      * @param todayIndex 今日在该周中的索引，不在该周时为null
      */
-    @Immutable
+    @Stable
     data class WeekHeaderUi(
         val days: List<String>,
         val dates: List<String>,
@@ -69,7 +71,7 @@ class ScheduleViewModel(
      * @param actualWeek 实际周次
      * @param dayRenderData 每天的渲染数据映射
      */
-    @Immutable
+    @Stable
     data class PageRenderUi(
         val actualWeek: Int,
         val dayRenderData: Map<Int, DayRenderData>,
@@ -150,7 +152,7 @@ class ScheduleViewModel(
      * @param conflicts 冲突的课程列表
      * @param pendingOverride 待覆盖的课程
      */
-    @Immutable
+    @Stable
     data class TransConflictUiState(
         val show: Boolean = false,
         val conflicts: List<Course> = emptyList(),
@@ -163,7 +165,7 @@ class ScheduleViewModel(
      * @param show 是否显示
      * @param courses 该时间段的课程列表
      */
-    @Immutable
+    @Stable
     data class DetailSheetUiState(
         val show: Boolean = false,
         val courses: List<Course> = emptyList(),
@@ -609,7 +611,10 @@ class ScheduleViewModel(
     fun insertCourse(course: Course) {
         viewModelScope.launch {
             runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
-                .onFailure { AppLogger.log("Schedule", "插入课程失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Schedule", "插入课程失败", e)
+                }
         }
     }
 
@@ -621,7 +626,10 @@ class ScheduleViewModel(
     fun deleteCourse(course: Course) {
         viewModelScope.launch {
             runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
-                .onFailure { AppLogger.log("Schedule", "删除课程失败", it) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Schedule", "删除课程失败", e)
+                }
         }
     }
 

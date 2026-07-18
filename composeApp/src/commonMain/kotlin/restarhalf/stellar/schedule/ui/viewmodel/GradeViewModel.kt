@@ -1,9 +1,12 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
+import restarhalf.stellar.schedule.core.time.SemesterUtils
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -69,7 +72,7 @@ class GradeViewModel(
      * @param summary 成绩汇总信息
      * @param statusText 状态文本（如"暂无成绩数据"）
      */
-    @Immutable
+    @Stable
     data class GradeScreenUi(
         val cards: List<GradeCardUi>,
         val summary: GradeSummary,
@@ -116,7 +119,7 @@ class GradeViewModel(
             .map { it.semester }
             .distinct()
             .filter { it.isNotBlank() }
-            .sortedWith(SemesterComparator)
+            .sortedWith(SemesterUtils.comparator)
         cachedGradesRef = allGrades
         cachedSortedSemesters = result
         return result
@@ -162,37 +165,6 @@ class GradeViewModel(
                         report = TermGradeReport(),
                     ),
             )
-
-    /**
-     * 学期比较器
-     * 
-     * 支持"2023-2024-1"格式的学期ID比较
-     */
-    private object SemesterComparator : Comparator<String> {
-        override fun compare(a: String, b: String): Int {
-            val ka = parse(a)
-            val kb = parse(b)
-            return when {
-                ka != null && kb != null -> {
-                    if (ka.first != kb.first) ka.first.compareTo(kb.first)
-                    else if (ka.second != kb.second) ka.second.compareTo(kb.second)
-                    else ka.third.compareTo(kb.third)
-                }
-                ka != null -> 1
-                kb != null -> -1
-                else -> a.compareTo(b)
-            }
-        }
-
-        private fun parse(id: String): Triple<Int, Int, Int>? {
-            val parts = id.trim().split("-")
-            if (parts.size < 3) return null
-            val y1 = parts[0].toIntOrNull() ?: return null
-            val y2 = parts[1].toIntOrNull() ?: return null
-            val t = parts[2].toIntOrNull() ?: return null
-            return Triple(y1, y2, t)
-        }
-    }
 
     /** 对外暴露的UI状态流 */
     val uiState: StateFlow<GradeUiState> = _uiState
@@ -334,10 +306,11 @@ class GradeViewModel(
         viewModelScope.launch {
             runCatching { loader() }
                 .onSuccess { _summary.value = it }
-                .onFailure {
-                    AppLogger.log("Grades", "加载成绩数据失败", it)
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Grades", "加载成绩数据失败", e)
                     _summary.value = TermGradeReport()
-                    _error.value = it.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
+                    _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }
             _loading.value = false
         }
