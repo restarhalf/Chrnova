@@ -92,44 +92,39 @@ class JwxtClient(
             parsed
         }
 
-    override suspend fun getCurrentTerm(): JwxtCurrentTermResponse =
-        withContext(AppIoDispatcher) {
-            val body = executePostEmpty("$BASE_URL/currentTerm")
-            json.decodeFromString(
-                JwxtApiResponse.serializer(ListSerializer(JwxtCurrentTermItem.serializer())), body
-            )
-        }
+    override suspend fun getCurrentTerm(): JwxtCurrentTermResponse {
+        val body = executePostEmpty("$BASE_URL/currentTerm")
+        return json.decodeFromString(
+            JwxtApiResponse.serializer(ListSerializer(JwxtCurrentTermItem.serializer())), body
+        )
+    }
 
-    override suspend fun getSemesterList(): List<JwxtSemesterItem> =
-        withContext(AppIoDispatcher) {
-            val body = executePostEmpty("$BASE_URL/getXnxqList")
-            json.decodeFromString(ListSerializer(JwxtSemesterItem.serializer()), body)
-        }
+    override suspend fun getSemesterList(): List<JwxtSemesterItem> {
+        val body = executePostEmpty("$BASE_URL/getXnxqList")
+        return json.decodeFromString(ListSerializer(JwxtSemesterItem.serializer()), body)
+    }
 
-    override suspend fun getSemesterListFromEndpoint(): List<JwxtSemesterListItem> =
-        withContext(AppIoDispatcher) {
-            val body = executePostEmpty("$BASE_URL/semesterList")
-            val response = json.decodeFromString(
-                JwxtApiResponse.serializer(ListSerializer(JwxtSemesterListItem.serializer())), body
-            )
-            if (!response.isSuccess()) {
-                throw IllegalStateException(
-                    response.messageOrEmpty().ifBlank { "获取学期列表失败" })
-            }
-            response.data ?: emptyList()
+    override suspend fun getSemesterListFromEndpoint(): List<JwxtSemesterListItem> {
+        val body = executePostEmpty("$BASE_URL/semesterList")
+        val response = json.decodeFromString(
+            JwxtApiResponse.serializer(ListSerializer(JwxtSemesterListItem.serializer())), body
+        )
+        if (!response.isSuccess()) {
+            throw IllegalStateException(
+                response.messageOrEmpty().ifBlank { "获取学期列表失败" })
         }
+        return response.data ?: emptyList()
+    }
 
-    override suspend fun getTeachingWeek(): JwxtTeachingWeekResponse =
-        withContext(AppIoDispatcher) {
-            val body = executePostEmpty("$BASE_URL/teachingWeek")
-            json.decodeFromString(JwxtTeachingWeekResponse.serializer(), body)
-        }
+    override suspend fun getTeachingWeek(): JwxtTeachingWeekResponse {
+        val body = executePostEmpty("$BASE_URL/teachingWeek")
+        return json.decodeFromString(JwxtTeachingWeekResponse.serializer(), body)
+    }
 
-    override suspend fun getCampusList(): JwxtCampusResponse =
-        withContext(AppIoDispatcher) {
-            val body = executePostEmpty("$BASE_URL/Get_sjkbms")
-            json.decodeFromString(JwxtCampusResponse.serializer(), body)
-        }
+    override suspend fun getCampusList(): JwxtCampusResponse {
+        val body = executePostEmpty("$BASE_URL/Get_sjkbms")
+        return json.decodeFromString(JwxtCampusResponse.serializer(), body)
+    }
 
     override suspend fun fetchCurriculum(fields: Map<String, String>): JwxtCurriculumResponse =
         withContext(AppIoDispatcher) {

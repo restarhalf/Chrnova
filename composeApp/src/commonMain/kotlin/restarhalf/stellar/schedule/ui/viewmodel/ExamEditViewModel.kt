@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +49,7 @@ class ExamEditViewModel(
      * @param courseNames 课程名称列表（用于下拉选择，已排除有考试的课程）
      * @param courses 所有课程列表（用于根据名称查找课程编号）
      */
+    @Immutable
     data class ExamEditUiState(
         val courseNames: List<String>,
         val courses: List<Course>,
@@ -66,6 +68,7 @@ class ExamEditViewModel(
      * @param zwh 座位号
      * @param ksbz 备注
      */
+    @Immutable
     data class EditingFormState(
         val isEdit: Boolean,
         val selectedIndex: Int,

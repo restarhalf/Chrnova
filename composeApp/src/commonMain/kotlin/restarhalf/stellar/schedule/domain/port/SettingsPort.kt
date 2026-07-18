@@ -78,14 +78,14 @@ interface SettingsPort {
     fun setCurrentTermId(termId: String)
 
     /** 获取用户自定义头像URI */
-    suspend fun getUserAvatarUri(): String?
+    fun getUserAvatarUri(): String?
 
     /** 设置用户自定义头像URI */
-    suspend fun setUserAvatarUri(uri: String?)
+    fun setUserAvatarUri(uri: String?)
 
     /** 获取用户自定义昵称 */
-    suspend fun getUserNickname(): String?
+    fun getUserNickname(): String?
 
     /** 设置用户自定义昵称 */
-    suspend fun setUserNickname(nickname: String?)
+    fun setUserNickname(nickname: String?)
 }

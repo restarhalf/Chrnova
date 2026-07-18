@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +41,7 @@ class GradeViewModel(
      * @param error 错误消息
      * @param report 学期成绩报告
      */
+    @Immutable
     data class GradeUiState(
         val loading: Boolean,
         val error: String,
@@ -53,6 +55,7 @@ class GradeViewModel(
      * @param totalGradePoints 总绩点
      * @param averageCreditGradePoint 平均学分绩点
      */
+    @Immutable
     data class GradeSummary(
         val earnedCredits: String = "",
         val totalGradePoints: String = "",
@@ -66,6 +69,7 @@ class GradeViewModel(
      * @param summary 成绩汇总信息
      * @param statusText 状态文本（如"暂无成绩数据"）
      */
+    @Immutable
     data class GradeScreenUi(
         val cards: List<GradeCardUi>,
         val summary: GradeSummary,
@@ -84,6 +88,7 @@ class GradeViewModel(
      * @param isRetakeExam 是否为补考
      * @param isFailed 是否挂科（成绩<60）
      */
+    @Immutable
     data class GradeCardUi(
         val idKey: String,
         val grade: GradeCourse,

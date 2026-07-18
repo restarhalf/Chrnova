@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ class ElectiveCreditViewModel(
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,
 ) : ViewModel() {
 
+    @Immutable
     data class ElectiveCreditUiState(
         val loading: Boolean = false,
         val error: String = "",

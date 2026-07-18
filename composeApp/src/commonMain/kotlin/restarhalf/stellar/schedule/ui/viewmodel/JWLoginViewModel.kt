@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,7 @@ class JWLoginViewModel(
     /**
      * JW登录UI状态
      */
+    @Immutable
     data class JWLoginUiState(
         val userNo: String = "",
         val password: String = "",

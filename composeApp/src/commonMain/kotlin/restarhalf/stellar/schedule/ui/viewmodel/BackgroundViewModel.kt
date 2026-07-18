@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +30,7 @@ class BackgroundViewModel(
      * @param backgroundBlur 背景模糊度（0.0-1.0）
      * @param componentsAlpha 组件透明度（0.0-1.0）
      */
+    @Immutable
     data class BackgroundUiState(
         val backgroundImageUri: String?,
         val backgroundAlpha: Float,
@@ -36,6 +38,7 @@ class BackgroundViewModel(
         val componentsAlpha: Float,
     )
 
+    @Immutable
     data class ScreenUi(
         val hasCustomImage: Boolean,
         val imageSummary: String,

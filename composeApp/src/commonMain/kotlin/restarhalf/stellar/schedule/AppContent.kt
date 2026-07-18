@@ -186,7 +186,6 @@ fun AppContent(
 
     val entryProvider =
         remember(
-            backStack,
             appIcon,
             canSaveAwardPicture,
             appUpdate,

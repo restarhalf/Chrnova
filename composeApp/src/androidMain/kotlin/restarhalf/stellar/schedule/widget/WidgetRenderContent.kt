@@ -273,11 +273,13 @@ private fun HeaderRow(left: String, right: String) {
 
 private fun openHomeAction() =
     actionStartActivity(
-        Intent(Intent.ACTION_MAIN).apply {
-            setClassName("restarhalf.stellar.schedule", "restarhalf.stellar.schedule.MainActivity")
-            addCategory(Intent.CATEGORY_LAUNCHER)
+        Intent().apply {
+            setClassName(
+                "restarhalf.stellar.schedule",
+                "restarhalf.stellar.schedule.MainActivity"
+            )
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        },
+        }
     )
 
 @Composable

@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 class PELoginViewModel(
     private val peLoginUseCase: PELoginUseCase,
 ) : ViewModel() {
+    @Immutable
     data class PELoginUiState(
         val username: String = "",
         val password: String = "",

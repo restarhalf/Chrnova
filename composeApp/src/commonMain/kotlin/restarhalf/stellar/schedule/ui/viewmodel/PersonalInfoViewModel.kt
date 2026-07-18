@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,7 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 class PersonalInfoViewModel(
     private val settingsPort: SettingsPort,
 ) : ViewModel() {
+    @Immutable
     data class UiState(
         val avatarUri: String? = null,
         val nickname: String? = null,
