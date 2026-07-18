@@ -21,7 +21,7 @@ import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.components.screen.about.DownloadDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel

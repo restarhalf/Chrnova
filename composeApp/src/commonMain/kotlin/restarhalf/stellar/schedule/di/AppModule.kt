@@ -11,6 +11,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.core.module.dsl.viewModel
 import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
@@ -354,7 +355,7 @@ val useCaseModule = module {
  * ViewModel负责管理UI状态和处理用户交互。
  */
 val viewModelModule = module {
-    factory {
+    viewModel {
         AppViewModel(
             auth = get(),
             timetable = get(),
@@ -366,18 +367,18 @@ val viewModelModule = module {
             bindUnboundData = get(),
         )
     }
-    factory {
+    viewModel {
         BackgroundViewModel(
             backgroundSettings = get(),
         )
     }
-    factory {
+    viewModel {
         CourseEditViewModel(
             courseRepository = get(),
             auth = get(),
         )
     }
-    factory {
+    viewModel {
         ScheduleViewModel(
             settings = get(),
             courseRepository = get(),
@@ -386,7 +387,7 @@ val viewModelModule = module {
             refreshCourseRemindersIfEnabledUseCase = get(),
         )
     }
-    factory {
+    viewModel {
         SettingsViewModel(
             auth = get(),
             authWorkflow = get(),
@@ -399,7 +400,7 @@ val viewModelModule = module {
             verifyGitHubStar = get(),
         )
     }
-    factory {
+    viewModel {
         ExaminationViewModel(
             isExamNotEnded = get(),
             observeAllExaminations = get(),
@@ -407,7 +408,7 @@ val viewModelModule = module {
             settings = get(),
         )
     }
-    factory {
+    viewModel {
         ExamEditViewModel(
             courseRepository = get(),
             examinationRepository = get(),
@@ -418,13 +419,13 @@ val viewModelModule = module {
             deleteExaminationUseCase = get(),
         )
     }
-    factory {
+    viewModel {
         GradeViewModel(
             observeAllGrades = get(),
             settings = get(),
         )
     }
-    factory {
+    viewModel {
         HomeViewModel(
             courseRepository = get(),
             observeAllExaminations = get(),
@@ -439,8 +440,8 @@ val viewModelModule = module {
             buildHomeSurfaceUiUseCase = get(),
         )
     }
-    factory { AboutViewModel(checkAppUpdate = get()) }
-    factory {
+    viewModel { AboutViewModel(checkAppUpdate = get()) }
+    viewModel {
         restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(
             peLoginUseCase = get(),
             peLogoutUseCase = get(),
@@ -450,24 +451,24 @@ val viewModelModule = module {
             peAuth = get(),
         )
     }
-    factory {
+    viewModel {
         restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel(
             loginUseCase = get(),
         )
     }
-    factory {
+    viewModel {
         restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel(
             peLoginUseCase = get(),
         )
     }
-    factory {
+    viewModel {
         PapersViewModel(
             papersPort = get(),
             settings = get(),
             verifyGitHubStar = get(),
         )
     }
-    factory {
+    viewModel {
         ElectiveCreditViewModel(
             authWorkflow = get(),
             academic = get(),
@@ -477,7 +478,7 @@ val viewModelModule = module {
             calculateElectiveCredits = get(),
         )
     }
-    factory {
+    viewModel {
         PersonalInfoViewModel(
             settingsPort = get(),
         )

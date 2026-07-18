@@ -70,7 +70,7 @@ import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
-import restarhalf.stellar.schedule.ui.koin.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel

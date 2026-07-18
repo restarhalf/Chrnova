@@ -30,6 +30,7 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -50,8 +51,8 @@ fun WelcomeScreen(
 ) {
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val coroutineScope = rememberCoroutineScope()
-    val jwLoginVm: JWLoginViewModel = koinInject()
-    val peLoginVm: PELoginViewModel = koinInject()
+    val jwLoginVm: JWLoginViewModel = koinViewModel()
+    val peLoginVm: PELoginViewModel = koinViewModel()
     val colors = MiuixTheme.colorScheme
 
     Column(
