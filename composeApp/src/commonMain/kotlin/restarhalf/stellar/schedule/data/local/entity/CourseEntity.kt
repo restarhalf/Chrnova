@@ -9,6 +9,8 @@ import androidx.room3.PrimaryKey
     indices = [
         Index("semesterId"),
         Index("userNo"),
+        Index("userNo", "semesterId"),
+        Index("type"),
     ]
 )
 data class CourseEntity(

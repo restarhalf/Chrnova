@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.ui.mapper
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -27,7 +27,7 @@ private data class CourseVisual(val cardColor: Color, val titleColor: Color, val
  *
  * @param items 课程渲染项列表
  */
-@Immutable
+@Stable
 data class DayRenderData(val items: List<CourseRenderItem>)
 
 /**
@@ -36,7 +36,7 @@ data class DayRenderData(val items: List<CourseRenderItem>)
  * @param model 课程卡片模型
  * @param overlaps 重叠的课程列表
  */
-@Immutable
+@Stable
 data class CourseRenderItem(val model: CourseCardModel, val overlaps: List<Course>)
 
 /**
@@ -44,7 +44,7 @@ data class CourseRenderItem(val model: CourseCardModel, val overlaps: List<Cours
  * 
  * 用于渲染课程卡片的不可变数据类。
  */
-@Immutable
+@Stable
 data class CourseCardModel(
     /** 课程名称 */
     val name: String,
@@ -68,11 +68,31 @@ data class CourseCardModel(
     val cardAlpha: Float,
 )
 
+private fun splitCourseSections(course: Course): List<Pair<Int, Int>> {
+    val start = course.startSection
+    val end = course.startSection + course.sectionCount - 1
+    if (course.sectionCount <= 0) return emptyList()
+    val boundaries = listOf(4, 8)
+    val segments = ArrayList<Pair<Int, Int>>()
+    var cursorStart = start
+    val cursorEnd = end
+    for (b in boundaries) {
+        val crosses = cursorStart <= b && cursorEnd >= (b + 1)
+        if (crosses) {
+            segments.add(cursorStart to b)
+            cursorStart = b + 1
+        }
+    }
+    if (cursorStart <= cursorEnd) {
+        segments.add(cursorStart to cursorEnd)
+    }
+    return segments
+}
 /**
  * 构建每日渲染数据
- * 
+ *
  * 将课程列表转换为渲染数据，处理重叠课程和非当前周课程。
- * 
+ *
  * @param dayCourses 当天课程列表
  * @param page 当前周次
  * @param showNonCurrentWeek 是否显示非当前周课程
@@ -83,7 +103,6 @@ data class CourseCardModel(
  * @param yForSection 计算节次Y坐标的函数
  * @param heightForSections 计算节次高度的函数
  * @param cellInset 单元格内边距
- * @param contentCardAlpha 内容卡片透明度
  * @return 每日渲染数据
  */
 fun buildDayRenderData(
@@ -97,7 +116,6 @@ fun buildDayRenderData(
     yForSection: (Int) -> Dp,
     heightForSections: (Int) -> Dp,
     cellInset: Dp,
-    contentCardAlpha: Float,
 ): DayRenderData {
 
     val shown =
@@ -113,27 +131,6 @@ fun buildDayRenderData(
                 filterNonOverlapping(current + nonCurrentNoConflict)
             }
         }
-
-    fun splitCourseSections(course: Course): List<Pair<Int, Int>> {
-        val start = course.startSection
-        val end = course.startSection + course.sectionCount - 1
-        if (course.sectionCount <= 0) return emptyList()
-        val boundaries = listOf(4, 8)
-        val segments = ArrayList<Pair<Int, Int>>()
-        var cursorStart = start
-        val cursorEnd = end
-        for (b in boundaries) {
-            val crosses = cursorStart <= b && cursorEnd >= (b + 1)
-            if (crosses) {
-                segments.add(cursorStart to b)
-                cursorStart = b + 1
-            }
-        }
-        if (cursorStart <= cursorEnd) {
-            segments.add(cursorStart to cursorEnd)
-        }
-        return segments
-    }
 
     val items =
         shown.flatMap { course ->
@@ -176,7 +173,7 @@ fun buildDayRenderData(
                         color = visual.cardColor,
                         titleColor = visual.titleColor,
                         subTextColor = visual.subColor,
-                        cardAlpha = contentCardAlpha
+                        cardAlpha = 1f
                     )
                 CourseRenderItem(model = model, overlaps = overlappingCourses)
             }

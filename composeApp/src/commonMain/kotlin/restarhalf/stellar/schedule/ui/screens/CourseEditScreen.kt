@@ -93,6 +93,7 @@ fun CourseEditScreen(
     var selectedIndex by remember { mutableIntStateOf(0) }
     var courseNameError by remember { mutableStateOf(false) }
     val classRoomValue = remember { mutableStateOf("") }
+    val teacherValue = remember { mutableStateOf("") }
     val showWeekdayPicker = remember { mutableStateOf(false) }
     val showSectionPicker = remember { mutableStateOf(false) }
     var dayOfWeek by remember { mutableIntStateOf(1) }
@@ -115,10 +116,26 @@ fun CourseEditScreen(
         onEditChanged(formState.isEdit)
         selectedIndex = formState.selectedIndex
         classRoomValue.value = formState.classRoom
+        teacherValue.value = formState.teacher
         dayOfWeek = formState.dayOfWeek
         startSection = formState.startSection
         endSection = formState.endSection
         selectedWeeks = formState.selectedWeeks
+    }
+
+    // 新建模式下，切换课名时自动填充同步课程的教师
+    LaunchedEffect(selectedIndex, inputCourseName.value, changeToSelect.value, courseNames.size) {
+        if (courseId != null) return@LaunchedEffect
+        val selectedName = if (changeToSelect.value) {
+            courseNames.getOrNull(selectedIndex).orEmpty()
+        } else {
+            inputCourseName.value
+        }
+        val matchedTeacher = courseEditUiState.courses
+            .firstOrNull { it.type == 0 && it.name == selectedName && it.teacher.isNotBlank() }
+            ?.teacher
+            .orEmpty()
+        teacherValue.value = matchedTeacher
     }
 
     val weekdayText = remember(dayOfWeek) { vm.weekdayText(dayOfWeek) }
@@ -153,6 +170,7 @@ fun CourseEditScreen(
                                     selectedName = selectedName,
                                     selectedWeeks = selectedWeeks,
                                     classRoom = classRoomValue.value,
+                                    teacher = teacherValue.value,
                                     dayOfWeek = dayOfWeek,
                                     startSection = startSection,
                                     endSection = endSection,
@@ -320,6 +338,15 @@ fun CourseEditScreen(
                         label = "教室",
                         value = classRoomValue.value,
                         onValueChange = { classRoomValue.value = it })
+                }
+            }
+            item { Spacer(Modifier.height(12.dp)) }
+            item {
+                AppCard {
+                    TextField(
+                        label = "教师",
+                        value = teacherValue.value,
+                        onValueChange = { teacherValue.value = it })
                 }
             }
             item { Spacer(Modifier.height(12.dp)) }

@@ -46,7 +46,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
         PESubjectScoreEntity::class,
         PEDetailSummaryEntity::class
     ],
-    version = 16,
+    version = 18,
     exportSchema = true
 )
 @ColumnTypeConverters(Converters::class)
@@ -72,7 +72,6 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 /** 数据库构造器（平台特定实现） */
-@Suppress("KotlinNoActualForExpect", "NO_ACTUAL_FOR_EXPECT")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
@@ -194,6 +193,20 @@ private val migration15To16 = object : Migration(15, 16) {
     }
 }
 
+/** 数据库迁移：课程表添加复合索引 */
+private val migration16To17 = object : Migration(16, 17) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_userNo_semesterId ON courses(userNo, semesterId)")
+    }
+}
+
+/** 数据库迁移：课程表添加type索引 */
+private val migration17To18 = object : Migration(17, 18) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_type ON courses(type)")
+    }
+}
+
 /**
  * 构建应用数据库
  * 
@@ -219,6 +232,8 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration12To13,
             migration13To14,
             migration14To15,
-            migration15To16
+            migration15To16,
+            migration16To17,
+            migration17To18
         )
         .build()

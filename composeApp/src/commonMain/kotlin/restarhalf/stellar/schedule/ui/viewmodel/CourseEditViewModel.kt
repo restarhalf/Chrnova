@@ -61,6 +61,7 @@ class CourseEditViewModel(
         val isEdit: Boolean,
         val selectedIndex: Int,
         val classRoom: String,
+        val teacher: String,
         val dayOfWeek: Int,
         val startSection: Int,
         val endSection: Int,
@@ -146,6 +147,7 @@ class CourseEditViewModel(
         selectedName: String,
         selectedWeeks: Set<Int>,
         classRoom: String,
+        teacher: String,
         dayOfWeek: Int,
         startSection: Int,
         endSection: Int,
@@ -157,7 +159,7 @@ class CourseEditViewModel(
         if (weeks.isEmpty()) return null
 
         val sectionCount = (endSection - startSection + 1).coerceAtLeast(1)
-        // 从同步的课程中获取教师信息
+        // 优先使用用户输入的教师，其次从同步课程中获取
         val teacherFromSyncedCourse =
             courses
                 .firstOrNull { it.type == 0 && it.name == selectedName && it.teacher.isNotBlank() }
@@ -175,13 +177,13 @@ class CourseEditViewModel(
             name = selectedName,
             semesterId = semesterId,
             location = classRoom,
-            teacher = teacherFromSyncedCourse.ifBlank { existing?.teacher.orEmpty() },
+            teacher = teacher.ifBlank { teacherFromSyncedCourse.ifBlank { existing?.teacher.orEmpty() } },
             dayOfWeek = dayOfWeek,
             startSection = startSection,
             sectionCount = sectionCount,
             weeks = weeks,
             color = existing?.color ?: "",
-            type = 1,  // 实验课类型
+            type = 1,
             userNo = existing?.userNo?.takeIf { it.isNotBlank() } ?: userNo.value,
         )
     }
@@ -221,6 +223,7 @@ class CourseEditViewModel(
                 isEdit = false,
                 selectedIndex = 0,
                 classRoom = "",
+                teacher = "",
                 dayOfWeek = initialDayOfWeek.coerceIn(1, 7),
                 startSection = initialStartSection.coerceIn(1, 12),
                 endSection = initialStartSection.coerceIn(1, 12),
@@ -234,6 +237,7 @@ class CourseEditViewModel(
             isEdit = true,
             selectedIndex = selectedIndex,
             classRoom = editingCourse.location,
+            teacher = editingCourse.teacher,
             dayOfWeek = editingCourse.dayOfWeek,
             startSection = editingCourse.startSection,
             endSection =

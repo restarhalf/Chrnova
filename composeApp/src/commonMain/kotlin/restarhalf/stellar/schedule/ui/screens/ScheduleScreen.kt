@@ -152,10 +152,9 @@ fun ScheduleScreen(
     val mutedCourseColor = if (isDarkMode) colors.surfaceContainerHighest else Color(0xFFF5F5F5)
     val mutedTitleColor = if (isDarkMode) colors.onSurface else Color(0xFF999999)
     val mutedSubColor = if (isDarkMode) colors.onSurfaceVariantSummary else Color(0xFFB3B3B3)
-    val contentCardAlpha = 1f
     val dayCount = 7
     val rowHeight = 64.dp
-    val rowGap = 2.dp
+    val rowGap = 1.dp
     val restHeight = 24.dp
     val cellInset = 0.5.dp
     val restBarTextMeasurer = rememberTextMeasurer()
@@ -463,8 +462,7 @@ fun ScheduleScreen(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp)
-                        .then(Modifier) ,
+                        .padding(horizontal = 8.dp),
                 ) { page: Int ->
                     val actualWeek = vm.pageToWeek(page = page, includeWeek0 = uiState.includeWeek0)
                     val weekCourses = effectiveCoursesCache.getOrPut(actualWeek) {
@@ -475,15 +473,12 @@ fun ScheduleScreen(
                         remember(
                             weekCourses,
                             page,
-                            uiState.includeWeek0,
-                            dayCount,
                             scheduleUiState.showNonCurrentWeek,
                             isDarkMode,
                             mutedCourseColor,
                             mutedTitleColor,
                             mutedSubColor,
                             cellInset,
-                            contentCardAlpha
                         ) {
                             vm.buildPageRenderUi(
                                 courses = courses,
@@ -498,7 +493,6 @@ fun ScheduleScreen(
                                 yForSection = ::yForSection,
                                 heightForSections = ::heightForSections,
                                 cellInset = cellInset,
-                                contentCardAlpha = contentCardAlpha,
                                 effectiveCourses = weekCourses
                             )
                         }
@@ -536,7 +530,7 @@ fun ScheduleScreen(
                                             afterSection * (sectionHeight + gapPx) +
                                                     (if (afterSection > 4) restPx else 0f)
                                         drawRect(
-                                            color = surfaceSoft.copy(alpha = contentCardAlpha),
+                                            color = surfaceSoft,
                                             topLeft = Offset(0f, y),
                                             size = androidx.compose.ui.geometry.Size(
                                                 size.width,
@@ -700,10 +694,11 @@ private fun ScheduleDayContent(
     val occupiedSections = remember(renderItems) {
         val rowHeightPx = rowHeight.value
         val rowGapPx = (rowHeight + rowGap).value
+        val cellInsetPx = 0.5f
         buildSet {
             for (item in renderItems) {
                 val courseStart =
-                    (item.model.topOffsetY.value / rowGapPx).toInt() + 1
+                    ((item.model.topOffsetY.value - cellInsetPx) / rowGapPx).toInt() + 1
                 val courseSections =
                     (item.model.height.value / rowHeightPx).toInt()
                         .coerceAtLeast(1)
@@ -722,7 +717,7 @@ private fun ScheduleDayContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(rowHeight)
-                    .padding(horizontal = 2.5.dp)
+                    .padding(horizontal = 1.dp)
                     .offset(y = yForSection(section))
                     .clickable(
                         interactionSource = emptyCellInteractionSource,

@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRowUiUseCase.RowUi
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase.PeriodItem
@@ -11,7 +11,7 @@ class BuildHomePeriodRenderRowsUseCase(
     private val buildHomePeriodRowUiUseCase: BuildHomePeriodRowUiUseCase,
 ) {
 
-    @Immutable
+    @Stable
     data class RowRenderUi(
         val item: PeriodItem,
         val timeRange: Pair<String, String>,
@@ -25,13 +25,16 @@ class BuildHomePeriodRenderRowsUseCase(
         timetable: List<TimetableSlot>,
         nowMinutes: Int,
     ): List<RowRenderUi> {
+        val timeRangeCache = HashMap<Pair<Int, Int>, Pair<String, String>>()
         return items.map { item ->
-            val timeRange =
+            val key = item.startSection to item.endSection
+            val timeRange = timeRangeCache.getOrPut(key) {
                 buildHomeTodayScheduleUseCase.timeRange(
                     timetable = timetable,
                     startSection = item.startSection,
                     endSection = item.endSection
                 )
+            }
             val status =
                 resolveCourseStatusUseCase(
                     hasCourse = item.course != null,

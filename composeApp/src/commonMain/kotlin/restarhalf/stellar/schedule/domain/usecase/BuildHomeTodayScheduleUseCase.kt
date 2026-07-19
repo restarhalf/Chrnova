@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.time.WeekCalculator
@@ -9,10 +9,10 @@ import restarhalf.stellar.schedule.domain.model.TimetableSlot
 
 class BuildHomeTodayScheduleUseCase {
 
-    @Immutable
+    @Stable
     data class PeriodItem(val startSection: Int, val endSection: Int, val course: Course?)
 
-    @Immutable
+    @Stable
     data class HomeTodaySchedule(
         val activeWeek: Int?,
         val todayCourses: List<Course>,

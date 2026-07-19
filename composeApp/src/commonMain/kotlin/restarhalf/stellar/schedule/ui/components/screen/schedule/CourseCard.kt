@@ -41,7 +41,7 @@ fun CourseCard(model: CourseCardModel, onClick: (() -> Unit)?) {
     Card(
         modifier =
             Modifier
-                .padding(horizontal = 2.5.dp)
+                .padding(horizontal = 1.dp)
                 .fillMaxWidth()
                 .height(model.height)
                 .offset(y = model.topOffsetY)

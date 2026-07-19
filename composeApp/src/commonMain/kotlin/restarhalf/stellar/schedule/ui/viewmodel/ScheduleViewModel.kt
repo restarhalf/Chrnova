@@ -372,7 +372,6 @@ class ScheduleViewModel(
      * @param yForSection 计算节次Y坐标的函数
      * @param heightForSections 计算节次高度的函数
      * @param cellInset 单元格内边距
-     * @param contentCardAlpha 内容卡片透明度
      * @return 页面渲染UI
      */
     fun buildPageRenderUi(
@@ -388,7 +387,6 @@ class ScheduleViewModel(
         yForSection: (Int) -> Dp,
         heightForSections: (Int) -> Dp,
         cellInset: Dp,
-        contentCardAlpha: Float,
         effectiveCourses: List<Course>? = null,
     ): PageRenderUi {
         val actualWeek = pageToWeek(page = page, includeWeek0 = includeWeek0)
@@ -407,7 +405,6 @@ class ScheduleViewModel(
                     yForSection = yForSection,
                     heightForSections = heightForSections,
                     cellInset = cellInset,
-                    contentCardAlpha = contentCardAlpha
                 )
             }
         return PageRenderUi(actualWeek = actualWeek, dayRenderData = dayRenderData)

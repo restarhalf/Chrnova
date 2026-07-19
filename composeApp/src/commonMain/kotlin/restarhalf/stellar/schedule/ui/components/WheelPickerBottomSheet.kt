@@ -196,7 +196,7 @@ fun WheelPickerColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            itemsIndexed(items) { index, value ->
+            itemsIndexed(items, key = { index, _ -> index }) { index, value ->
                 val isSelected = index == centerIndex
                 Box(
                     modifier = Modifier.height(itemHeight).fillMaxWidth(),
