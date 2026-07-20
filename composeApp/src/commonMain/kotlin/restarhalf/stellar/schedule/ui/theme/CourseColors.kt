@@ -87,13 +87,16 @@ fun getCoursePaletteIndex(courseName: String): Int {
     return courseName.hashCode().absoluteValue % courseColorPaletteLight.size
 }
 
-private val colorCache = mutableMapOf<Pair<String, Boolean>, CourseColor>()
 private const val COLOR_CACHE_MAX = 128
+private val colorCache = LinkedHashMap<Pair<String, Boolean>, CourseColor>(128, 0.75f)
 
 private fun getCachedColors(courseName: String, darkMode: Boolean): CourseColor {
     val key = courseName to darkMode
     colorCache[key]?.let { return it }
-    if (colorCache.size >= COLOR_CACHE_MAX) colorCache.clear()
+    if (colorCache.size >= COLOR_CACHE_MAX) {
+        val eldest = colorCache.entries.iterator().next()
+        colorCache.remove(eldest.key)
+    }
     val palette = if (darkMode) courseColorPaletteDark else courseColorPaletteLight
     return palette[getCoursePaletteIndex(courseName)].also { colorCache[key] = it }
 }
