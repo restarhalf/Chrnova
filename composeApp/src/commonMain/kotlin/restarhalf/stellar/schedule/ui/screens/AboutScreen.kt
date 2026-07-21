@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,7 +98,7 @@ fun AboutScreen(
     val isInPreview = LocalInspectionMode.current
     val handleEvent by rememberUpdatedState(onHandleEvent)
 
-    val aboutUiState by vm.uiState.collectAsState()
+    val aboutUiState by vm.uiState.collectAsStateWithLifecycle()
 
     val appName = remember(appInfo.appName) { appInfo.appName }
     val versionName = appInfo.versionName
@@ -265,12 +265,12 @@ fun AboutScreen(
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
                     extraStart =
-                        16.dp +
+                        12.dp +
                                 WindowInsets.displayCutout
                                     .asPaddingValues()
                                     .calculateLeftPadding(LayoutDirection.Ltr),
                     extraEnd =
-                        16.dp +
+                        12.dp +
                                 WindowInsets.displayCutout
                                     .asPaddingValues()
                                     .calculateRightPadding(LayoutDirection.Ltr),

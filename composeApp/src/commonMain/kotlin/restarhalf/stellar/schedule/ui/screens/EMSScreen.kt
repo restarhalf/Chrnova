@@ -31,7 +31,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -74,7 +74,6 @@ import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.ExperimentalTime
@@ -104,8 +103,8 @@ fun EMSScreen(
     onEditExam: (Long) -> Unit = {},
     onNavigateToElectiveCredit: () -> Unit = {},
 ) {
-    val examUiState by examVm.uiState.collectAsState()
-    val gradeUiState by gradeVm.uiState.collectAsState()
+    val examUiState by examVm.uiState.collectAsStateWithLifecycle()
+    val gradeUiState by gradeVm.uiState.collectAsStateWithLifecycle()
 
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
@@ -117,7 +116,6 @@ fun EMSScreen(
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
-    val overscrollEffect = MiuixOverscrollEffect()
 
     LaunchedEffect(onLoadExaminations) { examVm.bindLoader(onLoadExaminations) }
     LaunchedEffect(onLoadGrades) { gradeVm.bindLoader(onLoadGrades) }
@@ -234,12 +232,11 @@ fun EMSScreen(
                         innerPadding = PaddingValues(),
                         outerPadding = appScaffoldPadding,
                         extraTop = 12.dp,
-                        extraStart = 16.dp,
-                        extraEnd = 16.dp,
+                        extraStart = 12.dp,
+                        extraEnd = 12.dp,
                     ),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    overscrollEffect = overscrollEffect
                 ) {
                     when (pageIndex) {
                         0 -> {

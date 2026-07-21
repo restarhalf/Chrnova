@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -42,7 +42,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 /**
  * 教务系统登录页面
@@ -61,8 +60,7 @@ fun JWLoginScreen(
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val overscrollEffect = MiuixOverscrollEffect()
-    val uiState by vm.uiState.collectAsState()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
     val focusManager = LocalFocusManager.current
     
@@ -136,10 +134,9 @@ fun JWLoginScreen(
                 innerPadding = PaddingValues(),
                 outerPadding = appScaffoldPadding,
                 extraTop = 12.dp,
-                extraStart = 16.dp,
-                extraEnd = 16.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
             ),
-            overscrollEffect = overscrollEffect
         ) {
             item {
                 Column(

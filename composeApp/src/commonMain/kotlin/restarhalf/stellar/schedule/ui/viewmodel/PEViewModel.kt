@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,7 +61,7 @@ class PEViewModel(
      */
     @Stable
     data class PeUiState(
-        val yearScores: List<PEYearScore> = emptyList(),
+        val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
         val detailData: PEDetailData? = null,
         val studentInfo: PEStudentInfo? = null,
         val loading: Boolean = false,
@@ -96,7 +99,7 @@ class PEViewModel(
                     .collect { scores ->
                         _uiState.update { state ->
                             if (state.yearScores.isEmpty()) {
-                                state.copy(yearScores = scores.sortedByDescending { it.schoolYear })
+                                state.copy(yearScores = scores.sortedByDescending { it.schoolYear }.toPersistentList())
                             } else state
                         }
                     }
@@ -238,7 +241,7 @@ class PEViewModel(
                     onSuccess = { result ->
                         _uiState.update {
                             it.copy(
-                                yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear },
+                                yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear }.toPersistentList(),
                                 loadedScoreList = true,
                             )
                         }

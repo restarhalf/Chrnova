@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +43,7 @@ class ElectiveCreditViewModel(
     data class ElectiveCreditUiState(
         val loading: Boolean = false,
         val error: String = "",
-        val categories: List<CalculateElectiveCreditsUseCase.CreditCategory> = emptyList(),
+        val categories: ImmutableList<CalculateElectiveCreditsUseCase.CreditCategory> = persistentListOf(),
     )
 
     private val _uiState = MutableStateFlow(ElectiveCreditUiState())
@@ -103,7 +106,7 @@ class ElectiveCreditViewModel(
 
                 _uiState.value = _uiState.value.copy(
                     loading = false,
-                    categories = categories,
+                    categories = categories.toPersistentList(),
                 )
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e

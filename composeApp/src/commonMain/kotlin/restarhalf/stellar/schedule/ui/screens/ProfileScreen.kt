@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,7 +63,7 @@ fun ProfileScreen(
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val peUiState by peVm.uiState.collectAsState()
+    val peUiState by peVm.uiState.collectAsStateWithLifecycle()
     val peStudentInfo = peUiState.studentInfo
 
     val isLoggedIn = authProfile?.userNo?.isNotBlank() == true
@@ -78,7 +78,7 @@ fun ProfileScreen(
     var showLogoutJWConfirm by remember { mutableStateOf(false) }
     var showLogoutPEConfirm by remember { mutableStateOf(false) }
     var showPictureSelector by remember { mutableStateOf(false) }
-    val personalInfoUiState by personalInfoViewModel.uiState.collectAsState()
+    val personalInfoUiState by personalInfoViewModel.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
     Scaffold(
@@ -182,8 +182,8 @@ fun ProfileScreen(
                 innerPadding = paddingValues,
                 outerPadding = appScaffoldPadding,
                 extraTop = 12.dp,
-                extraStart = 16.dp,
-                extraEnd = 16.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -5,6 +5,9 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,7 +77,7 @@ class GradeViewModel(
      */
     @Stable
     data class GradeScreenUi(
-        val cards: List<GradeCardUi>,
+        val cards: ImmutableList<GradeCardUi>,
         val summary: GradeSummary,
         val statusText: String?,
     )
@@ -206,7 +209,7 @@ class GradeViewModel(
                 !loading && cards.isEmpty() -> "暂无成绩数据"
                 else -> null
             }
-        return GradeScreenUi(cards = cards, summary = summary, statusText = statusText)
+        return GradeScreenUi(cards = cards.toPersistentList(), summary = summary, statusText = statusText)
     }
 
     /**

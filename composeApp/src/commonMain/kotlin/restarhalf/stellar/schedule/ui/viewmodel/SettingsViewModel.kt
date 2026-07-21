@@ -4,6 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -90,10 +93,10 @@ class SettingsViewModel(
      */
     @Stable
     data class SettingsScreenUi(
-        val campusOptions: List<String>,
+        val campusOptions: ImmutableList<String>,
         val campusSelectedIndex: Int,
-        val themeOptions: List<String>,
-        val floatingBarOptions: List<String>,
+        val themeOptions: ImmutableList<String>,
+        val floatingBarOptions: ImmutableList<String>,
         val termStartSummary: String,
         val syncSummary: String,
     )
@@ -106,7 +109,7 @@ class SettingsViewModel(
      */
     @Stable
     data class TermSelectionUi(
-        val items: List<String>,
+        val items: ImmutableList<String>,
         val selectedIndex: Int,
     )
 
@@ -140,16 +143,16 @@ class SettingsViewModel(
         val logEnabled: Boolean,
         val authToken: String,
         val profile: AuthProfile,
-        val remoteTermItems: List<String>,
+        val remoteTermItems: ImmutableList<String>,
     )
 
     private companion object {
-        val CAMPUS_OPTIONS = listOf("开发区", "金石滩")
-        val THEME_OPTIONS = listOf("跟随系统", "浅色", "深色")
-        val FLOATING_BAR_OPTIONS = listOf("固定", "悬浮","液态玻璃")
+        val CAMPUS_OPTIONS = persistentListOf("开发区", "金石滩")
+        val THEME_OPTIONS = persistentListOf("跟随系统", "浅色", "深色")
+        val FLOATING_BAR_OPTIONS = persistentListOf("固定", "悬浮","液态玻璃")
     }
 
-    private val _remoteTermItems = MutableStateFlow<List<String>>(emptyList())
+    private val _remoteTermItems = MutableStateFlow<ImmutableList<String>>(persistentListOf())
 
     private val basePrefsFlow = combine(
         settings.observeShowNonCurrentWeek(),
@@ -204,7 +207,7 @@ class SettingsViewModel(
                 logEnabled = prefs.logEnabled,
                 authToken = auth.authToken,
                 profile = auth.profile,
-                remoteTermItems = remoteTermItems,
+                remoteTermItems = remoteTermItems.toPersistentList(),
             )
         }
             .distinctUntilChanged()
@@ -222,7 +225,7 @@ class SettingsViewModel(
                         logEnabled = false,
                         authToken = "",
                         profile = AuthProfile(),
-                        remoteTermItems = emptyList(),
+                        remoteTermItems = persistentListOf(),
                     ),
             )
 
@@ -247,7 +250,7 @@ class SettingsViewModel(
     /** 刷新远程学期列表 */
     fun refreshRemoteTerms() {
         if (uiState.value.authToken.isBlank()) {
-            _remoteTermItems.value = emptyList()
+            _remoteTermItems.value = persistentListOf()
             return
         }
 
@@ -257,7 +260,7 @@ class SettingsViewModel(
                     withContext(AppIoDispatcher) {
                         fetchSemesterIds()
                     }
-                _remoteTermItems.value = terms
+                _remoteTermItems.value = terms.toPersistentList()
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Settings", "刷新远程学期列表失败", e)
@@ -280,9 +283,9 @@ class SettingsViewModel(
     ): TermSelectionUi {
         val items =
             if (authToken.isBlank()) {
-                listOf("当前学期")
+                persistentListOf("当前学期")
             } else {
-                listOf("当前学期") + remoteTermItems
+                (listOf("当前学期") + remoteTermItems).toPersistentList()
             }
         val index = items.indexOf(selectedTerm).takeIf { it >= 0 } ?: 0
         return TermSelectionUi(items = items, selectedIndex = index)
@@ -342,10 +345,10 @@ class SettingsViewModel(
                 is SyncUiState.Error -> syncUiState.message
             }
         return SettingsScreenUi(
-            campusOptions = CAMPUS_OPTIONS,
+            campusOptions = CAMPUS_OPTIONS.toPersistentList(),
             campusSelectedIndex = campusSelectedIndex,
-            themeOptions = THEME_OPTIONS,
-            floatingBarOptions = FLOATING_BAR_OPTIONS,
+            themeOptions = THEME_OPTIONS.toPersistentList(),
+            floatingBarOptions = FLOATING_BAR_OPTIONS.toPersistentList(),
             termStartSummary = termStartSummary,
             syncSummary = syncSummary
         )

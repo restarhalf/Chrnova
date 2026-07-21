@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -64,8 +67,8 @@ class HomeViewModel(
      */
     @Stable
     data class HomeUiState(
-        val courses: List<Course>,
-        val exams: List<Examination>,
+        val courses: ImmutableList<Course>,
+        val exams: ImmutableList<Examination>,
         val nowMs: Long,
     )
 
@@ -78,7 +81,7 @@ class HomeViewModel(
     @Stable
     data class SectionRenderUi(
         val title: String,
-        val rows: List<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
+        val rows: ImmutableList<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
     )
 
     /**
@@ -93,7 +96,7 @@ class HomeViewModel(
         /** 今日课程安排 */
         val todaySchedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
         /** 时间段渲染列表 */
-        val sectionRenders: List<SectionRenderUi>,
+        val sectionRenders: ImmutableList<SectionRenderUi>,
         /** 表面UI（背景相关） */
         val surfaceUi: BuildHomeSurfaceUiUseCase.SurfaceUi,
         /** 当前时间的分钟数（用于判断课程状态） */
@@ -127,13 +130,13 @@ class HomeViewModel(
             } else {
                 exams
             }
-            HomeUiState(courses = courses, exams = filteredExams, nowMs = nowMs)
+            HomeUiState(courses = courses.toPersistentList(), exams = filteredExams.toPersistentList(), nowMs = nowMs)
         }
             .distinctUntilChanged()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = HomeUiState(courses = emptyList(), exams = emptyList(), nowMs = Clock.System.now().toEpochMilliseconds()),
+                initialValue = HomeUiState(courses = persistentListOf(), exams = persistentListOf(), nowMs = Clock.System.now().toEpochMilliseconds()),
             )
 
     /** 对外暴露的UI状态流 */
@@ -262,14 +265,14 @@ class HomeViewModel(
             buildSections(todaySchedule).map { section ->
                 SectionRenderUi(
                     title = section.title,
-                    rows = buildPeriodRenderRows(section.items, timetable, nowMinutes)
+                    rows = buildPeriodRenderRows(section.items, timetable, nowMinutes).toPersistentList()
                 )
             }
 
         return HomeRenderState(
             headerUi = headerUi,
             todaySchedule = todaySchedule,
-            sectionRenders = sectionRenders,
+            sectionRenders = sectionRenders.toPersistentList(),
             surfaceUi = buildSurfaceUi(hasBackground = hasBackground, componentsAlpha = componentsAlpha),
             nowMinutes = nowMinutes
         )

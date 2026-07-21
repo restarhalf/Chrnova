@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 fun Modifier.pageScrollModifiers(
     showTopAppBar: Boolean = true,
@@ -26,6 +28,8 @@ fun Modifier.pageScrollModifiers(
                 Modifier
             },
         )
+        .scrollEndHaptic()
+        .overScrollVertical()
         .fillMaxHeight()
 
 @Composable

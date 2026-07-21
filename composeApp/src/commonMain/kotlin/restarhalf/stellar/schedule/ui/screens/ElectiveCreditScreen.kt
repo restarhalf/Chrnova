@@ -24,7 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +58,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 /**
  * 选修课学分统计屏幕
@@ -75,13 +74,12 @@ fun ElectiveCreditScreen(
     vm: ElectiveCreditViewModel,
     onBack: () -> Unit,
 ) {
-    val uiState by vm.uiState.collectAsState()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
-    val overscrollEffect = MiuixOverscrollEffect()
 
     val showGradeDetailsDialog = remember { mutableStateOf(false) }
     var selectedGrade by remember { mutableStateOf<GradeCourse?>(null) }
@@ -167,12 +165,11 @@ fun ElectiveCreditScreen(
                     innerPadding = PaddingValues(),
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
-                    extraStart = 16.dp,
-                    extraEnd = 16.dp,
+                    extraStart = 12.dp,
+                    extraEnd = 12.dp,
                 ),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                overscrollEffect = overscrollEffect
             ) {
                 // 各类别学分卡片
                 items(uiState.categories, key = { it.code }) { category ->

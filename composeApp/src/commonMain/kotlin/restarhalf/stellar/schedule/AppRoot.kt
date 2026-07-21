@@ -6,7 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,7 +76,7 @@ fun AppRoot(
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
 
-    val appUiState by vm.uiState.collectAsState()
+    val appUiState by vm.uiState.collectAsStateWithLifecycle()
     var appState by remember {
         mutableStateOf(
             AppState(
@@ -145,7 +145,7 @@ fun AppRoot(
             }
     }
 
-    val apkDownloadState by appUpdate.apkDownloadState.collectAsState()
+    val apkDownloadState by appUpdate.apkDownloadState.collectAsStateWithLifecycle()
     var backgroundDownload by remember { mutableStateOf(false) }
 
     LaunchedEffect(apkDownloadState) {

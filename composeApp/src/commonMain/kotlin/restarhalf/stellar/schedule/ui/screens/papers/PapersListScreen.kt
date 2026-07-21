@@ -22,7 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
@@ -52,7 +52,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 
 @Composable
 fun PapersListScreen(
@@ -62,13 +61,12 @@ fun PapersListScreen(
     onUploadClick: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val overscrollEffect = MiuixOverscrollEffect()
     val pullToRefreshState = rememberPullToRefreshState()
-    val uiState by vm.uiState.collectAsState()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
     val expandedFolders = remember { mutableStateSetOf<String>() }
     val colors = MiuixTheme.colorScheme
 
-    val starState by vm.starVerification.state.collectAsState()
+    val starState by vm.starVerification.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         if (!starState.isVerified) {
@@ -162,11 +160,10 @@ fun PapersListScreen(
                 innerPadding = PaddingValues(),
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
-                extraStart = 16.dp,
-                extraEnd = 16.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            overscrollEffect = overscrollEffect,
         ) {
             item {
                 AppCard {

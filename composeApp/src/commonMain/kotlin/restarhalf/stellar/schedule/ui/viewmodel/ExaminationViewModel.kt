@@ -4,6 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,7 +76,7 @@ class ExaminationViewModel(
      */
     @Stable
     data class ExaminationScreenUi(
-        val cards: List<ExamCardUi>,
+        val cards: ImmutableList<ExamCardUi>,
         val statusText: String?,
     )
 
@@ -88,7 +91,7 @@ class ExaminationViewModel(
     data class ExaminationUiState(
         val loading: Boolean,
         val error: String,
-        val items: List<Examination>,
+        val items: ImmutableList<Examination>,
     )
 
     private val _loading = MutableStateFlow(false)
@@ -122,7 +125,7 @@ class ExaminationViewModel(
                     val termMatch = if (term.isNotBlank()) exam.semesterId == term else true
                     userMatch && termMatch
                 }
-                ExaminationUiState(loading = loading, error = error, items = filtered)
+                ExaminationUiState(loading = loading, error = error, items = filtered.toPersistentList())
             }
             .stateIn(
                 scope = viewModelScope,
@@ -131,7 +134,7 @@ class ExaminationViewModel(
                     ExaminationUiState(
                         loading = false,
                         error = "",
-                        items = emptyList(),
+                        items = persistentListOf(),
                     ),
             )
 
@@ -172,7 +175,7 @@ class ExaminationViewModel(
                 !loading && cards.isEmpty() -> "暂无考试安排"
                 else -> null
             }
-        return ExaminationScreenUi(cards = cards, statusText = statusText)
+        return ExaminationScreenUi(cards = cards.toPersistentList(), statusText = statusText)
     }
 
     /** 加载考试数据 */

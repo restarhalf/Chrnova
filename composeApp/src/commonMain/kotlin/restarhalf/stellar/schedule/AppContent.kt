@@ -15,7 +15,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -146,7 +146,7 @@ fun AppContent(
     val appState = LocalAppState.current
     val colors = MiuixTheme.colorScheme
 
-    val backgroundUiState by bgVm.uiState.collectAsState()
+    val backgroundUiState by bgVm.uiState.collectAsStateWithLifecycle()
     val surfaceColor = colors.surface
     val backdrop = rememberLayerBackdrop{
         drawRect(surfaceColor)
@@ -297,7 +297,7 @@ fun AppContent(
                 }
                 entry(Screen.PEQRCode) {
                     val settingsVm: SettingsViewModel = koinViewModel()
-                    val settingsUiState by settingsVm.uiState.collectAsState()
+                    val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
                     val peVm: PEViewModel = koinViewModel()
                     PEQRCodeScreen(
                         vm = peVm,
@@ -307,7 +307,7 @@ fun AppContent(
                 }
                 entry(Screen.Profile) {
                     val settingsVm: SettingsViewModel = koinViewModel()
-                    val settingsUiState by settingsVm.uiState.collectAsState()
+                    val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
                     val peVm: PEViewModel = koinViewModel()
                     val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
                     ProfileScreen(
@@ -512,7 +512,7 @@ private fun MainRouteContent(
     val updateAppState = LocalUpdateAppState.current
     val navigator = LocalNavigator.current
     val mainPagerState = LocalMainPagerState.current
-    val courses by scheduleVm.allCourses.collectAsState()
+    val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
 
     HorizontalPager(
         state = mainPagerState.pagerState,
@@ -522,7 +522,7 @@ private fun MainRouteContent(
     ) { page ->
         when (rootTabAt(page)) {
             Screen.Home -> {
-                val bgUiState by bgVm.uiState.collectAsState()
+                val bgUiState by bgVm.uiState.collectAsStateWithLifecycle()
                 HomeScreen(
                     vm = homeVm,
                     campus = appState.campus,
@@ -562,7 +562,7 @@ private fun MainRouteContent(
             }
 
             Screen.PEScore -> {
-                val settingsUiState by settingsVm.uiState.collectAsState()
+                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
                 PEScoreScreen(
                     vm = peVm,
                     onNavigateToDetail = { schoolYear ->
@@ -575,7 +575,7 @@ private fun MainRouteContent(
             }
 
             Screen.Settings -> {
-                val isPeLoggedIn by peVm.isLoggedIn.collectAsState()
+                val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
                 SettingsScreen(
                     vm = settingsVm,
                     syncUiState = appState.syncUiState,

@@ -4,6 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
@@ -51,8 +54,8 @@ class ExamEditViewModel(
      */
     @Stable
     data class ExamEditUiState(
-        val courseNames: List<String>,
-        val courses: List<Course>,
+        val courseNames: ImmutableList<String>,
+        val courses: ImmutableList<Course>,
     )
 
     /**
@@ -85,14 +88,14 @@ class ExamEditViewModel(
         courseRepository.observeAllCourses()
             .map { courses ->
                 ExamEditUiState(
-                    courseNames = buildCourseNames(courses),
-                    courses = courses,
+                    courseNames = buildCourseNames(courses).toPersistentList(),
+                    courses = courses.toPersistentList(),
                 )
             }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = ExamEditUiState(courseNames = emptyList(), courses = emptyList()),
+                initialValue = ExamEditUiState(courseNames = persistentListOf(), courses = persistentListOf()),
             )
 
     /** 对外暴露的UI状态流 */

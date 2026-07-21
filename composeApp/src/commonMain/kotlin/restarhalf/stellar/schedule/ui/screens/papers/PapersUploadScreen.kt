@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +41,6 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -53,8 +52,7 @@ fun PapersUploadScreen(
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val overscrollEffect = MiuixOverscrollEffect()
-    val uiState by vm.uiState.collectAsState()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     var title by remember { mutableStateOf("") }
     var folder by remember { mutableStateOf("") }
@@ -128,12 +126,11 @@ fun PapersUploadScreen(
                 innerPadding = PaddingValues(),
                 outerPadding = appScaffoldPadding,
                 extraTop = 12.dp,
-                extraStart = 16.dp,
-                extraEnd = 16.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
             ),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            overscrollEffect = overscrollEffect,
         ) {
             item {
                 SmallTitle(text = "试卷信息")

@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,8 +36,8 @@ class PapersViewModel(
         val loading: Boolean = false,
         val error: String? = null,
         val successMessage: String? = null,
-        val allPapers: List<Paper> = emptyList(),
-        val folders: List<String> = emptyList(),
+        val allPapers: ImmutableList<Paper> = persistentListOf(),
+        val folders: ImmutableList<String> = persistentListOf(),
         val searchQuery: String = "",
         val selectedPaper: Paper? = null,
         val uploading: Boolean = false,
@@ -58,7 +61,7 @@ class PapersViewModel(
                 runCatching {
                     papersPort.listPapers()
                 }.onSuccess { papers ->
-                    _uiState.update { it.copy(allPapers = papers, loading = false) }
+                    _uiState.update { it.copy(allPapers = papers.toPersistentList(), loading = false) }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Papers", "加载课件列表失败", e)
@@ -73,7 +76,7 @@ class PapersViewModel(
             runCatching {
                 papersPort.getFolders()
             }.onSuccess { folders ->
-                _uiState.update { it.copy(folders = folders) }
+                _uiState.update { it.copy(folders = folders.toPersistentList()) }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Papers", "加载文件夹列表失败", e)

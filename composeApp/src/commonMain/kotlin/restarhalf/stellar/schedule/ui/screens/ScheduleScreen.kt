@@ -36,7 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -122,7 +122,7 @@ fun ScheduleScreen(
         )
             .calculateBottomPadding()
     val scope = rememberCoroutineScope()
-    val courses by vm.allCourses.collectAsState()
+    val courses by vm.allCourses.collectAsStateWithLifecycle()
     val uiState =
         remember(campus, termStartMs, totalWeeks) {
             vm.buildScheduleUiState(
@@ -136,7 +136,7 @@ fun ScheduleScreen(
         rememberPagerState(initialPage = uiState.pagerInitialPage) { uiState.pagerPageCount }
     val currentWeek =
         vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
-    val scheduleUiState by vm.uiState.collectAsState()
+    val scheduleUiState by vm.uiState.collectAsStateWithLifecycle()
     var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val colors = MiuixTheme.colorScheme
 

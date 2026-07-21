@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,8 +44,8 @@ class CourseEditViewModel(
      */
     @Stable
     data class CourseEditUiState(
-        val courses: List<Course>,
-        val courseNames: List<String>,
+        val courses: ImmutableList<Course>,
+        val courseNames: ImmutableList<String>,
     )
 
     /**
@@ -71,12 +74,12 @@ class CourseEditViewModel(
     private val _uiState: StateFlow<CourseEditUiState> =
         courseRepository.observeAllCourses()
             .map { courses ->
-                CourseEditUiState(courses = courses, courseNames = buildCourseNames(courses))
+                CourseEditUiState(courses = courses.toPersistentList(), courseNames = buildCourseNames(courses).toPersistentList())
             }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = CourseEditUiState(courses = emptyList(), courseNames = emptyList()),
+                initialValue = CourseEditUiState(courses = persistentListOf(), courseNames = persistentListOf()),
             )
 
     /** 对外暴露的UI状态流 */

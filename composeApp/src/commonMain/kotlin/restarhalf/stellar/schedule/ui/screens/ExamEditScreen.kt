@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -66,11 +66,11 @@ fun ExamEditScreen(
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val examEditUiState by vm.uiState.collectAsState()
+    val examEditUiState by vm.uiState.collectAsStateWithLifecycle()
 
     val editingExamination by
     remember(examinationId) { vm.observeEditingExamination(examinationId) }
-        .collectAsState(initial = null)
+        .collectAsStateWithLifecycle(initialValue = null)
 
     val courseNames = examEditUiState.courseNames
     val courses = examEditUiState.courses
@@ -284,8 +284,8 @@ fun ExamEditScreen(
                     innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
-                    extraStart = 16.dp,
-                    extraEnd = 16.dp,
+                    extraStart = 12.dp,
+                    extraEnd = 12.dp,
                 ),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,

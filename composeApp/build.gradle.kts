@@ -165,6 +165,8 @@ kotlin {
                 implementation(libs.qrose)
                 implementation(libs.cryptography.core)
                 implementation(libs.cryptography.provider.optimal)
+                implementation(libs.lifecycle.runtime.compose)
+                implementation(libs.kotlinx.collections.immutable)
                 api(libs.lifecycle.viewmodel)
                 api(libs.lifecycle.viewmodel.navigation3)
             }

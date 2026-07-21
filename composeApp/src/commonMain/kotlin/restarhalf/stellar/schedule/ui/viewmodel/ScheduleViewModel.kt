@@ -6,6 +6,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -60,8 +66,8 @@ class ScheduleViewModel(
      */
     @Stable
     data class WeekHeaderUi(
-        val days: List<String>,
-        val dates: List<String>,
+        val days: ImmutableList<String>,
+        val dates: ImmutableList<String>,
         val todayIndex: Int?,
     )
 
@@ -74,7 +80,7 @@ class ScheduleViewModel(
     @Stable
     data class PageRenderUi(
         val actualWeek: Int,
-        val dayRenderData: Map<Int, DayRenderData>,
+        val dayRenderData: ImmutableMap<Int, DayRenderData>,
     )
 
     /**
@@ -155,7 +161,7 @@ class ScheduleViewModel(
     @Stable
     data class TransConflictUiState(
         val show: Boolean = false,
-        val conflicts: List<Course> = emptyList(),
+        val conflicts: ImmutableList<Course> = persistentListOf(),
         val pendingOverride: Course? = null,
     )
 
@@ -168,7 +174,7 @@ class ScheduleViewModel(
     @Stable
     data class DetailSheetUiState(
         val show: Boolean = false,
-        val courses: List<Course> = emptyList(),
+        val courses: ImmutableList<Course> = persistentListOf(),
     )
 
     /**
@@ -354,7 +360,7 @@ class ScheduleViewModel(
             AcademicCalendar.getTodayIndexInWeek(headerWeek, termStartMs)
         }
 
-        return WeekHeaderUi(days = WEEKDAYS, dates = dates, todayIndex = todayIndex)
+        return WeekHeaderUi(days = WEEKDAYS.toPersistentList(), dates = dates.toPersistentList(), todayIndex = todayIndex)
     }
 
     /**
@@ -407,7 +413,7 @@ class ScheduleViewModel(
                     cellInset = cellInset,
                 )
             }
-        return PageRenderUi(actualWeek = actualWeek, dayRenderData = dayRenderData)
+        return PageRenderUi(actualWeek = actualWeek, dayRenderData = dayRenderData.toPersistentMap())
     }
 
     /**
@@ -417,7 +423,7 @@ class ScheduleViewModel(
      */
     fun openDetailSheet(courses: List<Course>) {
         _detailSheetUiState.value =
-            DetailSheetUiState(show = courses.isNotEmpty(), courses = courses)
+            DetailSheetUiState(show = courses.isNotEmpty(), courses = courses.toPersistentList())
     }
 
     /** 关闭课程详情弹窗 */
@@ -506,7 +512,7 @@ class ScheduleViewModel(
         _transConflictUiState.value =
             TransConflictUiState(
                 show = true,
-                conflicts = conflicts,
+                conflicts = conflicts.toPersistentList(),
                 pendingOverride = pendingOverride
             )
     }

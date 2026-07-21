@@ -13,7 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -56,7 +56,7 @@ fun HomeScreen(
     val textPrimary = colors.onBackground
     val textSecondary = colors.onSurfaceVariantSummary
     val dividerColor = colors.surfaceContainerHigh
-    val homeUiState by vm.uiState.collectAsState()
+    val homeUiState by vm.uiState.collectAsStateWithLifecycle()
     val renderState =
         remember(
             homeUiState.courses,

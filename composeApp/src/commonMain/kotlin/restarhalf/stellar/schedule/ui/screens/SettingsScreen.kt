@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +34,8 @@ import restarhalf.stellar.schedule.core.text.CsvExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.CardItem
+import restarhalf.stellar.schedule.ui.components.groupedCardItems
 import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
 import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
@@ -53,7 +55,6 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.MiuixOverscrollEffect
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -111,9 +112,7 @@ fun SettingsScreen(
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val overscrollEffect = MiuixOverscrollEffect()
-
-    val settingsUiState by vm.uiState.collectAsState()
+    val settingsUiState by vm.uiState.collectAsStateWithLifecycle()
 
     val screenUi =
         remember(syncUiState, campus, termStartMs) {
@@ -127,7 +126,7 @@ fun SettingsScreen(
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val starVerificationState by vm.starVerification.state.collectAsState()
+    val starVerificationState by vm.starVerification.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.refreshAuth()
@@ -151,7 +150,7 @@ fun SettingsScreen(
             vm.buildAccountUi(settingsUiState.authToken, settingsUiState.profile)
         }
 
-    val personalInfoUiState by vm.personalInfoUiState.collectAsState()
+    val personalInfoUiState by vm.personalInfoUiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.loadPersonalInfo()
@@ -221,12 +220,11 @@ fun SettingsScreen(
                     innerPadding = PaddingValues(),
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
-                    extraStart = 16.dp,
-                    extraEnd = 16.dp,
+                    extraStart = 12.dp,
+                    extraEnd = 12.dp,
                 ),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
-            overscrollEffect = overscrollEffect
         ) {
             item {
                 SmallTitle(text = "账号")
@@ -265,45 +263,59 @@ fun SettingsScreen(
             }
             item {
                 SmallTitle(text = "基本设置")
-                AppCard {
-                    OverlayDropdownPreference(
-                        title = "学期",
-                        summary = "用于查询课表和成绩",
-                        items = termSelectionUi.items,
-                        selectedIndex = termSelectionUi.selectedIndex,
-                        onSelectedIndexChange = { index: Int ->
-                            vm.onSelectedTermChanged(
-                                vm.selectedTermValueFromIndex(termSelectionUi.items, index)
-                            )
-                            vm.triggerSync { onSync() }
-                        })
-                    OverlayDropdownPreference(
-                        title = "上课校区",
-                        summary = "用于课表时间与作息展示",
-                        items = screenUi.campusOptions,
-                        selectedIndex = screenUi.campusSelectedIndex,
-                        onSelectedIndexChange = { index: Int ->
-                            onCampusChange(vm.campusFromIndex(index))
-                            vm.triggerSync { onSync() }
-                        })
-                    ArrowPreference(
-                        title = "开始上课时间",
-                        summary = screenUi.termStartSummary,
-                        onClick = { showTermStartPicker.value = true })
-
-                    ArrowPreference(
-                        title = "本学期总周数",
-                        summary = totalWeeks.toString(),
-                        onClick = { showTotalWeeksPicker.value = true })
-                    SwitchPreference(
-                        title = "是否显示非本周课程",
-                        summary = "开启后单双周课程都可以看见哦",
-                        checked = settingsUiState.showNonCurrentWeek,
-                        onCheckedChange = {
-                            vm.onShowNonCurrentWeekChanged(it)
-                        })
-                }
             }
+            groupedCardItems(
+                keyPrefix = "settings_basic",
+                outerBottomPadding = 6.dp,
+                outerHorizontalPadding = 0.dp,
+                items = listOf(
+                    CardItem("term") {
+                        OverlayDropdownPreference(
+                            title = "学期",
+                            summary = "用于查询课表和成绩",
+                            items = termSelectionUi.items,
+                            selectedIndex = termSelectionUi.selectedIndex,
+                            onSelectedIndexChange = { index: Int ->
+                                vm.onSelectedTermChanged(
+                                    vm.selectedTermValueFromIndex(termSelectionUi.items, index)
+                                )
+                                vm.triggerSync { onSync() }
+                            })
+                    },
+                    CardItem("campus") {
+                        OverlayDropdownPreference(
+                            title = "上课校区",
+                            summary = "用于课表时间与作息展示",
+                            items = screenUi.campusOptions,
+                            selectedIndex = screenUi.campusSelectedIndex,
+                            onSelectedIndexChange = { index: Int ->
+                                onCampusChange(vm.campusFromIndex(index))
+                                vm.triggerSync { onSync() }
+                            })
+                    },
+                    CardItem("termStart") {
+                        ArrowPreference(
+                            title = "开始上课时间",
+                            summary = screenUi.termStartSummary,
+                            onClick = { showTermStartPicker.value = true })
+                    },
+                    CardItem("totalWeeks") {
+                        ArrowPreference(
+                            title = "本学期总周数",
+                            summary = totalWeeks.toString(),
+                            onClick = { showTotalWeeksPicker.value = true })
+                    },
+                    CardItem("showNonCurrentWeek") {
+                        SwitchPreference(
+                            title = "是否显示非本周课程",
+                            summary = "开启后单双周课程都可以看见哦",
+                            checked = settingsUiState.showNonCurrentWeek,
+                            onCheckedChange = {
+                                vm.onShowNonCurrentWeekChanged(it)
+                            })
+                    },
+                ),
+            )
 
             item {
                 SmallTitle(text = "学习资料")
@@ -318,100 +330,126 @@ fun SettingsScreen(
 
             item {
                 SmallTitle(text = "外观")
-                AppCard {
-                    OverlayDropdownPreference(
-                        title = "主题模式",
-                        summary = "深色/浅色可跟随系统",
-                        items = screenUi.themeOptions,
-                        selectedIndex = settingsUiState.themeMode.coerceIn(0, 2),
-                        onSelectedIndexChange = { index: Int ->
-                            vm.onThemeModeChanged(index)
-                        })
-                    OverlayDropdownPreference(
-                        title = "底栏形式",
-                        summary = "选择底栏的状态",
-                        items = screenUi.floatingBarOptions,
-                        selectedIndex = settingsUiState.floatingBar.coerceIn(0, 2),
-                        onSelectedIndexChange = { index: Int ->
-                            vm.onFloatingBarChanged(index)
-                        }
-                    )
-                    ArrowPreference(
-                        title = "更换背景",
-                        summary = "设置背景图片、模糊度与透明度",
-                        onClick = onChangeBackground
-                    )
-                }
             }
+            groupedCardItems(
+                keyPrefix = "settings_appearance",
+                outerBottomPadding = 6.dp,
+                outerHorizontalPadding = 0.dp,
+                items = listOf(
+                    CardItem("theme") {
+                        OverlayDropdownPreference(
+                            title = "主题模式",
+                            summary = "深色/浅色可跟随系统",
+                            items = screenUi.themeOptions,
+                            selectedIndex = settingsUiState.themeMode.coerceIn(0, 2),
+                            onSelectedIndexChange = { index: Int ->
+                                vm.onThemeModeChanged(index)
+                            })
+                    },
+                    CardItem("floatingBar") {
+                        OverlayDropdownPreference(
+                            title = "底栏形式",
+                            summary = "选择底栏的状态",
+                            items = screenUi.floatingBarOptions,
+                            selectedIndex = settingsUiState.floatingBar.coerceIn(0, 2),
+                            onSelectedIndexChange = { index: Int ->
+                                vm.onFloatingBarChanged(index)
+                            }
+                        )
+                    },
+                    CardItem("background") {
+                        ArrowPreference(
+                            title = "更换背景",
+                            summary = "设置背景图片、模糊度与透明度",
+                            onClick = onChangeBackground
+                        )
+                    },
+                ),
+            )
 
             item {
                 SmallTitle(text = "杂项")
-                AppCard {
-                    ArrowPreference(
-                        title = "手动刷新课表",
-                        summary = screenUi.syncSummary,
-                        onClick = { vm.triggerSync { onSync() } })
-                    ArrowPreference(
-                        title = "导出课表CSV",
-                        summary = "将当前课表导出为CSV文件",
-                        onClick = {
-                            if (!starVerificationState.isVerified) {
-                                vm.starVerification.showDialog()
-                            } else {
-                                scope.launch {
-                                    val csv = CsvExporter.export(courses)
-                                    val path = onExportCsv("课表.csv", csv)
-                                    if (path != null) {
-                                        showMessage("已保存: $path")
-                                    } else {
-                                        showMessage("保存失败")
+            }
+            groupedCardItems(
+                keyPrefix = "settings_misc",
+                outerBottomPadding = 6.dp,
+                outerHorizontalPadding = 0.dp,
+                items = buildList {
+                    add(CardItem("sync") {
+                        ArrowPreference(
+                            title = "手动刷新课表",
+                            summary = screenUi.syncSummary,
+                            onClick = { vm.triggerSync { onSync() } })
+                    })
+                    add(CardItem("exportCsv") {
+                        ArrowPreference(
+                            title = "导出课表CSV",
+                            summary = "将当前课表导出为CSV文件",
+                            onClick = {
+                                if (!starVerificationState.isVerified) {
+                                    vm.starVerification.showDialog()
+                                } else {
+                                    scope.launch {
+                                        val csv = CsvExporter.export(courses)
+                                        val path = onExportCsv("课表.csv", csv)
+                                        if (path != null) {
+                                            showMessage("已保存: $path")
+                                        } else {
+                                            showMessage("保存失败")
+                                        }
                                     }
                                 }
-                            }
-                        })
-                    SwitchPreference(
-                        title = "课程提醒",
-                        summary = "上课前15分钟推送通知提醒",
-                        checked = settingsUiState.reminderEnabled,
-                        onCheckedChange = { newValue ->
-                            if (newValue) {
-                                ensureCourseReminderPermission {
-                                    vm.onReminderEnabledChanged(true)
-                                    vm.scheduleCourseReminder(
-                                        campus = campus,
-termStartMs = termStartMs,
-                            totalWeeks = totalWeeks
-                                    )
+                            })
+                    })
+                    add(CardItem("courseReminder") {
+                        SwitchPreference(
+                            title = "课程提醒",
+                            summary = "上课前15分钟推送通知提醒",
+                            checked = settingsUiState.reminderEnabled,
+                            onCheckedChange = { newValue ->
+                                if (newValue) {
+                                    ensureCourseReminderPermission {
+                                        vm.onReminderEnabledChanged(true)
+                                        vm.scheduleCourseReminder(
+                                            campus = campus,
+                                            termStartMs = termStartMs,
+                                            totalWeeks = totalWeeks
+                                        )
+                                    }
+                                } else {
+                                    vm.onReminderEnabledChanged(false)
                                 }
-                            } else {
-                                vm.onReminderEnabledChanged(false)
-                            }
-                        })
-                    SwitchPreference(
-                        title = "考试提醒",
-                        summary = "考试前15分钟推送通知提醒",
-                        checked = settingsUiState.examReminderEnabled,
-                        onCheckedChange = { newValue ->
-                            if (newValue) {
-                                ensureExamReminderPermission {
-                                    vm.onExamReminderEnabledChanged(true)
-                                    vm.scheduleExamReminder(
-                                        selectedTerm = settingsUiState.selectedTerm
-                                    )
+                            })
+                    })
+                    add(CardItem("examReminder") {
+                        SwitchPreference(
+                            title = "考试提醒",
+                            summary = "考试前15分钟推送通知提醒",
+                            checked = settingsUiState.examReminderEnabled,
+                            onCheckedChange = { newValue ->
+                                if (newValue) {
+                                    ensureExamReminderPermission {
+                                        vm.onExamReminderEnabledChanged(true)
+                                        vm.scheduleExamReminder(
+                                            selectedTerm = settingsUiState.selectedTerm
+                                        )
+                                    }
+                                } else {
+                                    vm.onExamReminderEnabledChanged(false)
                                 }
-                            } else {
-                                vm.onExamReminderEnabledChanged(false)
-                            }
-                        })
-                    SwitchPreference(
-                        title = "开启日志",
-                        summary = "点开关于单击五次logo进入log界面",
-                        checked = settingsUiState.logEnabled,
-                        onCheckedChange = {
-                            vm.onLogEnabledChanged(it)
-                        })
-                }
-            }
+                            })
+                    })
+                    add(CardItem("log") {
+                        SwitchPreference(
+                            title = "开启日志",
+                            summary = "点开关于单击五次logo进入log界面",
+                            checked = settingsUiState.logEnabled,
+                            onCheckedChange = {
+                                vm.onLogEnabledChanged(it)
+                            })
+                    })
+                },
+            )
             item {
                 SmallTitle(text = "关于")
                 AppCard {

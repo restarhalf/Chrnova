@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +57,7 @@ fun ChangeBackgroundScreen(
     val showPictureSelector = remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
 
-    val backgroundUiState by vm.uiState.collectAsState()
+    val backgroundUiState by vm.uiState.collectAsStateWithLifecycle()
 
     val screenUi by remember(backgroundUiState) {
         derivedStateOf {
@@ -100,8 +100,8 @@ fun ChangeBackgroundScreen(
                     innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
-                    extraStart = 16.dp,
-                    extraEnd = 16.dp,
+                    extraStart = 12.dp,
+                    extraEnd = 12.dp,
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,

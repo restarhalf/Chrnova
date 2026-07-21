@@ -29,7 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,7 +76,7 @@ fun LogScreen(
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val entries by AppLogger.entries.collectAsState()
+    val entries by AppLogger.entries.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val appInfo: AppInfoPort = koinInject()
     var selectedEntry by remember { mutableStateOf<AppLogger.LogEntry?>(null) }
@@ -159,10 +159,10 @@ fun LogScreen(
                                 innerPadding = PaddingValues(),
                                 outerPadding = appScaffoldPadding,
                                 extraTop = 8.dp,
-                                extraStart = 16.dp + WindowInsets.displayCutout
+                                extraStart = 12.dp + WindowInsets.displayCutout
                                     .asPaddingValues()
                                     .calculateStartPadding(LocalLayoutDirection.current),
-                                extraEnd = 16.dp + WindowInsets.displayCutout
+                                extraEnd = 12.dp + WindowInsets.displayCutout
                                     .asPaddingValues()
                                     .calculateEndPadding(LocalLayoutDirection.current),
                             )
