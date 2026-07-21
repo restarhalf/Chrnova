@@ -436,7 +436,7 @@ fun SettingsScreen(
                     add(CardItem("log") {
                         SwitchPreference(
                             title = "开启日志",
-                            summary = "点开关于单击五次logo进入log界面",
+                            summary = "关于页面连续点击五次应用版本进入日志",
                             checked = settingsUiState.logEnabled,
                             onCheckedChange = {
                                 vm.onLogEnabledChanged(it)

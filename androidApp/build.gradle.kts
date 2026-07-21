@@ -68,7 +68,7 @@ val commitHashCode =
         ?.take(7)
         ?: resolveGitShortHash()
         ?: "local"
-val alphaVersionName = "${releaseVersionName}Alpha($commitHashCode)"
+val alphaVersionName = "${releaseVersionName}($commitHashCode)"
 val resolvedVersionName = githubTagName ?: alphaVersionName
 val resolvedVersionCode = releaseVersionCode
 

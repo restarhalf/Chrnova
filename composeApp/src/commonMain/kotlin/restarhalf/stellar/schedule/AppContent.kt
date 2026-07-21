@@ -213,7 +213,6 @@ fun AppContent(
                     AboutScreen(
                         vm = aboutVm,
                         onBack = { navigator.pop() },
-                        appIcon = appIcon,
                         showMessage = showMessageState,
                         canSaveAwardPicture = canSaveAwardPicture,
                         onSaveAwardPicture = saveAwardPictureState,

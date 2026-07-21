@@ -41,14 +41,7 @@ import restarhalf.stellar.schedule.ui.theme.StatusColors
  * - 周次和节次时间
  * - 地点和教师
  * - 操作按钮（调课、编辑）
- * 
- * @param modifier Modifier修饰符
- * @param course 课程数据
- * @param isCurrent 是否为当前周课程
- * @param surfaceSoft 柔和表面颜色
- * @param uiState ViewModel UI状态
- * @param onEdit 编辑回调
- * @param onTrans 调课回调
+ *
  */
 @Composable
 fun CourseDetailItem(
