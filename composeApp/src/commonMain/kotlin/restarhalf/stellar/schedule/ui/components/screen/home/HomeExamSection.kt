@@ -29,8 +29,9 @@ fun HomeExamSection(
     textPrimary: Color,
     textSecondary: Color,
     dividerColor: Color,
+    modifier: Modifier = Modifier,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(text = "考试安排", fontSize = 14.sp, color = textSecondary)
         exams.forEach { exam ->
             ExamRow(

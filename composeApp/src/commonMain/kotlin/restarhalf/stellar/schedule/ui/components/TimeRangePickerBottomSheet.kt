@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.collections.immutable.toPersistentList
 
 private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
 
@@ -74,28 +75,28 @@ fun TimeRangePickerBottomSheet(
             columns =
                 listOf(
                     WheelPickerColumnState(
-                        items = hourItems,
+                        items = hourItems.toPersistentList(),
                         selectedIndex = startHourIndex,
                         onSelectedIndexChange = { startHourIndex = it },
                     ),
                     WheelPickerColumnState(
-                        items = minuteItems,
+                        items = minuteItems.toPersistentList(),
                         selectedIndex = startMinuteIndex,
                         onSelectedIndexChange = { startMinuteIndex = it },
                     ),
                     WheelPickerColumnState(
-                        items = listOf("-"),
+                        items = listOf("-").toPersistentList(),
                         selectedIndex = 0,
                         onSelectedIndexChange = {},
                         visibleCount = 1,
                     ),
                     WheelPickerColumnState(
-                        items = hourItems,
+                        items = hourItems.toPersistentList(),
                         selectedIndex = endHourIndex,
                         onSelectedIndexChange = { endHourIndex = it },
                     ),
                     WheelPickerColumnState(
-                        items = minuteItems,
+                        items = minuteItems.toPersistentList(),
                         selectedIndex = endMinuteIndex,
                         onSelectedIndexChange = { endMinuteIndex = it },
                     ),

@@ -36,11 +36,11 @@ import top.yukonga.miuix.kmp.basic.Text
  * @param onClick 点击回调
  */
 @Composable
-fun CourseCard(model: CourseCardModel, onClick: (() -> Unit)?) {
+fun CourseCard(model: CourseCardModel, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
 
     Card(
         modifier =
-            Modifier
+            modifier
                 .padding(horizontal = 1.dp)
                 .fillMaxWidth()
                 .height(model.height)

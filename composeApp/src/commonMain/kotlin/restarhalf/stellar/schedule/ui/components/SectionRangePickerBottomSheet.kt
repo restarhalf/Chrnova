@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun SectionRangePickerBottomSheet(
@@ -46,12 +47,12 @@ fun SectionRangePickerBottomSheet(
             columns =
                 listOf(
                     WheelPickerColumnState(
-                        items = sectionItems,
+                        items = sectionItems.toPersistentList(),
                         selectedIndex = startIndex,
                         onSelectedIndexChange = { idx -> startIndex = idx },
                     ),
                     WheelPickerColumnState(
-                        items = sectionItems,
+                        items = sectionItems.toPersistentList(),
                         selectedIndex = endIndex,
                         onSelectedIndexChange = { idx -> endIndex = idx },
                     ),

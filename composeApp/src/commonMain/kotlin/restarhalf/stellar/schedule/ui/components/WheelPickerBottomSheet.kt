@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -273,7 +274,7 @@ fun WheelPickerRow(
 @Stable
 data class WheelPickerColumnState(
     val key: String = "",
-    val items: List<String>,
+    val items: ImmutableList<String>,
     val selectedIndex: Int,
     val onSelectedIndexChange: (Int) -> Unit,
     val visibleCount: Int = 5,

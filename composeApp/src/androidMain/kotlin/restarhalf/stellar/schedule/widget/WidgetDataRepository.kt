@@ -1,9 +1,13 @@
 package restarhalf.stellar.schedule.widget
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
 import com.russhwolf.settings.SharedPreferencesSettings
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
@@ -29,6 +33,7 @@ import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
+@Immutable
 internal data class SmallWidgetState(
     val dayLabel: String,
     val weekLabel: String,
@@ -44,10 +49,11 @@ internal data class SmallNextCourse(
     val restCount: Int,
 )
 
+@Immutable
 internal data class LargeWidgetState(
     val headerLabel: String,
     val weekLabel: String,
-    val rows: List<LargeCourseRow>,
+    val rows: ImmutableList<LargeCourseRow>,
     val emptyText: String?,
 )
 
@@ -288,7 +294,7 @@ internal object WidgetDataRepository {
         return LargeWidgetState(
             headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
             weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
-            rows = rows,
+            rows = rows.toPersistentList(),
             emptyText = null
         )
     }
@@ -297,7 +303,7 @@ internal object WidgetDataRepository {
         return LargeWidgetState(
             headerLabel = "明天课程预告 / ${weekdayLabel(tomorrow.weekday)}",
             weekLabel = if (tomorrow.isHoliday) "假期中" else "第${tomorrow.week}周",
-            rows = tomorrow.sessions.take(2).map { it.toLargeRow(StatusType.NONE, null) },
+            rows = tomorrow.sessions.take(2).map { it.toLargeRow(StatusType.NONE, null) }.toPersistentList(),
             emptyText = null
         )
     }
@@ -310,7 +316,7 @@ internal object WidgetDataRepository {
             return LargeWidgetState(
                 headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
                 weekLabel = "假期中",
-                rows = emptyList(),
+                rows = persistentListOf(),
                 emptyText = "假期愉快"
             )
         }
@@ -318,14 +324,14 @@ internal object WidgetDataRepository {
             LargeWidgetState(
                 headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
                 weekLabel = "第${today.week}周",
-                rows = emptyList(),
+                rows = persistentListOf(),
                 emptyText = "今日课程已上完"
             )
         } else {
             LargeWidgetState(
                 headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
                 weekLabel = "第${today.week}周",
-                rows = emptyList(),
+                rows = persistentListOf(),
                 emptyText = "本周课程已上完"
             )
         }

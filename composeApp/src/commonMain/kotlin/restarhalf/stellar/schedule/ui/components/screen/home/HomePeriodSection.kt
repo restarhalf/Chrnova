@@ -47,8 +47,9 @@ fun HomePeriodSection(
     textPrimary: Color,
     textSecondary: Color,
     dividerColor: Color,
+    modifier: Modifier = Modifier,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(text = title, fontSize = 14.sp, color = textSecondary)
         rows.forEach { row ->
             val rowUi = row.rowUi

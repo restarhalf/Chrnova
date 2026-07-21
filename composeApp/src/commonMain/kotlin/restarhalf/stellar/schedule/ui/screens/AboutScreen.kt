@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +75,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
@@ -316,15 +318,15 @@ fun AboutScreen(
 @Composable
 private fun AboutContent(
     innerPadding: PaddingValues,
-    scrollBehavior: top.yukonga.miuix.kmp.basic.ScrollBehavior,
+    scrollBehavior: ScrollBehavior,
     lazyListState: LazyListState,
     scrollProgress: Float,
     appName: String,
     screenUi: AboutViewModel.AboutScreenUi,
     isDark: Boolean,
     onIconTap: () -> Unit,
-    showAward: androidx.compose.runtime.MutableState<Boolean>,
-    showJwxt: androidx.compose.runtime.MutableState<Boolean>,
+    showAward: MutableState<Boolean>,
+    showJwxt: MutableState<Boolean>,
     vm: AboutViewModel,
 ) {
     val layoutDirection = LocalLayoutDirection.current

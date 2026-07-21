@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
@@ -97,18 +98,18 @@ fun DatePickerBottomSheet(
             columns =
                 listOf(
                     WheelPickerColumnState(
-                        items = yearItems,
+                        items = yearItems.toPersistentList(),
                         selectedIndex = selectedYearIndex,
                         onSelectedIndexChange = { selectedYearIndex = it },
                     ),
                     WheelPickerColumnState(
-                        items = monthItems,
+                        items = monthItems.toPersistentList(),
                         selectedIndex = selectedMonthIndex,
                         onSelectedIndexChange = { selectedMonthIndex = it },
                     ),
                     WheelPickerColumnState(
                         key = "day_${selectedYear}_${selectedMonth}",
-                        items = dayItems,
+                        items = dayItems.toPersistentList(),
                         selectedIndex = selectedDayIndex,
                         onSelectedIndexChange = { selectedDayIndex = it },
                     ),

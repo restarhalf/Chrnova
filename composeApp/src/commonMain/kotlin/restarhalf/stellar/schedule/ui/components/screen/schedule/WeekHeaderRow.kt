@@ -35,10 +35,11 @@ import top.yukonga.miuix.kmp.basic.Text
 fun WeekHeaderRow(
     ui: ScheduleViewModel.WeekHeaderUi,
     primary: Color,
-    textSecondary: Color
+    textSecondary: Color,
+    modifier: Modifier = Modifier,
 ) {
 
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.width(36.dp))
 
         ui.days.zip(ui.dates).forEachIndexed { index, (day, date) ->
