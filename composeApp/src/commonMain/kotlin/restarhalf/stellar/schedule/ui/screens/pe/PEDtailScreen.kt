@@ -66,7 +66,6 @@ fun PEDetailScreen(
     vm: PEViewModel,
     schoolYear: String,
     onBack: () -> Unit,
-    onLogin: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()

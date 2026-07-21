@@ -33,6 +33,7 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 /**
  * 成绩项目卡片组件
@@ -96,7 +97,7 @@ fun GradeItemCard(
                                 modifier =
                                     Modifier.padding(top = 2.dp)
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(Color(0xFFE57373).copy(0.8f))
+                                        .background(StatusColors.danger.copy(0.8f))
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
@@ -110,7 +111,7 @@ fun GradeItemCard(
                                 modifier =
                                     Modifier.padding(top = 2.dp)
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(Color(0xFFFCB065).copy(0.8f))
+                                        .background(StatusColors.warning.copy(0.8f))
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import top.yukonga.miuix.kmp.squircle.squircleSurface
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -96,8 +97,7 @@ fun WeekPalette(
                         modifier =
                             Modifier.weight(1f)
                                 .height(itemHeight)
-                                .clip(RoundedCornerShape(cornerRadius))
-                                .background(bg)
+                                .squircleSurface(bg, cornerRadius)
                                 .clickable(enabled = enabled) { onToggleWeek(week) },
                         contentAlignment = Alignment.Center,
                     ) {

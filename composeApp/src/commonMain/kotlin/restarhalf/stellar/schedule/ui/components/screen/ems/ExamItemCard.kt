@@ -33,6 +33,7 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 /**
  * 考试项目卡片组件
@@ -147,7 +148,7 @@ fun ExamItemCard(
                             .align(Alignment.TopEnd)
                             .padding(8.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF9E9E9E).copy(0.8f))
+                            .background(StatusColors.neutral.copy(0.8f))
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(

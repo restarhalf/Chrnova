@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import top.yukonga.miuix.kmp.squircle.squircleClip
+import top.yukonga.miuix.kmp.squircle.squircleSurface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -272,8 +274,7 @@ private fun AlbumBreadcrumb(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.surface)
+                .squircleSurface(colors.surface, 8.dp)
                 .clickable(onClick = onBack)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -337,8 +338,7 @@ private fun AlbumRow(
                 modifier =
                     Modifier
                         .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(colors.surface),
+                        .squircleClip(8.dp),
                 maxSidePx = 192,
             )
 
@@ -398,8 +398,7 @@ private fun ImageGrid(
                             Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(colors.surface)
+                                .squircleSurface(colors.surface, 8.dp)
                                 .clickable { onImageClick(image) },
                         maxSidePx = 360,
                     )

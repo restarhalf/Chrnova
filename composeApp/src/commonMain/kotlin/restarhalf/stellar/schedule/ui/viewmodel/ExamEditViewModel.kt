@@ -273,7 +273,7 @@ class ExamEditViewModel(
             val currentId = currentTerm.value
             termId.ifBlank { currentId }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
             currentTerm.value
         }
     }

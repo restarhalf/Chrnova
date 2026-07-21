@@ -31,6 +31,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 /**
  * 课程详情项组件
@@ -96,8 +97,8 @@ fun CourseDetailItem(
             if (tagText != null) {
                 val tagBackground =
                     when (detailUi.tagStyle) {
-                        ScheduleViewModel.CourseDetailTagStyle.LAB -> Color(0xFFFCB065).copy(0.8f)
-                        ScheduleViewModel.CourseDetailTagStyle.TRANS -> Color(0xFFE54E4E).copy(0.8f)
+                        ScheduleViewModel.CourseDetailTagStyle.LAB -> StatusColors.labTag.copy(0.8f)
+                        ScheduleViewModel.CourseDetailTagStyle.TRANS -> StatusColors.transTag.copy(0.8f)
                         ScheduleViewModel.CourseDetailTagStyle.NON_CURRENT -> surfaceSoft
                         null -> surfaceSoft
                     }

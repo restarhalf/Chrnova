@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import top.yukonga.miuix.kmp.squircle.squircleBackground
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,6 +67,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import kotlin.time.Clock
 
@@ -238,7 +240,7 @@ private fun LogEntryCard(
     val levelColor = when (entry.level) {
         AppLogger.Level.DEBUG -> colors.secondary
         AppLogger.Level.INFO -> colors.onSurfaceVariantSummary
-        AppLogger.Level.WARN -> Color(0xFFFF9800)
+        AppLogger.Level.WARN -> StatusColors.warning
         AppLogger.Level.ERROR -> colors.error
     }
 
@@ -307,7 +309,7 @@ private fun LogDetailBottomSheet(
     val levelColor = when (entry.level) {
         AppLogger.Level.DEBUG -> colors.secondary
         AppLogger.Level.INFO -> colors.onSurfaceVariantSummary
-        AppLogger.Level.WARN -> Color(0xFFFF9800)
+        AppLogger.Level.WARN -> StatusColors.warning
         AppLogger.Level.ERROR -> colors.error
     }
 
@@ -355,8 +357,7 @@ private fun LogDetailBottomSheet(
                             .fillMaxWidth()
                             .heightIn(max = 400.dp)
                             .verticalScroll(rememberScrollState())
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(colors.surfaceContainerHigh)
+                            .squircleBackground(colors.surfaceContainerHigh, 8.dp)
                             .padding(12.dp),
                 ) {
                     Text(

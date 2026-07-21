@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import top.yukonga.miuix.kmp.squircle.squircleBackground
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -83,6 +84,7 @@ import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -149,9 +151,9 @@ fun ScheduleScreen(
     val textSecondary = colors.onSurfaceVariantSummary
     val textHint = colors.onSurfaceVariantActions
     val isDarkMode = colors.background.luminance() < 0.5f
-    val mutedCourseColor = if (isDarkMode) colors.surfaceContainerHighest else Color(0xFFF5F5F5)
-    val mutedTitleColor = if (isDarkMode) colors.onSurface else Color(0xFF999999)
-    val mutedSubColor = if (isDarkMode) colors.onSurfaceVariantSummary else Color(0xFFB3B3B3)
+    val mutedCourseColor = StatusColors.mutedBackground
+    val mutedTitleColor = StatusColors.mutedTitle
+    val mutedSubColor = StatusColors.mutedSub
     val dayCount = 7
     val rowHeight = 64.dp
     val rowGap = 1.dp
@@ -731,10 +733,7 @@ private fun ScheduleDayContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                color = colors.surfaceContainerHighest,
-                                shape = RoundedCornerShape(8.dp)
-                            ),
+                            .squircleBackground(colors.surfaceContainerHighest, 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import top.yukonga.miuix.kmp.squircle.squircleSurface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -36,7 +38,7 @@ fun DetailHeader(
         modifier =
             Modifier
                 .size(90.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .squircleSurface(Color.Transparent, 8.dp)
                 .clickable {
                     tapCount++
                     if (tapCount >= 5) {

@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import top.yukonga.miuix.kmp.squircle.squircleClip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -131,7 +132,7 @@ fun PEQRCodeScreen(
                                     shape = RoundedCornerShape(16.dp),
                                     clip = false
                                 )
-                                .clip(RoundedCornerShape(16.dp))
+                                .squircleClip(16.dp)
                                 .background(Color.White),
                             contentAlignment = Alignment.Center
                         ) {

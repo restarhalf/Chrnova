@@ -291,8 +291,7 @@ fun AppContent(
                     PEDetailScreen(
                         vm = peVm,
                         schoolYear = screen.schoolYear,
-                        onBack = { navigator.pop() },
-                        onLogin = { navigator.push(Screen.PELogin) }
+                        onBack = { navigator.pop() }
                     )
                 }
                 entry(Screen.PEQRCode) {

@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import top.yukonga.miuix.kmp.squircle.squircleBackground
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -144,8 +145,7 @@ fun HomeScreen(
                     Modifier
                         .fillMaxSize()
                         .padding(top = paddingValues.calculateTopPadding() + 140.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha))
+                        .squircleBackground(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha), 24.dp)
             ) {
                 Column(
                     modifier =
