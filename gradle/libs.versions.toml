@@ -21,6 +21,7 @@ ktor = "3.5.1"
 kotlinx-datetime = "0.8.0"
 lifecycle = "2.11.0"
 exifinterface = "1.4.2"
+navigationevent = "1.1.2"
 
 [libraries]
 # AndroidX
@@ -51,6 +52,7 @@ miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur", version.ref = "miuix
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
 miuix-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui", version.ref = "miuix" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+navigationevent = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 # Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

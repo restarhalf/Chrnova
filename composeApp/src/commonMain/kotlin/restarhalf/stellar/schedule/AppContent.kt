@@ -15,11 +15,15 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +75,7 @@ import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
 import org.koin.compose.viewmodel.koinViewModel
+import restarhalf.stellar.schedule.ui.navigation.MainPagerState
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -405,6 +410,7 @@ fun AppContent(
         LocalAppChromeState provides chromeState,
         LocalMainPagerState provides mainPagerState,
     ) {
+        MainScreenBackHandler(mainPagerState, navigator)
         Box(
             modifier =
                 Modifier
@@ -611,4 +617,28 @@ private fun MainRouteContent(
             else -> Unit
         }
     }
+}
+
+@Composable
+private fun MainScreenBackHandler(
+    mainState: MainPagerState,
+    navigator: AppNavigator,
+) {
+    val isPagerBackHandlerEnabled by remember {
+        derivedStateOf {
+            navigator.current() is Screen.Main &&
+                    navigator.backStackSize() == 1 &&
+                    mainState.selectedPage != 0
+        }
+    }
+
+    val navEventState = rememberNavigationEventState(NavigationEventInfo.None)
+
+    NavigationBackHandler(
+        state = navEventState,
+        isBackEnabled = isPagerBackHandlerEnabled,
+        onBackCompleted = {
+            mainState.animateToPage(0)
+        },
+    )
 }

@@ -15,6 +15,12 @@ room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
+composeCompiler {
+    stabilityConfigurationFiles.add(
+        project.layout.projectDirectory.file("compose_compiler_config.conf")
+    )
+}
+
 val localProps = Properties().apply {
     runCatching { rootProject.file("local.properties").inputStream().use(::load) }
 }
@@ -147,6 +153,7 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.androidx.navigation3.runtime)
+                implementation(libs.navigationevent)
                 implementation(libs.miuix.ui)
                 implementation(libs.miuix.blur)
                 implementation(libs.miuix.preference)

@@ -63,6 +63,7 @@ fun AppPageTopBar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     color: Color = Color.Transparent,
+    titleColor: Color = Color.Unspecified,
 ) {
     SmallTopAppBar(
         title = title,
@@ -70,6 +71,7 @@ fun AppPageTopBar(
         defaultWindowInsetsPadding = false,
         navigationIcon = navigationIcon,
         actions = actions,
-        color = color
+        color = color,
+        titleColor = titleColor,
     )
 }
