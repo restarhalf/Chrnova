@@ -1,73 +1,26 @@
 package restarhalf.stellar.schedule.data.impl
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.serialization.json.Json
 import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
-import restarhalf.stellar.schedule.core.update.GithubLatestReleaseResponse
-import restarhalf.stellar.schedule.core.update.IOS_RELEASE_IPA_FILE_NAME
-import restarhalf.stellar.schedule.core.update.buildGithubLatestReleaseApi
-import restarhalf.stellar.schedule.core.update.buildGithubReleaseAssetUrl
-import restarhalf.stellar.schedule.core.update.buildGithubReleasePageUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupIosUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupWebUrl
-import restarhalf.stellar.schedule.core.update.allGithubMirrors
-import restarhalf.stellar.schedule.core.update.isNewerVersion
-import restarhalf.stellar.schedule.core.update.resolvedLatestVersion
+import restarhalf.stellar.schedule.core.update.checkUpdateFromWorker
 
 class AppUpdatePortImpl : AppUpdatePort {
-    private val json = Json { ignoreUnknownKeys = true }
-    private val client = HttpClient()
     private val _apkDownloadState = MutableStateFlow<ApkDownloadState>(ApkDownloadState.Idle)
 
     override val apkDownloadState: StateFlow<ApkDownloadState> = _apkDownloadState
 
-    override suspend fun check(currentVersionName: String): AppUpdateInfo? {
-        var lastException: Exception? = null
-        for (mirror in allGithubMirrors()) {
-            try {
-                val response = client.get(buildGithubLatestReleaseApi(mirror))
-                if (!response.status.isSuccess()) {
-                    lastException = IllegalStateException("检查更新失败（HTTP ${response.status.value}）from $mirror")
-                    continue
-                }
-
-                val latest = json.decodeFromString<GithubLatestReleaseResponse>(response.body())
-                val latestVersion = resolvedLatestVersion(latest)
-                if (latestVersion.isBlank()) {
-                    throw IllegalStateException("检查更新失败：未获取到版本号")
-                }
-                if (!isNewerVersion(latestVersion, currentVersionName)) return null
-
-                val releasePageUrl =
-                    latest.htmlUrl?.takeIf { it.isNotBlank() } ?: buildGithubReleasePageUrl(latestVersion, mirror)
-                val downloadUrl = buildGithubReleaseAssetUrl(latestVersion, IOS_RELEASE_IPA_FILE_NAME, mirror)
-                return AppUpdateInfo(
-                    latestVersion = latestVersion,
-                    releasePageUrl = releasePageUrl,
-                    downloadUrl = downloadUrl,
-                    changelog = latest.body,
-                )
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                lastException = e
-                AppLogger.log("Update", "Mirror $mirror failed for check", e)
-            }
-        }
-        throw lastException ?: IllegalStateException("All mirrors failed")
-    }
+    override suspend fun check(currentVersionName: String): AppUpdateInfo? =
+        checkUpdateFromWorker(currentVersionName)
 
     override fun startDirectDownload(info: AppUpdateInfo) {
         openUri(info.downloadUrl) || openUri(info.releasePageUrl)

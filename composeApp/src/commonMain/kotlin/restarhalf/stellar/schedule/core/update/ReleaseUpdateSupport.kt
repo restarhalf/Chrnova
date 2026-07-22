@@ -1,28 +1,14 @@
 package restarhalf.stellar.schedule.core.update
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private const val PRIMARY_GITHUB_MIRROR = "https://gh.felicity.ac.cn"
-private val FALLBACK_GITHUB_MIRRORS = listOf(
-    "https://github.dpik.top",
-    "https://gh.927223.xyz",
-    "https://v4.gh-proxy.org",
-    "https://ghfile.geekertao.top"
-)
-private val ALL_GITHUB_MIRRORS = listOf(PRIMARY_GITHUB_MIRROR) + FALLBACK_GITHUB_MIRRORS
-
-internal const val GITHUB_OWNER = "restarhalf"
-internal const val GITHUB_REPO = "Chrnova"
-internal const val ANDROID_RELEASE_APK_FILE_NAME = "app-release.apk"
-internal const val IOS_RELEASE_IPA_FILE_NAME = "app-release.ipa"
+internal const val VERSION_WORKER_URL = "https://version.restarhalf.dpdns.org"
+internal const val QUARK_SHARE_URL = "https://pan.quark.cn/s/2326de687ab1?pwd=E97u"
 
 @Serializable
-internal data class GithubLatestReleaseResponse(
-    @SerialName("tag_name") val tagName: String = "",
-    val name: String = "",
-    val body: String = "",
-    @SerialName("html_url") val htmlUrl: String? = null,
+internal data class VersionJsonResponse(
+    val version: String = "",
+    val changelog: String = "",
 )
 
 internal fun normalizeVersion(version: String): List<Int> {
@@ -45,19 +31,4 @@ internal fun isNewerVersion(latest: String, current: String): Boolean {
     return false
 }
 
-internal fun resolvedLatestVersion(response: GithubLatestReleaseResponse): String =
-    response.tagName.ifBlank { response.name }.trim()
-
-internal fun buildGithubLatestReleaseApi(mirror: String = PRIMARY_GITHUB_MIRROR): String =
-    "$mirror/https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
-
-internal fun buildGithubReleasePageUrl(version: String, mirror: String = PRIMARY_GITHUB_MIRROR): String =
-    "$mirror/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/tag/$version"
-
-internal fun buildGithubReleaseAssetUrl(
-    version: String,
-    fileName: String,
-    mirror: String = PRIMARY_GITHUB_MIRROR,
-): String = "$mirror/https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$version/$fileName"
-
-internal fun allGithubMirrors(): List<String> = ALL_GITHUB_MIRRORS
+internal fun buildVersionWorkerUrl(): String = "$VERSION_WORKER_URL/version.json"

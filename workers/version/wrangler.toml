@@ -1,0 +1,11 @@
+name = "chrnova-version-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "VERSION_KV"
+id = "f88540855628441e833ffa29908232c0"
+
+[vars]
+# AUTH_TOKEN should be set via `wrangler secret put AUTH_TOKEN`
+# Generate a strong random token for API authentication
