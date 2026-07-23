@@ -12,3 +12,4 @@ GITHUB_OWNER = "restarhalf"
 GITHUB_REPO = "ChrnovaPaper"
 GITHUB_STAR_REPO = "Chrnova"
 # GITHUB_TOKEN should be set via `wrangler secret put GITHUB_TOKEN`
+# ADMIN_TOKEN should be set via `wrangler secret put ADMIN_TOKEN`

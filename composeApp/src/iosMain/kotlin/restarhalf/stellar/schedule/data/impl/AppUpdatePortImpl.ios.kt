@@ -1,38 +1,20 @@
 package restarhalf.stellar.schedule.data.impl
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import platform.Foundation.NSThread
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
-import restarhalf.stellar.schedule.core.update.ApkDownloadState
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.buildQqGroupIosUrl
 import restarhalf.stellar.schedule.core.update.buildQqGroupWebUrl
-import restarhalf.stellar.schedule.core.update.checkUpdateFromWorker
 
 class AppUpdatePortImpl : AppUpdatePort {
-    private val _apkDownloadState = MutableStateFlow<ApkDownloadState>(ApkDownloadState.Idle)
-
-    override val apkDownloadState: StateFlow<ApkDownloadState> = _apkDownloadState
-
-    override suspend fun check(currentVersionName: String): AppUpdateInfo? =
-        checkUpdateFromWorker(currentVersionName)
 
     override fun startDirectDownload(info: AppUpdateInfo) {
         openUri(info.downloadUrl) || openUri(info.releasePageUrl)
     }
-
-    override fun cancelApkDownload() = Unit
-
-    override fun canRequestInstallPackages(): Boolean = true
-
-    override fun openUnknownSourcesSettings() = Unit
-
-    override fun launchInstaller(apkPath: String): Boolean = openUri(apkPath)
 
     override fun saveWxpayToPictures(): Boolean = false
 

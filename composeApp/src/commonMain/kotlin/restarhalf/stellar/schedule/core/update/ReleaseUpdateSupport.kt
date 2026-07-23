@@ -2,7 +2,7 @@ package restarhalf.stellar.schedule.core.update
 
 import kotlinx.serialization.Serializable
 
-internal const val VERSION_WORKER_URL = "https://version.restarhalf.dpdns.org"
+internal const val VERSION_WORKER_URL = "https://chrnova.version.restarhalf.dpdns.org"
 internal const val QUARK_SHARE_URL = "https://pan.quark.cn/s/2326de687ab1?pwd=E97u"
 
 @Serializable

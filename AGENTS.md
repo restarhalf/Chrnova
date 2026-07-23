@@ -6,7 +6,6 @@
 
 - 默认把跨平台业务、ViewModel、数据模型和 Compose UI 放在 `composeApp/src/commonMain`；仅把 Android 或 iOS 的实际实现放进对应 source set。
 - `androidApp/` 负责 Android 入口、签名、版本号；`composeApp/` 是 KMP 共享模块，包含全部业务逻辑和 UI。
-- 文案使用 Compose Resources，并同时维护英文默认值和 `values-zh-rCN`。Android Service/通知文案使用 `androidApp/src/main/res` 的对应资源。
 
 ## 架构与并发
 

@@ -31,8 +31,6 @@ data class AppState(
     val showUpdateDialog: Boolean = false,
     /** 是否需要确认隐私协议（首次启动时为true） */
     val confirmPrivacy: Boolean = false,
-    /** 是否显示APK下载进度对话框（仅Android） */
-    val showApkDownloadDialog: Boolean = false,
     /** 是否允许页面用户滚动 */
     val enablePageUserScroll: Boolean = true,
     /** 是否启用页面角落裁剪效果 */

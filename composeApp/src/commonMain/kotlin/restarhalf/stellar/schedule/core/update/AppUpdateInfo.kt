@@ -4,8 +4,6 @@ import androidx.compose.runtime.Immutable
 
 /**
  * 应用更新信息数据类
- *
- * 存储从GitHub Release获取的最新版本信息。
  */
 @Immutable
 data class AppUpdateInfo(

@@ -23,6 +23,8 @@ internal object WidgetRefreshController {
     const val ACTION_WIDGET_SMALL_PERIODIC_TICK =
         "restarhalf.stellar.schedule.action.WIDGET_SMALL_PERIODIC_TICK"
 
+    val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
     private const val ACTIVE_START_HOUR = 8
     private const val ACTIVE_END_HOUR = 22
 
@@ -31,7 +33,7 @@ internal object WidgetRefreshController {
     @RequiresApi(Build.VERSION_CODES.S)
     fun refreshAndScheduleAsync(context: Context) {
         val appContext = context.applicationContext
-        CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+        scope.launch {
             try {
                 WidgetUpdater.refreshAll(appContext)
                 scheduleIfNeeded(appContext)
@@ -225,7 +227,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
 
         val result = goAsync()
         val appContext = context.applicationContext
-        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+        WidgetRefreshController.scope.launch {
             try {
                 if (isMinuteTick) {
                     WidgetUpdater.refreshLargeOnly(appContext)

@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.data.local.entity
 
 import androidx.room3.Entity
-import androidx.room3.PrimaryKey
 
 @Entity(tableName = "pe_detail_scores", primaryKeys = ["schoolYear", "subjectId"])
 data class PESubjectScoreEntity(
@@ -14,11 +13,4 @@ data class PESubjectScoreEntity(
     val subRatio: String,
     val grade: String?,
     val isJoin: Int
-)
-
-@Entity(tableName = "pe_detail_summary")
-data class PEDetailSummaryEntity(
-    @PrimaryKey val schoolYear: String,
-    val totalScore: Double,
-    val totalGrade: String
 )
