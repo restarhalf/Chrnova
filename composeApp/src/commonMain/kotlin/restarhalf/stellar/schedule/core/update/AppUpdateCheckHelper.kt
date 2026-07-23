@@ -33,10 +33,11 @@ internal suspend fun checkUpdateFromWorker(currentVersionName: String): AppUpdat
         return null
     }
 
+    val downloadUrl = versionInfo.url.ifBlank { DEFAULT_QUARK_SHARE_URL }
     return AppUpdateInfo(
         latestVersion = latestVersion,
-        releasePageUrl = QUARK_SHARE_URL,
-        downloadUrl = QUARK_SHARE_URL,
+        releasePageUrl = downloadUrl,
+        downloadUrl = downloadUrl,
         changelog = versionInfo.changelog,
     )
 }

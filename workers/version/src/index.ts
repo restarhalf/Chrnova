@@ -8,9 +8,12 @@ interface Env {
 
 interface VersionInfo {
   version: string;
+  url: string;
   changelog: string;
   updatedAt: string;
 }
+
+const DEFAULT_URL = 'https://pan.quark.cn/s/2326de687ab1?pwd=E97u';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -20,7 +23,7 @@ app.use('*', cors());
 app.get('/version.json', async (c) => {
   const data = await c.env.VERSION_KV.get('latest', 'json');
   if (!data) {
-    return c.json({ version: '0.0.0', changelog: '', updatedAt: '' });
+    return c.json({ version: '0.0.0', url: DEFAULT_URL, changelog: '', updatedAt: '' });
   }
   return c.json(data);
 });
@@ -32,13 +35,14 @@ app.post('/api/version', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401);
   }
 
-  const body = await c.req.json<{ version: string; changelog: string }>();
+  const body = await c.req.json<{ version: string; url: string; changelog: string }>();
   if (!body.version || typeof body.version !== 'string') {
     return c.json({ error: 'version is required' }, 400);
   }
 
   const info: VersionInfo = {
     version: body.version,
+    url: body.url || DEFAULT_URL,
     changelog: body.changelog || '',
     updatedAt: new Date().toISOString(),
   };
@@ -55,7 +59,7 @@ app.get('/api/version', async (c) => {
   }
 
   const data = await c.env.VERSION_KV.get('latest', 'json');
-  return c.json(data || { version: '', changelog: '', updatedAt: '' });
+  return c.json(data || { version: '', url: DEFAULT_URL, changelog: '', updatedAt: '' });
 });
 
 // Web UI
@@ -223,6 +227,10 @@ function getWebUI(): string {
           <input type="text" id="versionInput" placeholder="例如: 1.2.0">
         </div>
         <div class="form-group">
+          <label>下载链接</label>
+          <input type="text" id="urlInput" placeholder="夸克网盘分享链接">
+        </div>
+        <div class="form-group">
           <label>更新日志</label>
           <textarea id="changelogInput" placeholder="输入更新内容..."></textarea>
         </div>
@@ -232,7 +240,7 @@ function getWebUI(): string {
 
       <div class="preview">
         <div class="preview-label">version.json 预览</div>
-        <code id="preview">{\n  "version": "",\n  "changelog": ""\n}</code>
+        <code id="preview">{\n  "version": "",\n  "url": "",\n  "changelog": ""\n}</code>
       </div>
     </div>
   </div>
@@ -262,6 +270,7 @@ function getWebUI(): string {
           ? '更新于 ' + new Date(data.updatedAt).toLocaleString()
           : '-';
         document.getElementById('versionInput').value = data.version || '';
+        document.getElementById('urlInput').value = data.url || '';
         document.getElementById('changelogInput').value = data.changelog || '';
         updatePreview();
       } catch (e) {
@@ -271,16 +280,19 @@ function getWebUI(): string {
 
     function updatePreview() {
       const version = document.getElementById('versionInput').value;
+      const url = document.getElementById('urlInput').value;
       const changelog = document.getElementById('changelogInput').value;
-      const obj = { version, changelog };
+      const obj = { version, url, changelog };
       document.getElementById('preview').textContent = JSON.stringify(obj, null, 2);
     }
 
     document.getElementById('versionInput').addEventListener('input', updatePreview);
+    document.getElementById('urlInput').addEventListener('input', updatePreview);
     document.getElementById('changelogInput').addEventListener('input', updatePreview);
 
     async function save() {
       const version = document.getElementById('versionInput').value;
+      const url = document.getElementById('urlInput').value;
       const changelog = document.getElementById('changelogInput').value;
 
       if (!version) {
@@ -299,7 +311,7 @@ function getWebUI(): string {
             'Authorization': 'Bearer ' + authToken,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ version, changelog })
+          body: JSON.stringify({ version, url, changelog })
         });
 
         if (!res.ok) throw new Error('Save failed');
@@ -323,7 +335,6 @@ function getWebUI(): string {
       setTimeout(() => { el.className = 'status'; }, 3000);
     }
 
-    // Enter key to login
     document.getElementById('tokenInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') login();
     });
