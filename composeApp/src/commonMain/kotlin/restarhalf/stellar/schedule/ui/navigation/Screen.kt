@@ -102,4 +102,20 @@ sealed interface Screen : NavKey {
     @Serializable
     data object ElectiveCredit : Screen
 
+    /** 美食滚轮页面 */
+    @Serializable
+    data object FoodRoulette : Screen
+
+    /**
+     * 美食二维码页面
+     *
+     * @param foodName 食物名称
+     * @param qrContent 二维码内容
+     */
+    @Serializable
+    data class FoodQRCode(
+        val foodName: String,
+        val qrContent: String = "",
+    ) : Screen
+
 }

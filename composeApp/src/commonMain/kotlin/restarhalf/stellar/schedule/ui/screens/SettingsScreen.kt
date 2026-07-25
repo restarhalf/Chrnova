@@ -100,6 +100,7 @@ fun SettingsScreen(
     onAbout: () -> Unit,
     onPaper: () -> Unit,
     onProfile: () -> Unit = {},
+    onFoodRoulette: () -> Unit = {},
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     courses: List<Course> = emptyList(),
     showMessage: (String) -> Unit = {},
@@ -394,6 +395,13 @@ fun SettingsScreen(
                                     }
                                 }
                             })
+                    })
+                    add(CardItem("foodRoulette") {
+                        ArrowPreference(
+                            title = "今天吃什么",
+                            summary = "选择困难症？让滚轮帮你决定",
+                            onClick = onFoodRoulette,
+                        )
                     })
                     add(CardItem("courseReminder") {
                         SwitchPreference(
