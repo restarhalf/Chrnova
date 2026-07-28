@@ -11,6 +11,7 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -222,7 +223,9 @@ class JwxtClient(
         for (header in setCookies) {
             val parts = header.split(';')
             val keyValue = parts.firstOrNull().orEmpty().trim()
-            if (keyValue.startsWith("SERVERID=", ignoreCase = true)) {
+            if (keyValue.startsWith("SERVERID=", ignoreCase = true) ||
+                keyValue.startsWith("srv_id=", ignoreCase = true)
+            ) {
                 return keyValue
             }
         }
