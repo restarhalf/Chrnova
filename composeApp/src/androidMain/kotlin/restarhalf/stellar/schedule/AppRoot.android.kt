@@ -155,11 +155,16 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                 },
                 saveCsv = { fileName, content ->
                     runCatching {
+                        val mimeType = when {
+                            fileName.endsWith(".ics", ignoreCase = true) -> "text/calendar"
+                            fileName.endsWith(".csv", ignoreCase = true) -> "text/csv"
+                            else -> "text/plain"
+                        }
                         val collection =
                             MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                         val values = ContentValues().apply {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
                             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Chrnova")
                         }
                         val uri = contentResolver.insert(collection, values)

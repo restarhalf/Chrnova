@@ -26,8 +26,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.text.CsvExporter
+import restarhalf.stellar.schedule.core.text.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.CardItem
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
@@ -49,6 +51,7 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import org.koin.compose.koinInject
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -108,6 +111,7 @@ fun SettingsScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val settingsUiState by vm.uiState.collectAsStateWithLifecycle()
+    val timetablePort: TimetablePort = koinInject()
 
     val screenUi =
         remember(syncUiState, campus, termStartMs) {
@@ -393,6 +397,27 @@ fun SettingsScreen(
                                     scope.launch {
                                         val csv = CsvExporter.export(courses)
                                         val path = onExportCsv("课表.csv", csv)
+                                        if (path != null) {
+                                            showMessage("已保存: $path")
+                                        } else {
+                                            showMessage("保存失败")
+                                        }
+                                    }
+                                }
+                            })
+                    })
+                    add(CardItem("exportIcs") {
+                        ArrowPreference(
+                            title = "导出日历ICS",
+                            summary = "导入系统日历,支持课前提醒",
+                            onClick = {
+                                if (!starVerificationState.isVerified) {
+                                    vm.starVerification.showDialog()
+                                } else {
+                                    scope.launch {
+                                        val timetable = timetablePort.getCampusTimetable(campus)
+                                        val ics = IcsExporter.export(courses, termStartMs, timetable)
+                                        val path = onExportCsv("课表.ics", ics)
                                         if (path != null) {
                                             showMessage("已保存: $path")
                                         } else {
