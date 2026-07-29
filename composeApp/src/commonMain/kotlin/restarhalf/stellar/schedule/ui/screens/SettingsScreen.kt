@@ -224,6 +224,7 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "账号")
                 AppCard {
+                    // 个人信息卡（头像/昵称）仅用于展示与编辑，不应影响登录入口的可用性
                     if (personalInfoUiState.hasPersonalInfo) {
                         PersonalInfoCard(
                             avatarUri = personalInfoUiState.avatarUri,
@@ -237,7 +238,12 @@ fun SettingsScreen(
                             summary = accountUi.summary,
                             onClick = onProfile,
                         )
-                    } else {
+                    }
+                    // 登录入口：只要未登录教务就始终显示，与是否设置头像/昵称无关
+                    if (!accountUi.loggedIn) {
+                        if (personalInfoUiState.hasPersonalInfo) {
+                            HorizontalDivider()
+                        }
                         ArrowPreference(
                             title = "登录教务系统",
                             summary = "用于获取课表",

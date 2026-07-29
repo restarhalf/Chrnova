@@ -8,12 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,7 +45,6 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -75,7 +70,6 @@ fun LogScreen(
     onBack: () -> Unit,
     onExport: (fileName: String, content: String) -> Unit = { _, _ -> },
 ) {
-    val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val entries by AppLogger.entries.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -99,6 +93,42 @@ fun LogScreen(
                     }
                 },
             )
+        },
+        bottomBar = {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 25.dp, start = 10.dp, end = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        showClearConfirm = true
+                    },
+                ) {
+                    Text(text = "清空")
+                }
+                Button(
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                    onClick = {
+                        val metadata = mapOf(
+                            "App" to appInfo.appName,
+                            "Version" to appInfo.versionName,
+                            "Platform" to platformName(),
+                        )
+                        val text = AppLogger.toExportText(metadata)
+                        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                        val ts = "${now.date}T${now.time.hour.toString().padStart(2, '0')}:${now.time.minute.toString().padStart(2, '0')}:${now.time.second.toString().padStart(2, '0')}.${now.time.nanosecond.toString().take(5)}"
+                        val fileName = "Chrnova-$ts.log"
+                        onExport(fileName, text)
+                    },
+                ) {
+                    Text(text = "导出", color = colors.onPrimary)
+                }
+            }
         },
         popupHost = {
             if (showClearConfirm) {
@@ -135,41 +165,26 @@ fun LogScreen(
         },
         containerColor = Color.Transparent,
     ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior)
                     .padding(
                         PaddingValues(
                             top = paddingValues.calculateTopPadding(),
-                            start =
-                                paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                             end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
                             bottom = 0.dp
                         )
-                    )
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
-        ) {
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(
-                            appPageContentPadding(
-                                innerPadding = PaddingValues(),
-                                outerPadding = appScaffoldPadding,
-                                extraTop = 8.dp,
-                                extraStart = 12.dp + WindowInsets.displayCutout
-                                    .asPaddingValues()
-                                    .calculateStartPadding(LocalLayoutDirection.current),
-                                extraEnd = 12.dp + WindowInsets.displayCutout
-                                    .asPaddingValues()
-                                    .calculateEndPadding(LocalLayoutDirection.current),
-                            )
-                        ),
+                    ),
+                contentPadding = appPageContentPadding(
+                    innerPadding = PaddingValues(),
+                    outerPadding = paddingValues,
+                    extraTop = 12.dp,
+                    extraStart = 12.dp,
+                    extraEnd = 12.dp,
+                ),
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 items(entries.reversed(), key = { it.id }) { entry ->
                     LogEntryCard(
@@ -178,48 +193,6 @@ fun LogScreen(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        ),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        showClearConfirm = true
-                    },
-                ) {
-                    Text(text = "清空")
-                }
-                Button(
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColorsPrimary(),
-                    onClick = {
-                        val metadata = mapOf(
-                            "App" to appInfo.appName,
-                            "Version" to appInfo.versionName,
-                            "Platform" to platformName(),
-                        )
-                        val text = AppLogger.toExportText(metadata)
-                        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                        val ts = "${now.date}T${now.time.hour.toString().padStart(2, '0')}:${now.time.minute.toString().padStart(2, '0')}:${now.time.second.toString().padStart(2, '0')}.${now.time.nanosecond.toString().take(5)}"
-                        val fileName = "Chrnova-$ts.log"
-                        onExport(fileName, text)
-                    },
-                ) {
-                    Text(text = "导出", color = colors.onPrimary)
-                }
-            }
-        }
     }
 
     selectedEntry?.let { entry ->
