@@ -8,20 +8,19 @@ import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 
 /**
  * 同步课程用例
- * 
+ *
  * 执行教务系统课程同步的完整流程：
  * 1. 确保用户已登录
  * 2. 获取当前学期
  * 3. 匹配校区
  * 4. 执行同步
- * 5. 刷新提醒
+ * 5. 同步日历事件(若开启)
  */
 class RunSyncUseCase(
     private val authWorkflow: AuthWorkflowPort,
@@ -29,7 +28,7 @@ class RunSyncUseCase(
     private val timetable: TimetablePort,
     private val settings: SettingsPort,
     private val sync: SyncPort,
-    private val reminderScheduler: ReminderSchedulerPort,
+    private val syncCourseEvents: SyncCourseEventsToCalendarUseCase,
 ) {
 
     /**
@@ -80,7 +79,11 @@ class RunSyncUseCase(
             timetable.setTotalWeeks(teachingWeekTotal)
         }
 
-        reminderScheduler.scheduleNow()
+        syncCourseEvents(
+            campus = timetable.getCampus(),
+            termStartMs = timetable.getTermStartMs(),
+            totalWeeks = timetable.getTotalWeeks(),
+        )
 
         return result
     }

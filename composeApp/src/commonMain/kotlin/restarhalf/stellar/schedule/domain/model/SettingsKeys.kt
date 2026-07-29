@@ -12,9 +12,9 @@ object SettingsKeys {
     /** 是否显示非当前周课程 */
     const val SHOW_NON_CURRENT_WEEK = "show_non_current_week"
     /** 课程提醒是否启用 */
-    const val REMINDER_ENABLED = "reminder_enabled"
+    const val REMINDER_ENABLED = "calendar_enabled"
     /** 考试提醒是否启用 */
-    const val EXAM_REMINDER_ENABLED = "exam_reminder_enabled"
+    const val EXAM_REMINDER_ENABLED = "exam_calendar_enabled"
     /** 主题模式：0=跟随系统，1=浅色，2=深色 */
     const val THEME_MODE = "theme_mode"
     /** 当前选中的学期 */

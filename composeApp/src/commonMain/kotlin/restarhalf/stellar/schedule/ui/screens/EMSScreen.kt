@@ -122,6 +122,7 @@ fun EMSScreen(
     LaunchedEffect(Unit) {
         examVm.load()
         gradeVm.load()
+        examVm.refreshExamCalendar()
         while (true) {
             delay(300_000L.milliseconds)
             nowMs = Clock.System.now().toEpochMilliseconds()

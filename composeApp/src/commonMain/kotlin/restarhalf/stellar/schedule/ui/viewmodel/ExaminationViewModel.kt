@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
@@ -27,6 +28,8 @@ import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
  * 考试安排ViewModel
@@ -41,6 +44,7 @@ class ExaminationViewModel(
     observeAllExaminations: ObserveAllExaminationsUseCase,
     private val auth: AuthPort,
     private val settings: SettingsPort,
+    private val syncExamEventsToCalendar: SyncExamEventsToCalendarUseCase,
 ) : ViewModel() {
 
     /**
@@ -194,6 +198,26 @@ class ExaminationViewModel(
                     _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
                 }
             _loading.value = false
+        }
+    }
+
+    /**
+     * 刷新考试日历事件
+     *
+     * 进入考试页或考试数据变化后调用,触发日历事件全量重建。
+     * 仅在已开启「考试日历提醒」时实际写入。
+     */
+    fun refreshExamCalendar() {
+        viewModelScope.launch {
+            runCatching {
+                withContext(AppIoDispatcher) {
+                    val term = _selectedTerm.value
+                    syncExamEventsToCalendar(selectedTerm = term)
+                }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Calendar", "考试日历刷新失败", e)
+            }
         }
     }
 

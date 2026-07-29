@@ -24,11 +24,10 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
-import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
-import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
-import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
+import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
@@ -49,11 +48,10 @@ class SettingsViewModel(
     private val auth: AuthPort,
     private val authWorkflow: AuthWorkflowPort,
     private val settings: SettingsPort,
-    private val cancelAllCourseReminders: CancelAllCourseRemindersUseCase,
-    private val cancelAllExamReminders: CancelAllExamRemindersUseCase,
+    private val syncCourseEventsToCalendar: SyncCourseEventsToCalendarUseCase,
+    private val syncExamEventsToCalendar: SyncExamEventsToCalendarUseCase,
+    private val removeAllCalendarEvents: RemoveAllCalendarEventsUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
-    private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
-    private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
     verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
 
@@ -417,25 +415,33 @@ class SettingsViewModel(
 
     /**
      * 课程提醒开关变更回调
-     * 
+     *
      * @param enabled 是否启用
      */
     fun onReminderEnabledChanged(enabled: Boolean) {
         settings.setCourseReminderEnabled(enabled)
         if (!enabled) {
-            cancelAllCourseReminders()
+            viewModelScope.launch {
+                withContext(AppIoDispatcher) {
+                    runCatching { removeAllCalendarEvents(removeCourses = true, removeExams = false) }
+                }
+            }
         }
     }
 
     /**
      * 考试提醒开关变更回调
-     * 
+     *
      * @param enabled 是否启用
      */
     fun onExamReminderEnabledChanged(enabled: Boolean) {
         settings.setExamReminderEnabled(enabled)
         if (!enabled) {
-            cancelAllExamReminders()
+            viewModelScope.launch {
+                withContext(AppIoDispatcher) {
+                    runCatching { removeAllCalendarEvents(removeCourses = false, removeExams = true) }
+                }
+            }
         }
     }
 
@@ -459,18 +465,18 @@ class SettingsViewModel(
     }
 
     /**
-     * 调度课程提醒
-     * 
+     * 同步课程事件到日历
+     *
      * @param campus 当前校区
      * @param termStartMs 学期开始时间戳
      * @param totalWeeks 学期总周数
      */
-    fun scheduleCourseReminder(campus: Campus, termStartMs: Long, totalWeeks: Int) {
+    fun syncCourseCalendar(campus: Campus, termStartMs: Long, totalWeeks: Int) {
         viewModelScope.launch {
             val result =
                 withContext(AppIoDispatcher) {
                     runCatching {
-                        scheduleNextCourseReminder(
+                        syncCourseEventsToCalendar(
                             campus = campus,
                             termStartMs = termStartMs,
                             totalWeeks = totalWeeks
@@ -480,29 +486,29 @@ class SettingsViewModel(
             if (result.isFailure) {
                 val e = result.exceptionOrNull()!!
                 if (e is CancellationException) throw e
-                AppLogger.log("Reminder", "课程提醒调度失败", e)
+                AppLogger.log("Calendar", "课程日历同步失败", e)
                 onReminderEnabledChanged(false)
             }
         }
     }
 
     /**
-     * 调度考试提醒
-     * 
+     * 同步考试事件到日历
+     *
      * @param selectedTerm 选中的学期
      */
-    fun scheduleExamReminder(selectedTerm: String) {
+    fun syncExamCalendar(selectedTerm: String) {
         viewModelScope.launch {
             val result =
                 withContext(AppIoDispatcher) {
                     runCatching {
-                        scheduleNextExamReminder(selectedTerm = selectedTerm)
+                        syncExamEventsToCalendar(selectedTerm = selectedTerm)
                     }
                 }
             if (result.isFailure) {
                 val e = result.exceptionOrNull()!!
                 if (e is CancellationException) throw e
-                AppLogger.log("Reminder", "考试提醒调度失败", e)
+                AppLogger.log("Calendar", "考试日历同步失败", e)
             }
         }
     }

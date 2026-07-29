@@ -323,15 +323,71 @@ fun SettingsScreen(
             )
 
             item {
-                SmallTitle(text = "学习资料")
-                AppCard {
-                    ArrowPreference(
-                        title = "试卷共享",
-                        summary = "校园试卷与学习资料共享",
-                        onClick = onPaper,
-                    )
-                }
+                SmallTitle(text = "小工具")
             }
+            groupedCardItems(
+                keyPrefix = "settings_tools",
+                outerBottomPadding = 6.dp,
+                outerHorizontalPadding = 0.dp,
+                items = buildList{
+                    add(CardItem("paper"){
+                        ArrowPreference(
+                            title = "试卷共享",
+                            summary = "校园试卷与学习资料共享",
+                            onClick = onPaper,
+                        )
+                    })
+                    add(CardItem("exportCsv") {
+                        ArrowPreference(
+                            title = "导出课表CSV",
+                            summary = "将当前课表导出为CSV文件",
+                            onClick = {
+                                if (!starVerificationState.isVerified) {
+                                    vm.starVerification.showDialog()
+                                } else {
+                                    scope.launch {
+                                        val csv = CsvExporter.export(courses)
+                                        val path = onExportCsv("课表.csv", csv)
+                                        if (path != null) {
+                                            showMessage("已保存: $path")
+                                        } else {
+                                            showMessage("保存失败")
+                                        }
+                                    }
+                                }
+                            })
+                    })
+                    add(CardItem("exportIcs") {
+                        ArrowPreference(
+                            title = "导出日历ICS",
+                            summary = "导入系统日历,支持课前提醒",
+                            onClick = {
+                                if (!starVerificationState.isVerified) {
+                                    vm.starVerification.showDialog()
+                                } else {
+                                    scope.launch {
+                                        val timetable = timetablePort.getCampusTimetable(campus)
+                                        val ics = IcsExporter.export(courses, termStartMs, timetable)
+                                        val path = onExportCsv("课表.ics", ics)
+                                        if (path != null) {
+                                            showMessage("已保存: $path")
+                                        } else {
+                                            showMessage("保存失败")
+                                        }
+                                    }
+                                }
+                            })
+                    })
+//                    add(CardItem("foodRoulette") {
+//                        ArrowPreference(
+//                            title = "今天吃什么",
+//                            summary = "选择困难症？让滚轮帮你决定",
+//                            onClick = onFoodRoulette,
+//                        )
+//                    })
+                }
+            )
+
 
             item {
                 SmallTitle(text = "外观")
@@ -386,64 +442,16 @@ fun SettingsScreen(
                             summary = screenUi.syncSummary,
                             onClick = { vm.triggerSync { onSync() } })
                     })
-                    add(CardItem("exportCsv") {
-                        ArrowPreference(
-                            title = "导出课表CSV",
-                            summary = "将当前课表导出为CSV文件",
-                            onClick = {
-                                if (!starVerificationState.isVerified) {
-                                    vm.starVerification.showDialog()
-                                } else {
-                                    scope.launch {
-                                        val csv = CsvExporter.export(courses)
-                                        val path = onExportCsv("课表.csv", csv)
-                                        if (path != null) {
-                                            showMessage("已保存: $path")
-                                        } else {
-                                            showMessage("保存失败")
-                                        }
-                                    }
-                                }
-                            })
-                    })
-                    add(CardItem("exportIcs") {
-                        ArrowPreference(
-                            title = "导出日历ICS",
-                            summary = "导入系统日历,支持课前提醒",
-                            onClick = {
-                                if (!starVerificationState.isVerified) {
-                                    vm.starVerification.showDialog()
-                                } else {
-                                    scope.launch {
-                                        val timetable = timetablePort.getCampusTimetable(campus)
-                                        val ics = IcsExporter.export(courses, termStartMs, timetable)
-                                        val path = onExportCsv("课表.ics", ics)
-                                        if (path != null) {
-                                            showMessage("已保存: $path")
-                                        } else {
-                                            showMessage("保存失败")
-                                        }
-                                    }
-                                }
-                            })
-                    })
-//                    add(CardItem("foodRoulette") {
-//                        ArrowPreference(
-//                            title = "今天吃什么",
-//                            summary = "选择困难症？让滚轮帮你决定",
-//                            onClick = onFoodRoulette,
-//                        )
-//                    })
                     add(CardItem("courseReminder") {
                         SwitchPreference(
-                            title = "课程提醒",
-                            summary = "上课前15分钟推送通知提醒",
+                            title = "课程日历提醒",
+                            summary = "写入系统日历,课前15分钟提醒",
                             checked = settingsUiState.reminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureCourseReminderPermission {
                                         vm.onReminderEnabledChanged(true)
-                                        vm.scheduleCourseReminder(
+                                        vm.syncCourseCalendar(
                                             campus = campus,
                                             termStartMs = termStartMs,
                                             totalWeeks = totalWeeks
@@ -456,14 +464,14 @@ fun SettingsScreen(
                     })
                     add(CardItem("examReminder") {
                         SwitchPreference(
-                            title = "考试提醒",
-                            summary = "考试前15分钟推送通知提醒",
+                            title = "考试日历提醒",
+                            summary = "写入系统日历,考前15分钟提醒",
                             checked = settingsUiState.examReminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureExamReminderPermission {
                                         vm.onExamReminderEnabledChanged(true)
-                                        vm.scheduleExamReminder(
+                                        vm.syncExamCalendar(
                                             selectedTerm = settingsUiState.selectedTerm
                                         )
                                     }

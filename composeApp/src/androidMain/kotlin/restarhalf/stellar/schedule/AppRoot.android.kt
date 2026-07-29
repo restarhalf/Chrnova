@@ -86,9 +86,10 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
         val appIcon = rememberAppIcon()
         var pendingNotificationGrant by remember { mutableStateOf<(() -> Unit)?>(null) }
         val notificationPermissionLauncher =
-            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
                 val onGranted = pendingNotificationGrant
                 pendingNotificationGrant = null
+                val granted = result.values.all { it }
                 if (granted) {
                     onGranted?.invoke()
                 }
@@ -110,16 +111,18 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                     PdfFilePickerHost(onPicked = onPicked)
                 },
                 ensureNotificationPermission = { onGranted ->
-                    if (
-                        ContextCompat.checkSelfPermission(
-                            this@AppRoot,
-                            Manifest.permission.POST_NOTIFICATIONS,
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
+                    val perms = arrayOf(
+                        Manifest.permission.READ_CALENDAR,
+                        Manifest.permission.WRITE_CALENDAR,
+                    )
+                    val allGranted = perms.all {
+                        ContextCompat.checkSelfPermission(this@AppRoot, it) == PackageManager.PERMISSION_GRANTED
+                    }
+                    if (allGranted) {
                         onGranted()
                     } else {
                         pendingNotificationGrant = onGranted
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        notificationPermissionLauncher.launch(perms)
                     }
                 },
                 openUri = { uri ->
