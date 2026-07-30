@@ -83,7 +83,7 @@ class CalculateElectiveCreditsUseCase {
         )
 
         private val X_CATEGORY_NAMES = mapOf(
-            "X1" to "X1",
+            "X1" to "X1人工智能与前沿追踪",
             "X2" to "X2艺术鉴赏与审美体验",
             "X3" to "X3生命关怀与健康素养",
             "X4" to "X4文化传承与社会发展",
