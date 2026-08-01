@@ -8,15 +8,16 @@ kotlinx-coroutines = "1.11.0"
 coil-compose = "3.5.0"
 glance = "1.1.1"
 miuix = "0.9.3"
-navigation3 = "1.1.4"
+navigation3 = "1.1.5"
 qrose = "1.1.2"
-room3 = "3.0.0"
+room3 = "3.0.1"
 multiplatformSettings = "1.3.0"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.10"
 koin = "4.2.2"
 sqlite = "2.7.0"
 ktor = "3.5.1"
+work = "2.11.2"
 kotlinx-datetime = "0.8.0"
 lifecycle = "2.11.0"
 exifinterface = "1.4.2"
@@ -27,6 +28,7 @@ navigationevent = "1.1.2"
 androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance"}
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 # Compose Multiplatform
 compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "compose" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }

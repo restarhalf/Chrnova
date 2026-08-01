@@ -179,6 +179,7 @@ kotlin {
             }
         }
         androidMain.dependencies {
+            implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.glance.appwidget)
             implementation(libs.androidx.glance)
             implementation(libs.androidx.exifinterface)

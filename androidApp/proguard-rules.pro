@@ -15,12 +15,8 @@
     native <methods>;
 }
 
-# WorkManager, receivers and Glance widgets are runtime entry points.
--keep class restarhalf.stellar.schedule.reminder.ReminderRescheduleWorker { *; }
+-keep class androidx.work.impl.WorkDatabase_Impl$* { *; }
 -keep class restarhalf.stellar.schedule.AndroidApp { *; }
--keep class restarhalf.stellar.schedule.reminder.receiver.BootReceiver { *; }
--keep class restarhalf.stellar.schedule.reminder.receiver.CourseReminderReceiver { *; }
--keep class restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.TodaySmallWidgetReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.TodayLargeWidgetReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.WidgetRefreshReceiver { *; }
