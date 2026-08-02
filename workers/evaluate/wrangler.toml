@@ -1,0 +1,13 @@
+name = "chrnova-evaluate-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chrnova-evaluate-db"
+database_id = "cbe1ea88-2b1a-4119-9e1b-9ed69231a5b6"
+
+#
+# ADMIN_TOKEN / ADMIN_PASSWORD 属于敏感信息，请通过以下命令注入，不要写在此文件：
+#   wrangler secret put ADMIN_TOKEN
+#   wrangler secret put ADMIN_PASSWORD

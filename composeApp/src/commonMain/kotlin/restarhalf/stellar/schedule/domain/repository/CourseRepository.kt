@@ -41,10 +41,20 @@ interface CourseRepository {
 
     /**
      * 一次性获取所有课程
-     * 
-     * @return 课程列表
+     *
+     * @return 课程列表（按当前激活学期过滤）
      */
     suspend fun getAllCoursesOnce(): List<Course>
+
+    /**
+     * 一次性获取所有课程（跨学期，不做学期过滤）
+     *
+     * 用于课程评价等需要覆盖全部已同步学期课程的场景。
+     * 注意：与本仓库的 [getAllCoursesOnce] 不同，此方法忽略激活学期。
+     *
+     * @return 课程列表
+     */
+    suspend fun getAllCoursesAcrossSemesters(): List<Course>
 
     /**
      * 替换同步的课程数据

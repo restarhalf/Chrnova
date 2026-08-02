@@ -36,11 +36,6 @@ val localSecretsAesKey =
         ?.takeIf { it.isNotEmpty() }
         ?: error("AES_KEY missing in local.properties or environment")
 
-val localSecretsPapersBaseUrl =
-    (localProps.getProperty("PAPERS_BASE_URL") ?: System.getenv("PAPERS_BASE_URL"))
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-        ?: error("PAPERS_BASE_URL missing in local.properties or environment")
 
 require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
     "AES_KEY must be exactly 16 bytes for AES-128"
@@ -54,9 +49,6 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
     @get:Input
     abstract val signKey: Property<String>
-
-    @get:Input
-    abstract val papersBaseUrl: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -77,7 +69,6 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
         val aesChars = aesKey.get().toHexStringArray()
         val signChars = signKey.get().toHexStringArray()
-        val urlChars = papersBaseUrl.get().toHexStringArray()
 
         outputFile.parentFile.mkdirs()
         outputFile.writeText(
@@ -87,11 +78,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
             internal object LocalSecrets {
                 private val _a = intArrayOf($aesChars)
                 private val _s = intArrayOf($signChars)
-                private val _u = intArrayOf($urlChars)
 
                 val AES_KEY: String by lazy { _a.joinToString("") { it.toChar().toString() } }
                 val SIGN_KEY: String by lazy { _s.joinToString("") { it.toChar().toString() } }
-                val PAPERS_BASE_URL: String by lazy { _u.joinToString("") { it.toChar().toString() } }
             }
             """.trimIndent()
         )
@@ -102,7 +91,6 @@ val generateLocalSecrets = tasks.register<GenerateLocalSecretsTask>("generateLoc
     description = "生成LocalSecrets"
     aesKey.set(localSecretsAesKey)
     signKey.set(localSecretsSignKey)
-    papersBaseUrl.set(localSecretsPapersBaseUrl)
     outputDir.set(generatedLocalSecretsDir)
 }
 

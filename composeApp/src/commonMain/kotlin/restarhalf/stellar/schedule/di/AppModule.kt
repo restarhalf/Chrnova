@@ -12,7 +12,6 @@ import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthPortImpl
 import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
@@ -23,6 +22,7 @@ import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.TimetableSettings
+import restarhalf.stellar.schedule.data.remote.CourseEvaluationApi
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
@@ -38,6 +38,7 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
+import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
@@ -88,6 +89,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
@@ -194,6 +196,13 @@ val portModule = module {
         }
     }
 
+    // 课程评价系统HTTP客户端
+    single(named("evaluate")) {
+        HttpClient {
+            installCommonModules(get())
+        }
+    }
+
     // 端口实现
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
@@ -216,7 +225,15 @@ val portModule = module {
         PapersApi(
             httpClient = get(named("papers")),
             json = get(),
-            baseUrl = LocalSecrets.PAPERS_BASE_URL,
+            baseUrl = "https://chrnova.paper.restarhalf.dpdns.org",
+            getDeviceId = { get<SettingsPort>().getDeviceId() },
+        )
+    }
+    single<CourseEvaluationPort> {
+        CourseEvaluationApi(
+            httpClient = get(named("evaluate")),
+            json = get(),
+            baseUrl = "https://chrnova.evaluate.restarhalf.dpdns.org",
             getDeviceId = { get<SettingsPort>().getDeviceId() },
         )
     }
@@ -438,6 +455,14 @@ val viewModelModule = module {
             papersPort = get(),
             settings = get(),
             verifyGitHubStar = get(),
+        )
+    }
+    viewModel {
+        CourseEvaluationViewModel(
+            port = get(),
+            courseRepository = get(),
+            auth = get(),
+            settings = get(),
         )
     }
     viewModel {

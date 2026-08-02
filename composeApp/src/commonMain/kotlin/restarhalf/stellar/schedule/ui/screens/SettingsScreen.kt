@@ -102,6 +102,7 @@ fun SettingsScreen(
     onChangeBackground: () -> Unit,
     onAbout: () -> Unit,
     onPaper: () -> Unit,
+    onEvaluation: () -> Unit = {},
     onProfile: () -> Unit = {},
     onFoodRoulette: () -> Unit = {},
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
@@ -335,6 +336,13 @@ fun SettingsScreen(
                             title = "试卷共享",
                             summary = "校园试卷与学习资料共享",
                             onClick = onPaper,
+                        )
+                    })
+                    add(CardItem("evaluation") {
+                        ArrowPreference(
+                            title = "课程评价",
+                            summary = "查看与分享课程评价",
+                            onClick = onEvaluation,
                         )
                     })
                     add(CardItem("exportCsv") {

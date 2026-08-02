@@ -1,0 +1,204 @@
+package restarhalf.stellar.schedule.ui.viewmodel
+
+import androidx.compose.runtime.Stable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.model.Evaluation
+import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
+import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.port.SettingsPort
+
+/**
+ * 课程评价 ViewModel
+ *
+ * 负责评价列表/详情的加载、提交、删除与点赞（交互操作）。
+ * 提交评价时由客户端限制只能选择“已选课程”（来自 CourseRepository），后端不做此限制。
+ */
+class CourseEvaluationViewModel(
+    private val port: CourseEvaluationPort,
+    private val courseRepository: CourseRepository,
+    private val auth: AuthPort,
+    private val settings: SettingsPort,
+) : ViewModel() {
+
+    @Stable
+    data class EvaluationUiState(
+        val loading: Boolean = false,
+        val error: String? = null,
+        val successMessage: String? = null,
+        val evaluations: ImmutableList<Evaluation> = persistentListOf(),
+        val total: Int = 0,
+        val searchQuery: String = "",
+        /** 列表页课程筛选（null 表示全部） */
+        val selectedCourse: String? = null,
+        val selectedEvaluation: Evaluation? = null,
+        /** 当前用户已选课程（用于提交时限制可选课程） */
+        val myCourses: ImmutableList<Course> = persistentListOf(),
+        val submitting: Boolean = false,
+        val userNo: String = "",
+        val profileName: String = "",
+        /** 用户自定义昵称（优先于 profileName 用作评价署名） */
+        val userNickname: String? = null,
+        val deviceId: String = "",
+    ) {
+        val filteredEvaluations: List<Evaluation>
+            get() = if (searchQuery.isEmpty()) {
+                evaluations
+            } else {
+                evaluations.filter {
+                    it.courseName.contains(searchQuery, ignoreCase = true) ||
+                        it.content.contains(searchQuery, ignoreCase = true) ||
+                        it.author.contains(searchQuery, ignoreCase = true)
+                }
+            }
+
+        /** 当前评价是否为本机提交（可删除） */
+        val canDeleteSelected: Boolean
+            get() = selectedEvaluation != null &&
+                deviceId.isNotBlank() &&
+                selectedEvaluation.deviceId == deviceId
+    }
+
+    private val _uiState = MutableStateFlow(EvaluationUiState())
+    val uiState: StateFlow<EvaluationUiState> = _uiState
+
+    init {
+        _uiState.update {
+            it.copy(
+                deviceId = settings.getDeviceId(),
+                userNickname = settings.getUserNickname(),
+            )
+        }
+        viewModelScope.launch {
+            auth.observeProfile().collect { profile ->
+                _uiState.update { it.copy(userNo = profile.userNo, profileName = profile.name) }
+            }
+        }
+        viewModelScope.launch {
+            runCatching { courseRepository.getAllCoursesAcrossSemesters() }
+                .onSuccess { courses ->
+                    _uiState.update { it.copy(myCourses = courses.toPersistentList()) }
+                }
+                .onFailure {
+                    if (it is CancellationException) throw it
+                    AppLogger.log("Evaluation", "加载已选课程失败", it)
+                }
+        }
+    }
+
+    fun loadEvaluations() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null) }
+            runCatching {
+                port.listEvaluations(course = _uiState.value.selectedCourse)
+            }.onSuccess { page ->
+                _uiState.update {
+                    it.copy(
+                        evaluations = page.items.toPersistentList(),
+                        total = page.total,
+                        loading = false,
+                    )
+                }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Evaluation", "加载评价列表失败", e)
+                _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+            }
+        }
+    }
+
+    fun loadDetail(id: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null) }
+            runCatching { port.getEvaluation(id) }
+                .onSuccess { evaluation ->
+                    _uiState.update { it.copy(selectedEvaluation = evaluation, loading = false) }
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "加载评价详情失败", e)
+                    _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+                }
+        }
+    }
+
+    fun submitEvaluation(req: EvaluationCreateRequest) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(submitting = true, error = null) }
+            runCatching { port.createEvaluation(req) }
+                .onSuccess {
+                    _uiState.update { it.copy(submitting = false, successMessage = "提交成功，等待审核") }
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "提交评价失败", e)
+                    _uiState.update { it.copy(submitting = false, error = e.message ?: "提交失败") }
+                }
+        }
+    }
+
+    fun deleteEvaluation(id: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null) }
+            runCatching { port.deleteEvaluation(id) }
+                .onSuccess {
+                    _uiState.update { it.copy(loading = false, successMessage = "已删除") }
+                    loadEvaluations()
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "删除评价失败", e)
+                    _uiState.update { it.copy(loading = false, error = e.message ?: "删除失败") }
+                }
+        }
+    }
+
+    fun toggleLike(id: String) {
+        viewModelScope.launch {
+            runCatching { port.toggleLike(id) }
+                .onSuccess { result ->
+                    _uiState.update { state ->
+                        val evaluations = state.evaluations.map { ev ->
+                            if (ev.id == id) ev.copy(likes = result.likes, liked = result.liked) else ev
+                        }.toPersistentList()
+                        val selected = if (state.selectedEvaluation?.id == id) {
+                            state.selectedEvaluation.copy(likes = result.likes, liked = result.liked)
+                        } else {
+                            state.selectedEvaluation
+                        }
+                        state.copy(evaluations = evaluations, selectedEvaluation = selected)
+                    }
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "点赞操作失败", e)
+                    _uiState.update { it.copy(error = e.message ?: "操作失败") }
+                }
+        }
+    }
+
+    fun setCourseFilter(course: String?) {
+        _uiState.update { it.copy(selectedCourse = course) }
+        loadEvaluations()
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun clearMessage() {
+        _uiState.update { it.copy(successMessage = null, error = null) }
+    }
+}

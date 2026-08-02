@@ -82,6 +82,18 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PapersUpload : Screen
 
+    /** 课程评价列表页 */
+    @Serializable
+    data object Evaluation : Screen
+
+    /** 课程评价详情页 */
+    @Serializable
+    data class EvaluationDetail(val evaluationId: String) : Screen
+
+    /** 课程评价提交页 */
+    @Serializable
+    data object EvaluationSubmit : Screen
+
     /** 教务系统登录页面 */
     @Serializable
     data object JWLogin : Screen

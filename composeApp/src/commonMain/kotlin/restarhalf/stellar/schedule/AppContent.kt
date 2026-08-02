@@ -73,6 +73,9 @@ import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodRouletteScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
@@ -93,6 +96,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -352,6 +356,33 @@ fun AppContent(
                         onBack = { navigator.pop() },
                         onResult = { showMessageState(it) },
                         pdfFilePickerHost = pdfFilePickerHost,
+                    )
+                }
+                entry(Screen.Evaluation) {
+                    val evalVm: CourseEvaluationViewModel = koinViewModel()
+                    EvaluationListScreen(
+                        vm = evalVm,
+                        onBack = { navigator.pop() },
+                        onEvaluationDetail = { evaluationId ->
+                            navigator.push(Screen.EvaluationDetail(evaluationId))
+                        },
+                        onSubmitClick = { navigator.push(Screen.EvaluationSubmit) },
+                    )
+                }
+                entry<Screen.EvaluationDetail> { screen ->
+                    val evalVm: CourseEvaluationViewModel = koinViewModel()
+                    EvaluationDetailScreen(
+                        vm = evalVm,
+                        evaluationId = screen.evaluationId,
+                        onBack = { navigator.pop() },
+                    )
+                }
+                entry(Screen.EvaluationSubmit) {
+                    val evalVm: CourseEvaluationViewModel = koinViewModel()
+                    EvaluationSubmitScreen(
+                        vm = evalVm,
+                        onBack = { navigator.pop() },
+                        onSubmitted = { navigator.pop() },
                     )
                 }
                 entry(Screen.JWLogin) {
@@ -630,6 +661,7 @@ private fun MainRouteContent(
                     onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                     onAbout = { navigator.push(Screen.About) },
                     onPaper = { navigator.push(Screen.Papers) },
+                    onEvaluation = { navigator.push(Screen.Evaluation) },
                     onLogin = { navigator.push(Screen.JWLogin) },
                     onProfile = { navigator.push(Screen.Profile) },
                     onFoodRoulette = { navigator.push(Screen.FoodRoulette) },

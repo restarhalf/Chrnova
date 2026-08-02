@@ -102,6 +102,13 @@ class RoomCourseRepository(
     }
 
     /**
+     * 跨学期获取全部课程（忽略激活学期过滤）。
+     */
+    override suspend fun getAllCoursesAcrossSemesters(): List<Course> {
+        return courseDao.getAllCoursesOnce().map { it.toDomain() }
+    }
+
+    /**
      * 替换同步的课程数据
      * 
      * @param courses 新课程列表
