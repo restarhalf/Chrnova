@@ -286,27 +286,27 @@ jobs:
           if-no-files-found: error
           path: build/ios/app-release.ipa
 
-  publish-release:
-    name: Publish GitHub Release
-    if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs:
-      - android-release
-      - ios-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: dist
-
-      - name: Show collected artifacts
-        run: find dist -type f | sort
-
-      - name: Publish release assets
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          fail_on_unmatched_files: false
-          files: |
-            dist/**/*.apk
-            dist/**/*.ipa
+#  publish-release:
+#    name: Publish GitHub Release
+#    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+#    needs:
+#      - android-release
+#      - ios-release
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Download all artifacts
+#        uses: actions/download-artifact@v8
+#        with:
+#          path: dist
+#
+#      - name: Show collected artifacts
+#        run: find dist -type f | sort
+#
+#      - name: Publish release assets
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          generate_release_notes: true
+#          fail_on_unmatched_files: false
+#          files: |
+#            dist/**/*.apk
+#            dist/**/*.ipa
