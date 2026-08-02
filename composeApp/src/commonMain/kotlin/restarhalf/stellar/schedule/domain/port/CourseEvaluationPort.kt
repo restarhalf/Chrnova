@@ -13,7 +13,7 @@ import restarhalf.stellar.schedule.domain.model.LikeResult
  */
 interface CourseEvaluationPort {
     /**
-     * 获取评价列表（已通过审核 + 当前设备自己的评价）
+     * 获取评价列表（已去掉审核，全部可见）
      *
      * @param course 按课程名过滤（可选）
      * @param page 页码（从 1 开始）
@@ -35,15 +35,15 @@ interface CourseEvaluationPort {
     suspend fun getEvaluation(id: String): Evaluation
 
     /**
-     * 提交一条课程评价
+     * 提交一条课程评价（需登录：请求会携带 X-User-Hash 头）
      *
      * @param req 评价内容
-     * @return 创建后的评价（状态为 pending，等待审核）
+     * @return 创建后的评价
      */
     suspend fun createEvaluation(req: EvaluationCreateRequest): Evaluation
 
     /**
-     * 删除自己提交的评价
+     * 删除自己提交的评价（需登录：请求会携带 X-User-Hash 头）
      *
      * @param id 评价唯一标识
      * @return 是否删除成功
@@ -51,10 +51,28 @@ interface CourseEvaluationPort {
     suspend fun deleteEvaluation(id: String): Boolean
 
     /**
-     * 点赞 / 取消点赞（交互操作）
+     * 点赞 / 取消点赞（需登录：请求会携带 X-User-Hash 头）
      *
      * @param id 评价唯一标识
      * @return 最新的点赞数与当前点赞状态
      */
     suspend fun toggleLike(id: String): LikeResult
+
+    companion object {
+        /**
+         * 把学号明文转成 user_hash（学号 SHA-256 hex，小写）。
+         *
+         * 后端用相同算法（crypto.subtle.digest('SHA-256')）计算，两边结果一致。
+         * 客户端把它放进 `X-User-Hash` 请求头，用于登录态校验、防刷与归属判定，
+         * 后端不再存储学号明文。
+         */
+        @OptIn(dev.whyoleg.cryptography.DelicateCryptographyApi::class)
+        fun hashUserNo(userNo: String): String {
+            if (userNo.isBlank()) return ""
+            val hasher = dev.whyoleg.cryptography.CryptographyProvider.Default
+                .get(dev.whyoleg.cryptography.algorithms.SHA256).hasher()
+            val digest = hasher.hashBlocking(userNo.encodeToByteArray())
+            return digest.toHexString().lowercase()
+        }
+    }
 }

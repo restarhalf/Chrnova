@@ -5,7 +5,7 @@ compatibility_date = "2026-06-24"
 [[d1_databases]]
 binding = "DB"
 database_name = "chrnova-evaluate-db"
-database_id = "cbe1ea88-2b1a-4119-9e1b-9ed69231a5b6"
+database_id = "9c43d578-7185-477d-b592-f5a4f9ebc968"
 
 #
 # ADMIN_TOKEN / ADMIN_PASSWORD 属于敏感信息，请通过以下命令注入，不要写在此文件：

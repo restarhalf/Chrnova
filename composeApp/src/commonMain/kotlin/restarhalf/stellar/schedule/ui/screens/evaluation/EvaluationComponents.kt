@@ -1,9 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens.evaluation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,30 +82,6 @@ fun StarRatingInput(
                     .padding(4.dp),
             )
         }
-    }
-}
-
-/**
- * 审核状态徽标：待审核（琥珀）/ 未通过（红）。
- */
-@Composable
-fun EvaluationStatusBadge(
-    status: String,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MiuixTheme.colorScheme
-    val (text, bg, fg) = when (status) {
-        "pending" -> Triple("待审核", Color(0xFFFFB300).copy(alpha = 0.18f), Color(0xFFE6A100))
-        "rejected" -> Triple("未通过", colors.error.copy(alpha = 0.16f), colors.error)
-        else -> Triple("待审核", Color(0xFFFFB300).copy(alpha = 0.18f), Color(0xFFE6A100))
-    }
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(bg)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
-    ) {
-        Text(text = text, fontSize = 11.sp, color = fg, fontWeight = FontWeight.Medium)
     }
 }
 

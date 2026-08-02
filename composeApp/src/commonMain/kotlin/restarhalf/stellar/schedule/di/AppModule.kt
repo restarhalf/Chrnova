@@ -235,6 +235,10 @@ val portModule = module {
             json = get(),
             baseUrl = "https://chrnova.evaluate.restarhalf.dpdns.org",
             getDeviceId = { get<SettingsPort>().getDeviceId() },
+            getUserHash = {
+                val userNo = get<JwxtAuthStore>().getUserNo() ?: ""
+                CourseEvaluationPort.hashUserNo(userNo)
+            },
         )
     }
 }

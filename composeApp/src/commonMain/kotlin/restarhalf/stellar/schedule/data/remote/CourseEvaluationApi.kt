@@ -26,17 +26,26 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * 课程评价 API 实现（Cloudflare Worker REST 接口）
  *
  * 镜像 PapersApi 的写法：持有 Ktor HttpClient，拼接 URL，手动编解码 JSON。
+ *
+ * 鉴权：登录态通过 [getUserHash] 返回的学号 SHA-256 hex 注入 `X-User-Hash` 请求头；
+ * 设备标识通过 [getDeviceId] 注入 `X-Device-Id`（仅用于评价归属回显）。
  */
 class CourseEvaluationApi(
     private val httpClient: HttpClient,
     private val baseUrl: String,
     private val json: Json = Json { ignoreUnknownKeys = true },
     private val getDeviceId: () -> String,
+    private val getUserHash: () -> String,
 ) : CourseEvaluationPort {
 
     private fun deviceHeader(request: HttpRequestBuilder) {
         val id = getDeviceId()
         if (id.isNotBlank()) request.header("X-Device-Id", id)
+    }
+
+    private fun userHashHeader(request: HttpRequestBuilder) {
+        val hash = getUserHash()
+        if (hash.isNotBlank()) request.header("X-User-Hash", hash)
     }
 
     override suspend fun listEvaluations(
@@ -62,6 +71,7 @@ class CourseEvaluationApi(
         withContext(AppIoDispatcher) {
             val response: HttpResponse = httpClient.post("$baseUrl/evaluations") {
                 deviceHeader(this)
+                userHashHeader(this)
                 contentType(ContentType.Application.Json)
                 setBody(req)
             }
@@ -74,6 +84,7 @@ class CourseEvaluationApi(
     override suspend fun deleteEvaluation(id: String): Boolean = withContext(AppIoDispatcher) {
         val response: HttpResponse = httpClient.delete("$baseUrl/evaluations/$id") {
             deviceHeader(this)
+            userHashHeader(this)
         }
         response.status.isSuccess()
     }
@@ -81,6 +92,7 @@ class CourseEvaluationApi(
     override suspend fun toggleLike(id: String): LikeResult = withContext(AppIoDispatcher) {
         val response: HttpResponse = httpClient.post("$baseUrl/evaluations/$id/like") {
             deviceHeader(this)
+            userHashHeader(this)
         }
         if (!response.status.isSuccess()) {
             throw IllegalStateException("操作失败（HTTP ${response.status.value}）")
@@ -89,7 +101,11 @@ class CourseEvaluationApi(
     }
 
     private suspend fun executeGet(url: String): String {
-        val response: HttpResponse = httpClient.get(url) { deviceHeader(this) }
+        val response: HttpResponse = httpClient.get(url) {
+            deviceHeader(this)
+            // GET 也需要带 X-User-Hash，后端 withLiked 据此返回每条评价的 liked 状态
+            userHashHeader(this)
+        }
         if (!response.status.isSuccess()) {
             throw IllegalStateException("请求失败（HTTP ${response.status.value}）")
         }

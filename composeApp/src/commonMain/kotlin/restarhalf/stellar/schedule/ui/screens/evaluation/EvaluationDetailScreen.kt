@@ -216,10 +216,6 @@ private fun EvaluationHeroCard(evaluation: Evaluation) {
                     fontSize = 13.sp,
                     color = colors.onSurfaceVariantSummary,
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                if (evaluation.status != "approved") {
-                    EvaluationStatusBadge(status = evaluation.status)
-                }
             }
         }
     }

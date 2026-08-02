@@ -16,6 +16,7 @@ interface EvaluationRow {
   anonymous: number;
   author: string;
   user_no: string;
+  user_hash: string;
   device_id: string;
   likes: number;
   status: string;
@@ -23,14 +24,18 @@ interface EvaluationRow {
   updated_at: number;
 }
 
-type EvalStatus = 'pending' | 'approved' | 'rejected';
-
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', cors());
 
 // ─── Helpers ───
 
+/** 取 X-User-Hash（学号 SHA-256，客户端计算）。 */
+function userHashOf(c: any): string {
+  return (c.req.header('X-User-Hash') || '').trim();
+}
+
+/** 取 X-Device-Id（仅用于本地评价归属判定）。 */
 function deviceIdOf(c: any): string {
   return (c.req.header('X-Device-Id') || '').trim();
 }
@@ -45,8 +50,8 @@ function rowToEval(r: EvaluationRow, liked: boolean) {
     anonymous: !!r.anonymous,
     // 匿名时隐藏作者信息
     author: r.anonymous ? '' : r.author,
-    user_no: r.user_no,
-    device_id: r.device_id,
+    // 不返回学号明文（user_no）和设备 ID，仅保留 user_hash 供管理员封号
+    user_hash: r.user_hash,
     likes: r.likes,
     status: r.status,
     created_at: r.created_at,
@@ -54,17 +59,27 @@ function rowToEval(r: EvaluationRow, liked: boolean) {
   };
 }
 
-// 为一组评价计算当前设备是否已点赞
+/** 检查当前 user_hash 是否已封号 */
+async function isBanned(db: D1Database, userHash: string): Promise<boolean> {
+  if (!userHash) return false;
+  const row = await db
+    .prepare('SELECT 1 FROM banned_users WHERE user_hash = ?')
+    .bind(userHash)
+    .first();
+  return !!row;
+}
+
+// 为一组评价计算当前用户是否已点赞
 async function withLiked(c: any, rows: EvaluationRow[]): Promise<any[]> {
-  const dev = deviceIdOf(c);
+  const uh = userHashOf(c);
   return Promise.all(
     rows.map(async (r) => {
       let liked = false;
-      if (dev) {
+      if (uh) {
         const lr = await c.env.DB.prepare(
-          'SELECT 1 FROM evaluation_likes WHERE device_id = ? AND evaluation_id = ?'
+          'SELECT 1 FROM evaluation_likes WHERE user_hash = ? AND evaluation_id = ?'
         )
-          .bind(dev, r.id)
+          .bind(uh, r.id)
           .first();
         liked = !!lr;
       }
@@ -78,24 +93,16 @@ function nowSec(): number {
 }
 
 // ─── Public: list evaluations ───
-// 仅返回已通过审核的评价；若携带 X-Device-Id，则额外包含该设备自己提交的评价（含待审）。
+// 去掉审核后，所有评价默认可见。仍保留 status 字段做向前兼容（旧数据可能含 pending/rejected）。
 app.get('/evaluations', async (c) => {
   const course = c.req.query('course');
   const teacher = c.req.query('teacher');
   const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1);
   const size = Math.min(100, Math.max(1, parseInt(c.req.query('size') || '20', 10) || 20));
-  const dev = deviceIdOf(c);
 
   const where: string[] = [];
   const params: any[] = [];
 
-  if (dev) {
-    where.push('(status = ? OR device_id = ?)');
-    params.push('approved', dev);
-  } else {
-    where.push('status = ?');
-    params.push('approved');
-  }
   if (course) {
     where.push('course_name = ?');
     params.push(course);
@@ -105,15 +112,17 @@ app.get('/evaluations', async (c) => {
     params.push(`%${teacher}%`);
   }
 
+  const w = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
   const countRes = await c.env.DB.prepare(
-    `SELECT COUNT(*) as cnt FROM evaluations WHERE ${where.join(' AND ')}`
+    `SELECT COUNT(*) as cnt FROM evaluations ${w}`
   )
     .bind(...params)
     .first<{ cnt: number }>();
   const total = countRes?.cnt ?? 0;
 
   const rows = await c.env.DB.prepare(
-    `SELECT * FROM evaluations WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    `SELECT * FROM evaluations ${w} ORDER BY created_at DESC LIMIT ? OFFSET ?`
   )
     .bind(...params, size, (page - 1) * size)
     .all<EvaluationRow>();
@@ -125,22 +134,20 @@ app.get('/evaluations', async (c) => {
 // ─── Public: evaluation detail ───
 app.get('/evaluations/:id', async (c) => {
   const id = c.req.param('id');
-  const dev = deviceIdOf(c);
-  const row = await c.env.DB.prepare(
-    'SELECT * FROM evaluations WHERE id = ? AND (status = ? OR device_id = ?)'
-  )
-    .bind(id, 'approved', dev)
+  const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?')
+    .bind(id)
     .first<EvaluationRow>();
 
   if (!row) {
     return c.json({ error: 'Evaluation not found' }, 404);
   }
 
-  const liked = dev
+  const uh = userHashOf(c);
+  const liked = uh
     ? !!(await c.env.DB.prepare(
-        'SELECT 1 FROM evaluation_likes WHERE device_id = ? AND evaluation_id = ?'
+        'SELECT 1 FROM evaluation_likes WHERE user_hash = ? AND evaluation_id = ?'
       )
-        .bind(dev, id)
+        .bind(uh, id)
         .first())
     : false;
 
@@ -148,9 +155,17 @@ app.get('/evaluations/:id', async (c) => {
 });
 
 // ─── Public: create evaluation ───
-// 后端不做“仅限已选课程”的限制（由客户端限制），收到即存储为 pending 待审核。
+// 需要登录（X-User-Hash 非空）；封号用户禁止提交。
 app.post('/evaluations', async (c) => {
   try {
+    const uh = userHashOf(c);
+    if (!uh) {
+      return c.json({ error: 'X-User-Id header required (login required)' }, 401);
+    }
+    if (await isBanned(c.env.DB, uh)) {
+      return c.json({ error: '账号已被封禁，无法提交评价' }, 403);
+    }
+
     const body = await c.req.json<{
       course_name?: string;
       teacher?: string;
@@ -158,7 +173,6 @@ app.post('/evaluations', async (c) => {
       content?: string;
       anonymous?: boolean;
       author?: string;
-      user_no?: string;
     }>();
 
     const courseName = (body.course_name || '').trim();
@@ -181,14 +195,13 @@ app.post('/evaluations', async (c) => {
     const anonymous = body.anonymous ? 1 : 0;
     const author = anonymous ? '' : (body.author || '').trim();
     const deviceId = deviceIdOf(c);
-    const userNo = (body.user_no || '').trim();
-
+    // 不再存储学号明文，仅保留 user_hash（来自 X-User-Hash 头）
     await c.env.DB.prepare(
       `INSERT INTO evaluations
-        (id, course_name, teacher, rating, content, anonymous, author, user_no, device_id, likes, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?)`
+        (id, course_name, teacher, rating, content, anonymous, author, user_no, user_hash, device_id, likes, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, 0, 'approved', ?, ?)`
     )
-      .bind(id, courseName, (body.teacher || '').trim(), rating, content, anonymous, author, userNo, deviceId, ts, ts)
+      .bind(id, courseName, (body.teacher || '').trim(), rating, content, anonymous, author, uh, deviceId, ts, ts)
       .run();
 
     const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -199,11 +212,15 @@ app.post('/evaluations', async (c) => {
 });
 
 // ─── Public: toggle like (interaction) ───
+// 需要登录（X-User-Hash 非空）；封号用户禁止点赞。
 app.post('/evaluations/:id/like', async (c) => {
   const id = c.req.param('id');
-  const dev = deviceIdOf(c);
-  if (!dev) {
-    return c.json({ error: 'X-Device-Id header required' }, 400);
+  const uh = userHashOf(c);
+  if (!uh) {
+    return c.json({ error: 'X-User-Id header required (login required)' }, 401);
+  }
+  if (await isBanned(c.env.DB, uh)) {
+    return c.json({ error: '账号已被封禁，无法点赞' }, 403);
   }
 
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -212,21 +229,21 @@ app.post('/evaluations/:id/like', async (c) => {
   }
 
   const existing = await c.env.DB.prepare(
-    'SELECT 1 FROM evaluation_likes WHERE device_id = ? AND evaluation_id = ?'
+    'SELECT 1 FROM evaluation_likes WHERE user_hash = ? AND evaluation_id = ?'
   )
-    .bind(dev, id)
+    .bind(uh, id)
     .first();
 
   let liked: boolean;
   if (existing) {
-    await c.env.DB.prepare('DELETE FROM evaluation_likes WHERE device_id = ? AND evaluation_id = ?')
-      .bind(dev, id)
+    await c.env.DB.prepare('DELETE FROM evaluation_likes WHERE user_hash = ? AND evaluation_id = ?')
+      .bind(uh, id)
       .run();
     await c.env.DB.prepare('UPDATE evaluations SET likes = MAX(0, likes - 1) WHERE id = ?').bind(id).run();
     liked = false;
   } else {
-    await c.env.DB.prepare('INSERT INTO evaluation_likes (device_id, evaluation_id, created_at) VALUES (?, ?, ?)')
-      .bind(dev, id, nowSec())
+    await c.env.DB.prepare('INSERT INTO evaluation_likes (user_hash, evaluation_id, created_at) VALUES (?, ?, ?)')
+      .bind(uh, id, nowSec())
       .run();
     await c.env.DB.prepare('UPDATE evaluations SET likes = likes + 1 WHERE id = ?').bind(id).run();
     liked = true;
@@ -237,15 +254,19 @@ app.post('/evaluations/:id/like', async (c) => {
 });
 
 // ─── Public: delete own evaluation ───
+// 需要登录（X-User-Hash 非空）；封号用户禁止删除。
 app.delete('/evaluations/:id', async (c) => {
   const id = c.req.param('id');
-  const dev = deviceIdOf(c);
-  if (!dev) {
-    return c.json({ error: 'X-Device-Id header required' }, 400);
+  const uh = userHashOf(c);
+  if (!uh) {
+    return c.json({ error: 'X-User-Id header required (login required)' }, 401);
+  }
+  if (await isBanned(c.env.DB, uh)) {
+    return c.json({ error: '账号已被封禁，无法删除评价' }, 403);
   }
 
-  const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ? AND device_id = ?')
-    .bind(id, dev)
+  const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ? AND user_hash = ?')
+    .bind(id, uh)
     .first<EvaluationRow>();
   if (!row) {
     return c.json({ error: 'Evaluation not found or unauthorized' }, 404);
@@ -278,19 +299,14 @@ app.post('/admin/login', async (c) => {
   }
 });
 
-// 管理员：列出全部评价（可按状态/课程筛选）
+// 管理员：列出全部评价（可按课程筛选）
 app.get('/admin/evaluations', adminAuth, async (c) => {
-  const status = c.req.query('status');
   const course = c.req.query('course');
   const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1);
   const size = Math.min(100, Math.max(1, parseInt(c.req.query('size') || '20', 10) || 20));
 
   const where: string[] = [];
   const params: any[] = [];
-  if (status) {
-    where.push('status = ?');
-    params.push(status);
-  }
   if (course) {
     where.push('course_name = ?');
     params.push(course);
@@ -322,7 +338,7 @@ app.get('/admin/evaluations/:id', adminAuth, async (c) => {
   return c.json(rowToEval(row, false));
 });
 
-// 管理员：修改评价（审核状态 / 内容 / 评分等）
+// 管理员：修改评价（内容 / 评分等，不再有审核状态字段）
 app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -331,7 +347,6 @@ app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   }
 
   const body = await c.req.json<{
-    status?: EvalStatus;
     content?: string;
     rating?: number;
     teacher?: string;
@@ -343,10 +358,6 @@ app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   const sets: string[] = [];
   const params: any[] = [];
 
-  if (body.status !== undefined) {
-    sets.push('status = ?');
-    params.push(body.status);
-  }
   if (body.content !== undefined) {
     sets.push('content = ?');
     params.push(body.content);
@@ -402,6 +413,42 @@ app.delete('/admin/evaluations/:id', adminAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// 管理员：列出封号用户
+app.get('/admin/bans', adminAuth, async (c) => {
+  const rows = await c.env.DB.prepare(
+    'SELECT * FROM banned_users ORDER BY banned_at DESC LIMIT 500'
+  ).all<{ user_hash: string; reason: string; banned_at: number }>();
+  return c.json({ items: rows.results });
+});
+
+// 管理员：封号（按 user_hash）
+app.post('/admin/bans', adminAuth, async (c) => {
+  try {
+    const body = await c.req.json<{ user_hash?: string; reason?: string }>();
+    const uh = (body.user_hash || '').trim();
+    if (!uh) {
+      return c.json({ error: 'user_hash is required' }, 400);
+    }
+    const reason = (body.reason || '').trim();
+    await c.env.DB.prepare(
+      `INSERT INTO banned_users (user_hash, reason, banned_at) VALUES (?, ?, ?)
+       ON CONFLICT(user_hash) DO UPDATE SET reason = excluded.reason, banned_at = excluded.banned_at`
+    )
+      .bind(uh, reason, nowSec())
+      .run();
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: `Ban failed: ${e}` }, 500);
+  }
+});
+
+// 管理员：解封（按 user_hash）
+app.delete('/admin/bans/:user_hash', adminAuth, async (c) => {
+  const uh = c.req.param('user_hash');
+  await c.env.DB.prepare('DELETE FROM banned_users WHERE user_hash = ?').bind(uh).run();
+  return c.json({ ok: true });
+});
+
 // ─── Admin Web UI（根地址即为管理后台入口）───
 app.get('/', (c) => c.html(getAdminHTML()));
 
@@ -438,6 +485,10 @@ function getAdminHTML(): string {
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     button:disabled { opacity: .5; cursor: not-allowed; }
 
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #e5e5e5; }
+    .tab { padding: 10px 16px; cursor: pointer; border: none; background: transparent; font-size: 14px; color: #666; border-bottom: 2px solid transparent; }
+    .tab.active { color: #0066ff; border-bottom-color: #0066ff; font-weight: 600; }
+
     .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     .toolbar input[type="text"] { flex: 1; min-width: 160px; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
     .toolbar select { padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fff; }
@@ -447,17 +498,17 @@ function getAdminHTML(): string {
     .stat-num { font-size: 24px; font-weight: 700; color: #0066ff; }
     .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
 
-    .eval-list { display: flex; flex-direction: column; gap: 8px; }
-    .eval-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .eval-list, .ban-list { display: flex; flex-direction: column; gap: 8px; }
+    .eval-card, .ban-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
     .eval-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .eval-course { font-size: 15px; font-weight: 600; }
     .eval-meta { font-size: 12px; color: #888; margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
     .eval-content { font-size: 14px; color: #444; margin-top: 8px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
     .eval-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
-    .badge-pending { background: #fff4e0; color: #b26a00; }
-    .badge-approved { background: #e3f5e3; color: #1a7a1a; }
-    .badge-rejected { background: #fde3e1; color: #cc0000; }
+    .ban-hash { font-family: monospace; font-size: 13px; color: #444; word-break: break-all; }
+    .ban-reason { font-size: 12px; color: #888; margin-top: 4px; }
+    .ban-time { font-size: 12px; color: #aaa; margin-top: 2px; }
+
     .stars { color: #ff9500; letter-spacing: 2px; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
@@ -487,25 +538,38 @@ function getAdminHTML(): string {
   <div id="mainView" class="container hidden">
     <h1>Chrnova 课程评价管理</h1>
 
-    <div class="stat-bar">
-      <div class="stat"><div class="stat-num" id="totalCount">-</div><div class="stat-label">评价总数</div></div>
-      <div class="stat"><div class="stat-num" id="pendingCount">-</div><div class="stat-label">待审核</div></div>
-      <div class="stat"><div class="stat-num" id="approvedCount">-</div><div class="stat-label">已通过</div></div>
+    <div class="tabs">
+      <button class="tab active" id="tabEvals" onclick="switchTab('evals')">评价管理</button>
+      <button class="tab" id="tabBans" onclick="switchTab('bans')">封号管理</button>
     </div>
 
-    <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="搜索课程 / 内容 / 作者..." oninput="debounceSearch()">
-      <select id="statusFilter" onchange="loadEvaluations()">
-        <option value="">全部状态</option>
-        <option value="pending">待审核</option>
-        <option value="approved">已通过</option>
-        <option value="rejected">已拒绝</option>
-      </select>
-      <button class="btn-ghost btn-sm" onclick="loadEvaluations()">刷新</button>
+    <!-- 评价管理 -->
+    <div id="evalsPanel">
+      <div class="stat-bar">
+        <div class="stat"><div class="stat-num" id="totalCount">-</div><div class="stat-label">评价总数</div></div>
+        <div class="stat"><div class="stat-num" id="totalLikes">-</div><div class="stat-label">总点赞</div></div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="搜索课程 / 内容 / 作者..." oninput="debounceSearch()">
+        <button class="btn-ghost btn-sm" onclick="loadEvaluations()">刷新</button>
+      </div>
+
+      <div id="evalList" class="eval-list"></div>
+      <div id="emptyState" class="empty hidden">没有评价</div>
     </div>
 
-    <div id="evalList" class="eval-list"></div>
-    <div id="emptyState" class="empty hidden">没有评价</div>
+    <!-- 封号管理 -->
+    <div id="bansPanel" class="hidden">
+      <div class="toolbar">
+        <input type="text" id="banHashInput" placeholder="user_hash (学号 SHA-256)">
+        <input type="text" id="banReasonInput" placeholder="封号原因（可选）">
+        <button class="btn-danger btn-sm" onclick="banUser()">封号</button>
+        <button class="btn-ghost btn-sm" onclick="loadBans()">刷新</button>
+      </div>
+      <div id="banList" class="ban-list"></div>
+      <div id="banEmptyState" class="empty hidden">没有封号记录</div>
+    </div>
   </div>
 
   <!-- Detail / Edit Modal -->
@@ -513,18 +577,10 @@ function getAdminHTML(): string {
     <div class="modal">
       <h2 id="detailTitle">-</h2>
       <div id="detailBody" style="font-size:14px; line-height:1.8; color:#555;"></div>
-      <div class="form-group" style="margin-top:16px;">
-        <label>审核状态</label>
-        <select id="detailStatus">
-          <option value="pending">待审核</option>
-          <option value="approved">通过</option>
-          <option value="rejected">拒绝</option>
-        </select>
-      </div>
       <div class="modal-actions">
         <button class="btn-ghost" onclick="closeModal('detailModal')">关闭</button>
         <button class="btn-danger" id="detailDeleteBtn" onclick="confirmDelete()">删除</button>
-        <button class="btn-primary" onclick="saveDetail()">保存</button>
+        <button class="btn-danger" id="detailBanBtn" onclick="confirmBan()">封号作者</button>
       </div>
     </div>
   </div>
@@ -533,7 +589,9 @@ function getAdminHTML(): string {
     let token = '';
     let allEvals = [];
     let currentId = '';
+    let currentEval = null;
     let searchTimer = null;
+    let currentTab = 'evals';
 
     function login() {
       const password = document.getElementById('passwordInput').value;
@@ -569,15 +627,18 @@ function getAdminHTML(): string {
       return res;
     }
 
-    async function loadEvaluations() {
-      const q = document.getElementById('searchInput').value.trim();
-      const status = document.getElementById('statusFilter').value;
-      const params = new URLSearchParams();
-      if (status) params.set('status', status);
-      if (q) params.set('q', q);
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tabEvals').classList.toggle('active', tab === 'evals');
+      document.getElementById('tabBans').classList.toggle('active', tab === 'bans');
+      document.getElementById('evalsPanel').classList.toggle('hidden', tab !== 'evals');
+      document.getElementById('bansPanel').classList.toggle('hidden', tab !== 'bans');
+      if (tab === 'bans') loadBans();
+    }
 
+    async function loadEvaluations() {
       try {
-        const res = await apiFetch('/admin/evaluations?' + params.toString());
+        const res = await apiFetch('/admin/evaluations');
         const data = await res.json();
         allEvals = data.items || [];
         renderEvals();
@@ -586,17 +647,24 @@ function getAdminHTML(): string {
     }
 
     function renderEvals() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const list = document.getElementById('evalList');
       const empty = document.getElementById('emptyState');
-      if (!allEvals.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+      const filtered = q
+        ? allEvals.filter(e =>
+            (e.course_name || '').toLowerCase().includes(q) ||
+            (e.content || '').toLowerCase().includes(q) ||
+            (e.author || '').toLowerCase().includes(q) ||
+            (e.user_no || '').toLowerCase().includes(q))
+        : allEvals;
+      if (!filtered.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
       empty.classList.add('hidden');
       list.innerHTML = '';
-      allEvals.forEach(e => {
+      filtered.forEach(e => {
         const card = document.createElement('div');
         card.className = 'eval-card';
         const stars = '★'.repeat(e.rating) + '☆'.repeat(5 - e.rating);
-        const statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[e.status] || e.status;
-        const anon = e.anonymous ? '匿名' : (e.author || (e.user_no ? '学号 ' + e.user_no : '未知'));
+        const anon = e.anonymous ? '匿名' : (e.author || '未署名');
         card.innerHTML =
           '<div class="eval-head">' +
             '<div>' +
@@ -608,7 +676,6 @@ function getAdminHTML(): string {
                 '<span>👍 ' + (e.likes || 0) + '</span>' +
               '</div>' +
             '</div>' +
-            '<span class="badge badge-' + e.status + '">' + statusText + '</span>' +
           '</div>' +
           (e.content ? '<div class="eval-content">' + esc(e.content) + '</div>' : '') +
           '<div class="eval-actions">' +
@@ -621,8 +688,7 @@ function getAdminHTML(): string {
 
     function updateStats() {
       document.getElementById('totalCount').textContent = allEvals.length;
-      document.getElementById('pendingCount').textContent = allEvals.filter(e => e.status === 'pending').length;
-      document.getElementById('approvedCount').textContent = allEvals.filter(e => e.status === 'approved').length;
+      document.getElementById('totalLikes').textContent = allEvals.reduce((s, e) => s + (e.likes || 0), 0);
     }
 
     function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(loadEvaluations, 300); }
@@ -632,35 +698,24 @@ function getAdminHTML(): string {
         const res = await apiFetch('/admin/evaluations/' + id);
         const e = await res.json();
         currentId = id;
+        currentEval = e;
         document.getElementById('detailTitle').textContent = e.course_name;
         const stars = '★'.repeat(e.rating) + '☆'.repeat(5 - e.rating);
-        const anon = e.anonymous ? '匿名' : (e.author || (e.user_no ? '学号 ' + e.user_no : '未知'));
+        const anon = e.anonymous ? '匿名' : (e.author || '未署名');
         document.getElementById('detailBody').innerHTML =
           '<b>课程:</b> ' + esc(e.course_name) + '<br>' +
           '<b>教师:</b> ' + esc(e.teacher || '未知') + '<br>' +
           '<b>评分:</b> <span class="stars">' + stars + '</span><br>' +
           '<b>作者:</b> ' + esc(anon) + '<br>' +
+          '<b>用户标识:</b> <span style="font-family:monospace;word-break:break-all">' + esc(e.user_hash || '-') + '</span><br>' +
           '<b>点赞:</b> ' + (e.likes || 0) + '<br>' +
-          '<b>状态:</b> ' + e.status + '<br>' +
           '<b>提交时间:</b> ' + new Date(e.created_at * 1000).toLocaleString('zh-CN') + '<br>' +
           '<b>内容:</b><br>' + esc(e.content);
-        document.getElementById('detailStatus').value = e.status;
+        const banBtn = document.getElementById('detailBanBtn');
+        // 仅当存在 user_hash 时显示封号按钮
+        banBtn.style.display = e.user_hash ? '' : 'none';
         document.getElementById('detailModal').classList.remove('hidden');
       } catch (e) { toast('加载失败', false); }
-    }
-
-    async function saveDetail() {
-      const status = document.getElementById('detailStatus').value;
-      try {
-        await apiFetch('/admin/evaluations/' + currentId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        });
-        closeModal('detailModal');
-        toast('已保存', true);
-        loadEvaluations();
-      } catch (e) { toast('保存失败: ' + e.message, false); }
     }
 
     function confirmDelete() {
@@ -668,6 +723,68 @@ function getAdminHTML(): string {
       apiFetch('/admin/evaluations/' + currentId, { method: 'DELETE' })
         .then(() => { closeModal('detailModal'); toast('已删除', true); loadEvaluations(); })
         .catch(e => toast('删除失败: ' + e.message, false));
+    }
+
+    function confirmBan() {
+      if (!currentEval) return;
+      const hash = (currentEval.user_hash || '').trim();
+      if (!hash) { toast('该评价无用户标识，无法封号', false); return; }
+      if (!confirm('确定封号该作者？\\n用户标识：' + hash + '\\n封号后该用户无法提交评价、点赞、删除。')) return;
+      const reason = prompt('封号原因（可选）：') || '';
+      apiFetch('/admin/bans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_hash: hash, reason: reason.trim() })
+      })
+        .then(() => { toast('已封号', true); loadBans(); })
+        .catch(e => toast('封号失败: ' + e.message, false));
+    }
+
+    async function loadBans() {
+      try {
+        const res = await apiFetch('/admin/bans');
+        const data = await res.json();
+        const items = data.items || [];
+        const list = document.getElementById('banList');
+        const empty = document.getElementById('banEmptyState');
+        if (!items.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        list.innerHTML = '';
+        items.forEach(b => {
+          const card = document.createElement('div');
+          card.className = 'ban-card';
+          card.innerHTML =
+            '<div class="ban-hash">' + esc(b.user_hash) + '</div>' +
+            (b.reason ? '<div class="ban-reason">原因: ' + esc(b.reason) + '</div>' : '') +
+            '<div class="ban-time">封号时间: ' + new Date(b.banned_at * 1000).toLocaleString('zh-CN') + '</div>' +
+            '<div class="eval-actions"><button class="btn-ghost btn-sm">解封</button></div>';
+          card.querySelector('button').addEventListener('click', function () {
+            if (!confirm('确定解封该用户？')) return;
+            apiFetch('/admin/bans/' + encodeURIComponent(b.user_hash), { method: 'DELETE' })
+              .then(() => { toast('已解封', true); loadBans(); })
+              .catch(e => toast('解封失败: ' + e.message, false));
+          });
+          list.appendChild(card);
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    function banUser() {
+      const hash = document.getElementById('banHashInput').value.trim();
+      const reason = document.getElementById('banReasonInput').value.trim();
+      if (!hash) { alert('请输入 user_hash'); return; }
+      apiFetch('/admin/bans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_hash: hash, reason: reason })
+      })
+        .then(() => {
+          document.getElementById('banHashInput').value = '';
+          document.getElementById('banReasonInput').value = '';
+          toast('已封号', true);
+          loadBans();
+        })
+        .catch(e => toast('封号失败: ' + e.message, false));
     }
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }

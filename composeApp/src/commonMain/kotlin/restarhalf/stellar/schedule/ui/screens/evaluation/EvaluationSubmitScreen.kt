@@ -122,7 +122,6 @@ fun EvaluationSubmitScreen(
                             content = content.trim(),
                             anonymous = anonymous,
                             author = if (anonymous) "" else author.trim(),
-                            userNo = uiState.userNo,
                         )
                     )
                 },

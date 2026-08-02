@@ -20,14 +20,14 @@ data class Evaluation(
     val anonymous: Boolean = false,
     /** 作者名（匿名时为空） */
     val author: String = "",
-    @SerialName("user_no") val userNo: String = "",
-    @SerialName("device_id") val deviceId: String = "",
+    /** 用户 hash（学号 SHA-256，由后端按 X-User-Hash 头计算） */
+    @SerialName("user_hash") val userHash: String = "",
     /** 点赞数 */
     val likes: Int = 0,
-    /** 审核状态：pending / approved / rejected */
-    val status: String = "pending",
+    /** 状态：后端已去掉审核流程，新建评价一律 approved。字段保留做向前兼容。 */
+    val status: String = "approved",
     @SerialName("created_at") val createdAt: Long = 0,
-    /** 当前设备是否已点赞（由后端按 X-Device-Id 计算） */
+    /** 当前用户是否已点赞（由后端按 X-User-Hash 计算） */
     val liked: Boolean = false,
 )
 
@@ -49,7 +49,6 @@ data class EvaluationCreateRequest(
     val content: String,
     val anonymous: Boolean = false,
     val author: String = "",
-    @SerialName("user_no") val userNo: String = "",
 )
 
 /** 点赞操作返回结果 */

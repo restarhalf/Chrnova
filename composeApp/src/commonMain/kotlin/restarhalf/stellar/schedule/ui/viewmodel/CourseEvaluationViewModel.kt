@@ -51,7 +51,8 @@ class CourseEvaluationViewModel(
         val profileName: String = "",
         /** 用户自定义昵称（优先于 profileName 用作评价署名） */
         val userNickname: String? = null,
-        val deviceId: String = "",
+        /** 当前登录用户的 user_hash（学号 SHA-256），用于判断评价是否为本机提交 */
+        val userHash: String = "",
     ) {
         val filteredEvaluations: List<Evaluation>
             get() = if (searchQuery.isEmpty()) {
@@ -64,11 +65,11 @@ class CourseEvaluationViewModel(
                 }
             }
 
-        /** 当前评价是否为本机提交（可删除） */
+        /** 当前评价是否为本人提交（可删除） */
         val canDeleteSelected: Boolean
             get() = selectedEvaluation != null &&
-                deviceId.isNotBlank() &&
-                selectedEvaluation.deviceId == deviceId
+                userHash.isNotBlank() &&
+                selectedEvaluation.userHash == userHash
     }
 
     private val _uiState = MutableStateFlow(EvaluationUiState())
@@ -77,13 +78,20 @@ class CourseEvaluationViewModel(
     init {
         _uiState.update {
             it.copy(
-                deviceId = settings.getDeviceId(),
                 userNickname = settings.getUserNickname(),
             )
         }
         viewModelScope.launch {
             auth.observeProfile().collect { profile ->
-                _uiState.update { it.copy(userNo = profile.userNo, profileName = profile.name) }
+                _uiState.update {
+                    it.copy(
+                        userNo = profile.userNo,
+                        profileName = profile.name,
+                        userHash = if (profile.userNo.isNotBlank()) {
+                            CourseEvaluationPort.hashUserNo(profile.userNo)
+                        } else "",
+                    )
+                }
             }
         }
         viewModelScope.launch {
@@ -136,10 +144,14 @@ class CourseEvaluationViewModel(
 
     fun submitEvaluation(req: EvaluationCreateRequest) {
         viewModelScope.launch {
+            if (_uiState.value.userNo.isBlank()) {
+                _uiState.update { it.copy(error = "请先登录教务系统后再提交评价") }
+                return@launch
+            }
             _uiState.update { it.copy(submitting = true, error = null) }
             runCatching { port.createEvaluation(req) }
                 .onSuccess {
-                    _uiState.update { it.copy(submitting = false, successMessage = "提交成功，等待审核") }
+                    _uiState.update { it.copy(submitting = false, successMessage = "提交成功") }
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
@@ -151,6 +163,10 @@ class CourseEvaluationViewModel(
 
     fun deleteEvaluation(id: String) {
         viewModelScope.launch {
+            if (_uiState.value.userNo.isBlank()) {
+                _uiState.update { it.copy(error = "请先登录教务系统后再操作") }
+                return@launch
+            }
             _uiState.update { it.copy(loading = true, error = null) }
             runCatching { port.deleteEvaluation(id) }
                 .onSuccess {
@@ -167,6 +183,10 @@ class CourseEvaluationViewModel(
 
     fun toggleLike(id: String) {
         viewModelScope.launch {
+            if (_uiState.value.userNo.isBlank()) {
+                _uiState.update { it.copy(error = "请先登录教务系统后再点赞") }
+                return@launch
+            }
             runCatching { port.toggleLike(id) }
                 .onSuccess { result ->
                     _uiState.update { state ->
