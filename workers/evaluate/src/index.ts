@@ -277,6 +277,63 @@ app.delete('/evaluations/:id', async (c) => {
   return c.json({ ok: true });
 });
 
+// ─── Public: update own evaluation ───
+// 需登录（X-User-Hash 非空）；封号用户禁止修改；只能改本人提交的评价。
+// 可改字段：teacher / rating / content / anonymous / author（course_name 不可改）。
+app.patch('/evaluations/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const uh = userHashOf(c);
+    if (!uh) {
+      return c.json({ error: 'X-User-Hash header required (login required)' }, 401);
+    }
+    if (await isBanned(c.env.DB, uh)) {
+      return c.json({ error: '账号已被封禁，无法修改评价' }, 403);
+    }
+
+    const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ? AND user_hash = ?')
+      .bind(id, uh)
+      .first<EvaluationRow>();
+    if (!row) {
+      return c.json({ error: 'Evaluation not found or unauthorized' }, 404);
+    }
+
+    const body = await c.req.json<{
+      teacher?: string;
+      rating?: number;
+      content?: string;
+      anonymous?: boolean;
+      author?: string;
+    }>();
+
+    const rating = body.rating !== undefined ? Math.round(body.rating) : row.rating;
+    if (rating < 1 || rating > 5) {
+      return c.json({ error: 'rating must be between 1 and 5' }, 400);
+    }
+    const content = body.content !== undefined ? (body.content).trim() : row.content;
+    if (!content) {
+      return c.json({ error: 'content is required' }, 400);
+    }
+    const anonymous = body.anonymous !== undefined ? (body.anonymous ? 1 : 0) : row.anonymous;
+    const teacher = body.teacher !== undefined ? (body.teacher).trim() : row.teacher;
+    const author = anonymous ? '' : (body.author !== undefined ? (body.author).trim() : row.author);
+    const ts = nowSec();
+
+    await c.env.DB.prepare(
+      `UPDATE evaluations
+       SET teacher = ?, rating = ?, content = ?, anonymous = ?, author = ?, updated_at = ?
+       WHERE id = ?`
+    )
+      .bind(teacher, rating, content, anonymous, author, ts, id)
+      .run();
+
+    const updated = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
+    return c.json(rowToEval(updated!, false));
+  } catch (e) {
+    return c.json({ error: `Update failed: ${e}` }, 500);
+  }
+});
+
 // ─── Admin auth ───
 const adminAuth = async (c: any, next: any) => {
   const token = c.req.header('Authorization')?.replace('Bearer ', '');

@@ -6,6 +6,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationPage
+import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
 import restarhalf.stellar.schedule.domain.model.LikeResult
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -87,6 +89,22 @@ class CourseEvaluationApi(
             userHashHeader(this)
         }
         response.status.isSuccess()
+    }
+
+    override suspend fun updateEvaluation(
+        id: String,
+        req: EvaluationUpdateRequest,
+    ): Evaluation = withContext(AppIoDispatcher) {
+        val response: HttpResponse = httpClient.patch("$baseUrl/evaluations/$id") {
+            deviceHeader(this)
+            userHashHeader(this)
+            contentType(ContentType.Application.Json)
+            setBody(req)
+        }
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException("编辑评价失败（HTTP ${response.status.value}）")
+        }
+        json.decodeFromString(Evaluation.serializer(), response.body())
     }
 
     override suspend fun toggleLike(id: String): LikeResult = withContext(AppIoDispatcher) {

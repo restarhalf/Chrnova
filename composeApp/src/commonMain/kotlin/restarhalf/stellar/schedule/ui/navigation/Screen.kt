@@ -90,9 +90,13 @@ sealed interface Screen : NavKey {
     @Serializable
     data class EvaluationDetail(val evaluationId: String) : Screen
 
-    /** 课程评价提交页 */
+    /**
+     * 课程评价提交/编辑页
+     *
+     * @param evaluationId 待编辑评价 ID；null 表示新建评价
+     */
     @Serializable
-    data object EvaluationSubmit : Screen
+    data class EvaluationSubmit(val evaluationId: String? = null) : Screen
 
     /** 教务系统登录页面 */
     @Serializable

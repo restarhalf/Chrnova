@@ -51,6 +51,7 @@ fun EvaluationDetailScreen(
     vm: CourseEvaluationViewModel,
     evaluationId: String,
     onBack: () -> Unit,
+    onEditEvaluation: (String) -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -93,6 +94,13 @@ fun EvaluationDetailScreen(
                         )
                     }
                     if (uiState.canDeleteSelected) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(),
+                            onClick = { onEditEvaluation(evaluation.id) },
+                        ) {
+                            Text(text = "编辑", color = colors.onSurface)
+                        }
                         Button(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(),

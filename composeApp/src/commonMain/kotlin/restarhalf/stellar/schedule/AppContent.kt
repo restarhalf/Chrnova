@@ -366,7 +366,7 @@ fun AppContent(
                         onEvaluationDetail = { evaluationId ->
                             navigator.push(Screen.EvaluationDetail(evaluationId))
                         },
-                        onSubmitClick = { navigator.push(Screen.EvaluationSubmit) },
+                        onSubmitClick = { navigator.push(Screen.EvaluationSubmit()) },
                     )
                 }
                 entry<Screen.EvaluationDetail> { screen ->
@@ -375,14 +375,18 @@ fun AppContent(
                         vm = evalVm,
                         evaluationId = screen.evaluationId,
                         onBack = { navigator.pop() },
+                        onEditEvaluation = { evaluationId ->
+                            navigator.push(Screen.EvaluationSubmit(evaluationId))
+                        },
                     )
                 }
-                entry(Screen.EvaluationSubmit) {
+                entry<Screen.EvaluationSubmit> { screen ->
                     val evalVm: CourseEvaluationViewModel = koinViewModel()
                     EvaluationSubmitScreen(
                         vm = evalVm,
                         onBack = { navigator.pop() },
                         onSubmitted = { navigator.pop() },
+                        evaluationId = screen.evaluationId,
                     )
                 }
                 entry(Screen.JWLogin) {

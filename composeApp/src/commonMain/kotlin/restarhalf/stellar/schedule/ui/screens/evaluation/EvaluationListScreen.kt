@@ -54,6 +54,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -171,6 +172,13 @@ fun EvaluationListScreen(
                                     val course = if (index <= 0) null else courseOptions[index]
                                     vm.setCourseFilter(course)
                                 },
+                            )
+                            HorizontalDivider()
+                            SwitchPreference(
+                                title = "仅看我的评价",
+                                summary = "只显示自己提交的评价",
+                                checked = uiState.onlyMine,
+                                onCheckedChange = { vm.setOnlyMine(it) },
                             )
                         }
                     }

@@ -51,6 +51,20 @@ data class EvaluationCreateRequest(
     val author: String = "",
 )
 
+/**
+ * 编辑评价请求体（仅本人可改；course_name 不可改）。
+ *
+ * 字段为 null 表示不修改该字段。
+ */
+@Serializable
+data class EvaluationUpdateRequest(
+    val teacher: String? = null,
+    val rating: Int? = null,
+    val content: String? = null,
+    val anonymous: Boolean? = null,
+    val author: String? = null,
+)
+
 /** 点赞操作返回结果 */
 @Serializable
 data class LikeResult(

@@ -15,6 +15,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
+import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -43,6 +44,8 @@ class CourseEvaluationViewModel(
         val searchQuery: String = "",
         /** 列表页课程筛选（null 表示全部） */
         val selectedCourse: String? = null,
+        /** 列表页"仅看我的"筛选（true 只显示当前 user_hash 提交的评价） */
+        val onlyMine: Boolean = false,
         val selectedEvaluation: Evaluation? = null,
         /** 当前用户已选课程（用于提交时限制可选课程） */
         val myCourses: ImmutableList<Course> = persistentListOf(),
@@ -55,17 +58,21 @@ class CourseEvaluationViewModel(
         val userHash: String = "",
     ) {
         val filteredEvaluations: List<Evaluation>
-            get() = if (searchQuery.isEmpty()) {
-                evaluations
-            } else {
-                evaluations.filter {
-                    it.courseName.contains(searchQuery, ignoreCase = true) ||
-                        it.content.contains(searchQuery, ignoreCase = true) ||
-                        it.author.contains(searchQuery, ignoreCase = true)
+            get() = evaluations
+                .let { list ->
+                    if (onlyMine && userHash.isNotBlank()) {
+                        list.filter { it.userHash == userHash }
+                    } else list
                 }
-            }
+                .let { list ->
+                    if (searchQuery.isEmpty()) list else list.filter {
+                        it.courseName.contains(searchQuery, ignoreCase = true) ||
+                            it.content.contains(searchQuery, ignoreCase = true) ||
+                            it.author.contains(searchQuery, ignoreCase = true)
+                    }
+                }
 
-        /** 当前评价是否为本人提交（可删除） */
+        /** 当前评价是否为本人提交（可删除 / 可编辑） */
         val canDeleteSelected: Boolean
             get() = selectedEvaluation != null &&
                 userHash.isNotBlank() &&
@@ -214,11 +221,46 @@ class CourseEvaluationViewModel(
         loadEvaluations()
     }
 
+    fun setOnlyMine(onlyMine: Boolean) {
+        _uiState.update { it.copy(onlyMine = onlyMine) }
+    }
+
+    /**
+     * 编辑本人提交的评价（需登录）。course_name 不可改。
+     * 编辑成功后会同步刷新列表与详情页中对应条目。
+     */
+    fun updateEvaluation(id: String, req: EvaluationUpdateRequest) {
+        viewModelScope.launch {
+            if (_uiState.value.userNo.isBlank()) {
+                _uiState.update { it.copy(error = "请先登录教务系统后再编辑评价") }
+                return@launch
+            }
+            _uiState.update { it.copy(submitting = true, error = null) }
+            runCatching { port.updateEvaluation(id, req) }
+                .onSuccess { updated ->
+                    _uiState.update { state ->
+                        val evaluations = state.evaluations.map { ev ->
+                            if (ev.id == id) updated else ev
+                        }.toPersistentList()
+                        val selected = if (state.selectedEvaluation?.id == id) updated else state.selectedEvaluation
+                        state.copy(
+                            evaluations = evaluations,
+                            selectedEvaluation = selected,
+                            submitting = false,
+                            successMessage = "编辑成功",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "编辑评价失败", e)
+                    _uiState.update { it.copy(submitting = false, error = e.message ?: "编辑失败") }
+                }
+        }
+    }
+
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
     }
 
-    fun clearMessage() {
-        _uiState.update { it.copy(successMessage = null, error = null) }
-    }
 }

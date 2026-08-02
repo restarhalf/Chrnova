@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.port
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationPage
+import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
 import restarhalf.stellar.schedule.domain.model.LikeResult
 
 /**
@@ -49,6 +50,16 @@ interface CourseEvaluationPort {
      * @return 是否删除成功
      */
     suspend fun deleteEvaluation(id: String): Boolean
+
+    /**
+     * 编辑自己提交的评价（需登录：请求会携带 X-User-Hash 头）。
+     * 仅本人可改；course_name 不可改。
+     *
+     * @param id 评价唯一标识
+     * @param req 编辑请求体（字段为 null 表示不修改）
+     * @return 更新后的评价
+     */
+    suspend fun updateEvaluation(id: String, req: EvaluationUpdateRequest): Evaluation
 
     /**
      * 点赞 / 取消点赞（需登录：请求会携带 X-User-Hash 头）
