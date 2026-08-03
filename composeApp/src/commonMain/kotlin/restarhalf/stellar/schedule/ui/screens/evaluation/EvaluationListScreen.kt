@@ -12,19 +12,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +36,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import restarhalf.stellar.schedule.domain.model.Evaluation
+import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
+import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -53,7 +55,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -61,6 +62,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun EvaluationListScreen(
     vm: CourseEvaluationViewModel,
     onBack: () -> Unit,
+    onCourseClick: (courseName: String, teacher: String) -> Unit,
     onEvaluationDetail: (String) -> Unit,
     onSubmitClick: () -> Unit,
 ) {
@@ -70,18 +72,13 @@ fun EvaluationListScreen(
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(Unit) {
-        vm.loadEvaluations()
+        vm.loadCourseSummaries()
     }
-
-    val courseOptions = remember(uiState.myCourses) {
-        buildList {
-            add("全部课程")
-            uiState.myCourses.map { it.name }.distinct().forEach { add(it) }
+    // "仅看我的"开启时需要加载评价列表（用于本地过滤出本人提交的）
+    LaunchedEffect(uiState.onlyMine) {
+        if (uiState.onlyMine) {
+            vm.loadEvaluations()
         }
-    }
-    val selectedCourseIndex = remember(uiState.selectedCourse, courseOptions) {
-        val idx = courseOptions.indexOf(uiState.selectedCourse)
-        if (idx < 0) 0 else idx
     }
 
     Scaffold(
@@ -129,7 +126,9 @@ fun EvaluationListScreen(
     ) { paddingValues ->
         PullToRefresh(
             isRefreshing = uiState.loading,
-            onRefresh = { vm.loadEvaluations() },
+            onRefresh = {
+                if (uiState.onlyMine) vm.loadEvaluations() else vm.loadCourseSummaries()
+            },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
             modifier = Modifier.fillMaxSize().padding(
@@ -151,27 +150,17 @@ fun EvaluationListScreen(
                     extraStart = 12.dp,
                     extraEnd = 12.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 item(key = "filter_bar") {
                     AppCard {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             TextField(
-                                label = "搜索课程 / 内容",
+                                label = if (uiState.onlyMine) "搜索课程 / 内容"
+                                else "搜索课程 / 教师",
                                 value = uiState.searchQuery,
                                 onValueChange = { vm.onSearchQueryChange(it) },
                                 modifier = Modifier.fillMaxWidth(),
-                            )
-                            HorizontalDivider()
-                            OverlayDropdownPreference(
-                                title = "按课程筛选",
-                                summary = uiState.selectedCourse ?: "全部课程",
-                                items = courseOptions,
-                                selectedIndex = selectedCourseIndex,
-                                onSelectedIndexChange = { index ->
-                                    val course = if (index <= 0) null else courseOptions[index]
-                                    vm.setCourseFilter(course)
-                                },
                             )
                             HorizontalDivider()
                             SwitchPreference(
@@ -184,32 +173,53 @@ fun EvaluationListScreen(
                     }
                 }
 
-                if (!uiState.loading && uiState.filteredEvaluations.isEmpty()) {
-                    item(key = "empty") {
-                        EvaluationEmptyState(
-                            title = "暂无评价",
-                            subtitle = "下拉刷新或写一条新评价吧",
+                if (uiState.onlyMine) {
+                    // "我的评价"模式：平铺显示本人提交的评价
+                    if (!uiState.loading && uiState.filteredEvaluations.isEmpty()) {
+                        item(key = "empty_mine") {
+                            EvaluationEmptyState(
+                                title = "你还没有提交过评价",
+                                subtitle = "写第一条评价吧",
+                            )
+                        }
+                    }
+                    items(uiState.filteredEvaluations, key = { it.id }) { evaluation ->
+                        EvaluationListItem(
+                            evaluation = evaluation,
+                            onClick = { onEvaluationDetail(evaluation.id) },
+                            onLike = { vm.toggleLike(evaluation.id) },
+                            showCourseName = true,
                         )
                     }
-                }
-
-                items(uiState.filteredEvaluations, key = { it.id }) { evaluation ->
-                    EvaluationListItem(
-                        evaluation = evaluation,
-                        onClick = { onEvaluationDetail(evaluation.id) },
-                        onLike = { vm.toggleLike(evaluation.id) },
-                    )
+                } else {
+                    // 默认：课程聚合视图
+                    if (!uiState.loading && uiState.filteredCourseSummaries.isEmpty()) {
+                        item(key = "empty") {
+                            EvaluationEmptyState(
+                                title = "暂无评价",
+                                subtitle = "下拉刷新或写一条新评价吧",
+                            )
+                        }
+                    }
+                    items(uiState.filteredCourseSummaries, key = { "${it.courseName}|${it.teacher}" }) { summary ->
+                        CourseSummaryItem(
+                            summary = summary,
+                            onClick = { onCourseClick(summary.courseName, summary.teacher) },
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * 课程聚合卡片：课程名 + 教师 + 平均分（大数字 + 星级）+ 评价数。
+ */
 @Composable
-private fun EvaluationListItem(
-    evaluation: Evaluation,
+private fun CourseSummaryItem(
+    summary: CourseEvaluationSummary,
     onClick: () -> Unit,
-    onLike: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
     AppCard(modifier = Modifier.fillMaxWidth()) {
@@ -217,53 +227,53 @@ private fun EvaluationListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // 标题行：课程名 + 状态徽标
+            // 标题行：课程名
+            Text(
+                text = summary.courseName.ifEmpty { "未命名课程" },
+                fontSize = 16.sp,
+                color = colors.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            // 评分行：大数字平均分 + 星级 + 评价数
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = evaluation.courseName.ifEmpty { "未命名课程" },
-                    fontSize = 15.sp,
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                    text = DecimalFormatter.format(summary.avgRating, 1),
+                    fontSize = 22.sp,
+                    color = colors.primary,
+                    fontWeight = FontWeight.Bold,
                 )
-            }
-            // 副标题行：教师 + 星级
-            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.width(8.dp))
+                StarRatingDisplay(rating = summary.avgRating.toInt().coerceIn(0, 5), starSize = 14)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = evaluation.teacher.ifEmpty { "教师未知" },
+                    text = "${summary.evalCount} 条评价",
                     fontSize = 12.sp,
                     color = colors.onSurfaceVariantSummary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                StarRatingDisplay(rating = evaluation.rating)
-            }
-            // 内容预览
-            if (evaluation.content.isNotBlank()) {
-                Text(
-                    text = evaluation.content,
-                    fontSize = 13.sp,
-                    color = colors.onSurfaceVariantSummary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            HorizontalDivider()
-            // 底部元信息：作者 + 点赞
-            EvaluationMetaRow(
-                authorText = if (evaluation.anonymous) "匿名" else evaluation.author.ifEmpty { "匿名" },
-            ) {
-                LikeButton(
-                    liked = evaluation.liked,
-                    likes = evaluation.likes,
-                    onClick = onLike,
-                )
+            // 教师行
+            if (summary.teacher.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "教师",
+                        fontSize = 12.sp,
+                        color = colors.onSurfaceVariantSummary,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = summary.teacher,
+                        fontSize = 12.sp,
+                        color = colors.onSurfaceVariantSummary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }

@@ -193,7 +193,7 @@ fun EvaluationSubmitScreen(
                 extraEnd = 12.dp,
             ),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             if (!isEditMode && courseOptions.isEmpty()) {
                 item(key = "no_courses") {

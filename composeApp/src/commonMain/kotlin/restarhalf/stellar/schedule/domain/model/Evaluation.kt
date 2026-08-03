@@ -71,3 +71,21 @@ data class LikeResult(
     val likes: Int = 0,
     val liked: Boolean = false,
 )
+
+/**
+ * 课程评价聚合摘要（按课程名聚合）。
+ *
+ * 与后端 GET /courses 接口返回一一对应，用于评价列表页的课程卡片视图。
+ */
+@Serializable
+data class CourseEvaluationSummary(
+    @SerialName("course_name") val courseName: String = "",
+    /** 教师名（同一课程多名教师时取其一） */
+    val teacher: String = "",
+    /** 平均评分（1-5，保留 1 位小数） */
+    @SerialName("avg_rating") val avgRating: Double = 0.0,
+    /** 评价总数 */
+    @SerialName("eval_count") val evalCount: Int = 0,
+    /** 最新评价时间（Unix 秒） */
+    @SerialName("latest_at") val latestAt: Long = 0,
+)

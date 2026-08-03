@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationPage
@@ -52,6 +53,7 @@ class CourseEvaluationApi(
 
     override suspend fun listEvaluations(
         course: String?,
+        teacher: String?,
         page: Int,
         size: Int,
     ): EvaluationPage = withContext(AppIoDispatcher) {
@@ -59,10 +61,21 @@ class CourseEvaluationApi(
             parameters.append("page", page.toString())
             parameters.append("size", size.toString())
             if (!course.isNullOrBlank()) parameters.append("course", course)
+            if (!teacher.isNullOrBlank()) parameters.append("teacher", teacher)
         }.buildString()
         val body = executeGet(url)
         json.decodeFromString(EvaluationPage.serializer(), body)
     }
+
+    override suspend fun listCourseSummaries(): List<CourseEvaluationSummary> =
+        withContext(AppIoDispatcher) {
+            val body = executeGet("$baseUrl/courses")
+            val response = json.decodeFromString(
+                CourseSummariesResponse.serializer(),
+                body,
+            )
+            response.items
+        }
 
     override suspend fun getEvaluation(id: String): Evaluation = withContext(AppIoDispatcher) {
         val body = executeGet("$baseUrl/evaluations/$id")
@@ -130,3 +143,9 @@ class CourseEvaluationApi(
         return response.body()
     }
 }
+
+/** GET /courses 返回的包装体 */
+@kotlinx.serialization.Serializable
+private data class CourseSummariesResponse(
+    val items: List<CourseEvaluationSummary> = emptyList(),
+)

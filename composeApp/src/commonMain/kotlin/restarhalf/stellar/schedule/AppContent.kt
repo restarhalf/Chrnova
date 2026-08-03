@@ -74,6 +74,7 @@ import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
@@ -363,10 +364,25 @@ fun AppContent(
                     EvaluationListScreen(
                         vm = evalVm,
                         onBack = { navigator.pop() },
+                        onCourseClick = { courseName, teacher ->
+                            navigator.push(Screen.EvaluationCourse(courseName, teacher))
+                        },
                         onEvaluationDetail = { evaluationId ->
                             navigator.push(Screen.EvaluationDetail(evaluationId))
                         },
                         onSubmitClick = { navigator.push(Screen.EvaluationSubmit()) },
+                    )
+                }
+                entry<Screen.EvaluationCourse> { screen ->
+                    val evalVm: CourseEvaluationViewModel = koinViewModel()
+                    EvaluationCourseScreen(
+                        vm = evalVm,
+                        courseName = screen.courseName,
+                        teacher = screen.teacher,
+                        onBack = { navigator.pop() },
+                        onEvaluationDetail = { evaluationId ->
+                            navigator.push(Screen.EvaluationDetail(evaluationId))
+                        },
                     )
                 }
                 entry<Screen.EvaluationDetail> { screen ->

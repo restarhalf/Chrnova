@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
@@ -44,8 +45,12 @@ class CourseEvaluationViewModel(
         val searchQuery: String = "",
         /** 列表页课程筛选（null 表示全部） */
         val selectedCourse: String? = null,
+        /** 列表页教师筛选（null 表示全部；"教师未知"匹配空教师） */
+        val selectedTeacher: String? = null,
         /** 列表页"仅看我的"筛选（true 只显示当前 user_hash 提交的评价） */
         val onlyMine: Boolean = false,
+        /** 课程聚合列表（评价列表页顶层视图，按课程分组） */
+        val courseSummaries: ImmutableList<CourseEvaluationSummary> = persistentListOf(),
         val selectedEvaluation: Evaluation? = null,
         /** 当前用户已选课程（用于提交时限制可选课程） */
         val myCourses: ImmutableList<Course> = persistentListOf(),
@@ -57,6 +62,13 @@ class CourseEvaluationViewModel(
         /** 当前登录用户的 user_hash（学号 SHA-256），用于判断评价是否为本机提交 */
         val userHash: String = "",
     ) {
+        /** 课程聚合列表按搜索词过滤（仅匹配课程名/教师） */
+        val filteredCourseSummaries: List<CourseEvaluationSummary>
+            get() = if (searchQuery.isEmpty()) courseSummaries else courseSummaries.filter {
+                it.courseName.contains(searchQuery, ignoreCase = true) ||
+                    it.teacher.contains(searchQuery, ignoreCase = true)
+            }
+
         val filteredEvaluations: List<Evaluation>
             get() = evaluations
                 .let { list ->
@@ -117,7 +129,10 @@ class CourseEvaluationViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
             runCatching {
-                port.listEvaluations(course = _uiState.value.selectedCourse)
+                port.listEvaluations(
+                    course = _uiState.value.selectedCourse,
+                    teacher = _uiState.value.selectedTeacher,
+                )
             }.onSuccess { page ->
                 _uiState.update {
                     it.copy(
@@ -131,6 +146,33 @@ class CourseEvaluationViewModel(
                 AppLogger.log("Evaluation", "加载评价列表失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
+        }
+    }
+
+    /** 按课程 + 教师加载评价列表（用于 EvaluationCourseScreen 第二层页面） */
+    fun loadEvaluations(course: String, teacher: String?) {
+        _uiState.update { it.copy(selectedCourse = course, selectedTeacher = teacher) }
+        loadEvaluations()
+    }
+
+    /** 加载课程聚合列表（评价列表页顶层视图） */
+    fun loadCourseSummaries() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null) }
+            runCatching { port.listCourseSummaries() }
+                .onSuccess { summaries ->
+                    _uiState.update {
+                        it.copy(
+                            courseSummaries = summaries.toPersistentList(),
+                            loading = false,
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Evaluation", "加载课程聚合列表失败", e)
+                    _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+                }
         }
     }
 

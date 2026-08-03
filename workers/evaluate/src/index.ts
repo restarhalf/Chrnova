@@ -92,6 +92,37 @@ function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
 
+// ─── Public: list course summaries (aggregated) ───
+// 按 (course_name, teacher) 联合聚合：平均分、评价数、最新评价时间。
+// 同一门课不同老师各自独立一条（教学班差异大，不应混合平均）。
+// 用于评价列表页的"课程卡片"视图（类似评分应用的课程列表）。
+app.get('/courses', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare(
+      `SELECT
+         course_name,
+         COALESCE(NULLIF(TRIM(teacher), ''), '教师未知') AS teacher,
+         ROUND(AVG(rating), 1) AS avg_rating,
+         COUNT(*) AS eval_count,
+         MAX(created_at) AS latest_at
+       FROM evaluations
+       WHERE status = 'approved'
+       GROUP BY course_name, COALESCE(NULLIF(TRIM(teacher), ''), '教师未知')
+       ORDER BY latest_at DESC`
+    ).all<{
+      course_name: string;
+      teacher: string;
+      avg_rating: number;
+      eval_count: number;
+      latest_at: number;
+    }>();
+
+    return c.json({ items: rows.results || [] });
+  } catch (e) {
+    return c.json({ error: `List courses failed: ${e}` }, 500);
+  }
+});
+
 // ─── Public: list evaluations ───
 // 去掉审核后，所有评价默认可见。仍保留 status 字段做向前兼容（旧数据可能含 pending/rejected）。
 app.get('/evaluations', async (c) => {
@@ -108,7 +139,9 @@ app.get('/evaluations', async (c) => {
     params.push(course);
   }
   if (teacher) {
-    where.push('teacher LIKE ?');
+    // 与 /courses 聚合的规范化保持一致：空 teacher 视为"教师未知"
+    // 用 LIKE 模糊匹配，"教师未知" 也能正确命中空 teacher
+    where.push("COALESCE(NULLIF(TRIM(teacher), ''), '教师未知') LIKE ?");
     params.push(`%${teacher}%`);
   }
 

@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.domain.port
 
+import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationPage
@@ -17,15 +18,27 @@ interface CourseEvaluationPort {
      * 获取评价列表（已去掉审核，全部可见）
      *
      * @param course 按课程名过滤（可选）
+     * @param teacher 按教师名过滤（可选，传"教师未知"匹配空教师）
      * @param page 页码（从 1 开始）
      * @param size 每页数量
      * @return 分页评价列表
      */
     suspend fun listEvaluations(
         course: String? = null,
+        teacher: String? = null,
         page: Int = 1,
         size: Int = 20,
     ): EvaluationPage
+
+    /**
+     * 获取课程评价聚合列表（按课程名分组）。
+     *
+     * 返回每门课程的平均分、评价数、教师与最新评价时间，
+     * 用于评价列表页的"课程卡片"视图。
+     *
+     * @return 课程聚合摘要列表（按最新评价时间倒序）
+     */
+    suspend fun listCourseSummaries(): List<CourseEvaluationSummary>
 
     /**
      * 获取评价详情

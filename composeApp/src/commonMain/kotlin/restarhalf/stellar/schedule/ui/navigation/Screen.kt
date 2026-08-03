@@ -82,9 +82,16 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PapersUpload : Screen
 
-    /** 课程评价列表页 */
+    /** 课程评价列表页（课程聚合视图） */
     @Serializable
     data object Evaluation : Screen
+
+    /** 某课程某教师的评价列表页（两层结构的第二层） */
+    @Serializable
+    data class EvaluationCourse(
+        val courseName: String,
+        val teacher: String = "",
+    ) : Screen
 
     /** 课程评价详情页 */
     @Serializable

@@ -135,7 +135,7 @@ fun EvaluationDetailScreen(
                 extraEnd = 12.dp,
             ),
             horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             if (uiState.loading) {
                 item(key = "loading") {
@@ -197,7 +197,7 @@ private fun EvaluationHeroCard(evaluation: Evaluation) {
     val colors = MiuixTheme.colorScheme
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // 课程名（主标题）

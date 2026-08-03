@@ -15,11 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.ui.icons.Favorite
 import restarhalf.stellar.schedule.ui.icons.Star
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -178,5 +182,78 @@ fun EvaluationMetaRow(
         )
         Spacer(modifier = Modifier.width(8.dp))
         trailing()
+    }
+}
+
+/**
+ * 评价列表项卡片：教师 + 星级 + 内容预览 + 作者/点赞。
+ *
+ * 用于"我的评价"、某课程评价列表等平铺场景。
+ *
+ * @param onClick 点击卡片（进入详情）
+ * @param onLike 点击点赞
+ */
+@Composable
+fun EvaluationListItem(
+    evaluation: Evaluation,
+    onClick: () -> Unit,
+    onLike: () -> Unit,
+    modifier: Modifier = Modifier,
+    showCourseName: Boolean = false,
+) {
+    val colors = MiuixTheme.colorScheme
+    AppCard(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // 标题行：课程名（可选，"我的评价"场景下需要显示）
+            if (showCourseName) {
+                Text(
+                    text = evaluation.courseName.ifEmpty { "未命名课程" },
+                    fontSize = 15.sp,
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // 副标题行：教师 + 星级
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = evaluation.teacher.ifEmpty { "教师未知" },
+                    fontSize = 12.sp,
+                    color = colors.onSurfaceVariantSummary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                StarRatingDisplay(rating = evaluation.rating)
+            }
+            // 内容预览
+            if (evaluation.content.isNotBlank()) {
+                Text(
+                    text = evaluation.content,
+                    fontSize = 13.sp,
+                    color = colors.onSurfaceVariantSummary,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            HorizontalDivider()
+            // 底部元信息：作者 + 点赞
+            EvaluationMetaRow(
+                authorText = if (evaluation.anonymous) "匿名" else evaluation.author.ifEmpty { "匿名" },
+            ) {
+                LikeButton(
+                    liked = evaluation.liked,
+                    likes = evaluation.likes,
+                    onClick = onLike,
+                )
+            }
+        }
     }
 }
