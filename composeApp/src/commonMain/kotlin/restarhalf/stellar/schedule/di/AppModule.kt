@@ -358,6 +358,7 @@ val viewModelModule = module {
             loginUseCase = get(),
             runSyncUseCase = get(),
             bindUnboundData = get(),
+            syncCourseEventsToCalendar = get(),
         )
     }
     viewModel {

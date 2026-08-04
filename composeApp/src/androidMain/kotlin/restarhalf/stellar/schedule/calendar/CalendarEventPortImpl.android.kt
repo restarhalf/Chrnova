@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.provider.CalendarContract
 import androidx.core.content.ContextCompat
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -63,7 +62,7 @@ class CalendarEventPortImpl(
             val tz = TimeZone.currentSystemDefault()
 
             val ops = ArrayList<ContentProviderOperation>()
-            val insertedIds = mutableListOf<Long>()
+            var insertedCount = 0
 
             for (course in courses) {
                 val startSlot = slotByNum[course.startSection] ?: continue
@@ -122,10 +121,9 @@ class CalendarEventPortImpl(
             for (result in results) {
                 val uri = result.uri ?: continue
                 val id = ContentUris.parseId(uri)
-                if (id > 0) insertedIds.add(id)
+                if (id > 0) insertedCount++
             }
-            saveCourseIds(insertedIds)
-            CalendarEventPort.SyncResult.Success(insertedIds.size)
+            CalendarEventPort.SyncResult.Success(insertedCount)
         }.getOrElse { e ->
             AppLogger.log("Calendar", "同步课程事件失败", e)
             CalendarEventPort.SyncResult.Failed(e.message ?: "Unknown")
@@ -144,7 +142,7 @@ class CalendarEventPortImpl(
 
             val tz = TimeZone.currentSystemDefault()
             val ops = ArrayList<ContentProviderOperation>()
-            val insertedIds = mutableListOf<Long>()
+            var insertedCount = 0
 
             for (exam in exams) {
                 val parsed = parseExamTime(exam.time) ?: continue
@@ -193,10 +191,9 @@ class CalendarEventPortImpl(
             for (result in results) {
                 val uri = result.uri ?: continue
                 val id = ContentUris.parseId(uri)
-                if (id > 0) insertedIds.add(id)
+                if (id > 0) insertedCount++
             }
-            saveExamIds(insertedIds)
-            CalendarEventPort.SyncResult.Success(insertedIds.size)
+            CalendarEventPort.SyncResult.Success(insertedCount)
         }.getOrElse { e ->
             AppLogger.log("Calendar", "同步考试事件失败", e)
             CalendarEventPort.SyncResult.Failed(e.message ?: "Unknown")
@@ -232,26 +229,29 @@ class CalendarEventPortImpl(
     }
 
     private fun removeAllCourseEventsInternal(): Int {
-        val ids = loadCourseIds()
-        deleteEventsByIds(ids)
-        clearCourseIds()
-        return ids.size
+        // 按 UID_2445 前缀查询删除，不依赖本地保存的 event ID
+        // 即使应用清数据/重装也能清理之前写入的事件
+        return deleteEventsByUidPrefix("chrnova-course-%")
     }
 
     private fun removeAllExamEventsInternal(): Int {
-        val ids = loadExamIds()
-        deleteEventsByIds(ids)
-        clearExamIds()
-        return ids.size
+        return deleteEventsByUidPrefix("chrnova-exam-%")
     }
 
-    private fun deleteEventsByIds(ids: List<Long>) {
-        if (ids.isEmpty()) return
-        val selection = "${CalendarContract.Events._ID} IN (${ids.joinToString(",")})"
-        context.contentResolver.delete(
+    /**
+     * 按 UID_2445 前缀批量删除事件。
+     *
+     * 替代旧的"按 prefs 保存的 event ID 删除"方案——UID 是写入时就固化在
+     * CalendarContract.Events.UID_2445 字段的稳定标识，不依赖本地 prefs，
+     * 应用清数据/重装后依然能正确清理之前写入的事件，避免重复堆积。
+     */
+    private fun deleteEventsByUidPrefix(uidPattern: String): Int {
+        val selection = "${CalendarContract.Events.UID_2445} LIKE ?"
+        val selectionArgs = arrayOf(uidPattern)
+        return context.contentResolver.delete(
             CalendarContract.Events.CONTENT_URI,
             selection,
-            null,
+            selectionArgs,
         )
     }
 
@@ -299,29 +299,10 @@ class CalendarEventPortImpl(
         return ParsedExamTime(start, end)
     }
 
-    private fun loadCourseIds(): List<Long> = prefs.getString(KEY_COURSE_IDS, "").orEmpty()
-        .split(",").mapNotNull { it.toLongOrNull() }
-
-    private fun saveCourseIds(ids: List<Long>) {
-        prefs[KEY_COURSE_IDS] = ids.joinToString(",")
-    }
-
-    private fun clearCourseIds() {
-        prefs.remove(KEY_COURSE_IDS)
-    }
-
-    private fun loadExamIds(): List<Long> = prefs.getString(KEY_EXAM_IDS, "").orEmpty()
-        .split(",").mapNotNull { it.toLongOrNull() }
-
-    private fun saveExamIds(ids: List<Long>) {
-        prefs[KEY_EXAM_IDS] = ids.joinToString(",")
-    }
-
-    private fun clearExamIds() {
-        prefs.remove(KEY_EXAM_IDS)
-    }
-
     companion object {
+        // 已废弃：旧版本用于持久化 event ID 的 prefs key。
+        // 现在按 UID_2445 前缀查询删除，不再需要本地保存 ID。
+        // 保留常量仅用于将来可能的一次性清理迁移，暂不读取。
         private const val KEY_COURSE_IDS = "calendar_course_event_ids"
         private const val KEY_EXAM_IDS = "calendar_exam_event_ids"
     }

@@ -376,13 +376,21 @@ class SettingsViewModel(
 
     /**
      * 选中的学期变更回调
-     * 
+     *
      * @param value 学期值
      */
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
             settings.setSelectedTerm(value)
             settings.setActiveScheduleTerm(value)
+            // 切换学期后,已写入日历的考试事件需要按新学期重新写入(先清后建)。
+            // SyncExamEventsToCalendarUseCase 内部判断开关,未开启考试提醒时直接返回 Success(0),
+            // 不会误开提醒。失败仅记录日志,不阻断学期切换。
+            runCatching { syncExamEventsToCalendar(selectedTerm = value) }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Calendar", "切换学期后重新同步考试日历失败", e)
+                }
         }
     }
 

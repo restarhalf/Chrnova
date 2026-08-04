@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.SettingsPort
+import kotlin.random.Random
 
 /**
  * 设置端口实现类
@@ -112,7 +113,14 @@ class SettingsPortImpl(
      * @param term 学期
      */
     override fun setActiveScheduleTerm(term: String) {
-        settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] = term
+        settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] = 
+            if (term!="") 
+                term
+            else
+                settings.getString(
+                    SettingsKeys.CURRENT_TERM_ID,
+                    defaultValue = ""
+                )
     }
 
     /**
@@ -183,7 +191,7 @@ class SettingsPortImpl(
         if (!existing.isNullOrEmpty()) return existing
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         val id = buildString(32) {
-            repeat(32) { append(chars[kotlin.random.Random.nextInt(chars.length)]) }
+            repeat(32) { append(chars[Random.nextInt(chars.length)]) }
         }
         settings[SettingsKeys.DEVICE_ID] = id
         return id

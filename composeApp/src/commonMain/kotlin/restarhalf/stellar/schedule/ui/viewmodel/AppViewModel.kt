@@ -23,6 +23,7 @@ import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
+import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
 /**
@@ -40,6 +41,7 @@ class AppViewModel(
     private val loginUseCase: LoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
     private val bindUnboundData: BindUnboundDataUseCase,
+    private val syncCourseEventsToCalendar: SyncCourseEventsToCalendarUseCase,
     ) : ViewModel() {
 
     init {
@@ -127,16 +129,44 @@ class AppViewModel(
     /** 校区变更回调 */
     fun onCampusChanged(campus: Campus) {
         timetable.setCampus(campus)
+        // 不同校区节次时间表不同，已写入日历的事件时间需要刷新
+        resyncCourseCalendar()
     }
 
     /** 学期开始时间变更回调 */
     fun onTermStartMsChanged(ms: Long) {
         timetable.setTermStartMs(ms)
+        // 学期起始日变化会改变所有课程事件的具体日期，需重新写入日历
+        resyncCourseCalendar()
     }
 
     /** 总周数变更回调 */
     fun onTotalWeeksChanged(weeks: Int) {
         timetable.setTotalWeeks(weeks)
+        // 总周数变化可能影响事件覆盖范围，重新写入日历
+        resyncCourseCalendar()
+    }
+
+    /**
+     * 重新同步课程事件到日历。
+     *
+     * 仅在用户已开启"课程日历提醒"时实际写入（由 SyncCourseEventsToCalendarUseCase
+     * 内部判断开关），未开启时直接返回 Success(0)，不会误开提醒。
+     * 失败仅记录日志，不抛给 UI——日历同步是设置变更的副作用，不应阻断用户操作。
+     */
+    private fun resyncCourseCalendar() {
+        viewModelScope.launch {
+            runCatching {
+                syncCourseEventsToCalendar(
+                    campus = timetable.getCampus(),
+                    termStartMs = timetable.getTermStartMs(),
+                    totalWeeks = timetable.getTotalWeeks(),
+                )
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Calendar", "学期/校区变更后重新同步日历失败", e)
+            }
+        }
     }
 
     /**

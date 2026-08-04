@@ -3,7 +3,6 @@
 package restarhalf.stellar.schedule.calendar
 
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -118,7 +117,6 @@ class CalendarEventPortImpl(
                     if (savedId != null) ids.add(savedId)
                 }
             }
-            saveCourseIds(ids)
             CalendarEventPort.SyncResult.Success(ids.size)
         }.getOrElse { e ->
             AppLogger.log("Calendar", "iOS 同步课程事件失败", e)
@@ -162,7 +160,6 @@ class CalendarEventPortImpl(
                 val savedId = saveEvent(event)
                 if (savedId != null) ids.add(savedId)
             }
-            saveExamIds(ids)
             CalendarEventPort.SyncResult.Success(ids.size)
         }.getOrElse { e ->
             AppLogger.log("Calendar", "iOS 同步考试事件失败", e)
@@ -197,27 +194,51 @@ class CalendarEventPortImpl(
     }
 
     private fun removeAllCourseEventsInternal(): Int {
-        val ids = loadCourseIds()
-        deleteEventsByIdentifiers(ids)
-        clearCourseIds()
-        return ids.size
+        return deleteEventsByNotesMarker("[chrnova-course]")
     }
 
     private fun removeAllExamEventsInternal(): Int {
-        val ids = loadExamIds()
-        deleteEventsByIdentifiers(ids)
-        clearExamIds()
-        return ids.size
+        return deleteEventsByNotesMarker("[chrnova-exam]")
     }
 
-    private fun deleteEventsByIdentifiers(identifiers: List<String>) {
-        for (id in identifiers) {
-            val event = eventStore.eventWithIdentifier(id) ?: continue
+    /**
+     * 按 notes 标记批量删除事件。
+     *
+     * 替代旧的"按 prefs 保存的 identifier 删除"方案——notes 标记是写入时就固化的
+     * 稳定标识，不依赖本地 prefs，应用清数据/重装后依然能正确清理之前写入的事件。
+     *
+     * 查询范围：过去 1 年到未来 2 年，覆盖整个学期跨度。
+     */
+    private fun deleteEventsByNotesMarker(marker: String): Int {
+        // NSDate 时间区间：过去 1 年 ~ 未来 2 年，覆盖一个完整学期跨度
+        val now = NSDate()
+        val oneYearSecs = 365 * 24 * 3600.0
+        val startDate = NSDate(timeIntervalSinceReferenceDate = now.timeIntervalSinceReferenceDate() - oneYearSecs)
+        val endDate = NSDate(timeIntervalSinceReferenceDate = now.timeIntervalSinceReferenceDate() + 2 * oneYearSecs)
+
+        val predicate = eventStore.predicateForEventsWithStartDate(
+            startDate = startDate,
+            endDate = endDate,
+            calendars = null,
+        )
+        val events = eventStore.eventsMatchingPredicate(predicate) ?: emptyList<Any>()
+        var count = 0
+        for (event in events) {
+            if (event !is EKEvent) continue
+            val notes = event.notes() ?: ""
+            if (!notes.contains(marker)) continue
             memScoped {
                 val errorPtr: ObjCObjectVar<NSError?> = alloc()
-                eventStore.removeEvent(event, span = EKSpan.EKSpanThisEvent, commit = true, error = errorPtr.ptr)
+                val success = eventStore.removeEvent(
+                    event = event,
+                    span = EKSpan.EKSpanThisEvent,
+                    commit = true,
+                    error = errorPtr.ptr,
+                )
+                if (success) count++
             }
         }
+        return count
     }
 
     private fun saveEvent(event: EKEvent): String? {
@@ -255,31 +276,9 @@ class CalendarEventPortImpl(
         return ParsedExamTime(start, end)
     }
 
-    private fun loadCourseIds(): List<String> = prefs.getString(KEY_COURSE_IDS, "").orEmpty()
-        .split("\u0001")
-        .filter { it.isNotBlank() }
-
-    private fun saveCourseIds(ids: List<String>) {
-        prefs[KEY_COURSE_IDS] = ids.joinToString("\u0001")
-    }
-
-    private fun clearCourseIds() {
-        prefs.remove(KEY_COURSE_IDS)
-    }
-
-    private fun loadExamIds(): List<String> = prefs.getString(KEY_EXAM_IDS, "").orEmpty()
-        .split("\u0001")
-        .filter { it.isNotBlank() }
-
-    private fun saveExamIds(ids: List<String>) {
-        prefs[KEY_EXAM_IDS] = ids.joinToString("\u0001")
-    }
-
-    private fun clearExamIds() {
-        prefs.remove(KEY_EXAM_IDS)
-    }
-
     companion object {
+        // 已废弃：旧版本用于持久化 event identifier 的 prefs key。
+        // 现在按 notes 标记查询删除，不再需要本地保存 identifier。
         private const val KEY_COURSE_IDS = "calendar_course_event_ids"
         private const val KEY_EXAM_IDS = "calendar_exam_event_ids"
     }

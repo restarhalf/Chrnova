@@ -224,7 +224,7 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(AppIoDispatcher)
-        .fallbackToDestructiveMigration(false)
+        .fallbackToDestructiveMigrationOnDowngrade()
         .addMigrations(
             migration2To3,
             migration3To4,

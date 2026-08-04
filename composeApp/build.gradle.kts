@@ -107,7 +107,7 @@ kotlin {
     android {
         namespace = "restarhalf.stellar.schedule"
         compileSdk { version = release(37) }
-        minSdk = 24
+        minSdk = 28
 
         androidResources {
             enable = true
