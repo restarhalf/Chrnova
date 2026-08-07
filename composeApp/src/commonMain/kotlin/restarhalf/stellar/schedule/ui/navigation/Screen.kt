@@ -145,4 +145,16 @@ sealed interface Screen : NavKey {
     @Serializable
     data object CourseSelection : Screen
 
+    /** 公告列表页 */
+    @Serializable
+    data object AnnouncementList : Screen
+
+    /**
+     * 公告详情页
+     *
+     * @param announcementId 公告唯一标识
+     */
+    @Serializable
+    data class AnnouncementDetail(val announcementId: String) : Screen
+
 }

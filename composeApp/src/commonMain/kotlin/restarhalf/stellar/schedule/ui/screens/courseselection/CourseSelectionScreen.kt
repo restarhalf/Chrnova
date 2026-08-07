@@ -1,5 +1,11 @@
 package restarhalf.stellar.schedule.ui.screens.courseselection
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +24,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,13 +44,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.icons.Refresh
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -52,19 +60,30 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.PullToRefreshState
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 自动抢课屏幕
  *
- * 提供完整的抢课流程 UI：选课轮次 → 选课分类 → 浏览课程 → 加入抢课目标 →
- * 调整优先级 → 启动/停止抢课 → 查看实时日志。
+ * 采用 Tab 分区布局，每个区域职责单一：
+ * - 选课：轮次 → 分类 → 搜索 → 课程列表（加入目标）
+ * - 目标：抢课目标列表 + 优先级调整 + 抢课配置
+ * - 已选：已选课程列表（退课）
+ * - 日志：实时抢课日志
+ *
+ * 底部固定操作栏让开始/停止按钮永远可达，顶部状态条显示会话与抢课状态。
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CourseSelectionScreen(
     vm: CourseSelectionViewModel,
@@ -72,37 +91,119 @@ fun CourseSelectionScreen(
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val colors = MiuixTheme.colorScheme
+    val coroutineScope = rememberCoroutineScope()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     LaunchedEffect(Unit) {
         if (uiState.rotations.isEmpty()) vm.loadRotations()
     }
 
+    val tabCount = 4
+    val pagerState = rememberPagerState(pageCount = { tabCount })
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = "自动抢课",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Back, contentDescription = "")
+            Column {
+                AppPageTopBar(
+                    title = "自动抢课",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Back, contentDescription = "")
+                        }
+                    },
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TabRowWithContour(
+                        tabs = listOf(
+                            "选课",
+                            "目标(${uiState.targets.size})",
+                            "已选(${uiState.selectedCourses.size})",
+                            "日志(${uiState.logs.size})",
+                        ),
+                        selectedTabIndex = pagerState.currentPage,
+                        onTabSelected = { index ->
+                            coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                        },
+                    )
+                }
+                // 顶部状态条
+                val statusText = buildStatusText(uiState)
+                AnimatedVisibility(
+                    visible = statusText != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                fontSize = 12.sp,
+                                text = statusText ?: "",
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { vm.loadRotations() }) {
-                        Icon(
-                            imageVector = Refresh,
-                            contentDescription = "刷新"
+                }
+            }
+        },
+        bottomBar = {
+            val canStart = uiState.targets.isNotEmpty() && uiState.sessionReady
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 25.dp, start = 10.dp, end = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (uiState.snatching) {
+                    Button(
+                        onClick = { vm.stopSnatch() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                    ) {
+                        Text(
+                            text = if (uiState.backgroundRunning) "停止后台抢课" else "停止抢课",
+                            color = colors.onPrimary,
                         )
                     }
-                },
-            )
+                } else {
+                    Button(
+                        onClick = { vm.startSnatch() },
+                        modifier = Modifier.weight(1f),
+                        enabled = canStart,
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                    ) {
+                        Text(text = "前台抢课", color = colors.onPrimary)
+                    }
+                    if (uiState.backgroundSupported) {
+                        Button(
+                            onClick = { ensureNotificationPermission { vm.startBackgroundSnatch() } },
+                            modifier = Modifier.weight(1f),
+                            enabled = canStart,
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                        ) {
+                            Text(text = "后台抢课", color = colors.onPrimary)
+                        }
+                    }
+                }
+            }
         },
     ) { paddingValues ->
-        LazyColumn(
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
@@ -110,299 +211,395 @@ fun CourseSelectionScreen(
                         top = paddingValues.calculateTopPadding(),
                         start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                         end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp,
+                        bottom = 0.dp
                     ),
+                ),
+        ) { pageIndex ->
+            when (pageIndex) {
+                0 -> SelectTab(
+                    uiState = uiState,
+                    vm = vm,
+                    paddingValues = paddingValues,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    isRefreshing = uiState.loading,
+                    onRefresh = { vm.loadRotations() },
+                    pullToRefreshState = pullToRefreshState,
                 )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
-            contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
-                extraTop = 12.dp,
-                extraStart = 12.dp,
-                extraEnd = 12.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            // 1. 选课轮次
-            item {
-                SmallTitle(text = "选课轮次")
-                AppCard {
-                    OverlayDropdownPreference(
-                        title = "选课轮次",
-                        summary = if (uiState.selectedRotationId.isBlank()) "请选择" else
-                            uiState.rotations.firstOrNull { it.rotationId == uiState.selectedRotationId }?.rotationName.orEmpty(),
-                        items = uiState.rotations.map { it.rotationName.ifBlank { it.rotationId } },
-                        selectedIndex = uiState.rotations.indexOfFirst { it.rotationId == uiState.selectedRotationId }.coerceAtLeast(0),
-                        onSelectedIndexChange = { index ->
-                            uiState.rotations.getOrNull(index)?.let { vm.selectRotation(it.rotationId) }
-                        },
-                    )
-                }
+                1 -> TargetTab(
+                    uiState = uiState,
+                    vm = vm,
+                    paddingValues = paddingValues,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    isRefreshing = uiState.loading,
+                    onRefresh = { vm.loadRotations() },
+                    pullToRefreshState = pullToRefreshState,
+                )
+                2 -> SelectedTab(
+                    uiState = uiState,
+                    vm = vm,
+                    paddingValues = paddingValues,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    isRefreshing = uiState.loadingSelected,
+                    onRefresh = { vm.loadSelectedCourses() },
+                    pullToRefreshState = pullToRefreshState,
+                )
+                3 -> LogTab(
+                    uiState = uiState,
+                    vm = vm,
+                    paddingValues = paddingValues,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    isRefreshing = false,
+                    onRefresh = { },
+                    pullToRefreshState = pullToRefreshState,
+                )
             }
-
-            // 2. 选课分类
-            if (uiState.classifications.isNotEmpty()) {
-                item {
-                    SmallTitle(text = "选课分类")
-                    AppCard {
-                        OverlayDropdownPreference(
-                            title = "课程分类",
-                            summary = uiState.classifications.firstOrNull { it.classificationCode == uiState.selectedClassificationCode }?.classificationName ?: "请选择",
-                            items = uiState.classifications.map { it.classificationName },
-                            selectedIndex = uiState.classifications.indexOfFirst { it.classificationCode == uiState.selectedClassificationCode }.coerceAtLeast(0),
-                            onSelectedIndexChange = { index ->
-                                uiState.classifications.getOrNull(index)?.let { vm.selectClassification(it.classificationCode) }
-                            },
-                        )
-                    }
-                }
-            }
-
-            // 2.5 搜索栏（选了分类后才显示）
-            if (uiState.selectedClassificationCode.isNotBlank()) {
-                item {
-                    SmallTitle(text = "搜索课程")
-                    AppCard {
-                        SearchSection(
-                            courseQuery = uiState.courseSearchQuery,
-                            loading = uiState.loading,
-                            onCourseQueryChange = { vm.onCourseSearchQueryChange(it) },
-                            onClear = { vm.clearSearch() },
-                        )
-                    }
-                }
-            }
-
-            // 3. 课程列表
-            if (uiState.courses.isNotEmpty()) {
-                item {
-                    SmallTitle(text = "可选课程（点击加入抢课目标，共 ${uiState.courses.size} 条）")
-                }
-                items(uiState.courses, key = { "${it.courseId}|${it.noticeId}|${it.kxh}" }) { course ->
-                    CourseCard(
-                        course = course,
-                        added = uiState.targets.any { it.key == "${course.courseId}|${course.noticeId}|${course.kxh}" },
-                        onAdd = { vm.addTarget(course) },
-                    )
-                }
-            } else if (uiState.selectedClassificationCode.isNotBlank() && !uiState.loading) {
-                // 已选分类且非加载中，但课程列表为空：提示无结果
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = if (uiState.courseSearchQuery.isNotBlank()) {
-                                "未找到匹配的课程"
-                            } else {
-                                "该分类下暂无可选课程"
-                            },
-                            fontSize = 13.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        )
-                    }
-                }
-            }
-
-            // 4. 抢课目标
-            if (uiState.targets.isNotEmpty()) {
-                item {
-                    SmallTitle(text = "抢课目标（按优先级排序，共 ${uiState.targets.size} 个）")
-                }
-                itemsIndexed(uiState.targets) { index, target ->
-                    TargetCard(
-                        target = target,
-                        index = index,
-                        total = uiState.targets.size,
-                        snatching = uiState.snatching,
-                        sessionReady = uiState.sessionReady,
-                        onMoveUp = { vm.moveTargetUp(index) },
-                        onMoveDown = { vm.moveTargetDown(index) },
-                        onRemove = { vm.removeTarget(target) },
-                        onDrop = { vm.dropCourse(target.course.noticeId, target.course.courseName) },
-                    )
-                }
-            }
-
-            // 4.5 已选课程（可退课）
-            if (uiState.sessionReady) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SmallTitle(text = "已选课程（可退课）")
-                        Text(
-                            text = if (uiState.loadingSelected) "加载中..." else "刷新",
-                            fontSize = 12.sp,
-                            color = colors.primary,
-                            modifier = Modifier.clickable(enabled = !uiState.loadingSelected) {
-                                vm.loadSelectedCourses()
-                            },
-                        )
-                    }
-                }
-                if (uiState.selectedCourses.isNotEmpty()) {
-                    items(uiState.selectedCourses, key = { it.noticeId }) { course ->
-                        SelectedCourseCard(
-                            course = course,
-                            onDrop = { vm.dropSelectedCourse(course) },
-                        )
-                    }
-                } else if (!uiState.loadingSelected) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "暂无已选课程",
-                                fontSize = 13.sp,
-                                color = colors.onSurfaceVariantSummary,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 5. 抢课配置
-            item {
-                SmallTitle(text = "抢课配置")
-                AppCard {
-                    SnatchConfigSection(
-                        config = uiState.snatchConfig,
-                        snatching = uiState.snatching,
-                        onConfigChange = { vm.updateSnatchConfig(it) },
-                    )
-                }
-            }
-
-            // 6. 开始/停止按钮
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (uiState.snatching) {
-                        Button(
-                            onClick = { vm.stopSnatch() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(color = colors.error),
-                        ) {
-                            Text(text = "停止抢课", color = colors.onError)
-                        }
-                    } else {
-                        Button(
-                            onClick = { vm.startSnatch() },
-                            modifier = Modifier.weight(1f),
-                            enabled = uiState.targets.isNotEmpty() && uiState.sessionReady,
-                            colors = ButtonDefaults.buttonColorsPrimary(),
-                        ) {
-                            Text(text = "前台抢课", color = colors.onPrimary)
-                        }
-                        if (uiState.backgroundSupported) {
-                            Button(
-                                onClick = {
-                                    // 后台抢课需要通知权限（Android 13+）
-                                    ensureNotificationPermission { vm.startBackgroundSnatch() }
-                                },
-                                modifier = Modifier.weight(1f),
-                                enabled = uiState.targets.isNotEmpty() && uiState.sessionReady,
-                                colors = ButtonDefaults.buttonColors(color = colors.secondary),
-                            ) {
-                                Text(text = "后台抢课", color = colors.onSecondary)
-                            }
-                        }
-                    }
-                }
-            }
-            // 后台抢课运行中提示
-            if (uiState.backgroundRunning) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(CircleShape)
-                            .background(colors.secondaryContainer)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "后台抢课服务运行中，可关闭应用或锁屏",
-                            fontSize = 12.sp,
-                            color = colors.onSecondaryContainer,
-                        )
-                    }
-                }
-            }
-
-            // 错误提示
-            if (uiState.error.isNotBlank()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(CircleShape)
-                            .background(colors.errorContainer)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = uiState.error,
-                            fontSize = 12.sp,
-                            color = colors.onErrorContainer,
-                        )
-                    }
-                }
-            }
-
-            // 7. 抢课日志
-            if (uiState.logs.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SmallTitle(text = "抢课日志")
-                        Text(
-                            text = "清空",
-                            fontSize = 12.sp,
-                            color = colors.primary,
-                            modifier = Modifier.clickable { vm.clearLogs() },
-                        )
-                    }
-                }
-                items(uiState.logs, key = { "${it.time}-${it.message.hashCode()}-${uiState.logs.indexOf(it)}" }) { log ->
-                    LogItem(log)
-                }
-            }
-
-            // 底部留白
-            item { Spacer(modifier = Modifier.height(12.dp)) }
         }
     }
 }
 
-/** 课程列表卡片 */
+/** 顶部状态条文案 */
+private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiState): String? {
+    return when {
+        uiState.backgroundRunning -> "后台抢课运行中，可关闭应用或锁屏"
+        uiState.snatching -> "前台抢课中..."
+        uiState.error.isNotBlank() -> uiState.error
+        !uiState.sessionReady && uiState.selectedRotationId.isBlank() -> "请选择选课轮次"
+        !uiState.sessionReady -> "正在进入选课..."
+        else -> null
+    }
+}
+
+// ---------------- Tab 1: 选课 ----------------
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SelectTab(
+    uiState: CourseSelectionViewModel.CourseSelectionUiState,
+    vm: CourseSelectionViewModel,
+    paddingValues: PaddingValues,
+    scrollBehavior: ScrollBehavior,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullToRefreshState: PullToRefreshState,
+) {
+    PullToRefresh(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        pullToRefreshState = pullToRefreshState,
+        refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
+            contentPadding = appPageContentPadding(
+                innerPadding = PaddingValues(),
+                outerPadding = paddingValues,
+                extraTop = 12.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+        // 1. 选课轮次
+        item {
+            SmallTitle(text = "选课轮次")
+            AppCard {
+                OverlayDropdownPreference(
+                    title = "选课轮次",
+                    items = uiState.rotations.map { it.rotationName.ifBlank { it.rotationId } },
+                    selectedIndex = uiState.rotations.indexOfFirst { it.rotationId == uiState.selectedRotationId }.coerceAtLeast(0),
+                    onSelectedIndexChange = { index ->
+                        uiState.rotations.getOrNull(index)?.let { vm.selectRotation(it.rotationId) }
+                    },
+                )
+            }
+        }
+
+        // 2. 选课分类
+        if (uiState.classifications.isNotEmpty()) {
+            item {
+                SmallTitle(text = "选课分类")
+                AppCard {
+                    OverlayDropdownPreference(
+                        title = "课程分类",
+                        summary = uiState.classifications.firstOrNull { it.classificationCode == uiState.selectedClassificationCode }?.classificationName ?: "请选择",
+                        items = uiState.classifications.map { it.classificationName },
+                        selectedIndex = uiState.classifications.indexOfFirst { it.classificationCode == uiState.selectedClassificationCode }.coerceAtLeast(0),
+                        onSelectedIndexChange = { index ->
+                            uiState.classifications.getOrNull(index)?.let { vm.selectClassification(it.classificationCode) }
+                        },
+                    )
+                }
+            }
+        }
+
+        // 3. 搜索栏
+        if (uiState.selectedClassificationCode.isNotBlank()) {
+            item {
+                SmallTitle(text = "搜索课程")
+                AppCard {
+                    SearchSection(
+                        courseQuery = uiState.courseSearchQuery,
+                        loading = uiState.loading,
+                        onCourseQueryChange = { vm.onCourseSearchQueryChange(it) },
+                        onClear = { vm.clearSearch() },
+                    )
+                }
+            }
+        }
+
+        // 4. 课程列表
+        if (uiState.courses.isNotEmpty()) {
+            item {
+                SmallTitle(text = "可选课程（点击加入抢课目标，共 ${uiState.courses.size} 条）")
+            }
+            items(uiState.courses, key = { "${it.courseId}|${it.noticeId}|${it.kxh}" }) { course ->
+                CourseCard(
+                    course = course,
+                    added = uiState.targets.any { it.key == "${course.courseId}|${course.noticeId}|${course.kxh}" },
+                    checking = uiState.checkingTarget,
+                    onAdd = { vm.addTargetWithCheck(course) },
+                )
+            }
+        } else if (uiState.selectedClassificationCode.isNotBlank() && !uiState.loading) {
+            item {
+                EmptyHint(
+                    text = if (uiState.courseSearchQuery.isNotBlank()) "未找到匹配的课程" else "该分类下暂无可选课程",
+                )
+            }
+        }
+        item { Spacer(modifier = Modifier.height(12.dp)) }
+        }
+    }
+}
+
+// ---------------- Tab 2: 目标 ----------------
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun TargetTab(
+    uiState: CourseSelectionViewModel.CourseSelectionUiState,
+    vm: CourseSelectionViewModel,
+    paddingValues: PaddingValues,
+    scrollBehavior: ScrollBehavior,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullToRefreshState: PullToRefreshState,
+) {
+    PullToRefresh(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        pullToRefreshState = pullToRefreshState,
+        refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
+            contentPadding = appPageContentPadding(
+                innerPadding = PaddingValues(),
+                outerPadding = paddingValues,
+                extraTop = 12.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+        if (uiState.targets.isEmpty()) {
+            item {
+                EmptyHint(text = "还没有抢课目标，去「选课」tab 添加吧")
+            }
+        } else {
+            item {
+                SmallTitle(text = "抢课目标（按优先级排序，共 ${uiState.targets.size} 个）")
+            }
+            itemsIndexed(uiState.targets) { index, target ->
+                TargetCard(
+                    target = target,
+                    index = index,
+                    total = uiState.targets.size,
+                    snatching = uiState.snatching,
+                    onMoveUp = { vm.moveTargetUp(index) },
+                    onMoveDown = { vm.moveTargetDown(index) },
+                    onRemove = { vm.removeTarget(target) },
+                )
+            }
+        }
+
+        // 抢课配置
+        item {
+            SmallTitle(text = "抢课配置")
+            AppCard {
+                SnatchConfigSection(
+                    config = uiState.snatchConfig,
+                    snatching = uiState.snatching,
+                    onConfigChange = { vm.updateSnatchConfig(it) },
+                )
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(12.dp)) }
+        }
+    }
+}
+
+// ---------------- Tab 3: 已选课程（退课） ----------------
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SelectedTab(
+    uiState: CourseSelectionViewModel.CourseSelectionUiState,
+    vm: CourseSelectionViewModel,
+    paddingValues: PaddingValues,
+    scrollBehavior: ScrollBehavior,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullToRefreshState: PullToRefreshState,
+) {
+    PullToRefresh(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        pullToRefreshState = pullToRefreshState,
+        refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
+            contentPadding = appPageContentPadding(
+                innerPadding = PaddingValues(),
+                outerPadding = paddingValues,
+                extraTop = 12.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+        item {
+            SmallTitle(text = "已选课程（可退课）")
+        }
+        if (uiState.selectedCourses.isNotEmpty()) {
+            items(uiState.selectedCourses, key = { it.noticeId }) { course ->
+                SelectedCourseCard(
+                    course = course,
+                    onDrop = { vm.dropSelectedCourse(course) },
+                )
+            }
+        } else if (!uiState.loadingSelected) {
+            item {
+                EmptyHint(text = if (uiState.sessionReady) "暂无已选课程" else "请先选择选课轮次")
+            }
+        }
+        item { Spacer(modifier = Modifier.height(12.dp)) }
+        }
+    }
+}
+
+// ---------------- Tab 4: 日志 ----------------
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LogTab(
+    uiState: CourseSelectionViewModel.CourseSelectionUiState,
+    vm: CourseSelectionViewModel,
+    paddingValues: PaddingValues,
+    scrollBehavior: ScrollBehavior,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullToRefreshState: PullToRefreshState,
+) {
+    PullToRefresh(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        pullToRefreshState = pullToRefreshState,
+        refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
+            contentPadding = appPageContentPadding(
+            innerPadding = PaddingValues(),
+            outerPadding = paddingValues,
+            extraTop = 12.dp,
+            extraStart = 12.dp,
+            extraEnd = 12.dp,
+        ),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (uiState.logs.isNotEmpty()) {
+            item {
+                SmallTitle(text = "抢课日志")
+            }
+            items(
+                uiState.logs,
+                key = { "${it.time}-${it.message.hashCode()}-${uiState.logs.indexOf(it)}" },
+            ) { log ->
+                LogItem(log)
+            }
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { vm.clearLogs() }
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "清空日志",
+                        fontSize = 13.sp,
+                        color = MiuixTheme.colorScheme.primary,
+                    )
+                }
+            }
+        } else {
+            item {
+                EmptyHint(text = "暂无日志，启动抢课后会在这里实时显示")
+            }
+        }
+        }
+    }
+}
+
+
+// ---------------- 通用小组件 ----------------
+
+@Composable
+private fun EmptyHint(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+    }
+}
+
+/** 课程列表卡片，次要信息可展开 */
 @Composable
 private fun CourseCard(
     course: JwxtSelectionCourse,
     added: Boolean,
+    checking: Boolean,
     onAdd: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    var expanded by remember { mutableStateOf(false) }
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = !added) { onAdd() }
+                .clickable(enabled = !added && !checking) { onAdd() }
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
@@ -418,62 +615,49 @@ private fun CourseCard(
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        text = "课程号：${course.courseNumber}  班次：${course.kxh}",
+                        text = "班次 ${course.kxh}" +
+                            (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
                         fontSize = 12.sp,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
-                if (added) {
-                    Text(
-                        text = "已加入",
-                        fontSize = 12.sp,
-                        color = colors.primary,
-                    )
-                } else {
-                    Text(
-                        text = "＋ 加入",
-                        fontSize = 12.sp,
-                        color = colors.primary,
-                    )
-                }
-            }
-            if (course.classTeacher.isNotBlank()) {
                 Text(
-                    text = "教师：${course.classTeacher}",
+                    text = when {
+                        added -> "已加入"
+                        checking -> "检查中..."
+                        else -> "＋ 加入"
+                    },
                     fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
+                    color = colors.primary,
                 )
             }
-            val place = course.cleanPlace()
-            if (place.isNotBlank()) {
-                Text(
-                    text = "地点：$place",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
-            val time = course.cleanTime()
-            if (time.isNotBlank()) {
-                Text(
-                    text = "时间：$time",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
+            // 次要信息：点击切换展开
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "学分：${course.credit}",
+                    text = "学分 ${course.credit}".ifBlank { "学分 -" },
                     fontSize = 12.sp,
                     color = colors.onSurfaceVariantSummary,
                 )
                 Text(
-                    text = "学时：${course.period}",
+                    text = if (expanded) "收起" else "详情",
                     fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
+                    color = colors.primary,
                 )
+            }
+            if (expanded) {
+                val place = course.cleanPlace()
+                if (place.isNotBlank()) {
+                    Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                }
+                val time = course.cleanTime()
+                if (time.isNotBlank()) {
+                    Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                }
             }
         }
     }
@@ -486,11 +670,9 @@ private fun TargetCard(
     index: Int,
     total: Int,
     snatching: Boolean,
-    sessionReady: Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
-    onDrop: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
     val course = target.course
@@ -517,12 +699,12 @@ private fun TargetCard(
                     Column {
                         Text(
                             text = course.courseName.ifBlank { "未命名课程" },
-                            fontSize = 14.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
                         )
                         Text(
                             text = "班次 ${course.kxh} · ${course.classTeacher}",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }
@@ -535,8 +717,8 @@ private fun TargetCard(
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = "✓ 成功",
-                            fontSize = 11.sp,
+                            text = "成功",
+                            fontSize = 12.sp,
                             color = colors.onPrimary,
                         )
                     }
@@ -551,13 +733,13 @@ private fun TargetCard(
             ) {
                 Text(
                     text = "尝试 ${target.attempts} 次",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     color = colors.onSurfaceVariantSummary,
                 )
                 if (target.lastMessage.isNotBlank()) {
                     Text(
                         text = target.lastMessage,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         color = if (target.succeeded) colors.primary else colors.onSurfaceVariantSummary,
                         maxLines = 1,
                     )
@@ -569,9 +751,8 @@ private fun TargetCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                ActionChip(text = "↑", enabled = index > 0 && !snatching, onClick = onMoveUp)
-                ActionChip(text = "↓", enabled = index < total - 1 && !snatching, onClick = onMoveDown)
-                ActionChip(text = "退课", enabled = !snatching && sessionReady, onClick = onDrop, destructive = true)
+                ActionChip(text = "上移", enabled = index > 0 && !snatching, onClick = onMoveUp)
+                ActionChip(text = "下移", enabled = index < total - 1 && !snatching, onClick = onMoveDown)
                 ActionChip(text = "移除", enabled = !snatching, onClick = onRemove, destructive = true)
             }
         }
@@ -585,6 +766,7 @@ private fun SelectedCourseCard(
     onDrop: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    var expanded by remember { mutableStateOf(false) }
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -600,11 +782,12 @@ private fun SelectedCourseCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = course.courseName.ifBlank { "未命名课程" },
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        text = "课程号：${course.courseNumber}  班次：${course.kxh}",
+                        text = "班次 ${course.kxh}" +
+                            (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
                         fontSize = 12.sp,
                         color = colors.onSurfaceVariantSummary,
                     )
@@ -614,48 +797,37 @@ private fun SelectedCourseCard(
                 } else {
                     Text(
                         text = "不可退",
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
             }
-            if (course.classTeacher.isNotBlank()) {
-                Text(
-                    text = "教师：${course.classTeacher}",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
-            val place = course.cleanPlace()
-            if (place.isNotBlank()) {
-                Text(
-                    text = "地点：$place",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
-            val time = course.cleanTime()
-            if (time.isNotBlank()) {
-                Text(
-                    text = "时间：$time",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "学分：${course.credit.trim()}",
+                    text = "学分 ${course.credit.trim()}",
                     fontSize = 12.sp,
                     color = colors.onSurfaceVariantSummary,
                 )
                 Text(
-                    text = "学时：${course.period.trim()}",
+                    text = if (expanded) "收起" else "详情",
                     fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
+                    color = colors.primary,
                 )
+            }
+            if (expanded) {
+                val place = course.cleanPlace()
+                if (place.isNotBlank()) {
+                    Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                }
+                val time = course.cleanTime()
+                if (time.isNotBlank()) {
+                    Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                }
             }
         }
     }
@@ -719,17 +891,9 @@ private fun SearchSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (loading) {
-                Text(
-                    text = "搜索中...",
-                    fontSize = 12.sp,
-                    color = colors.primary,
-                )
+                Text(text = "搜索中...", fontSize = 12.sp, color = colors.primary)
             } else if (hasFilter) {
-                Text(
-                    text = "已筛选",
-                    fontSize = 12.sp,
-                    color = colors.primary,
-                )
+                Text(text = "已筛选", fontSize = 12.sp, color = colors.primary)
             } else {
                 Spacer(modifier = Modifier.size(0.dp))
             }
@@ -741,11 +905,7 @@ private fun SearchSection(
                         .clickable { onClear() }
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    Text(
-                        text = "清除筛选",
-                        fontSize = 12.sp,
-                        color = colors.onSurfaceContainer,
-                    )
+                    Text(text = "清除筛选", fontSize = 12.sp, color = colors.onSurfaceContainer)
                 }
             }
         }
@@ -815,20 +975,17 @@ private fun LogItem(log: SelectionLog) {
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)) {
         Text(
             text = log.time,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = colors.onSurfaceVariantSummary,
             fontFamily = FontFamily.Monospace,
         )
         Spacer(modifier = Modifier.size(6.dp))
         Text(
             text = log.message,
-            fontSize = 11.sp,
+            fontSize = 12.sp,
             color = textColor,
             fontFamily = FontFamily.Monospace,
         )
     }
 }
 
-/** String.isBlank() 简化扩展，避免可空调用 */
-private fun String?.ifBlank(defaultValue: String): String =
-    if (this.isNullOrBlank()) defaultValue else this

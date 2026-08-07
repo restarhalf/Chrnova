@@ -21,7 +21,9 @@ import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
+import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.data.local.TimetableSettings
+import restarhalf.stellar.schedule.data.remote.AnnouncementApi
 import restarhalf.stellar.schedule.data.remote.CourseEvaluationApi
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
@@ -35,6 +37,7 @@ import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.domain.port.AuthPort
 import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
@@ -65,11 +68,13 @@ import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.MarkAnnouncementsReadUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
@@ -87,6 +92,7 @@ import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
@@ -243,6 +249,23 @@ val portModule = module {
             },
         )
     }
+
+    // 公告系统HTTP客户端
+    single(named("announcement")) {
+        HttpClient {
+            installCommonModules(get())
+        }
+    }
+
+    // 公告系统端口：面向全体用户，无需登录态或设备标识
+    single<AnnouncementPort> {
+        AnnouncementApi(
+            httpClient = get(named("announcement")),
+            json = get(),
+            baseUrl = "https://chrnova.announcement.restarhalf.dpdns.org",
+        )
+    }
+    single { AnnouncementStore(get(named(SettingsKeys.PREFS_NAME))) }
 }
 
 /**
@@ -347,6 +370,8 @@ val useCaseModule = module {
             authWorkflow = get(),
         )
     }
+    factory { FetchAnnouncementsUseCase(port = get(), store = get()) }
+    factory { MarkAnnouncementsReadUseCase(store = get()) }
 }
 
 /**
@@ -497,6 +522,12 @@ val viewModelModule = module {
         CourseSelectionViewModel(
             useCase = get(),
             servicePort = get(),
+        )
+    }
+    viewModel {
+        AnnouncementViewModel(
+            fetchAnnouncements = get(),
+            markAnnouncementsRead = get(),
         )
     }
 }

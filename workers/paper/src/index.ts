@@ -24,9 +24,76 @@ interface Paper {
   created_at: number;
 }
 
+// ─── Security helpers & constants ───
+
+/** 恒定时间比较，避免令牌逐字节爆破 */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * 校验管理令牌。
+ * 关键：`!expected` 守卫——若 ADMIN_TOKEN 未通过 `wrangler secret put` 配置，
+ * env 值为 undefined，而未带 Authorization 头时 token 同样是 undefined，
+ * 直接用 `!==` 比较会让两者相等从而放行。必须显式拒绝未配置的情况。
+ */
+function isAdmin(c: any): boolean {
+  const expected = c.env.ADMIN_TOKEN;
+  if (!expected) return false;
+  const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')?.trim();
+  if (!token) return false;
+  return timingSafeEqual(token, expected);
+}
+
+function clientIp(c: any): string {
+  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+}
+
+/** 上传允许的文件扩展名（白名单，防止上传可执行 / 脚本文件） */
+const ALLOWED_EXT = ['pdf', 'doc', 'docx'];
+/** 单文件大小上限：20 MB */
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+/** 去除标题中的特殊字符，防止 Content-Disposition 头注入 / 文件名穿越 */
+function safeFileName(title: string): string {
+  return (title || '').replace(/[^\w一-龥\-_. ]/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'paper';
+}
+
+/** 剥离 device_id 等敏感字段，仅返回公开安全字段（防 IDOR 泄漏） */
+function publicPaper(p: Paper): Omit<Paper, 'device_id'> {
+  const { device_id, ...rest } = p;
+  return rest;
+}
+
+/**
+ * 进程内滑动窗口限流（轻量，防单实例滥用）。
+ * 注意：Cloudflare Worker 实例间状态不共享，分布式限流需改用 KV / Durable Object。
+ */
+const rateBuckets = new Map<string, { count: number; reset: number }>();
+function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
+  const now = Date.now();
+  const b = rateBuckets.get(bucket);
+  if (!b || now > b.reset) {
+    rateBuckets.set(bucket, { count: 1, reset: now + windowSec * 1000 });
+    return true;
+  }
+  if (b.count >= limit) return false;
+  b.count++;
+  return true;
+}
+
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', cors());
+// CORS 仅对公开只读接口开放；管理接口同源（管理后台同源部署），无需 CORS。
+app.use('/papers', cors());
+app.use('/papers/*', cors());
+app.use('/courses', cors());
+app.use('/folders', cors());
+app.use('/download/*', cors());
+app.use('/verify-star', cors());
 
 // Get all papers with optional filters
 app.get('/papers', async (c) => {
@@ -53,7 +120,7 @@ app.get('/papers', async (c) => {
   query += ' ORDER BY created_at DESC';
 
   const result = await c.env.DB.prepare(query).bind(...params).all<Paper>();
-  return c.json(result.results);
+  return c.json(result.results.map(publicPaper));
 });
 
 // Get unique courses
@@ -82,7 +149,7 @@ app.get('/papers/:id', async (c) => {
   if (!result) {
     return c.json({ error: 'Paper not found' }, 404);
   }
-  return c.json(result);
+  return c.json(publicPaper(result));
 });
 
 // Download paper (proxy download from GitHub)
@@ -115,19 +182,25 @@ app.get('/download/:id', async (c) => {
   return new Response(ghResponse.body, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${result.title}.pdf"`,
+      'Content-Disposition': `attachment; filename="${safeFileName(result.title)}.pdf"`,
     },
   });
 });
 
 // Upload paper
+// 公开接口，依赖 X-Device-Id 做软鉴权（客户端契约，不可改为管理令牌以免破坏 App）。
+// 缓解措施：文件类型 / 大小白名单 + 限流 + 错误信息脱敏。
 app.post('/upload', async (c) => {
-  try {
-    const deviceId = c.req.header('X-Device-Id');
-    if (!deviceId) {
-      return c.json({ error: 'X-Device-Id header required' }, 400);
-    }
+  const deviceId = c.req.header('X-Device-Id');
+  if (!deviceId) {
+    return c.json({ error: 'X-Device-Id header required' }, 400);
+  }
 
+  if (!rateLimit(`upload:${clientIp(c)}:${deviceId}`, 30, 60)) {
+    return c.json({ error: '上传过于频繁，请稍后再试' }, 429);
+  }
+
+  try {
     const formData = await c.req.formData();
     const file = formData.get('file') as File | null;
     const title = formData.get('title') as string;
@@ -137,8 +210,16 @@ app.post('/upload', async (c) => {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return c.json({ error: `文件过大，上限 ${MAX_UPLOAD_BYTES / 1024 / 1024} MB` }, 413);
+    }
+
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) {
+      return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
+    }
+
     const id = crypto.randomUUID();
-    const ext = file.name.split('.').pop() || 'pdf';
     const path = `papers/${id}.${ext}`;
     const createdAt = Math.floor(Date.now() / 1000);
 
@@ -167,8 +248,7 @@ app.post('/upload', async (c) => {
     );
 
     if (!githubResponse.ok) {
-      const errBody = await githubResponse.text();
-      return c.json({ error: `GitHub upload failed (${githubResponse.status})`, detail: errBody }, 500);
+      return c.json({ error: 'GitHub 上传失败，请稍后再试' }, 500);
     }
 
     await c.env.DB.prepare(
@@ -180,7 +260,7 @@ app.post('/upload', async (c) => {
 
     return c.json({ id, path }, 201);
   } catch (e) {
-    return c.json({ error: `Upload failed: ${e}` }, 500);
+    return c.json({ error: 'Upload failed' }, 500);
   }
 });
 
@@ -210,8 +290,7 @@ app.get('/verify-star', async (c) => {
     );
 
     if (!response.ok) {
-      const errBody = await response.text();
-      return c.json({ starred: false, error: `GitHub API ${response.status}: ${errBody}` }, 502);
+      return c.json({ starred: false, error: `GitHub API 请求失败 (${response.status})` }, 502);
     }
 
     const starredRepos = await response.json<Array<{ full_name: string }>>();
@@ -221,7 +300,7 @@ app.get('/verify-star', async (c) => {
 
     return c.json({ starred: hasStarred, username });
   } catch (e) {
-    return c.json({ starred: false, error: `Verification failed: ${e}` }, 500);
+    return c.json({ starred: false, error: 'Verification failed' }, 500);
   }
 });
 
@@ -232,6 +311,10 @@ app.delete('/papers/:id', async (c) => {
 
   if (!deviceId) {
     return c.json({ error: 'X-Device-Id header required' }, 400);
+  }
+
+  if (!rateLimit(`del:${clientIp(c)}:${deviceId}`, 20, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
   }
 
   const result = await c.env.DB.prepare(
@@ -254,8 +337,7 @@ app.get('/', (c) => {
 
 // Admin auth middleware
 const adminAuth = async (c: any, next: any) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (token !== c.env.ADMIN_TOKEN) {
+  if (!isAdmin(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
   await next();
@@ -343,8 +425,15 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return c.json({ error: `文件过大，上限 ${MAX_UPLOAD_BYTES / 1024 / 1024} MB` }, 413);
+    }
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) {
+      return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
+    }
+
     const id = crypto.randomUUID();
-    const ext = file.name.split('.').pop() || 'pdf';
     const path = `papers/${id}.${ext}`;
     const createdAt = Math.floor(Date.now() / 1000);
 
@@ -373,8 +462,7 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
     );
 
     if (!githubResponse.ok) {
-      const errBody = await githubResponse.text();
-      return c.json({ error: `GitHub upload failed (${githubResponse.status})`, detail: errBody }, 500);
+      return c.json({ error: 'GitHub 上传失败，请稍后再试' }, 500);
     }
 
     await c.env.DB.prepare(
@@ -386,7 +474,7 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
 
     return c.json({ id, path }, 201);
   } catch (e) {
-    return c.json({ error: `Upload failed: ${e}` }, 500);
+    return c.json({ error: 'Upload failed' }, 500);
   }
 });
 
@@ -542,8 +630,8 @@ function getAdminHTML(): string {
           const sel = document.getElementById('folderFilter');
           const dl = document.getElementById('folderSuggestions');
           folders.forEach(f => {
-            sel.innerHTML += '<option value="' + f + '">' + f + '</option>';
-            dl.innerHTML += '<option value="' + f + '">';
+            sel.add(new Option(f, f));
+            dl.appendChild(new Option(f, f));
           });
           loadPapers();
         })

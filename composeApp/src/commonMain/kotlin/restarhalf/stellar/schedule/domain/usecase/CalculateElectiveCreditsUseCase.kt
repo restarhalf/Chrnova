@@ -10,6 +10,7 @@ class CalculateElectiveCreditsUseCase {
         val name: String,
         val credits: Double,
         val courses: List<GradeCourse>,
+        val isFailed: Boolean = false,
     )
 
     operator fun invoke(
@@ -30,7 +31,8 @@ class CalculateElectiveCreditsUseCase {
             guidanceCourses = professionalGuidanceCourses,
             gradeCourses = courses,
         )
-        return xCategories + listOf(innovationCategory, professionalCategory)
+        val failedCategory = buildFailedCategory(courses)
+        return xCategories + listOf(innovationCategory, professionalCategory, failedCategory)
     }
 
     private fun calculateXCategories(courses: List<GradeCourse>): List<CreditCategory> {
@@ -65,6 +67,17 @@ class CalculateElectiveCreditsUseCase {
             name = name,
             credits = courses.sumOf { it.credit },
             courses = courses,
+        )
+    }
+
+    private fun buildFailedCategory(courses: List<GradeCourse>): CreditCategory {
+        val failedCourses = courses.filter { !isCoursePassed(it) }
+        return CreditCategory(
+            code = "挂科",
+            name = "挂科课程（未获得学分）",
+            credits = failedCourses.sumOf { it.credit },
+            courses = failedCourses,
+            isFailed = true,
         )
     }
 

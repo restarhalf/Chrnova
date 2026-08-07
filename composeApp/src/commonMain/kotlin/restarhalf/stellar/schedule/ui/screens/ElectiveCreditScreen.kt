@@ -195,6 +195,7 @@ private fun CategoryCard(
     onCourseClick: (GradeCourse) -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    val accentColor = if (category.isFailed) colors.error else colors.primary
     var expanded by remember { mutableStateOf(false) }
 
     AppCard(
@@ -216,7 +217,7 @@ private fun CategoryCard(
                         text = category.code,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = colors.primary
+                        color = accentColor
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -230,6 +231,7 @@ private fun CategoryCard(
                         text = formatCredits(category.credits),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        color = accentColor,
                     )
                     Text(
                         text = "${category.courses.size}门课程",

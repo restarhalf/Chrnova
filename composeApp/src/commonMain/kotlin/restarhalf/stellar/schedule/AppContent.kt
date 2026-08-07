@@ -14,12 +14,16 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -73,6 +77,8 @@ import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodRouletteScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
+import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
+import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
@@ -99,6 +105,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
@@ -199,6 +206,22 @@ fun AppContent(
     val saveAwardPictureState by rememberUpdatedState(saveAwardPicture)
     val runSyncState by rememberUpdatedState(runSync)
 
+    // 公告全局共享一个 ViewModel：首页/列表/详情三处共用同一实例与状态，
+    // 列表页标记已读后首页红点立即消失，无需跨实例流同步。
+    val announcementVm: AnnouncementViewModel = koinViewModel()
+
+    // App 回到前台（含冷启动）时刷新公告，让新发布的公告及时点亮首页红点
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                announcementVm.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val entryProvider =
         remember(
             appIcon,
@@ -210,6 +233,7 @@ fun AppContent(
                     MainRouteContent(
                         bgVm = bgVm,
                         vm = vm,
+                        announcementVm = announcementVm,
                         runSync = runSyncState,
                         ensureNotificationPermission = ensureNotificationPermissionState,
                         saveCsv = saveCsv,
@@ -464,6 +488,22 @@ fun AppContent(
                         ensureNotificationPermission = ensureNotificationPermissionState,
                     )
                 }
+                entry(Screen.AnnouncementList) {
+                    AnnouncementListScreen(
+                        vm = announcementVm,
+                        onBack = { navigator.pop() },
+                        onAnnouncementClick = { announcementId ->
+                            navigator.push(Screen.AnnouncementDetail(announcementId))
+                        },
+                    )
+                }
+                entry<Screen.AnnouncementDetail> { screen ->
+                    AnnouncementDetailScreen(
+                        vm = announcementVm,
+                        announcementId = screen.announcementId,
+                        onBack = { navigator.pop() },
+                    )
+                }
             }
         }
 
@@ -583,6 +623,8 @@ private fun MainRouteContent(
     bgVm: BackgroundViewModel,
     /** 应用ViewModel */
     vm: AppViewModel,
+    /** 公告ViewModel（全局共享，首页红点与列表/详情页状态一致） */
+    announcementVm: AnnouncementViewModel,
     /** 同步教务系统的挂起函数 */
     runSync: suspend () -> Unit,
     /** 通知权限请求回调 */
@@ -604,6 +646,14 @@ private fun MainRouteContent(
     val mainPagerState = LocalMainPagerState.current
     val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
 
+    // 切回首页 tab 时刷新公告（首次组合 currentPage=0 也会触发一次），
+    // 保证新发布的公告红点在首页及时出现
+    LaunchedEffect(mainPagerState.pagerState.currentPage) {
+        if (rootTabAt(mainPagerState.pagerState.currentPage) == Screen.Home) {
+            announcementVm.refresh()
+        }
+    }
+
     HorizontalPager(
         state = mainPagerState.pagerState,
         modifier = Modifier.fillMaxSize(),
@@ -615,6 +665,8 @@ private fun MainRouteContent(
                 val bgUiState by bgVm.uiState.collectAsStateWithLifecycle()
                 HomeScreen(
                     vm = homeVm,
+                    announcementVm = announcementVm,
+                    onAnnouncementClick = { navigator.push(Screen.AnnouncementList) },
                     campus = appState.campus,
                     termStartMs = appState.termStartMs,
                     totalWeeks = appState.totalWeeks,

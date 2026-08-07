@@ -104,6 +104,8 @@ class CourseSelectionViewModel(
         val selectedCourses: ImmutableList<JwxtSelectedCourse> = persistentListOf(),
         /** 已选课程是否正在加载 */
         val loadingSelected: Boolean = false,
+        /** 点击「加入」时正在试探选课请求 */
+        val checkingTarget: Boolean = false,
     )
 
     private val _uiState = MutableStateFlow(
@@ -262,18 +264,102 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 加入抢课目标（已存在则忽略） */
-    fun addTarget(course: JwxtSelectionCourse) {
-        val classificationCode = _uiState.value.selectedClassificationCode.ifBlank { return }
-        _uiState.update { state ->
-            if (state.targets.any { it.key == "${course.courseId}|${course.noticeId}|${course.kxh}" }) {
-                state
-            } else {
-                state.copy(
-                    targets = (state.targets + SelectionTarget(course, classificationCode)).toPersistentList(),
-                )
+    /**
+     * 点击「加入」时先请求一次选课接口试探：
+     * - 成功：直接加入目标并标记为已成功（实际已选上）
+     * - 失败但属于「容量已满」类：加入目标继续抢
+     * - 失败且为其他原因：不加入，error 字段返回原因
+     */
+    fun addTargetWithCheck(course: JwxtSelectionCourse) {
+        val classificationCode = _uiState.value.selectedClassificationCode
+        if (classificationCode.isBlank()) {
+            _uiState.update { it.copy(error = "请先选择选课分类") }
+            return
+        }
+        val ctx = session ?: run {
+            _uiState.update { it.copy(error = "请先进入选课轮次") }
+            return
+        }
+        val key = "${course.courseId}|${course.noticeId}|${course.kxh}"
+        if (_uiState.value.targets.any { it.key == key }) return
+        if (_uiState.value.checkingTarget) return
+
+        _uiState.update { it.copy(checkingTarget = true, error = "") }
+        viewModelScope.launch {
+            try {
+                when (val result = useCase.submitOnce(ctx, classificationCode, course)) {
+                    is JwxtSelectionOperResult.Success -> {
+                        appendLog(SelectionLog(now(), "加入时已选上：${course.courseName} - ${result.message}", SelectionLog.LogLevel.SUCCESS))
+                        _uiState.update { state ->
+                            state.copy(
+                                checkingTarget = false,
+                                targets = (state.targets + SelectionTarget(
+                                    course = course,
+                                    classificationCode = classificationCode,
+                                    succeeded = true,
+                                    lastMessage = result.message,
+                                )).toPersistentList(),
+                            )
+                        }
+                    }
+
+                    is JwxtSelectionOperResult.NeedConfirm -> {
+                        // 关联班未自动选上，按失败处理
+                        handleAddCheckFailure(course, classificationCode, result.message.ifBlank { "需要确认关联教学班" })
+                    }
+
+                    is JwxtSelectionOperResult.Fail -> {
+                        handleAddCheckFailure(course, classificationCode, result.message)
+                    }
+
+                    is JwxtSelectionOperResult.Unknown -> {
+                        handleAddCheckFailure(course, classificationCode, result.message.ifBlank { "未知响应：${result.errorCode}" })
+                    }
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                AppLogger.log("CourseSelection", "加入目标试探失败", e)
+                handleAddCheckFailure(course, classificationCode, e.message ?: "请求异常")
             }
         }
+    }
+
+    /** 试探失败后判断是否可加入目标：容量满则加入，其他原因不加入 */
+    private fun handleAddCheckFailure(
+        course: JwxtSelectionCourse,
+        classificationCode: String,
+        message: String,
+    ) {
+        if (isCapacityFullMessage(message)) {
+            appendLog(SelectionLog(now(), "加入目标（容量已满）：${course.courseName} - $message", SelectionLog.LogLevel.WARN))
+            _uiState.update { state ->
+                val key = "${course.courseId}|${course.noticeId}|${course.kxh}"
+                if (state.targets.any { it.key == key }) {
+                    state.copy(checkingTarget = false)
+                } else {
+                    state.copy(
+                        checkingTarget = false,
+                        targets = (state.targets + SelectionTarget(
+                            course = course,
+                            classificationCode = classificationCode,
+                            lastMessage = message,
+                        )).toPersistentList(),
+                    )
+                }
+            }
+        } else {
+            _uiState.update { it.copy(checkingTarget = false, error = message) }
+        }
+    }
+
+    /** 判断是否为「课程容量已满」类错误，此类错误允许加入抢课目标 */
+    private fun isCapacityFullMessage(message: String): Boolean {
+        val lower = message.lowercase()
+        return message.contains("满") ||
+            message.contains("容量") ||
+            message.contains("人数") ||
+            lower.contains("full") ||
+            lower.contains("capacity")
     }
 
     /** 移除抢课目标 */
@@ -389,25 +475,6 @@ class CourseSelectionViewModel(
         snatchJob = null
         _uiState.update { it.copy(snatching = false) }
         appendLog(SelectionLog(now(), "已停止抢课", SelectionLog.LogLevel.WARN))
-    }
-
-    /** 手动退课 */
-    fun dropCourse(noticeId: String, courseName: String) {
-        val ctx = session ?: return
-        viewModelScope.launch {
-            try {
-                val resp = useCase.drop(ctx, noticeId)
-                if (resp.isSuccess()) {
-                    appendLog(SelectionLog(now(), "退课成功：$courseName", SelectionLog.LogLevel.SUCCESS))
-                } else {
-                    appendLog(SelectionLog(now(), "退课失败：${resp.resolvedMessage()}", SelectionLog.LogLevel.ERROR))
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "退课失败", e)
-                appendLog(SelectionLog(now(), "退课异常：${e.message}", SelectionLog.LogLevel.ERROR))
-            }
-        }
     }
 
     /** 加载已选课程列表（用于退课区域展示） */

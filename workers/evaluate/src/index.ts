@@ -24,9 +24,116 @@ interface EvaluationRow {
   updated_at: number;
 }
 
+// ─── Security helpers & constants ───
+
+const SESSION_TTL_SEC = 3600;
+const MAX_CONTENT_LEN = 2000;
+const MAX_AUTHOR_LEN = 50;
+const MAX_COURSE_LEN = 100;
+
+/** 恒定时间比较，避免令牌逐字节爆破 */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function clientIp(c: any): string {
+  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+}
+
+/**
+ * 进程内滑动窗口限流（轻量，防单实例滥用）。
+ * 注意：Cloudflare Worker 实例间状态不共享，分布式限流需改用 KV / Durable Object。
+ */
+const rateBuckets = new Map<string, { count: number; reset: number }>();
+function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
+  const now = Date.now();
+  const b = rateBuckets.get(bucket);
+  if (!b || now > b.reset) {
+    rateBuckets.set(bucket, { count: 1, reset: now + windowSec * 1000 });
+    return true;
+  }
+  if (b.count >= limit) return false;
+  b.count++;
+  return true;
+}
+
+// ─── HMAC 签名会话：登录后签发，过期失效，本身不是主密钥 ───
+function b64url(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecodeBytes(s: string): Uint8Array {
+  const t = s.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(t);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function b64urlDecodeStr(s: string): string {
+  return atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+}
+async function signSession(secret: string, payload: object): Promise<string> {
+  const enc = (o: object) => b64url(new TextEncoder().encode(JSON.stringify(o)));
+  const data = `${enc({ alg: 'HS256', typ: 'JWT' })}.${enc(payload)}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  return `${data}.${b64url(sig)}`;
+}
+async function verifySession(secret: string, token: string): Promise<boolean> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+  const ok = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    b64urlDecodeBytes(parts[2]),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+  );
+  if (!ok) return false;
+  try {
+    const payload = JSON.parse(b64urlDecodeStr(parts[1]));
+    return typeof payload.exp === 'number' && payload.exp > Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 管理鉴权：未配置 ADMIN_TOKEN 时显式拒绝（防 undefined === undefined 误放行）。
+ * 接受签名会话令牌；过渡期同时兼容原始 ADMIN_TOKEN，便于已持有主密钥的调用方平滑迁移。
+ */
+async function checkAdmin(c: any): Promise<boolean> {
+  const expected = c.env.ADMIN_TOKEN;
+  if (!expected) return false;
+  const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')?.trim();
+  if (!token) return false;
+  if (timingSafeEqual(token, expected)) return true;
+  return verifySession(expected, token);
+}
+
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', cors());
+// CORS 仅对公开只读接口开放；管理接口同源（管理后台同源部署），无需 CORS。
+app.use('/courses', cors());
+app.use('/evaluations', cors());
+app.use('/evaluations/*', cors());
 
 // ─── Helpers ───
 
@@ -40,7 +147,7 @@ function deviceIdOf(c: any): string {
   return (c.req.header('X-Device-Id') || '').trim();
 }
 
-function rowToEval(r: EvaluationRow, liked: boolean) {
+function rowToEval(r: EvaluationRow, liked: boolean, userHashVisible: boolean) {
   return {
     id: r.id,
     course_name: r.course_name,
@@ -50,8 +157,9 @@ function rowToEval(r: EvaluationRow, liked: boolean) {
     anonymous: !!r.anonymous,
     // 匿名时隐藏作者信息
     author: r.anonymous ? '' : r.author,
-    // 不返回学号明文（user_no）和设备 ID，仅保留 user_hash 供管理员封号
-    user_hash: r.user_hash,
+    // 不返回学号明文（user_no）与设备 ID；user_hash 仅对"本人"或"管理员"可见，
+    // 防止公开接口泄露他人标识（客户端依赖本人 user_hash 做"我的评价"过滤）。
+    user_hash: userHashVisible ? r.user_hash : '',
     likes: r.likes,
     status: r.status,
     created_at: r.created_at,
@@ -69,8 +177,8 @@ async function isBanned(db: D1Database, userHash: string): Promise<boolean> {
   return !!row;
 }
 
-// 为一组评价计算当前用户是否已点赞
-async function withLiked(c: any, rows: EvaluationRow[]): Promise<any[]> {
+// 为一组评价计算当前用户是否已点赞；includeUserHash=true 时（管理员）始终暴露 user_hash
+async function withLiked(c: any, rows: EvaluationRow[], includeUserHash = false): Promise<any[]> {
   const uh = userHashOf(c);
   return Promise.all(
     rows.map(async (r) => {
@@ -83,7 +191,8 @@ async function withLiked(c: any, rows: EvaluationRow[]): Promise<any[]> {
           .first();
         liked = !!lr;
       }
-      return rowToEval(r, liked);
+      const visible = includeUserHash || r.user_hash === uh;
+      return rowToEval(r, liked, visible);
     })
   );
 }
@@ -119,7 +228,7 @@ app.get('/courses', async (c) => {
 
     return c.json({ items: rows.results || [] });
   } catch (e) {
-    return c.json({ error: `List courses failed: ${e}` }, 500);
+    return c.json({ error: 'List courses failed' }, 500);
   }
 });
 
@@ -184,7 +293,7 @@ app.get('/evaluations/:id', async (c) => {
         .first())
     : false;
 
-  return c.json(rowToEval(row, liked));
+  return c.json(rowToEval(row, liked, row.user_hash === uh));
 });
 
 // ─── Public: create evaluation ───
@@ -197,6 +306,10 @@ app.post('/evaluations', async (c) => {
     }
     if (await isBanned(c.env.DB, uh)) {
       return c.json({ error: '账号已被封禁，无法提交评价' }, 403);
+    }
+
+    if (!rateLimit(`submit:${uh}`, 10, 60)) {
+      return c.json({ error: '提交过于频繁，请稍后再试' }, 429);
     }
 
     const body = await c.req.json<{
@@ -212,6 +325,9 @@ app.post('/evaluations', async (c) => {
     if (!courseName) {
       return c.json({ error: 'course_name is required' }, 400);
     }
+    if (courseName.length > MAX_COURSE_LEN) {
+      return c.json({ error: 'course_name 过长' }, 400);
+    }
 
     const rating = Math.round(body.rating ?? 0);
     if (rating < 1 || rating > 5) {
@@ -222,11 +338,18 @@ app.post('/evaluations', async (c) => {
     if (!content) {
       return c.json({ error: 'content is required' }, 400);
     }
+    if (content.length > MAX_CONTENT_LEN) {
+      return c.json({ error: 'content 过长' }, 400);
+    }
 
     const id = crypto.randomUUID();
     const ts = nowSec();
     const anonymous = body.anonymous ? 1 : 0;
-    const author = anonymous ? '' : (body.author || '').trim();
+    const authorRaw = (body.author || '').trim();
+    if (authorRaw.length > MAX_AUTHOR_LEN) {
+      return c.json({ error: 'author 过长' }, 400);
+    }
+    const author = anonymous ? '' : authorRaw;
     const deviceId = deviceIdOf(c);
     // 不再存储学号明文，仅保留 user_hash（来自 X-User-Hash 头）
     await c.env.DB.prepare(
@@ -238,9 +361,9 @@ app.post('/evaluations', async (c) => {
       .run();
 
     const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
-    return c.json(rowToEval(row!, false), 201);
+    return c.json(rowToEval(row!, false, row!.user_hash === uh), 201);
   } catch (e) {
-    return c.json({ error: `Create failed: ${e}` }, 500);
+    return c.json({ error: 'Create failed' }, 500);
   }
 });
 
@@ -254,6 +377,10 @@ app.post('/evaluations/:id/like', async (c) => {
   }
   if (await isBanned(c.env.DB, uh)) {
     return c.json({ error: '账号已被封禁，无法点赞' }, 403);
+  }
+
+  if (!rateLimit(`like:${uh}`, 30, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
   }
 
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -347,9 +474,16 @@ app.patch('/evaluations/:id', async (c) => {
     if (!content) {
       return c.json({ error: 'content is required' }, 400);
     }
+    if (content.length > MAX_CONTENT_LEN) {
+      return c.json({ error: 'content 过长' }, 400);
+    }
     const anonymous = body.anonymous !== undefined ? (body.anonymous ? 1 : 0) : row.anonymous;
     const teacher = body.teacher !== undefined ? (body.teacher).trim() : row.teacher;
-    const author = anonymous ? '' : (body.author !== undefined ? (body.author).trim() : row.author);
+    const authorRaw = body.author !== undefined ? (body.author).trim() : row.author;
+    if (authorRaw.length > MAX_AUTHOR_LEN) {
+      return c.json({ error: 'author 过长' }, 400);
+    }
+    const author = anonymous ? '' : authorRaw;
     const ts = nowSec();
 
     await c.env.DB.prepare(
@@ -361,29 +495,35 @@ app.patch('/evaluations/:id', async (c) => {
       .run();
 
     const updated = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
-    return c.json(rowToEval(updated!, false));
+    return c.json(rowToEval(updated!, false, updated!.user_hash === uh));
   } catch (e) {
-    return c.json({ error: `Update failed: ${e}` }, 500);
+    return c.json({ error: 'Update failed' }, 500);
   }
 });
 
 // ─── Admin auth ───
 const adminAuth = async (c: any, next: any) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (token !== c.env.ADMIN_TOKEN) {
+  if (!(await checkAdmin(c))) {
     return c.json({ error: 'Unauthorized' }, 401);
   }
   await next();
 };
 
-// 管理员登录：使用管理密码换取管理令牌（Bearer 鉴权）
+// 管理员登录：校验管理密码后签发 HMAC 签名会话令牌（1 小时过期，本身不是主密钥）
 app.post('/admin/login', async (c) => {
+  if (!rateLimit(`login:${clientIp(c)}`, 5, 300)) {
+    return c.json({ error: '尝试次数过多，请 5 分钟后再试' }, 429);
+  }
   try {
     const body = await c.req.json<{ password?: string }>();
     if (!body.password || body.password !== c.env.ADMIN_PASSWORD) {
       return c.json({ error: 'Invalid password' }, 401);
     }
-    return c.json({ token: c.env.ADMIN_TOKEN, ok: true });
+    const token = await signSession(c.env.ADMIN_TOKEN, {
+      sub: 'admin',
+      exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SEC,
+    });
+    return c.json({ token, ok: true });
   } catch {
     return c.json({ error: 'Bad request' }, 400);
   }
@@ -414,7 +554,7 @@ app.get('/admin/evaluations', adminAuth, async (c) => {
     .bind(...params, size, (page - 1) * size)
     .all<EvaluationRow>();
 
-  const items = await withLiked(c, rows.results);
+  const items = await withLiked(c, rows.results, true);
   return c.json({ items, total, page, size });
 });
 
@@ -425,7 +565,7 @@ app.get('/admin/evaluations/:id', adminAuth, async (c) => {
   if (!row) {
     return c.json({ error: 'Not found' }, 404);
   }
-  return c.json(rowToEval(row, false));
+  return c.json(rowToEval(row, false, true));
 });
 
 // 管理员：修改评价（内容 / 评分等，不再有审核状态字段）
@@ -480,7 +620,7 @@ app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   }
 
   if (sets.length === 0) {
-    return c.json(rowToEval(row, false));
+    return c.json(rowToEval(row, false, true));
   }
 
   sets.push('updated_at = ?');
@@ -492,7 +632,7 @@ app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
     .run();
 
   const updated = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
-  return c.json(rowToEval(updated!, false));
+  return c.json(rowToEval(updated!, false, true));
 });
 
 // 管理员：删除任意评价
@@ -528,7 +668,7 @@ app.post('/admin/bans', adminAuth, async (c) => {
       .run();
     return c.json({ ok: true });
   } catch (e) {
-    return c.json({ error: `Ban failed: ${e}` }, 500);
+    return c.json({ error: 'Ban failed' }, 500);
   }
 });
 

@@ -1,0 +1,11 @@
+name = "chrnova-announcement-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chrnova-announcement-db"
+database_id = "359e6730-9ad8-4c54-91cc-253ecf44a37b"
+
+# ADMIN_TOKEN should be set via `wrangler secret put ADMIN_TOKEN`
+# IMG_BB_API_KEY should be set via `wrangler secret put IMG_BB_API_KEY` (imgbb.com API key for image upload)
