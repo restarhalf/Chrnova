@@ -141,4 +141,8 @@ sealed interface Screen : NavKey {
         val qrContent: String = "",
     ) : Screen
 
+    /** 自动抢课页面 */
+    @Serializable
+    data object CourseSelection : Screen
+
 }

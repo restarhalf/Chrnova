@@ -105,6 +105,7 @@ fun SettingsScreen(
     onEvaluation: () -> Unit = {},
     onProfile: () -> Unit = {},
     onFoodRoulette: () -> Unit = {},
+    onCourseSelection: () -> Unit = {},
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     courses: List<Course> = emptyList(),
     showMessage: (String) -> Unit = {},
@@ -343,6 +344,13 @@ fun SettingsScreen(
                             title = "课程评价",
                             summary = "查看与分享课程评价",
                             onClick = onEvaluation,
+                        )
+                    })
+                    add(CardItem("courseSelection") {
+                        ArrowPreference(
+                            title = "自动抢课",
+                            summary = "自动监控并提交选课请求",
+                            onClick = onCourseSelection,
                         )
                     })
                     add(CardItem("exportCsv") {

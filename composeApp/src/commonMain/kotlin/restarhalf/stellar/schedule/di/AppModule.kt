@@ -61,6 +61,7 @@ import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
+import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
@@ -90,6 +91,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
@@ -339,6 +341,12 @@ val useCaseModule = module {
     factory { PEStudentInfoUseCase(repository = get(), peAuth = get(), roomRepository = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
     factory { CheckAppUpdateUseCase(appUpdate = get()) }
+    factory {
+        CourseSelectionUseCase(
+            gateway = get(),
+            authWorkflow = get(),
+        )
+    }
 }
 
 /**
@@ -483,6 +491,12 @@ val viewModelModule = module {
     viewModel {
         PersonalInfoViewModel(
             settingsPort = get(),
+        )
+    }
+    viewModel {
+        CourseSelectionViewModel(
+            useCase = get(),
+            servicePort = get(),
         )
     }
 }

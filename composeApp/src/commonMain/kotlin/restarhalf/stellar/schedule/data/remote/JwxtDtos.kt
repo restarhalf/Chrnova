@@ -311,3 +311,165 @@ data class JwxtGuidanceTeachingResponse(
 
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
+
+// ==================== 选课系统 DTO ====================
+// 对应 http://jwyd.dlnu.edu.cn/jsxsd/qzapp/* 系列接口
+
+/**
+ * 选课通用响应：errorCode 取值 success / success_needcf / fail。
+ *
+ * data 类型因接口而异（列表 / 对象 / 空字符串），统一以 [JsonElement] 兜底，
+ * 由调用方按场景解析为具体的 [JwxtSelectionCourse] 列表或 [JwxtSelectionOperResult]。
+ */
+@Serializable
+data class JwxtSelectionResponse(
+    @SerialName("errorCode") val errorCode: String = "",
+    @SerialName("errorMessage") val errorMessage: String = "",
+    @SerialName("errorMessageParam") val errorMessageParam: List<String> = emptyList(),
+    @SerialName("data") val data: JsonElement? = null,
+    @SerialName("data_encryptStr") val dataEncryptStr: String = "",
+    @SerialName("runTime") val runTime: String = "",
+) {
+    fun isSuccess(): Boolean = errorCode == "success"
+
+    /** 选课操作还需要选择关联教学班时返回 */
+    fun isNeedConfirm(): Boolean = errorCode == "success_needcf"
+
+    fun isFail(): Boolean = errorCode == "fail"
+
+    /** 拼接错误信息，含模板参数替换（如 "还有[0]需要选" -> "还有[讲课学时]需要选"） */
+    fun resolvedMessage(): String {
+        var msg = errorMessage
+        errorMessageParam.forEachIndexed { index, param ->
+            msg = msg.replace("[$index]", param)
+        }
+        return msg
+    }
+}
+
+/** 选课轮次项（wxgetXklc 接口的 data 数组元素） */
+@Serializable
+data class JwxtSelectionRotation(
+    @SerialName("rotationid") val rotationId: String = "",
+    @SerialName("rotationname") val rotationName: String = "",
+    @SerialName("semesterid") val semesterId: String = "",
+    @SerialName("xqmc") val xqmc: String = "",
+    /** 选课开始时间，格式 yyyy-MM-dd HH:mm */
+    @SerialName("xkkssj") val startTime: String = "",
+    /** 选课结束时间，格式 yyyy-MM-dd HH:mm */
+    @SerialName("xkjzsj") val endTime: String = "",
+    @SerialName("courseselectiontime") val courseselectiontime: String = "",
+    @SerialName("courseselectioncontrol") val courseselectioncontrol: String = "",
+    @SerialName("dailycourseselection") val dailycourseselection: String = "",
+    @SerialName("preselectedcourses") val preselectedcourses: String = "",
+    @SerialName("drawlots") val drawlots: String = "",
+    @SerialName("populationcontrol") val populationcontrol: String = "",
+    @SerialName("conflictselection") val conflictselection: String = "",
+    @SerialName("creditcontrol") val creditcontrol: String? = null,
+    @SerialName("xkbs") val xkbs: String = "",
+)
+
+/** wxinitXscache 返回的选课规则数据（仅提取关键字段，其余忽略） */
+@Serializable
+data class JwxtSelectionInitData(
+    @SerialName("sessionTime") val sessionTime: String = "",
+    @SerialName("classificationList") val classificationList: List<JwxtSelectionClassification> = emptyList(),
+    @SerialName("gzsmStr") val gzsmStr: String = "",
+    @SerialName("compulsorySelection") val compulsorySelection: Boolean = false,
+    @SerialName("compulsorySemester") val compulsorySemester: Boolean = false,
+    @SerialName("compulsoryGrades") val compulsoryGrades: Boolean = false,
+    @SerialName("selectionGrades") val selectionGrades: Boolean = false,
+    @SerialName("departmentCurriculum") val departmentCurriculum: Boolean = false,
+    /** 注意：服务端返回字符串 "true" / "false" */
+    @SerialName("courseQualification") val courseQualification: String = "",
+)
+
+/** 选课分类项（必修/选修/本学期计划等） */
+@Serializable
+data class JwxtSelectionClassification(
+    @SerialName("classificationCode") val classificationCode: String = "",
+    @SerialName("classificationName") val classificationName: String = "",
+)
+
+/** 课程列表项（wxgetKcList 返回元素） */
+@Serializable
+data class JwxtSelectionCourse(
+    @SerialName("courseName") val courseName: String = "",
+    @SerialName("courseNumber") val courseNumber: String = "",
+    @SerialName("courseId") val courseId: String = "",
+    @SerialName("noticeId") val noticeId: String = "",
+    /** 教学班序号 */
+    @SerialName("kxh") val kxh: String = "",
+    @SerialName("classTeacher") val classTeacher: String = "",
+    @SerialName("classPlace") val classPlace: String = "",
+    @SerialName("classTime") val classTime: String = "",
+    @SerialName("period") val period: String = "",
+    @SerialName("credit") val credit: String = "",
+    @SerialName("groupName") val groupName: String = "",
+    @SerialName("splitIdentification") val splitIdentification: String = "",
+) {
+    /** 把 &nbsp; / <br> 转换为可读文本 */
+    fun cleanPlace(): String = classPlace
+        .replace("&nbsp;", " ")
+        .replace("<br>", " / ")
+        .trim()
+
+    fun cleanTime(): String = classTime
+        .replace("&nbsp;", " ")
+        .replace("<br>", " / ")
+        .trim()
+}
+
+/** 已选课程项（wxgetYxkcList 返回元素，含 isCanTk 退课标志） */
+@Serializable
+data class JwxtSelectedCourse(
+    @SerialName("courseName") val courseName: String = "",
+    @SerialName("courseNumber") val courseNumber: String = "",
+    @SerialName("noticeId") val noticeId: String = "",
+    @SerialName("kxh") val kxh: String = "",
+    @SerialName("classTeacher") val classTeacher: String = "",
+    @SerialName("classPlace") val classPlace: String = "",
+    @SerialName("classTime") val classTime: String = "",
+    @SerialName("period") val period: String = "",
+    @SerialName("credit") val credit: String = "",
+    @SerialName("groupName") val groupName: String = "",
+    /** "1"=可退课 */
+    @SerialName("isCanTk") val isCanTk: String = "0",
+    @SerialName("kclb") val kclb: String = "",
+) {
+    fun cleanPlace(): String = classPlace
+        .replace("&nbsp;", " ")
+        .replace("<br>", " / ")
+        .trim()
+
+    fun cleanTime(): String = classTime
+        .replace("&nbsp;", " ")
+        .replace("<br>", " / ")
+        .trim()
+
+    val canDrop: Boolean get() = isCanTk == "1"
+}
+
+/**
+ * 选课操作解析后的统一结果。
+ * - [Success]：选课成功，data 可能为关联课程列表
+ * - [NeedConfirm]：success_needcf，需要继续选关联教学班
+ * - [Fail]：选课失败（如已选其它教学班、容量已满等）
+ * - [Unknown]：未知响应
+ */
+sealed class JwxtSelectionOperResult {
+    data class Success(val message: String, val relatedCourses: List<JwxtSelectionCourse> = emptyList()) :
+        JwxtSelectionOperResult()
+
+    data class NeedConfirm(
+        val message: String,
+        val yxcfbs: String,
+        val cfbs: String,
+        val xkkcid: String,
+        val yxjx0404id: String,
+    ) : JwxtSelectionOperResult()
+
+    data class Fail(val message: String) : JwxtSelectionOperResult()
+
+    data class Unknown(val errorCode: String, val message: String) : JwxtSelectionOperResult()
+}

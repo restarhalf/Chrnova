@@ -2,15 +2,23 @@ package restarhalf.stellar.schedule.data.remote
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.Parameters
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -29,6 +37,7 @@ class JwxtClient(
 
     private companion object {
         const val BASE_URL = "http://jwyd.dlnu.edu.cn/njwhd"
+        const val SELECTION_BASE_URL = "http://jwyd.dlnu.edu.cn/jsxsd/qzapp"
     }
 
     private suspend fun executePostEmpty(url: String): String =
@@ -230,5 +239,215 @@ class JwxtClient(
             }
         }
         return null
+    }
+
+    // ==================== 选课系统接口实现 ====================
+    // 对应 http://jwyd.dlnu.edu.cn/jsxsd/qzapp/* 系列接口。
+    // 这些接口均为 POST + query 参数（无 body），退课接口除外（multipart）。
+
+    /** 通用选课 POST 请求：无 body，仅 query 参数，返回原始响应文本 */
+    private suspend fun postSelectionRaw(
+        endpoint: String,
+        params: Map<String, String>,
+    ): String =
+        withContext(AppIoDispatcher) {
+            val response: HttpResponse = httpClient.post("$SELECTION_BASE_URL/$endpoint") {
+                params.forEach { (k, v) -> parameter(k, v) }
+            }
+            if (!response.status.isSuccess()) {
+                throw IllegalStateException(
+                    response.extractServerErrorMessage(
+                        json,
+                        fieldPriority = listOf("errorMessage", "msg", "Msg", "message"),
+                    ) ?: "选课请求失败（HTTP ${response.status.value}）"
+                )
+            }
+            response.body()
+        }
+
+    override suspend fun fetchSelectionRotations(isnew: Int): JwxtSelectionResponse {
+        val body = postSelectionRaw("wxgetXklc", mapOf("isnew" to isnew.toString()))
+        return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
+    }
+
+    override suspend fun initSelectionSession(rotationId: String): JwxtSelectionResponse {
+        val body = postSelectionRaw(
+            "wxinitXscache",
+            mapOf("rotationId" to rotationId, "appChossCurTime" to ""),
+        )
+        return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
+    }
+
+    override suspend fun fetchSelectionCourses(
+        rotationId: String,
+        classificationCode: String,
+        sessionTime: String,
+        extraRules: Map<String, String>,
+        courseInformation: String,
+    ): JwxtSelectionResponse {
+        val params = buildMap {
+            put("classificationCode", classificationCode)
+            put("rotationId", rotationId)
+            put("courseId", "")
+            put("noticeId", "")
+            put("splitIdentification", "")
+            put("courseInformation", courseInformation)
+            put("classTeacher", "")
+            put("classWeek", "")
+            put("classSessions", "")
+            put("filteringConflicts", "")
+            put("restrictedSelection", "")
+            put("sessionTime", sessionTime)
+            put("fullCourse", "")
+            put("compulsorySemester", extraRules["compulsorySemester"] ?: "true")
+            put("compulsorySelection", extraRules["compulsorySelection"] ?: "true")
+            put("compulsoryGrades", extraRules["compulsoryGrades"] ?: "true")
+            put("selectionGrades", extraRules["selectionGrades"] ?: "true")
+            put("departmentCurriculum", extraRules["departmentCurriculum"] ?: "false")
+            put("generalCourseCategories", "")
+            put("courseQualification", extraRules["courseQualification"] ?: "true")
+            put("data_enccryptStr", "")
+            put("szjylb", "")
+        }
+        val body = postSelectionRaw("wxgetKcList", params)
+        return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
+    }
+
+    override suspend fun submitSelection(
+        rotationId: String,
+        courseId: String,
+        noticeId: String,
+        sessionTime: String,
+        classificationCode: String,
+        splitIdentification: String,
+        selectedNoticeId: String,
+        selectedSplitIdentification: String,
+        extraRules: Map<String, String>,
+    ): JwxtSelectionOperResult {
+        val params = buildMap {
+            put("classificationCode", classificationCode)
+            put("rotationId", rotationId)
+            put("courseId", courseId)
+            put("noticeId", noticeId)
+            put("selectedNoticeId", selectedNoticeId)
+            put("splitIdentification", splitIdentification)
+            put("selectedSplitIdentification", selectedSplitIdentification)
+            put("courseInformation", "")
+            put("classTeacher", "")
+            put("classWeek", "")
+            put("classSessions", "")
+            put("filteringConflicts", "")
+            put("restrictedSelection", "")
+            put("sessionTime", sessionTime)
+            put("fullCourse", "")
+            put("compulsorySemester", extraRules["compulsorySemester"] ?: "true")
+            put("compulsorySelection", extraRules["compulsorySelection"] ?: "true")
+            put("compulsoryGrades", extraRules["compulsoryGrades"] ?: "true")
+            put("selectionGrades", extraRules["selectionGrades"] ?: "true")
+            put("departmentCurriculum", extraRules["departmentCurriculum"] ?: "false")
+            put("generalCourseCategories", "")
+            put("courseQualification", extraRules["courseQualification"] ?: "true")
+            put("data_enccryptStr", "")
+            put("szjylb", "")
+        }
+        val body = postSelectionRaw("wxxkOper", params)
+        val resp = json.decodeFromString(JwxtSelectionResponse.serializer(), body)
+        return parseSelectionOperResult(resp)
+    }
+
+    override suspend fun dropSelection(
+        rotationId: String,
+        noticeId: String,
+        sessionTime: String,
+        courseQualification: String,
+    ): JwxtSelectionResponse =
+        withContext(AppIoDispatcher) {
+            val response: HttpResponse = httpClient.post("$SELECTION_BASE_URL/wxxstkOper") {
+                setBody(
+                    MultiPartFormDataContent(
+                        formData {
+                            append("courseQualification", courseQualification)
+                            append("rotationId", rotationId)
+                            append("noticeId", noticeId)
+                            append("sessionTime", sessionTime)
+                        },
+                    ),
+                )
+            }
+            if (!response.status.isSuccess()) {
+                throw IllegalStateException(
+                    response.extractServerErrorMessage(
+                        json,
+                        fieldPriority = listOf("errorMessage", "msg", "Msg", "message"),
+                    ) ?: "退课失败（HTTP ${response.status.value}）"
+                )
+            }
+            json.decodeFromString(JwxtSelectionResponse.serializer(), response.body())
+        }
+
+    override suspend fun fetchSelectedCourses(rotationId: String): JwxtSelectionResponse {
+        val body = postSelectionRaw("wxgetYxkcList", mapOf("rotationId" to rotationId))
+        return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
+    }
+
+    /**
+     * 解析 wxxkOper 响应的 data 字段为统一结果：
+     * - success：data 可能为空字符串、关联课程对象或关联课程数组
+     * - success_needcf：data 为对象，含 yxcfbs/cfbs/xkkcid/yxjx0404id
+     * - fail：data 为空字符串
+     */
+    private fun parseSelectionOperResult(resp: JwxtSelectionResponse): JwxtSelectionOperResult {
+        val msg = resp.resolvedMessage()
+        val data = resp.data
+        return when {
+            resp.isSuccess() -> {
+                val related = parseRelatedCourses(data)
+                JwxtSelectionOperResult.Success(
+                    message = msg.ifBlank { "选课成功" },
+                    relatedCourses = related,
+                )
+            }
+
+            resp.isNeedConfirm() -> {
+                val obj = data as? JsonObject
+                val str = { key: String -> obj?.get(key)?.jsonPrimitive?.contentOrNull.orEmpty() }
+                JwxtSelectionOperResult.NeedConfirm(
+                    message = msg.ifBlank { "还有关联教学班需要选" },
+                    yxcfbs = str("yxcfbs"),
+                    cfbs = str("cfbs"),
+                    xkkcid = str("xkkcid"),
+                    yxjx0404id = str("yxjx0404id"),
+                )
+            }
+
+            resp.isFail() -> JwxtSelectionOperResult.Fail(msg.ifBlank { "选课失败" })
+
+            else -> JwxtSelectionOperResult.Unknown(resp.errorCode, msg)
+        }
+    }
+
+    /** 成功响应中 data 若为数组，则尝试解析为关联课程列表；对象视为单个课程；其它返回空 */
+    private fun parseRelatedCourses(data: JsonElement?): List<JwxtSelectionCourse> {
+        if (data == null) return emptyList()
+        return when (data) {
+            is JsonArray -> runCatching {
+                json.decodeFromString(
+                    ListSerializer(JwxtSelectionCourse.serializer()),
+                    data.toString(),
+                )
+            }.getOrElse {
+                AppLogger.log("JwxtClient", "解析关联课程数组失败", it)
+                emptyList()
+            }
+
+            is JsonObject -> runCatching {
+                listOf(json.decodeFromString(JwxtSelectionCourse.serializer(), data.toString()))
+            }.getOrElse {
+                AppLogger.log("JwxtClient", "解析关联课程对象失败", it)
+                emptyList()
+            }
+
+            else -> emptyList()
+        }
     }
 }

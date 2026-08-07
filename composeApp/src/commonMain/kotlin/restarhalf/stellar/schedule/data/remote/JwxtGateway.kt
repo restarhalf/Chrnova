@@ -101,4 +101,84 @@ interface JwxtGateway {
         kcsx: String = "",
         kcmc: String = ""
     ): JwxtGuidanceTeachingResponse
+
+    // ==================== 选课系统接口 ====================
+
+    /**
+     * 获取选课轮次列表（wxgetXklc）。
+     *
+     * @param isnew 是否只看当前可进行轮次（1=是）
+     * @return 选课轮次列表响应
+     */
+    suspend fun fetchSelectionRotations(isnew: Int = 1): JwxtSelectionResponse
+
+    /**
+     * 进入选课轮次并初始化会话缓存（wxinitXscache）。
+     *
+     * 调用后服务端会返回 sessionTime，后续 [fetchSelectionCourses] / [submitSelection] /
+     * [dropSelection] 都需要带上该 sessionTime。
+     *
+     * @param rotationId 选课轮次 ID
+     * @return 初始化响应（含 sessionTime 与可选分类列表）
+     */
+    suspend fun initSelectionSession(rotationId: String): JwxtSelectionResponse
+
+    /**
+     * 获取指定分类下的可选课程列表（wxgetKcList）。
+     *
+     * @param rotationId 选课轮次 ID
+     * @param classificationCode 分类码（01 必修 / 02 选修 / 03 本学期计划 / 04 专业内跨年级 / 05 跨专业 / 100 体育）
+     * @param sessionTime [initSelectionSession] 返回的 sessionTime
+     * @param extraRules 初始化时返回的规则位（compulsorySemester/selectionGrades 等），原样回传
+     * @param courseInformation 课程名称搜索关键词（对应 wxgetKcList 的 courseInformation 参数，空串表示不筛选）
+     * @return 课程列表响应
+     */
+    suspend fun fetchSelectionCourses(
+        rotationId: String,
+        classificationCode: String,
+        sessionTime: String,
+        extraRules: Map<String, String> = emptyMap(),
+        courseInformation: String = "",
+    ): JwxtSelectionResponse
+
+    /**
+     * 提交选课（wxxkOper）。
+     *
+     * @return 统一选课结果，详见 [JwxtSelectionOperResult]
+     */
+    suspend fun submitSelection(
+        rotationId: String,
+        courseId: String,
+        noticeId: String,
+        sessionTime: String,
+        classificationCode: String,
+        splitIdentification: String = "",
+        selectedNoticeId: String = "",
+        selectedSplitIdentification: String = "",
+        extraRules: Map<String, String> = emptyMap(),
+    ): JwxtSelectionOperResult
+
+    /**
+     * 退课（wxxstkOper）。
+     *
+     * @param rotationId 选课轮次 ID
+     * @param noticeId 教学 ID
+     * @param sessionTime 会话时间
+     * @param courseQualification 是否资质选课，默认 "true"
+     * @return 退课响应
+     */
+    suspend fun dropSelection(
+        rotationId: String,
+        noticeId: String,
+        sessionTime: String,
+        courseQualification: String = "true",
+    ): JwxtSelectionResponse
+
+    /**
+     * 获取已选课程列表（wxgetYxkcList），用于退课。
+     *
+     * @param rotationId 选课轮次 ID
+     * @return 响应，data 字段为已选课程数组，每个元素含 isCanTk 标志
+     */
+    suspend fun fetchSelectedCourses(rotationId: String): JwxtSelectionResponse
 }

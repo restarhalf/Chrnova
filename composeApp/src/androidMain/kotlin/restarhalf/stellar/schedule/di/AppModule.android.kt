@@ -8,6 +8,7 @@ import org.koin.dsl.module
 import restarhalf.stellar.schedule.calendar.CalendarEventPortImpl
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.data.impl.AppUpdatePortImpl
+import restarhalf.stellar.schedule.data.impl.CourseSelectionServicePortImpl
 import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
@@ -18,6 +19,7 @@ import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
@@ -55,6 +57,9 @@ private val androidPlatformModule = module {
         CalendarEventPortImpl(context = androidContext(), prefs = get(named("calendar_codes")))
     }
     single<AppUpdatePort> { AppUpdatePortImpl(context = androidContext()) }
+    single<CourseSelectionServicePort> {
+        CourseSelectionServicePortImpl(context = androidContext())
+    }
 }
 
 val appModule = module {

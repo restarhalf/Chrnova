@@ -77,6 +77,7 @@ import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
+import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
@@ -98,6 +99,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -454,6 +456,14 @@ fun AppContent(
                         onBack = { navigator.pop() },
                     )
                 }
+                entry(Screen.CourseSelection) {
+                    val courseSelectionVm: CourseSelectionViewModel = koinViewModel()
+                    CourseSelectionScreen(
+                        vm = courseSelectionVm,
+                        onBack = { navigator.pop() },
+                        ensureNotificationPermission = ensureNotificationPermissionState,
+                    )
+                }
             }
         }
 
@@ -682,6 +692,7 @@ private fun MainRouteContent(
                     onAbout = { navigator.push(Screen.About) },
                     onPaper = { navigator.push(Screen.Papers) },
                     onEvaluation = { navigator.push(Screen.Evaluation) },
+                    onCourseSelection = { navigator.push(Screen.CourseSelection) },
                     onLogin = { navigator.push(Screen.JWLogin) },
                     onProfile = { navigator.push(Screen.Profile) },
                     onFoodRoulette = { navigator.push(Screen.FoodRoulette) },
