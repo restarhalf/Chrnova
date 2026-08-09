@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,7 @@ data class StarVerificationState(
     val isVerified: Boolean = false,
     val isVerifying: Boolean = false,
     val showDialog: Boolean = false,
-    val username: String = "",
+    val username: TextFieldValue = TextFieldValue(),
     val error: String? = null,
 )
 
@@ -38,15 +39,21 @@ class StarVerificationHolder(
     }
 
     fun dismissDialog() {
-        _state.value = _state.value.copy(showDialog = false)
+        _state.value = StarVerificationState(
+            isVerified = _state.value.isVerified,
+            showDialog = false,
+            username = TextFieldValue(),
+            error = null,
+            isVerifying = false,
+        )
     }
 
-    fun onUsernameChange(username: String) {
+    fun onUsernameChange(username: TextFieldValue) {
         _state.value = _state.value.copy(username = username)
     }
 
     fun verify() {
-        val username = _state.value.username.trim()
+        val username = _state.value.username.text.trim()
         if (username.isBlank()) return
 
         scope.launch {
