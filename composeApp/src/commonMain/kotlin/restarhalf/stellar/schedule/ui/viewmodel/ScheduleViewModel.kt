@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -144,7 +145,7 @@ class ScheduleViewModel(
         val course: Course? = null,
         val targetWeek: Int = 1,
         val originWeek: Int = 1,
-        val newClassRoom: String = "",
+        val newClassRoom: TextFieldValue = TextFieldValue(),
         val dayOfWeek: Int = 1,
         val startSection: Int = 1,
         val endSection: Int = 2,
@@ -444,7 +445,7 @@ class ScheduleViewModel(
                 course = course,
                 targetWeek = safeWeek,
                 originWeek = safeWeek,
-                newClassRoom = course.location,
+                newClassRoom = TextFieldValue(course.location),
                 dayOfWeek = course.dayOfWeek.coerceIn(1, 7),
                 startSection = course.startSection.coerceIn(1, 12),
                 endSection = (course.startSection + course.sectionCount - 1).coerceIn(1, 12),
@@ -465,7 +466,7 @@ class ScheduleViewModel(
         _transDialogUiState.value = _transDialogUiState.value.copy(targetWeek = week)
     }
 
-    fun updateTransNewClassRoom(value: String) {
+    fun updateTransNewClassRoom(value: TextFieldValue) {
         _transDialogUiState.value = _transDialogUiState.value.copy(newClassRoom = value)
     }
 
@@ -494,7 +495,7 @@ class ScheduleViewModel(
             course = course,
             originWeek = state.originWeek,
             targetWeek = state.targetWeek,
-            newRoom = state.newClassRoom,
+            newRoom = state.newClassRoom.text,
             dayOfWeek = state.dayOfWeek,
             startSection = state.startSection,
             endSection = state.endSection

@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.ui.components.SectionRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
@@ -53,8 +54,8 @@ fun TransClassDialog(
     onDismiss: () -> Unit,
     totalWeeks: Int,
     onTotalWeeksChange: (Int) -> Unit,
-    newClassRoom: String,
-    onNewClassRoomChange: (String) -> Unit,
+    newClassRoom: TextFieldValue,
+    onNewClassRoomChange: (TextFieldValue) -> Unit,
     dayOfWeek: Int,
     onDayOfWeekChange: (Int) -> Unit,
     startSection: Int,

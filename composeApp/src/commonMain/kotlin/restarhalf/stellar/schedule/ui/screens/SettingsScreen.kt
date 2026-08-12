@@ -346,13 +346,13 @@ fun SettingsScreen(
                             onClick = onEvaluation,
                         )
                     })
-                    add(CardItem("courseSelection") {
-                        ArrowPreference(
-                            title = "自动抢课",
-                            summary = "自动监控并提交选课请求",
-                            onClick = onCourseSelection,
-                        )
-                    })
+//                    add(CardItem("courseSelection") {
+//                        ArrowPreference(
+//                            title = "自动抢课",
+//                            summary = "自动监控并提交选课请求",
+//                            onClick = onCourseSelection,
+//                        )
+//                    })
                     add(CardItem("exportCsv") {
                         ArrowPreference(
                             title = "导出课表CSV",
@@ -394,13 +394,13 @@ fun SettingsScreen(
                                 }
                             })
                     })
-                    add(CardItem("foodRoulette") {
-                        ArrowPreference(
-                            title = "今天吃什么",
-                            summary = "选择困难症？让滚轮帮你决定",
-                            onClick = onFoodRoulette,
-                        )
-                    })
+//                    add(CardItem("foodRoulette") {
+//                        ArrowPreference(
+//                            title = "今天吃什么",
+//                            summary = "选择困难症？让滚轮帮你决定",
+//                            onClick = onFoodRoulette,
+//                        )
+//                    })
                 }
             )
 
