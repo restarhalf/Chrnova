@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Button
@@ -21,10 +22,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun StarVerificationDialog(
     show: Boolean,
-    username: String,
+    username: TextFieldValue,
     isVerifying: Boolean,
     error: String?,
-    onUsernameChange: (String) -> Unit,
+    onUsernameChange: (TextFieldValue) -> Unit,
     onVerify: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -66,7 +67,7 @@ fun StarVerificationDialog(
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColorsPrimary(),
-                    enabled = username.isNotBlank() && !isVerifying,
+                    enabled = username.text.isNotBlank() && !isVerifying,
                     onClick = onVerify,
                 ) {
                     Text(
