@@ -13,7 +13,7 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -28,7 +28,7 @@ fun StarVerificationDialog(
 ) {
     if (!show) return
     val colors = MiuixTheme.colorScheme
-    OverlayDialog(
+    WindowDialog(
         show = true,
         modifier = Modifier,
         title = "GitHub Star 验证",
@@ -42,7 +42,6 @@ fun StarVerificationDialog(
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {
             Column(
                 modifier = Modifier.fillMaxWidth(),

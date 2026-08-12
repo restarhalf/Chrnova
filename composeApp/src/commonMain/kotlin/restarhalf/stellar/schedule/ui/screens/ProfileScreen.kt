@@ -43,7 +43,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -101,7 +101,7 @@ fun ProfileScreen(
         popupHost = {
             // 教务系统退出确认
             if (showLogoutJWConfirm) {
-                OverlayDialog(
+                WindowDialog(
                     show = showLogoutJWConfirm,
                     title = "确认退出教务系统",
                     summary = "退出后需要重新登录才能同步课表和考务",
@@ -132,7 +132,7 @@ fun ProfileScreen(
             }
             // 体测系统退出确认
             if (showLogoutPEConfirm) {
-                OverlayDialog(
+                WindowDialog(
                     show = showLogoutPEConfirm,
                     title = "确认退出体测平台",
                     summary = "退出后需要重新登录才能查看体测成绩",

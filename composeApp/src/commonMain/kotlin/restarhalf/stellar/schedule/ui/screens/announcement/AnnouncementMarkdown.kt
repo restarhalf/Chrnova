@@ -60,7 +60,7 @@ import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -299,7 +299,7 @@ private fun AnnouncementMarkdownImage(
 }
 
 /**
- * 全屏图片预览：miuix OverlayDialog 承载网络大图，点击图片/外部关闭。
+ * 全屏图片预览：miuix WindowDialog 承载网络大图，点击图片/外部关闭。
  */
 @Composable
 private fun AnnouncementImagePreviewDialog(
@@ -307,7 +307,7 @@ private fun AnnouncementImagePreviewDialog(
     alt: String?,
     onDismiss: () -> Unit,
 ) {
-    OverlayDialog(
+    WindowDialog(
         show = true,
         title = alt ?: "图片预览",
         titleColor = DialogDefaults.titleColor(),
@@ -320,7 +320,6 @@ private fun AnnouncementImagePreviewDialog(
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {
             AsyncImage(
                 model = ImageRequest.Builder(LocalPlatformContext.current)

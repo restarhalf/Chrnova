@@ -13,7 +13,7 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * 赞赏对话框组件
@@ -26,7 +26,7 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  */
 @Composable
 fun AwardDialog(show: Boolean, onDismissRequest: () -> Unit, onWxpay: () -> Unit, onAlipay: () -> Unit) {
-    OverlayDialog(
+    WindowDialog(
         show = show,
         modifier = Modifier,
         title = "赞赏作者",
@@ -40,7 +40,6 @@ fun AwardDialog(show: Boolean, onDismissRequest: () -> Unit, onWxpay: () -> Unit
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,

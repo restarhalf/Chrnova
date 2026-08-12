@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * 教务系统网页对话框组件
@@ -26,7 +26,7 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  */
 @Composable
 fun JwxtWebDialog(show: Boolean, onDismissRequest: () -> Unit, onPc: () -> Unit, onMobile: () -> Unit) {
-    OverlayDialog(
+    WindowDialog(
         show = show,
         modifier = Modifier,
         title = "打开教务系统",
@@ -40,7 +40,6 @@ fun JwxtWebDialog(show: Boolean, onDismissRequest: () -> Unit, onPc: () -> Unit,
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,

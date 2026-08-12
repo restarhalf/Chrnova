@@ -57,7 +57,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
@@ -132,7 +132,7 @@ fun LogScreen(
         },
         popupHost = {
             if (showClearConfirm) {
-                OverlayDialog(
+                WindowDialog(
                     show = showClearConfirm,
                     title = "确认清空",
                     summary = "清空后不可恢复，确定要清空所有日志吗？",

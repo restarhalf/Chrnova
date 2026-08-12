@@ -3,7 +3,7 @@ package restarhalf.stellar.schedule.ui.components.screen.ems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * 成绩详情对话框组件
@@ -16,7 +16,7 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
  */
 @Composable
 fun GradeDetailsDialog(show: Boolean, onDismissRequest: () -> Unit, title: String, summary: String) {
-    OverlayDialog(
+    WindowDialog(
         show = show,
         modifier = Modifier,
         title = title,
@@ -30,6 +30,5 @@ fun GradeDetailsDialog(show: Boolean, onDismissRequest: () -> Unit, title: Strin
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {})
 }

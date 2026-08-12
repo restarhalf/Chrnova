@@ -80,7 +80,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -274,7 +274,7 @@ fun ScheduleScreen(
             }
             val conflicts = scheduleUiState.transConflictUiState.conflicts
             if (scheduleUiState.transConflictUiState.show) {
-                OverlayDialog(
+                WindowDialog(
                     show = scheduleUiState.transConflictUiState.show,
                     modifier = Modifier,
                     title = "调课冲突",
@@ -290,7 +290,6 @@ fun ScheduleScreen(
                     outsideMargin = DialogDefaults.outsideMargin,
                     insideMargin = DialogDefaults.insideMargin,
                     defaultWindowInsetsPadding = true,
-                    renderInRootScaffold = true,
                     content = {
                         LazyColumn(
                             contentPadding = PaddingValues(

@@ -20,7 +20,7 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -101,7 +101,7 @@ fun PersonalInfoEditCard(
 
     // 清除头像确认对话框
     if (showClearAvatarDialog) {
-        OverlayDialog(
+        WindowDialog(
             show = true,
             title = "清除头像",
             summary = "确定要清除头像吗？",
@@ -141,7 +141,7 @@ private fun NicknameEditDialog(
     var nickname by remember { mutableStateOf(initialNickname) }
     val colors = MiuixTheme.colorScheme
     
-    OverlayDialog(
+    WindowDialog(
         show = true,
         title = "设置昵称",
         onDismissRequest = onDismiss,

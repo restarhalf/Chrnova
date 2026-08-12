@@ -22,7 +22,7 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -83,7 +83,7 @@ fun TransClassDialog(
             }
         }
 
-    OverlayDialog(
+    WindowDialog(
         show = show,
         modifier = Modifier,
         title = "调课",
@@ -97,7 +97,6 @@ fun TransClassDialog(
         outsideMargin = DialogDefaults.outsideMargin,
         insideMargin = DialogDefaults.insideMargin,
         defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
         content = {
             if (showWeekdayPicker.value) {
                 WeekdayPickerBottomSheet(
