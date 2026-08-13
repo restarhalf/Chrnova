@@ -1,18 +1,24 @@
 package restarhalf.stellar.schedule.ui.screens.evaluation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +58,19 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+private const val MAX_CONTENT_LENGTH = 500
+
+/**
+ * 写评价 / 编辑评价页。
+ *
+ * 设计要点（参考 EMS 视觉语言 + 写评价特有的表单体验优化）：
+ * - 顶栏返回 + 标题
+ * - 顶部错误状态药丸（与列表页一致）
+ * - 三个分组（课程 / 评分 / 署名），每组用 SmallTitle + AppCard
+ * - 评分输入区域：星 + 实时分值 + 文案提示（点击星星时 StarRatingInput 自带放大回弹）
+ * - 评价内容字数统计
+ * - 提交按钮：底部全宽 primary，loading 时显示进度文案
+ */
 @Composable
 fun EvaluationSubmitScreen(
     vm: CourseEvaluationViewModel,
@@ -121,19 +141,33 @@ fun EvaluationSubmitScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = if (isEditMode) "编辑评价" else "写评价",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Back, contentDescription = "返回")
-                    }
+            Column {
+                AppPageTopBar(
+                    title = if (isEditMode) "编辑评价" else "写评价",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回",
+                                tint = colors.onBackground,
+                            )
+                        }
+                    },
+                )
+                // 错误状态药丸
+                AnimatedVisibility(
+                    visible = uiState.error != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    EvaluationStatusPill(text = uiState.error)
                 }
-            )
+            }
         },
         bottomBar = {
             Button(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                 colors = ButtonDefaults.buttonColorsPrimary(),
                 enabled = canSubmit,
                 onClick = {
@@ -170,6 +204,7 @@ fun EvaluationSubmitScreen(
                         else -> "提交"
                     },
                     color = colors.onPrimary,
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -249,34 +284,77 @@ fun EvaluationSubmitScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             HorizontalDivider()
-                            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 评分区
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
                                     Text(
                                         text = "评分",
                                         fontSize = 13.sp,
                                         color = colors.onSurfaceVariantSummary,
                                     )
                                     if (rating > 0) {
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clip(CircleShape)
+                                                .background(colors.primary.copy(alpha = 0.12f)),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = "$rating",
+                                                fontSize = 12.sp,
+                                                color = colors.primary,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                        }
                                         Text(
-                                            text = "$rating/5",
-                                            fontSize = 13.sp,
+                                            text = "/ 5",
+                                            fontSize = 12.sp,
                                             color = colors.onSurfaceVariantSummary,
-                                            fontWeight = FontWeight.Medium,
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
                                 StarRatingInput(rating = rating, onRatingChanged = { rating = it })
+                                Text(
+                                    text = ratingHint(rating),
+                                    fontSize = 11.sp,
+                                    color = colors.onSurfaceVariantSummary.copy(alpha = 0.85f),
+                                )
                             }
                             HorizontalDivider()
-                            TextField(
-                                label = "评价内容",
-                                value = content,
-                                onValueChange = { content = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                maxLines = 8,
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                TextField(
+                                    label = "评价内容",
+                                    value = content,
+                                    onValueChange = { newValue ->
+                                        if (newValue.length <= MAX_CONTENT_LENGTH) {
+                                            content = newValue
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 8,
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.End,
+                                ) {
+                                    Text(
+                                        text = "${content.length} / $MAX_CONTENT_LENGTH",
+                                        fontSize = 11.sp,
+                                        color = if (content.length >= MAX_CONTENT_LENGTH) {
+                                            colors.error
+                                        } else {
+                                            colors.onSurfaceVariantSummary
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -304,19 +382,17 @@ fun EvaluationSubmitScreen(
                     }
                 }
             }
-
-            if (uiState.error != null) {
-                item(key = "error") {
-                    AppCard {
-                        Text(
-                            text = uiState.error ?: "",
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            fontSize = 14.sp,
-                            color = colors.error,
-                        )
-                    }
-                }
-            }
         }
     }
+}
+
+/** 根据当前评分给出语义化提示 */
+private fun ratingHint(rating: Int): String = when (rating) {
+    0 -> "点击星星为这门课打分"
+    1 -> "很不推荐，慎选"
+    2 -> "不太推荐"
+    3 -> "中规中矩"
+    4 -> "推荐，质量不错"
+    5 -> "强烈推荐，神课"
+    else -> ""
 }

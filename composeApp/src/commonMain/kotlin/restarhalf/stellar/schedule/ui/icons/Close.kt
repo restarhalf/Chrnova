@@ -1,44 +1,55 @@
 package restarhalf.stellar.schedule.ui.icons
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 val Close: ImageVector
-    get() =
-        ImageVector.Builder(
-            name = "Rounded.Close",
+    get() {
+        if (_Close != null) {
+            return _Close!!
+        }
+        _Close = ImageVector.Builder(
+            name = "Close",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f,
-        )
-            .apply {
-                path(
-                    fill = SolidColor(Color(0xFF1F1F1F)),
-                    pathFillType = PathFillType.NonZero,
-                ) {
-                    moveTo(18.3f, 5.7f)
-                    curveTo(18.7f, 6.1f, 18.7f, 6.7f, 18.3f, 7.1f)
-                    lineTo(13.4f, 12f)
-                    lineTo(18.3f, 16.9f)
-                    curveTo(18.7f, 17.3f, 18.7f, 17.9f, 18.3f, 18.3f)
-                    curveTo(17.9f, 18.7f, 17.3f, 18.7f, 16.9f, 18.3f)
-                    lineTo(12f, 13.4f)
-                    lineTo(7.1f, 18.3f)
-                    curveTo(6.7f, 18.7f, 6.1f, 18.7f, 5.7f, 18.3f)
-                    curveTo(5.3f, 17.9f, 5.3f, 17.3f, 5.7f, 16.9f)
-                    lineTo(10.6f, 12f)
-                    lineTo(5.7f, 7.1f)
-                    curveTo(5.3f, 6.7f, 5.3f, 6.1f, 5.7f, 5.7f)
-                    curveTo(6.1f, 5.3f, 6.7f, 5.3f, 7.1f, 5.7f)
-                    lineTo(12f, 10.6f)
-                    lineTo(16.9f, 5.7f)
-                    curveTo(17.3f, 5.3f, 17.9f, 5.3f, 18.3f, 5.7f)
-                    close()
-                }
+            viewportWidth = 960f,
+            viewportHeight = 960f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(480f, 536f)
+                lineTo(284f, 732f)
+                quadToRelative(-11f, 11f, -28f, 11f)
+                reflectiveQuadToRelative(-28f, -11f)
+                quadToRelative(-11f, -11f, -11f, -28f)
+                reflectiveQuadToRelative(11f, -28f)
+                lineToRelative(196f, -196f)
+                lineToRelative(-196f, -196f)
+                quadToRelative(-11f, -11f, -11f, -28f)
+                reflectiveQuadToRelative(11f, -28f)
+                quadToRelative(11f, -11f, 28f, -11f)
+                reflectiveQuadToRelative(28f, 11f)
+                lineToRelative(196f, 196f)
+                lineToRelative(196f, -196f)
+                quadToRelative(11f, -11f, 28f, -11f)
+                reflectiveQuadToRelative(28f, 11f)
+                quadToRelative(11f, 11f, 11f, 28f)
+                reflectiveQuadToRelative(-11f, 28f)
+                lineTo(536f, 480f)
+                lineToRelative(196f, 196f)
+                quadToRelative(11f, 11f, 11f, 28f)
+                reflectiveQuadToRelative(-11f, 28f)
+                quadToRelative(-11f, 11f, -28f, 11f)
+                reflectiveQuadToRelative(-28f, -11f)
+                lineTo(480f, 536f)
+                close()
             }
-            .build()
+        }.build()
+
+        return _Close!!
+    }
+
+@Suppress("ObjectPropertyName")
+private var _Close: ImageVector? = null

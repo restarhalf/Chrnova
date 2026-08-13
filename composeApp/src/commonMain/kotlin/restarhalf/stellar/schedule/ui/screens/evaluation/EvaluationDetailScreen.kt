@@ -1,34 +1,40 @@
 package restarhalf.stellar.schedule.ui.screens.evaluation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.icons.Delete
+import restarhalf.stellar.schedule.ui.icons.Edit
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -45,7 +51,18 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
+/**
+ * 评价详情页。
+ *
+ * 设计要点：
+ * - 顶栏：返回 + 标题 + 右上角"编辑"/"删除"操作（仅本机提交者可见）
+ * - 顶部错误状态药丸
+ * - Hero 卡片：左侧彩色强调条 + 课程名 + 教师 + 大数字评分 + 半星
+ * - 内容卡片：评价正文 + 作者 + 发布时间
+ * - 底部点赞按钮：primary 样式
+ */
 @Composable
 fun EvaluationDetailScreen(
     vm: CourseEvaluationViewModel,
@@ -63,55 +80,109 @@ fun EvaluationDetailScreen(
     }
 
     val evaluation = uiState.selectedEvaluation
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = "评价详情", scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Back, contentDescription = "返回")
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            if (evaluation != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Column {
+                AppPageTopBar(
+                    title = "评价详情",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回",
+                                tint = colors.onBackground,
+                            )
+                        }
+                    },
+                    actions = {
+                        if (evaluation != null && uiState.canDeleteSelected) {
+                            IconButton(onClick = { onEditEvaluation(evaluation.id) }) {
+                                Icon(
+                                    imageVector = Edit,
+                                    contentDescription = "编辑",
+                                    tint = colors.onBackground,
+                                )
+                            }
+                            IconButton(onClick = { showDeleteConfirm = true }) {
+                                Icon(
+                                    imageVector = Delete,
+                                    contentDescription = "删除",
+                                    tint = colors.onBackground,
+                                )
+                            }
+                        }
+                    },
+                )
+                // 错误状态药丸
+                AnimatedVisibility(
+                    visible = uiState.error != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
                 ) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColorsPrimary(),
-                        onClick = { vm.toggleLike(evaluation.id) },
+                    EvaluationStatusPill(text = uiState.error)
+                }
+            }
+        },
+        popupHost = {
+            if (showDeleteConfirm && evaluation != null) {
+                WindowDialog(
+                    show = showDeleteConfirm,
+                    title = "删除评价",
+                    summary = "删除后不可恢复，确定继续吗？",
+                    onDismissRequest = { showDeleteConfirm = false },
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(
-                            text = if (evaluation.liked) "已赞 ${evaluation.likes}"
-                            else "点赞 ${evaluation.likes}",
-                            color = colors.onPrimary,
-                        )
-                    }
-                    if (uiState.canDeleteSelected) {
                         Button(
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(),
-                            onClick = { onEditEvaluation(evaluation.id) },
+                            onClick = { showDeleteConfirm = false },
                         ) {
-                            Text(text = "编辑", color = colors.onSurface)
+                            Text(text = "取消")
                         }
                         Button(
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(),
+                            colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
+                                showDeleteConfirm = false
                                 vm.deleteEvaluation(evaluation.id)
                                 onBack()
                             },
                         ) {
-                            Text(text = "删除", color = colors.onSurface)
+                            Text(text = "确认删除", color = colors.onPrimary)
                         }
                     }
+                }
+            }
+        },
+        bottomBar = {
+            if (evaluation != null) {
+                val isLoggedOut = uiState.userNo.isBlank()
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    colors = if (evaluation.liked) {
+                        ButtonDefaults.buttonColors()
+                    } else {
+                        ButtonDefaults.buttonColorsPrimary()
+                    },
+                    onClick = { vm.toggleLike(evaluation.id) },
+                ) {
+                    Text(
+                        text = when {
+                            isLoggedOut -> "请先登录后再点赞"
+                            evaluation.liked -> "已赞 ${evaluation.likes}"
+                            else -> "点赞 · ${evaluation.likes}"
+                        },
+                        color = if (evaluation.liked) colors.onSurface else colors.onPrimary,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }
@@ -137,7 +208,7 @@ fun EvaluationDetailScreen(
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            if (uiState.loading) {
+            if (uiState.loading && evaluation == null) {
                 item(key = "loading") {
                     Text(
                         text = "加载中...",
@@ -148,41 +219,30 @@ fun EvaluationDetailScreen(
                 }
             }
 
-            if (uiState.error != null) {
-                item(key = "error") {
-                    Text(
-                        text = uiState.error ?: "",
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
-                        color = colors.error,
-                    )
-                }
-            }
-
             if (evaluation != null) {
                 item(key = "hero") {
-                    EvaluationHeroCard(evaluation = evaluation)
+                    EvaluationDetailHero(evaluation = evaluation)
                 }
 
                 item(key = "content") {
                     SmallTitle(text = "评价内容")
                     AppCard {
-                        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
                             Text(
                                 text = evaluation.content.ifEmpty { "（无内容）" },
                                 modifier = Modifier.fillMaxWidth(),
                                 fontSize = 14.sp,
                                 color = colors.onSurface,
                             )
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                             val authorText = if (evaluation.anonymous) "匿名" else evaluation.author.ifEmpty { "匿名" }
                             BasicComponent(title = "作者", summary = authorText)
                             BasicComponent(
                                 title = "发布时间",
-                                summary = runCatching {
-                                    kotlin.time.Instant.fromEpochSeconds(evaluation.createdAt)
-                                        .toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
-                                }.getOrDefault("-"),
+                                summary = formatDate(evaluation.createdAt),
                             )
                         }
                     }
@@ -192,39 +252,12 @@ fun EvaluationDetailScreen(
     }
 }
 
-@Composable
-private fun EvaluationHeroCard(evaluation: Evaluation) {
-    val colors = MiuixTheme.colorScheme
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            // 课程名（主标题）
-            Text(
-                text = evaluation.courseName.ifEmpty { "未命名课程" },
-                fontSize = 18.sp,
-                color = colors.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            // 教师名（副标题）
-            Text(
-                text = evaluation.teacher.ifEmpty { "教师未知" },
-                fontSize = 13.sp,
-                color = colors.onSurfaceVariantSummary,
-            )
-            // 评分行：星级 + 分值 + 状态徽标
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                StarRatingDisplay(rating = evaluation.rating, starSize = 20)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "${evaluation.rating}/5",
-                    fontSize = 13.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-            }
-        }
-    }
+/** 把 Unix 秒时间戳格式化成 YYYY-MM-DD HH:mm */
+private fun formatDate(epochSeconds: Long): String {
+    if (epochSeconds <= 0) return "—"
+    return runCatching {
+        val dateTime = kotlin.time.Instant.fromEpochSeconds(epochSeconds)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+        "${dateTime.date} ${dateTime.hour.toString().padStart(2, '0')}:${dateTime.minute.toString().padStart(2, '0')}"
+    }.getOrDefault("—")
 }

@@ -12,7 +12,7 @@ val PE: ImageVector
         if (current != null) return current
 
         return ImageVector.Builder(
-            name = "Rounded.PE",
+            name = "PE",
             defaultWidth = 24.0.dp,
             defaultHeight = 24.0.dp,
             viewportWidth = 960.0f,

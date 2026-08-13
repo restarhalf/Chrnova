@@ -13,7 +13,7 @@ val AppIcon: ImageVector
         if (current != null) return current
 
         return ImageVector.Builder(
-            name = "Rounded.Bot",
+            name = "Chrnova",
             defaultWidth = 734.0.dp,
             defaultHeight = 734.0.dp,
             viewportWidth = 734.0f,

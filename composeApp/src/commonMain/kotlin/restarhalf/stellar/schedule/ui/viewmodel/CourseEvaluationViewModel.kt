@@ -258,11 +258,6 @@ class CourseEvaluationViewModel(
         }
     }
 
-    fun setCourseFilter(course: String?) {
-        _uiState.update { it.copy(selectedCourse = course) }
-        loadEvaluations()
-    }
-
     fun setOnlyMine(onlyMine: Boolean) {
         _uiState.update { it.copy(onlyMine = onlyMine) }
     }

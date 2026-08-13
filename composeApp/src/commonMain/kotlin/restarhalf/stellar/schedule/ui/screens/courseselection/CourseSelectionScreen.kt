@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.ui.screens.courseselection
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,16 +13,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -38,9 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,11 +60,14 @@ import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.theme.StatusColors
+import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel.SelectionLog
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel.SelectionTarget
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
@@ -82,6 +92,11 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * - 日志：实时抢课日志
  *
  * 底部固定操作栏让开始/停止按钮永远可达，顶部状态条显示会话与抢课状态。
+ *
+ * 视觉语言与 EMS / 课程评价一致：
+ * - 卡片左侧彩色强调条（按课程名取色，同课程同色）
+ * - 列表项入场动画（透明度 + 上浮）
+ * - 成功 / 失败 / 警告使用 StatusColors 语义色
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -193,9 +208,8 @@ fun CourseSelectionScreen(
                             onClick = { ensureNotificationPermission { vm.startBackgroundSnatch() } },
                             modifier = Modifier.weight(1f),
                             enabled = canStart,
-                            colors = ButtonDefaults.buttonColorsPrimary(),
                         ) {
-                            Text(text = "后台抢课", color = colors.onPrimary)
+                            Text(text = "后台抢课")
                         }
                     }
                 }
@@ -267,6 +281,31 @@ private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiS
         !uiState.sessionReady -> "正在进入选课..."
         else -> null
     }
+}
+
+/** 列表项入场动画：透明度 0→1 + 50dp 上浮，300ms 缓入 */
+@Composable
+private fun rememberItemEnterAnimation(): Animatable<Float, *> {
+    val anim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        anim.animateTo(1f, tween(durationMillis = 300))
+    }
+    return anim
+}
+
+/** 卡片左侧彩色强调条（参考 EMS / 评价列表项），调用方需在 RowScope 内传入 align 修饰符 */
+@Composable
+private fun AccentBar(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(color)
+            .width(4.dp)
+            .fillMaxHeight(0.8f),
+    )
 }
 
 // ---------------- Tab 1: 选课 ----------------
@@ -353,7 +392,7 @@ private fun SelectTab(
         // 4. 课程列表
         if (uiState.courses.isNotEmpty()) {
             item {
-                SmallTitle(text = "可选课程（点击加入抢课目标，共 ${uiState.courses.size} 条）")
+                SmallTitle(text = "可选课程（点击卡片看详情，点击「加入」进目标，共 ${uiState.courses.size} 条）")
             }
             items(uiState.courses, key = { "${it.courseId}|${it.noticeId}|${it.kxh}" }) { course ->
                 CourseCard(
@@ -524,14 +563,14 @@ private fun LogTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-            innerPadding = PaddingValues(),
-            outerPadding = paddingValues,
-            extraTop = 12.dp,
-            extraStart = 12.dp,
-            extraEnd = 12.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
+                innerPadding = PaddingValues(),
+                outerPadding = paddingValues,
+                extraTop = 12.dp,
+                extraStart = 12.dp,
+                extraEnd = 12.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
         if (uiState.logs.isNotEmpty()) {
             item {
                 SmallTitle(text = "抢课日志")
@@ -566,7 +605,6 @@ private fun LogTab(
     }
 }
 
-
 // ---------------- 通用小组件 ----------------
 
 @Composable
@@ -585,7 +623,13 @@ private fun EmptyHint(text: String) {
     }
 }
 
-/** 课程列表卡片，次要信息可展开 */
+/**
+ * 可选课程卡片。
+ *
+ * 视觉参考 EMS / 评价列表项：左侧彩色强调条 + 入场动画。
+ * 交互与旧版不同：整卡点击 = 展开详情；右侧「加入」pill = 加入抢课目标，
+ * 避免误触整卡直接发起试探请求。
+ */
 @Composable
 private fun CourseCard(
     course: JwxtSelectionCourse,
@@ -594,76 +638,139 @@ private fun CourseCard(
     onAdd: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    val animProgress = rememberItemEnterAnimation()
     var expanded by remember { mutableStateOf(false) }
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
+    val accentColor = pickCourseSubColor(course.courseName.ifBlank { course.kxh }, false)
+    AppCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                alpha = animProgress.value
+                translationY = 50f * (1f - animProgress.value)
+            },
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = !added && !checking) { onAdd() }
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .height(IntrinsicSize.Min)
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            AccentBar(
+                color = accentColor,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                // 课程名 + 加入按钮
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = course.courseName.ifBlank { "未命名课程" },
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
                     )
+                    AddTargetChip(
+                        added = added,
+                        checking = checking,
+                        onClick = onAdd,
+                    )
+                }
+                // 班次 · 教师
+                Text(
+                    text = "班次 ${course.kxh}" +
+                        (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
+                    fontSize = 12.sp,
+                    color = colors.onSurfaceVariantSummary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // 学分 + 详情切换（点击整行展开）
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                        .padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     Text(
-                        text = "班次 ${course.kxh}" +
-                            (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
+                        text = course.creditText(),
                         fontSize = 12.sp,
                         color = colors.onSurfaceVariantSummary,
                     )
+                    Text(
+                        text = if (expanded) "收起" else "详情",
+                        fontSize = 12.sp,
+                        color = colors.primary,
+                    )
                 }
-                Text(
-                    text = when {
-                        added -> "已加入"
-                        checking -> "检查中..."
-                        else -> "＋ 加入"
-                    },
-                    fontSize = 12.sp,
-                    color = colors.primary,
-                )
-            }
-            // 次要信息：点击切换展开
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = "学分 ${course.credit}".ifBlank { "学分 -" },
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-                Text(
-                    text = if (expanded) "收起" else "详情",
-                    fontSize = 12.sp,
-                    color = colors.primary,
-                )
-            }
-            if (expanded) {
-                val place = course.cleanPlace()
-                if (place.isNotBlank()) {
-                    Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
-                }
-                val time = course.cleanTime()
-                if (time.isNotBlank()) {
-                    Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                if (expanded) {
+                    val place = course.cleanPlace()
+                    if (place.isNotBlank()) {
+                        Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                    }
+                    val time = course.cleanTime()
+                    if (time.isNotBlank()) {
+                        Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                    }
                 }
             }
         }
     }
 }
 
-/** 抢课目标卡片 */
+/** 「加入」pill：未加入可点，已加入 / 检查中只读展示 */
+@Composable
+private fun AddTargetChip(
+    added: Boolean,
+    checking: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = MiuixTheme.colorScheme
+    when {
+        added -> Text(
+            text = "已加入",
+            fontSize = 12.sp,
+            color = colors.primary,
+            fontWeight = FontWeight.Medium,
+        )
+        checking -> Text(
+            text = "检查中…",
+            fontSize = 12.sp,
+            color = colors.onSurfaceVariantSummary,
+        )
+        else -> Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(colors.surfaceContainerHigh)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+        ) {
+            Text(
+                text = "＋ 加入",
+                fontSize = 12.sp,
+                color = colors.primary,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+/**
+ * 抢课目标卡片。
+ *
+ * 成功的目标：强调条与序号徽标转绿（StatusColors.healthy），整卡正向反馈。
+ * 序号徽标强调优先级，操作 chips 置于底部。
+ */
 @Composable
 private fun TargetCard(
     target: SelectionTarget,
@@ -675,158 +782,224 @@ private fun TargetCard(
     onRemove: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    val animProgress = rememberItemEnterAnimation()
     val course = target.course
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
+    val accentColor = pickCourseSubColor(course.courseName.ifBlank { course.kxh }, false)
+    val stateColor = if (target.succeeded) StatusColors.healthy else colors.primary
+    AppCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                alpha = animProgress.value
+                translationY = 50f * (1f - animProgress.value)
+            },
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .height(IntrinsicSize.Min)
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            AccentBar(
+                color = if (target.succeeded) StatusColors.healthy else accentColor,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "${index + 1}.",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.primary,
-                    )
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Column {
+                // 序号徽标 + 课程信息 + 成功标识
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // 优先级序号徽标
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(stateColor),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "${index + 1}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
                         Text(
                             text = course.courseName.ifBlank { "未命名课程" },
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
-                            text = "班次 ${course.kxh} · ${course.classTeacher}",
+                            text = "班次 ${course.kxh}" +
+                                (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
                             fontSize = 12.sp,
                             color = colors.onSurfaceVariantSummary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
-                }
-                if (target.succeeded) {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(colors.primary)
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
-                    ) {
-                        Text(
-                            text = "成功",
-                            fontSize = 12.sp,
-                            color = colors.onPrimary,
-                        )
+                    if (target.succeeded) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(StatusColors.healthy)
+                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = "成功",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White,
+                            )
+                        }
                     }
                 }
-            }
 
-            // 状态行
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "尝试 ${target.attempts} 次",
-                    fontSize = 12.sp,
-                    color = colors.onSurfaceVariantSummary,
-                )
-                if (target.lastMessage.isNotBlank()) {
+                // 尝试次数 + 最近状态
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = target.lastMessage,
+                        text = "尝试 ${target.attempts} 次",
                         fontSize = 12.sp,
-                        color = if (target.succeeded) colors.primary else colors.onSurfaceVariantSummary,
-                        maxLines = 1,
+                        color = colors.onSurfaceVariantSummary,
                     )
+                    if (target.lastMessage.isNotBlank()) {
+                        Text(
+                            text = target.lastMessage,
+                            fontSize = 12.sp,
+                            color = when {
+                                target.succeeded -> StatusColors.healthy
+                                else -> colors.onSurfaceVariantSummary
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f).padding(start = 8.dp),
+                        )
+                    }
                 }
-            }
 
-            // 操作按钮
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                ActionChip(text = "上移", enabled = index > 0 && !snatching, onClick = onMoveUp)
-                ActionChip(text = "下移", enabled = index < total - 1 && !snatching, onClick = onMoveDown)
-                ActionChip(text = "移除", enabled = !snatching, onClick = onRemove, destructive = true)
+                // 操作按钮
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    ActionChip(text = "上移", enabled = index > 0 && !snatching, onClick = onMoveUp)
+                    ActionChip(text = "下移", enabled = index < total - 1 && !snatching, onClick = onMoveDown)
+                    ActionChip(text = "移除", enabled = !snatching, onClick = onRemove, destructive = true)
+                }
             }
         }
     }
 }
 
-/** 已选课程卡片（用于退课） */
+/** 已选课程卡片（用于退课），视觉与 CourseCard 一致 */
 @Composable
 private fun SelectedCourseCard(
     course: JwxtSelectedCourse,
     onDrop: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
+    val animProgress = rememberItemEnterAnimation()
     var expanded by remember { mutableStateOf(false) }
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
+    val accentColor = pickCourseSubColor(course.courseName.ifBlank { course.noticeId }, false)
+    AppCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                alpha = animProgress.value
+                translationY = 50f * (1f - animProgress.value)
+            },
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .height(IntrinsicSize.Min)
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            AccentBar(
+                color = accentColor,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = course.courseName.ifBlank { "未命名课程" },
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
                     )
-                    Text(
-                        text = "班次 ${course.kxh}" +
-                            (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
-                        fontSize = 12.sp,
-                        color = colors.onSurfaceVariantSummary,
-                    )
+                    if (course.canDrop) {
+                        ActionChip(text = "退课", enabled = true, onClick = onDrop, destructive = true)
+                    } else {
+                        Text(
+                            text = "不可退",
+                            fontSize = 12.sp,
+                            color = colors.onSurfaceVariantSummary,
+                        )
+                    }
                 }
-                if (course.canDrop) {
-                    ActionChip(text = "退课", enabled = true, onClick = onDrop, destructive = true)
-                } else {
-                    Text(
-                        text = "不可退",
-                        fontSize = 12.sp,
-                        color = colors.onSurfaceVariantSummary,
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
                 Text(
-                    text = "学分 ${course.credit.trim()}",
+                    text = "班次 ${course.kxh}" +
+                        (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
                     fontSize = 12.sp,
                     color = colors.onSurfaceVariantSummary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = if (expanded) "收起" else "详情",
-                    fontSize = 12.sp,
-                    color = colors.primary,
-                )
-            }
-            if (expanded) {
-                val place = course.cleanPlace()
-                if (place.isNotBlank()) {
-                    Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                        .padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = course.creditText(),
+                        fontSize = 12.sp,
+                        color = colors.onSurfaceVariantSummary,
+                    )
+                    Text(
+                        text = if (expanded) "收起" else "详情",
+                        fontSize = 12.sp,
+                        color = colors.primary,
+                    )
                 }
-                val time = course.cleanTime()
-                if (time.isNotBlank()) {
-                    Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                if (expanded) {
+                    val place = course.cleanPlace()
+                    if (place.isNotBlank()) {
+                        Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                    }
+                    val time = course.cleanTime()
+                    if (time.isNotBlank()) {
+                        Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                    }
                 }
             }
         }
@@ -912,7 +1085,12 @@ private fun SearchSection(
     }
 }
 
-/** 抢课配置区 */
+/**
+ * 抢课配置区。
+ *
+ * 两组输入之间用分隔线隔开，每组带辅助说明文字；单位直接标在标签上，
+ * 避免用户猜「毫秒」「次数」的含义。
+ */
 @Composable
 private fun SnatchConfigSection(
     config: CourseSelectionViewModel.SnatchConfig,
@@ -925,67 +1103,121 @@ private fun SnatchConfigSection(
     var maxAttemptsText by remember(config.maxAttempts) {
         mutableStateOf(config.maxAttempts.toString())
     }
-    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = "请求间隔（毫秒，建议 500-2000）",
-            fontSize = 13.sp,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        )
-        TextField(
-            value = intervalText,
-            onValueChange = { value ->
-                intervalText = value.filter { it.isDigit() }
-                intervalText.toLongOrNull()?.let { ms ->
-                    onConfigChange(config.copy(intervalMs = ms.coerceAtLeast(100L)))
-                }
-            },
-            enabled = !snatching,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "最大尝试次数（0 = 无限，直到成功或手动停止）",
-            fontSize = 13.sp,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        )
-        TextField(
-            value = maxAttemptsText,
-            onValueChange = { value ->
-                maxAttemptsText = value.filter { it.isDigit() }
-                maxAttemptsText.toIntOrNull()?.let { n ->
-                    onConfigChange(config.copy(maxAttempts = n.coerceAtLeast(0)))
-                }
-            },
-            enabled = !snatching,
-            modifier = Modifier.fillMaxWidth(),
-        )
+    val summaryColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // 组 1：请求间隔
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "请求间隔",
+                fontSize = 13.sp,
+                color = MiuixTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+            )
+            TextField(
+                value = intervalText,
+                onValueChange = { value ->
+                    intervalText = value.filter { it.isDigit() }
+                    intervalText.toLongOrNull()?.let { ms ->
+                        onConfigChange(config.copy(intervalMs = ms.coerceAtLeast(100L)))
+                    }
+                },
+                enabled = !snatching,
+                modifier = Modifier.fillMaxWidth(),
+                label = "毫秒",
+            )
+            Text(
+                text = "建议 500-2000ms，过快可能触发教务系统风控",
+                fontSize = 12.sp,
+                color = summaryColor,
+            )
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+        // 组 2：最大尝试次数
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "最大尝试次数",
+                fontSize = 13.sp,
+                color = MiuixTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+            )
+            TextField(
+                value = maxAttemptsText,
+                onValueChange = { value ->
+                    maxAttemptsText = value.filter { it.isDigit() }
+                    maxAttemptsText.toIntOrNull()?.let { n ->
+                        onConfigChange(config.copy(maxAttempts = n.coerceAtLeast(0)))
+                    }
+                },
+                enabled = !snatching,
+                modifier = Modifier.fillMaxWidth(),
+                label = "次",
+            )
+            Text(
+                text = "0 = 无限重试，直到成功或手动停止",
+                fontSize = 12.sp,
+                color = summaryColor,
+            )
+        }
     }
 }
 
-/** 日志条目 */
+/** 日志条目：级别彩色圆点 + 时间戳 + 等宽消息 */
 @Composable
 private fun LogItem(log: SelectionLog) {
     val colors = MiuixTheme.colorScheme
+    val dotColor = when (log.level) {
+        SelectionLog.LogLevel.SUCCESS -> StatusColors.healthy
+        SelectionLog.LogLevel.ERROR -> StatusColors.danger
+        SelectionLog.LogLevel.WARN -> StatusColors.warning
+        SelectionLog.LogLevel.INFO -> StatusColors.neutral
+    }
     val textColor = when (log.level) {
-        SelectionLog.LogLevel.SUCCESS -> colors.primary
-        SelectionLog.LogLevel.ERROR -> colors.error
+        SelectionLog.LogLevel.SUCCESS -> StatusColors.healthy
+        SelectionLog.LogLevel.ERROR -> StatusColors.danger
         SelectionLog.LogLevel.WARN -> colors.secondary
         SelectionLog.LogLevel.INFO -> colors.onSurfaceVariantSummary
     }
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(dotColor),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = log.time,
             fontSize = 12.sp,
             color = colors.onSurfaceVariantSummary,
             fontFamily = FontFamily.Monospace,
         )
-        Spacer(modifier = Modifier.size(6.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = log.message,
             fontSize = 12.sp,
             color = textColor,
             fontFamily = FontFamily.Monospace,
+            modifier = Modifier.weight(1f),
         )
     }
 }
 
+/** 学分文案：空值显示占位符 */
+private fun JwxtSelectionCourse.creditText(): String =
+    if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"
+
+/** 学分文案：空值显示占位符 */
+private fun JwxtSelectedCourse.creditText(): String =
+    if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"

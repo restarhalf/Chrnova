@@ -1,48 +1,58 @@
 package restarhalf.stellar.schedule.ui.icons
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-/**
- * 首页图标
- *
- * 房屋图标，用于首页导航。
- */
 val Home: ImageVector
-    get() =
-        ImageVector.Builder(
-            name = "Rounded.Home",
+    get() {
+        if (_Home != null) {
+            return _Home!!
+        }
+        _Home = ImageVector.Builder(
+            name = "Home",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f
-        )
-            .apply {
-                path(fill = SolidColor(Color(0xFF1F1F1F)), pathFillType = PathFillType.NonZero) {
-                    moveTo(10.0f, 19.0f)
-                    verticalLineToRelative(-5.0f)
-                    horizontalLineToRelative(4.0f)
-                    verticalLineToRelative(5.0f)
-                    curveToRelative(0.0f, 0.55f, 0.45f, 1.0f, 1.0f, 1.0f)
-                    horizontalLineToRelative(3.0f)
-                    curveToRelative(0.55f, 0.0f, 1.0f, -0.45f, 1.0f, -1.0f)
-                    verticalLineToRelative(-7.0f)
-                    horizontalLineToRelative(1.7f)
-                    curveToRelative(0.46f, 0.0f, 0.68f, -0.57f, 0.33f, -0.87f)
-                    lineTo(12.67f, 3.6f)
-                    curveToRelative(-0.38f, -0.34f, -0.96f, -0.34f, -1.34f, 0.0f)
-                    lineToRelative(-8.36f, 7.53f)
-                    curveToRelative(-0.34f, 0.3f, -0.13f, 0.87f, 0.33f, 0.87f)
-                    horizontalLineTo(5.0f)
-                    verticalLineToRelative(7.0f)
-                    curveToRelative(0.0f, 0.55f, 0.45f, 1.0f, 1.0f, 1.0f)
-                    horizontalLineToRelative(3.0f)
-                    curveToRelative(0.55f, 0.0f, 1.0f, -0.45f, 1.0f, -1.0f)
-                    close()
-                }
+            viewportWidth = 960f,
+            viewportHeight = 960f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(160f, 760f)
+                verticalLineToRelative(-360f)
+                quadToRelative(0f, -19f, 8.5f, -36f)
+                reflectiveQuadToRelative(23.5f, -28f)
+                lineToRelative(240f, -180f)
+                quadToRelative(21f, -16f, 48f, -16f)
+                reflectiveQuadToRelative(48f, 16f)
+                lineToRelative(240f, 180f)
+                quadToRelative(15f, 11f, 23.5f, 28f)
+                reflectiveQuadToRelative(8.5f, 36f)
+                verticalLineToRelative(360f)
+                quadToRelative(0f, 33f, -23.5f, 56.5f)
+                reflectiveQuadTo(720f, 840f)
+                lineTo(600f, 840f)
+                quadToRelative(-17f, 0f, -28.5f, -11.5f)
+                reflectiveQuadTo(560f, 800f)
+                verticalLineToRelative(-200f)
+                quadToRelative(0f, -17f, -11.5f, -28.5f)
+                reflectiveQuadTo(520f, 560f)
+                horizontalLineToRelative(-80f)
+                quadToRelative(-17f, 0f, -28.5f, 11.5f)
+                reflectiveQuadTo(400f, 600f)
+                verticalLineToRelative(200f)
+                quadToRelative(0f, 17f, -11.5f, 28.5f)
+                reflectiveQuadTo(360f, 840f)
+                lineTo(240f, 840f)
+                quadToRelative(-33f, 0f, -56.5f, -23.5f)
+                reflectiveQuadTo(160f, 760f)
+                close()
             }
-            .build()
+        }.build()
+
+        return _Home!!
+    }
+
+@Suppress("ObjectPropertyName")
+private var _Home: ImageVector? = null
