@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
@@ -58,7 +57,7 @@ fun PersonalInfoEditCard(
                 if (avatarUri != null) {
                     Text(
                         text = "清除",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.error,
                         modifier = Modifier.clickable { showClearAvatarDialog = true }
                     )
@@ -74,13 +73,13 @@ fun PersonalInfoEditCard(
             ) {
                 Text(
                     text = nickname ?: "点击设置昵称",
-                    fontSize = 18.sp,
+                    style = MiuixTheme.textStyles.title4,
                     fontWeight = FontWeight.Medium,
                     color = if (nickname != null) colors.onBackground else colors.onSurfaceVariantSummary,
                 )
                 Text(
                     text = "点击编辑",
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = colors.onSurfaceVariantSummary,
                 )
             }

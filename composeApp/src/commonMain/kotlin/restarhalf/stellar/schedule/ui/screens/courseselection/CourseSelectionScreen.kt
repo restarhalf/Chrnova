@@ -49,7 +49,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
@@ -166,7 +165,7 @@ fun CourseSelectionScreen(
                                 .padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
                             Text(
-                                fontSize = 12.sp,
+                                style = MiuixTheme.textStyles.footnote1,
                                 text = statusText ?: "",
                             )
                         }
@@ -591,7 +590,7 @@ private fun LogTab(
                 ) {
                     Text(
                         text = "清空日志",
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = MiuixTheme.colorScheme.primary,
                     )
                 }
@@ -617,7 +616,7 @@ private fun EmptyHint(text: String) {
     ) {
         Text(
             text = text,
-            fontSize = 13.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
     }
@@ -673,7 +672,7 @@ private fun CourseCard(
                 ) {
                     Text(
                         text = course.courseName.ifBlank { "未命名课程" },
-                        fontSize = 15.sp,
+                        style = MiuixTheme.textStyles.body1,
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -689,7 +688,7 @@ private fun CourseCard(
                 Text(
                     text = "班次 ${course.kxh}" +
                         (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = colors.onSurfaceVariantSummary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -704,23 +703,23 @@ private fun CourseCard(
                 ) {
                     Text(
                         text = course.creditText(),
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                     )
                     Text(
                         text = if (expanded) "收起" else "详情",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.primary,
                     )
                 }
                 if (expanded) {
                     val place = course.cleanPlace()
                     if (place.isNotBlank()) {
-                        Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                        Text(text = "地点：$place", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceVariantSummary)
                     }
                     val time = course.cleanTime()
                     if (time.isNotBlank()) {
-                        Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                        Text(text = "时间：$time", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceVariantSummary)
                     }
                 }
             }
@@ -739,13 +738,13 @@ private fun AddTargetChip(
     when {
         added -> Text(
             text = "已加入",
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = colors.primary,
             fontWeight = FontWeight.Medium,
         )
         checking -> Text(
             text = "检查中…",
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = colors.onSurfaceVariantSummary,
         )
         else -> Box(
@@ -757,7 +756,7 @@ private fun AddTargetChip(
         ) {
             Text(
                 text = "＋ 加入",
-                fontSize = 12.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = colors.primary,
                 fontWeight = FontWeight.Medium,
             )
@@ -826,7 +825,7 @@ private fun TargetCard(
                     ) {
                         Text(
                             text = "${index + 1}",
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                         )
@@ -837,7 +836,7 @@ private fun TargetCard(
                     ) {
                         Text(
                             text = course.courseName.ifBlank { "未命名课程" },
-                            fontSize = 15.sp,
+                            style = MiuixTheme.textStyles.body1,
                             fontWeight = FontWeight.Medium,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
@@ -845,7 +844,7 @@ private fun TargetCard(
                         Text(
                             text = "班次 ${course.kxh}" +
                                 (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -860,7 +859,7 @@ private fun TargetCard(
                         ) {
                             Text(
                                 text = "成功",
-                                fontSize = 12.sp,
+                                style = MiuixTheme.textStyles.footnote1,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.White,
                             )
@@ -876,13 +875,13 @@ private fun TargetCard(
                 ) {
                     Text(
                         text = "尝试 ${target.attempts} 次",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                     )
                     if (target.lastMessage.isNotBlank()) {
                         Text(
                             text = target.lastMessage,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = when {
                                 target.succeeded -> StatusColors.healthy
                                 else -> colors.onSurfaceVariantSummary
@@ -949,7 +948,7 @@ private fun SelectedCourseCard(
                 ) {
                     Text(
                         text = course.courseName.ifBlank { "未命名课程" },
-                        fontSize = 15.sp,
+                        style = MiuixTheme.textStyles.body1,
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -960,7 +959,7 @@ private fun SelectedCourseCard(
                     } else {
                         Text(
                             text = "不可退",
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }
@@ -968,7 +967,7 @@ private fun SelectedCourseCard(
                 Text(
                     text = "班次 ${course.kxh}" +
                         (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = colors.onSurfaceVariantSummary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -982,23 +981,23 @@ private fun SelectedCourseCard(
                 ) {
                     Text(
                         text = course.creditText(),
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                     )
                     Text(
                         text = if (expanded) "收起" else "详情",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.primary,
                     )
                 }
                 if (expanded) {
                     val place = course.cleanPlace()
                     if (place.isNotBlank()) {
-                        Text(text = "地点：$place", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                        Text(text = "地点：$place", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceVariantSummary)
                     }
                     val time = course.cleanTime()
                     if (time.isNotBlank()) {
-                        Text(text = "时间：$time", fontSize = 12.sp, color = colors.onSurfaceVariantSummary)
+                        Text(text = "时间：$time", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceVariantSummary)
                     }
                 }
             }
@@ -1032,7 +1031,7 @@ private fun ActionChip(
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
-        Text(text = text, fontSize = 12.sp, color = fg)
+        Text(text = text, style = MiuixTheme.textStyles.footnote1, color = fg)
     }
 }
 
@@ -1064,9 +1063,9 @@ private fun SearchSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (loading) {
-                Text(text = "搜索中...", fontSize = 12.sp, color = colors.primary)
+                Text(text = "搜索中...", style = MiuixTheme.textStyles.footnote1, color = colors.primary)
             } else if (hasFilter) {
-                Text(text = "已筛选", fontSize = 12.sp, color = colors.primary)
+                Text(text = "已筛选", style = MiuixTheme.textStyles.footnote1, color = colors.primary)
             } else {
                 Spacer(modifier = Modifier.size(0.dp))
             }
@@ -1078,7 +1077,7 @@ private fun SearchSection(
                         .clickable { onClear() }
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    Text(text = "清除筛选", fontSize = 12.sp, color = colors.onSurfaceContainer)
+                    Text(text = "清除筛选", style = MiuixTheme.textStyles.footnote1, color = colors.onSurfaceContainer)
                 }
             }
         }
@@ -1114,7 +1113,7 @@ private fun SnatchConfigSection(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "请求间隔",
-                fontSize = 13.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = MiuixTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
             )
@@ -1132,7 +1131,7 @@ private fun SnatchConfigSection(
             )
             Text(
                 text = "建议 500-2000ms，过快可能触发教务系统风控",
-                fontSize = 12.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = summaryColor,
             )
         }
@@ -1143,7 +1142,7 @@ private fun SnatchConfigSection(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "最大尝试次数",
-                fontSize = 13.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = MiuixTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
             )
@@ -1161,7 +1160,7 @@ private fun SnatchConfigSection(
             )
             Text(
                 text = "0 = 无限重试，直到成功或手动停止",
-                fontSize = 12.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = summaryColor,
             )
         }
@@ -1199,14 +1198,14 @@ private fun LogItem(log: SelectionLog) {
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = log.time,
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = colors.onSurfaceVariantSummary,
             fontFamily = FontFamily.Monospace,
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = log.message,
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = textColor,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.weight(1f),

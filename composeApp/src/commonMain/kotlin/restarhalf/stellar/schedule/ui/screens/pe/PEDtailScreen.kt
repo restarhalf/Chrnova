@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -118,7 +117,7 @@ fun PEDetailScreen(
                                 .background(colors.surfaceContainerHigh)
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(fontSize = 12.sp, text = statusText ?: "")
+                            Text(style = MiuixTheme.textStyles.footnote1, text = statusText ?: "")
                         }
                     }
                 }
@@ -170,10 +169,10 @@ fun PEDetailScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(text = "总分", fontSize = 16.sp)
+                                        Text(text = "总分", style = MiuixTheme.textStyles.body1)
                                         Text(
                                             text = "${data.totalScore}分",
-                                            fontSize = 18.sp,
+                                            style = MiuixTheme.textStyles.title4,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
@@ -181,10 +180,10 @@ fun PEDetailScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text(text = "等级", fontSize = 16.sp)
+                                        Text(text = "等级", style = MiuixTheme.textStyles.body1)
                                         Text(
                                             text = data.totalGrade,
-                                            fontSize = 16.sp,
+                                            style = MiuixTheme.textStyles.body1,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
@@ -211,19 +210,19 @@ fun PEDetailScreen(
                                     ) {
                                         Text(
                                             text = subject.subName,
-                                            fontSize = 16.sp,
+                                            style = MiuixTheme.textStyles.body1,
                                             fontWeight = FontWeight.Bold
                                         )
                                         if (subject.isJoin == 1) {
                                             Text(
                                                 text = "${subject.score ?: "--"}分",
-                                                fontSize = 18.sp,
+                                                style = MiuixTheme.textStyles.title4,
                                                 fontWeight = FontWeight.SemiBold
                                             )
                                         } else {
                                             Text(
                                                 text = "未参加",
-                                                fontSize = 14.sp,
+                                                style = MiuixTheme.textStyles.body2,
                                                 color = colors.onSurfaceVariantSummary
                                             )
                                         }
@@ -235,12 +234,12 @@ fun PEDetailScreen(
                                         ) {
                                             Text(
                                                 text = "成绩",
-                                                fontSize = 14.sp,
+                                                style = MiuixTheme.textStyles.body2,
                                                 color = colors.onSurfaceVariantSummary
                                             )
                                             Text(
                                                 text = "${subject.result ?: "--"}${subject.unit}",
-                                                fontSize = 14.sp
+                                                style = MiuixTheme.textStyles.body2
                                             )
                                         }
                                         Row(
@@ -249,10 +248,10 @@ fun PEDetailScreen(
                                         ) {
                                             Text(
                                                 text = "等级",
-                                                fontSize = 14.sp,
+                                                style = MiuixTheme.textStyles.body2,
                                                 color = colors.onSurfaceVariantSummary
                                             )
-                                            Text(text = subject.grade ?: "--", fontSize = 14.sp)
+                                            Text(text = subject.grade ?: "--", style = MiuixTheme.textStyles.body2)
                                         }
                                     }
                                     Row(
@@ -261,10 +260,10 @@ fun PEDetailScreen(
                                     ) {
                                         Text(
                                             text = "占比",
-                                            fontSize = 14.sp,
+                                            style = MiuixTheme.textStyles.body2,
                                             color = colors.onSurfaceVariantSummary
                                         )
-                                        Text(text = "${subject.subRatio}%", fontSize = 14.sp)
+                                        Text(text = "${subject.subRatio}%", style = MiuixTheme.textStyles.body2)
                                     }
                                 }
                             }

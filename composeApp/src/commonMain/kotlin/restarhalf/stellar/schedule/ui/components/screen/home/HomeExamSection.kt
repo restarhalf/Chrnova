@@ -19,9 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun HomeExamSection(
@@ -32,7 +32,7 @@ fun HomeExamSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(text = "考试安排", fontSize = 14.sp, color = textSecondary)
+        Text(text = "考试安排", style = MiuixTheme.textStyles.body2, color = textSecondary)
         exams.forEach { exam ->
             ExamRow(
                 exam = exam,
@@ -80,8 +80,8 @@ private fun ExamRow(
             modifier = Modifier.width(56.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(text = exam.startTime, fontSize = 13.sp, color = textSecondary)
-            Text(text = exam.endTime, fontSize = 13.sp, color = textSecondary)
+            Text(text = exam.startTime, style = MiuixTheme.textStyles.footnote1, color = textSecondary)
+            Text(text = exam.endTime, style = MiuixTheme.textStyles.footnote1, color = textSecondary)
         }
         Box(
             modifier = Modifier
@@ -96,7 +96,7 @@ private fun ExamRow(
         ) {
             Text(
                 text = exam.title,
-                fontSize = 16.sp,
+                style = MiuixTheme.textStyles.body1,
                 fontWeight = if (exam.isEnded) FontWeight.Normal else FontWeight.SemiBold,
                 color = currentPrimaryTextColor,
                 maxLines = 1,
@@ -104,7 +104,7 @@ private fun ExamRow(
             )
             Text(
                 text = exam.location,
-                fontSize = 13.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -113,7 +113,7 @@ private fun ExamRow(
         if (status.isNotEmpty()) {
             Text(
                 text = status,
-                fontSize = 13.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = textSecondary,
                 modifier = Modifier.padding(start = 8.dp)
             )

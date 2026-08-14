@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoEditCard
@@ -43,8 +42,8 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 @Composable
 fun ProfileScreen(
@@ -236,7 +235,7 @@ fun ProfileScreen(
                             ) {
                                 Text(
                                     text = "退出登录",
-                                    fontSize = 15.sp,
+                                    style = MiuixTheme.textStyles.body1,
                                     color = colors.error,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -276,7 +275,7 @@ fun ProfileScreen(
                             ) {
                                 Text(
                                     text = "退出登录",
-                                    fontSize = 15.sp,
+                                    style = MiuixTheme.textStyles.body1,
                                     color = colors.error,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -311,12 +310,12 @@ private fun ProfileInfoRow(
     ) {
         Text(
             text = label,
-            fontSize = 15.sp,
+            style = MiuixTheme.textStyles.body1,
             color = colors.onSurfaceVariantSummary,
         )
         Text(
             text = value,
-            fontSize = 15.sp,
+            style = MiuixTheme.textStyles.body1,
             fontWeight = FontWeight.Medium,
             color = colors.onBackground,
         )

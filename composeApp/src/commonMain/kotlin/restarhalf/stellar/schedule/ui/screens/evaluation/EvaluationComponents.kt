@@ -31,7 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
@@ -40,7 +40,6 @@ import restarhalf.stellar.schedule.ui.icons.Favorite
 import restarhalf.stellar.schedule.ui.icons.Star
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
-import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
@@ -218,7 +217,7 @@ fun LikeButton(
         )
         Text(
             text = likes.toString(),
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = if (liked) colors.primary else colors.onSurfaceVariantSummary,
         )
     }
@@ -250,7 +249,7 @@ fun EvaluationStatusPill(
         ) {
             Text(
                 text = text,
-                fontSize = 12.sp,
+                style = MiuixTheme.textStyles.footnote1,
                 color = colors.onSurfaceVariantSummary,
             )
         }
@@ -281,7 +280,7 @@ fun EvaluationTag(
     ) {
         Text(
             text = text,
-            fontSize = 11.sp,
+            style = MiuixTheme.textStyles.footnote2,
             color = contentColor,
             fontWeight = FontWeight.Medium,
         )
@@ -349,7 +348,7 @@ fun EvaluationListItem(
                 if (showCourseName) {
                     Text(
                         text = evaluation.courseName.ifEmpty { "未命名课程" },
-                        fontSize = 15.sp,
+                        style = MiuixTheme.textStyles.body1,
                         fontWeight = FontWeight.Bold,
                         color = colors.onSurface,
                         maxLines = 1,
@@ -372,7 +371,7 @@ fun EvaluationListItem(
                     }
                     Text(
                         text = evaluation.teacher.ifEmpty { "教师未知" },
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -385,7 +384,7 @@ fun EvaluationListItem(
                 if (evaluation.content.isNotBlank()) {
                     Text(
                         text = evaluation.content,
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
@@ -401,7 +400,7 @@ fun EvaluationListItem(
                 ) {
                     Text(
                         text = if (evaluation.anonymous) "匿名" else evaluation.author.ifEmpty { "匿名" },
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
@@ -459,7 +458,7 @@ fun CourseSummaryCard(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = summary.courseName.ifEmpty { "未命名课程" },
-                    fontSize = 16.sp,
+                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.onSurface,
                     maxLines = 2,
@@ -485,14 +484,14 @@ fun CourseSummaryCard(
                 ) {
                     Text(
                         text = DecimalFormatter.format(summary.avgRating, 1),
-                        fontSize = 22.sp,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
                         color = colors.primary,
                     )
                     HalfStarRatingDisplay(rating = summary.avgRating, starSize = 11)
                     Text(
                         text = "平均分",
-                        fontSize = 11.sp,
+                        style = MiuixTheme.textStyles.footnote2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -509,13 +508,13 @@ fun CourseSummaryCard(
                 ) {
                     Text(
                         text = summary.evalCount.toString(),
-                        fontSize = 22.sp,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
                         color = colors.onSurface,
                     )
                     Text(
                         text = "条评价",
-                        fontSize = 11.sp,
+                        style = MiuixTheme.textStyles.footnote2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -532,13 +531,13 @@ fun CourseSummaryCard(
                 ) {
                     Text(
                         text = formatLatestTime(summary.latestAt),
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.onSurface,
                     )
                     Text(
                         text = "最近评价",
-                        fontSize = 11.sp,
+                        style = MiuixTheme.textStyles.footnote2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -595,7 +594,7 @@ fun CourseHeroCard(
             ) {
                 Text(
                     text = courseName.ifEmpty { "未命名课程" },
-                    fontSize = 18.sp,
+                    style = MiuixTheme.textStyles.title4,
                     fontWeight = FontWeight.Bold,
                     color = colors.onSurface,
                     maxLines = 2,
@@ -612,7 +611,7 @@ fun CourseHeroCard(
                     ) {
                         Text(
                             text = DecimalFormatter.format(summary.avgRating, 1),
-                            fontSize = 32.sp,
+                            style = MiuixTheme.textStyles.title1,
                             fontWeight = FontWeight.Bold,
                             color = colors.primary,
                         )
@@ -620,7 +619,7 @@ fun CourseHeroCard(
                             HalfStarRatingDisplay(rating = summary.avgRating, starSize = 14)
                             Text(
                                 text = "${summary.evalCount} 条评价",
-                                fontSize = 12.sp,
+                                style = MiuixTheme.textStyles.footnote1,
                                 color = colors.onSurfaceVariantSummary,
                             )
                         }
@@ -675,7 +674,7 @@ fun EvaluationDetailHero(
             ) {
                 Text(
                     text = evaluation.courseName.ifEmpty { "未命名课程" },
-                    fontSize = 18.sp,
+                    style = MiuixTheme.textStyles.title4,
                     fontWeight = FontWeight.Bold,
                     color = colors.onSurface,
                     maxLines = 2,
@@ -691,7 +690,7 @@ fun EvaluationDetailHero(
                 ) {
                     Text(
                         text = "${evaluation.rating}",
-                        fontSize = 28.sp,
+                        style = MiuixTheme.textStyles.title2,
                         fontWeight = FontWeight.Bold,
                         color = StarFilledColor,
                     )
@@ -699,7 +698,7 @@ fun EvaluationDetailHero(
                         StarRatingDisplay(rating = evaluation.rating, starSize = 16)
                         Text(
                             text = "/ 5 分",
-                            fontSize = 11.sp,
+                            style = MiuixTheme.textStyles.footnote2,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }

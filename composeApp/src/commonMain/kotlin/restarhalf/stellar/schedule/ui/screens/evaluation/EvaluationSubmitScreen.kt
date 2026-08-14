@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
@@ -236,7 +235,7 @@ fun EvaluationSubmitScreen(
                         Text(
                             text = "你还没有已选课程，无法提交评价。请先在课表中同步你的课程。",
                             modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            fontSize = 14.sp,
+                            style = MiuixTheme.textStyles.body2,
                             color = colors.error,
                         )
                     }
@@ -295,7 +294,7 @@ fun EvaluationSubmitScreen(
                                 ) {
                                     Text(
                                         text = "评分",
-                                        fontSize = 13.sp,
+                                        style = MiuixTheme.textStyles.footnote1,
                                         color = colors.onSurfaceVariantSummary,
                                     )
                                     if (rating > 0) {
@@ -308,14 +307,14 @@ fun EvaluationSubmitScreen(
                                         ) {
                                             Text(
                                                 text = "$rating",
-                                                fontSize = 12.sp,
+                                                style = MiuixTheme.textStyles.footnote1,
                                                 color = colors.primary,
                                                 fontWeight = FontWeight.Bold,
                                             )
                                         }
                                         Text(
                                             text = "/ 5",
-                                            fontSize = 12.sp,
+                                            style = MiuixTheme.textStyles.footnote1,
                                             color = colors.onSurfaceVariantSummary,
                                         )
                                     }
@@ -323,7 +322,7 @@ fun EvaluationSubmitScreen(
                                 StarRatingInput(rating = rating, onRatingChanged = { rating = it })
                                 Text(
                                     text = ratingHint(rating),
-                                    fontSize = 11.sp,
+                                    style = MiuixTheme.textStyles.footnote2,
                                     color = colors.onSurfaceVariantSummary.copy(alpha = 0.85f),
                                 )
                             }
@@ -346,7 +345,7 @@ fun EvaluationSubmitScreen(
                                 ) {
                                     Text(
                                         text = "${content.length} / $MAX_CONTENT_LENGTH",
-                                        fontSize = 11.sp,
+                                        style = MiuixTheme.textStyles.footnote2,
                                         color = if (content.length >= MAX_CONTENT_LENGTH) {
                                             colors.error
                                         } else {

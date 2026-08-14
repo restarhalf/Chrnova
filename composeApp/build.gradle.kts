@@ -118,7 +118,6 @@ kotlin {
     iosArm64 {
         binaries.framework {
             export(libs.lifecycle.viewmodel)
-            export(libs.lifecycle.viewmodel.navigation3)
             baseName = "ComposeApp"
             isStatic = true
             binaryOption("bundleId", "restarhalf.stellar.schedule.composeapp")
@@ -140,12 +139,11 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.navigationevent)
                 implementation(libs.miuix.ui)
                 implementation(libs.miuix.blur)
                 implementation(libs.miuix.preference)
-                implementation(libs.miuix.navigation3.ui)
+                implementation(libs.miuix.nav)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.network.ktor3)
                 implementation(libs.markdown.renderer)
@@ -166,7 +164,6 @@ kotlin {
                 implementation(libs.lifecycle.runtime.compose)
                 implementation(libs.kotlinx.collections.immutable)
                 api(libs.lifecycle.viewmodel)
-                api(libs.lifecycle.viewmodel.navigation3)
             }
         }
         androidMain.dependencies {

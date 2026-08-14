@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.ui.screens.foodroulette
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -175,7 +174,7 @@ fun FoodRouletteScreen(
             ) {
                 Text(
                     text = "随机",
-                    fontSize = 16.sp,
+                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Medium,
                     color = colors.onPrimary,
                 )
@@ -196,7 +195,7 @@ fun FoodRouletteScreen(
             ) {
                 Text(
                     text = "选这个，看二维码",
-                    fontSize = 16.sp,
+                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Medium,
                 )
             }

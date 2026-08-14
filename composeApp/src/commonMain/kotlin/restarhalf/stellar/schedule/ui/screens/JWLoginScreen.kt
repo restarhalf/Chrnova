@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -25,7 +24,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -165,13 +164,13 @@ fun JWLoginScreen(
                         Text(
                             text = "密码包含中文字符了，确定吗",
                             color = colors.error,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                         )
                     }
                     Text(
                         text = uiState.error,
                         color = colors.error,
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                     )
                 }
             }
@@ -183,12 +182,12 @@ fun JWLoginScreen(
                     ) {
                         Text(
                             text = "此为教务系统账号登录",
-                            fontSize = 15.sp,
+                            style = MiuixTheme.textStyles.body1,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = "账号是你的学号，密码是新教务系统的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取课程和考务等",
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }

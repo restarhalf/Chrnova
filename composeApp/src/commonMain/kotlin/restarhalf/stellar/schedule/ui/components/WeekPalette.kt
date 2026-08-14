@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -101,7 +100,7 @@ fun WeekPalette(
                         Text(
                             text = week.toString(),
                             textAlign = TextAlign.Center,
-                            fontSize = 13.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             fontWeight = FontWeight.Medium,
                             color = fg,
                         )

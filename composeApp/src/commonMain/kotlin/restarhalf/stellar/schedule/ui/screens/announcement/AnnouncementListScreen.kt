@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -107,7 +106,7 @@ fun AnnouncementListScreen(
                                     .background(colors.surfaceContainerHigh)
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
-                            Text(fontSize = 12.sp, text = uiState.error ?: "")
+                            Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error ?: "")
                         }
                     }
                 }
@@ -153,7 +152,7 @@ fun AnnouncementListScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),
-                            fontSize = 14.sp,
+                            style = MiuixTheme.textStyles.body2,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }
@@ -187,7 +186,7 @@ fun AnnouncementListScreen(
                                 if (date.isNotEmpty()) {
                                     Text(
                                         text = date,
-                                        fontSize = 12.sp,
+                                        style = MiuixTheme.textStyles.footnote1,
                                         color = colors.onSurfaceVariantSummary,
                                     )
                                 }

@@ -63,18 +63,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import restarhalf.stellar.schedule.ui.modifier.InnerShadow
-import restarhalf.stellar.schedule.ui.modifier.innerShadow
-import restarhalf.stellar.schedule.ui.modifier.lens
-import restarhalf.stellar.schedule.ui.modifier.rememberCombinedBackdrop
-import restarhalf.stellar.schedule.ui.modifier.vibrancy
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.ui.components.animation.DampedDragAnimation
 import restarhalf.stellar.schedule.ui.components.animation.InteractiveHighlight
+import restarhalf.stellar.schedule.ui.modifier.InnerShadow
+import restarhalf.stellar.schedule.ui.modifier.innerShadow
+import restarhalf.stellar.schedule.ui.modifier.lens
+import restarhalf.stellar.schedule.ui.modifier.rememberCombinedBackdrop
+import restarhalf.stellar.schedule.ui.modifier.vibrancy
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -326,7 +325,7 @@ internal fun GlassNavigationBar(
                 Text(
                     text = item.label,
                     color = tabContentColor,
-                    fontSize = 11.sp,
+                    style = MiuixTheme.textStyles.footnote2,
                     fontWeight = FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

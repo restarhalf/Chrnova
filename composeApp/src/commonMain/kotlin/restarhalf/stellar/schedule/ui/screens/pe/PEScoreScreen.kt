@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.AuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.QrCode
@@ -122,7 +121,7 @@ fun PEScoreScreen(
                                 .background(colors.surfaceContainerHigh)
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(fontSize = 12.sp, text = statusText ?: "")
+                            Text(style = MiuixTheme.textStyles.footnote1, text = statusText ?: "")
                         }
                     }
                 }
@@ -188,18 +187,18 @@ fun PEScoreScreen(
                                     val nextYear = score.schoolYear.toInt() + 1
                                     Text(
                                         text = "${score.schoolYear}-${nextYear}学年",
-                                        fontSize = 15.sp,
+                                        style = MiuixTheme.textStyles.body1,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = "已测 ${score.done}/${score.nums}",
-                                        fontSize = 12.sp,
+                                        style = MiuixTheme.textStyles.footnote1,
                                         color = colors.onSurfaceVariantSummary
                                     )
                                 }
                                 Text(
                                     text = if (score.isFree == 0) "${score.total}分" else "免测",
-                                    fontSize = 18.sp,
+                                    style = MiuixTheme.textStyles.title4,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }

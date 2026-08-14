@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.basic.Text
@@ -58,7 +57,7 @@ fun AnnouncementBadge(
     ) {
         Text(
             text = text,
-            fontSize = 10.sp,
+            style = MiuixTheme.textStyles.footnote2,
             fontWeight = FontWeight.Medium,
             color = color,
         )
@@ -100,7 +99,7 @@ fun AnnouncementTitleRow(
         }
         Text(
             text = title,
-            fontSize = 15.sp,
+            style = MiuixTheme.textStyles.body1,
             fontWeight = FontWeight.Medium,
             color = colors.onSurface,
             maxLines = 1,

@@ -35,12 +35,8 @@ data class AppState(
     val enablePageUserScroll: Boolean = true,
     /** 是否启用页面角落裁剪效果 */
     val enableCornerClip: Boolean = true,
-    /** 是否启用页面遮罩效果 */
-    val enableDim: Boolean = true,
     /** 页面切换时是否阻塞用户输入 */
     val blockInputDuringTransition: Boolean = true,
-    /** 弹出方向是否跟随滑动边缘 */
-    val popDirectionFollowsSwipeEdge: Boolean = false,
 )
 
 /**

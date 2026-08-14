@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.alexzhirkevich.qrose.options.QrErrorCorrectionLevel
 import io.github.alexzhirkevich.qrose.options.QrOptions
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
@@ -96,7 +95,7 @@ fun FoodQRCodeScreen(
                 ) {
                     Text(
                         text = food.name,
-                        fontSize = 22.sp,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
                         color = colors.onBackground,
                     )
@@ -131,7 +130,7 @@ fun FoodQRCodeScreen(
 
                     Text(
                         text = "扫码点餐",
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary,
                         textAlign = TextAlign.Center,
                     )

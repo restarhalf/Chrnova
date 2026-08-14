@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 import org.koin.compose.koinInject
@@ -81,7 +80,7 @@ fun EnterScreen(
             Text(
                 text = appName,
                 color = colors.onBackground,
-                fontSize = 39.sp,
+                style = MiuixTheme.textStyles.title1,
                 fontWeight = FontWeight(560)
             )
             Text(
@@ -104,7 +103,7 @@ fun EnterScreen(
             Text(
                 text = "进入软件",
                 modifier = Modifier.padding(horizontal = 12.dp),
-                fontSize = 18.sp,
+                style = MiuixTheme.textStyles.title4,
                 color = colors.onPrimary,
                 fontWeight = FontWeight.Bold
             )

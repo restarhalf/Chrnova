@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -171,7 +170,7 @@ fun PapersUploadScreen(
                     Text(
                         text = uiState.error ?: "",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.error,
                     )
                 }
@@ -179,7 +178,7 @@ fun PapersUploadScreen(
                     Text(
                         text = uiState.successMessage ?: "",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.primary,
                     )
                 }

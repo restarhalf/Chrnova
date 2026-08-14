@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Text
@@ -92,12 +91,12 @@ private fun SummaryItem(
         Text(
             text = value,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
+            style = MiuixTheme.textStyles.title4,
             color = valueColor,
         )
         Text(
             text = label,
-            fontSize = 12.sp,
+            style = MiuixTheme.textStyles.footnote1,
             color = colors.onSurfaceVariantSummary,
         )
     }

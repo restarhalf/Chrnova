@@ -44,11 +44,13 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import chrnova.composeapp.generated.resources.Res
+import chrnova.composeapp.generated.resources.alipay
+import chrnova.composeapp.generated.resources.wxpay
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import org.jetbrains.compose.resources.DrawableResource
+import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.ui.blur.BlurredBar
@@ -62,12 +64,10 @@ import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialo
 import restarhalf.stellar.schedule.ui.effect.BgEffectBackground
 import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
-import chrnova.composeapp.generated.resources.Res
-import chrnova.composeapp.generated.resources.alipay
-import chrnova.composeapp.generated.resources.wxpay
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -77,7 +77,6 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurBlendMode
@@ -444,7 +443,7 @@ private fun AboutContent(
                 text = appName,
                 color = colors.onBackground,
                 fontWeight = FontWeight.Bold,
-                fontSize = 35.sp,
+                style = MiuixTheme.textStyles.title1,
             )
             Text(
                 modifier = Modifier
@@ -456,7 +455,7 @@ private fun AboutContent(
                     },
                 color = colors.onSurfaceVariantSummary,
                 text = screenUi.versionDisplay,
-                fontSize = 14.sp,
+                style = MiuixTheme.textStyles.body2,
                 textAlign = TextAlign.Center,
             )
         }

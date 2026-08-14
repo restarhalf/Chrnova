@@ -27,13 +27,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 /**
  * 考试项目卡片组件
@@ -92,34 +91,34 @@ fun ExamItemCard(
                     Text(
                         text = card.title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        style = MiuixTheme.textStyles.body1,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                         Text(
                             text = card.dateText,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = summary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = card.timeText,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = summary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = card.locationText,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = summary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = card.seatText,
-                            fontSize = 12.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = summary
                         )
                     val remarkText = card.remarkText
@@ -131,7 +130,7 @@ fun ExamItemCard(
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                                     .align(Alignment.End)
                         ) {
-                            Text(text = remarkText, fontSize = 11.sp, color = summary)
+                            Text(text = remarkText, style = MiuixTheme.textStyles.footnote2, color = summary)
                         }
                     }
                 }
@@ -154,7 +153,7 @@ fun ExamItemCard(
                         Text(
                             text = "已结束",
                             color = Color.White,
-                            fontSize = 11.sp
+                            style = MiuixTheme.textStyles.footnote2
                         )
                     }
                 }

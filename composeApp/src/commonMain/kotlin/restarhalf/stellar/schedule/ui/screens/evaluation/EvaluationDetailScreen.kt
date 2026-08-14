@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -213,7 +212,7 @@ fun EvaluationDetailScreen(
                     Text(
                         text = "加载中...",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -234,7 +233,7 @@ fun EvaluationDetailScreen(
                             Text(
                                 text = evaluation.content.ifEmpty { "（无内容）" },
                                 modifier = Modifier.fillMaxWidth(),
-                                fontSize = 14.sp,
+                                style = MiuixTheme.textStyles.body2,
                                 color = colors.onSurface,
                             )
                             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

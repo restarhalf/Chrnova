@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
@@ -101,7 +100,7 @@ fun GradeItemCard(
                             ) {
                                 Text(
                                     text = "挂科",
-                                    fontSize = 11.sp,
+                                    style = MiuixTheme.textStyles.footnote2,
                                     color = colors.onSecondary
                                 )
                             }
@@ -115,14 +114,14 @@ fun GradeItemCard(
                             ) {
                                 Text(
                                     text = "补考",
-                                    fontSize = 11.sp,
+                                    style = MiuixTheme.textStyles.footnote2,
                                     color = colors.onSecondary
                                 )
                             }
                         }
                         Text(
                             text = card.title,
-                            fontSize = 15.sp,
+                            style = MiuixTheme.textStyles.body1,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -131,7 +130,7 @@ fun GradeItemCard(
                     }
                     Text(
                         text = card.subtitle,
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = summary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -144,11 +143,11 @@ fun GradeItemCard(
                     Text(
                         text = card.scoreText,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp
+                        style = MiuixTheme.textStyles.title4
                     )
                     Text(
                         text = card.jdText,
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = summary,
                     )
                 }

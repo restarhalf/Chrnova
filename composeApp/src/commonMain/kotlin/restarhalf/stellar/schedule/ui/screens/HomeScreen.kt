@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
@@ -137,13 +136,13 @@ fun HomeScreen(
                     Text(
                         text = headerUi.dateLabel,
                         color = colors.onPrimary,
-                        fontSize = 14.sp
+                        style = MiuixTheme.textStyles.body2
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = headerUi.greeting,
                         color = colors.onPrimary,
-                        fontSize = 30.sp,
+                        style = MiuixTheme.textStyles.title1,
                         fontWeight = FontWeight.Bold
                     )
                 }

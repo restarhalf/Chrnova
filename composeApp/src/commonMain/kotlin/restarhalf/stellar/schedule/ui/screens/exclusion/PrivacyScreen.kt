@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import chrnova.composeapp.generated.resources.Res
 import chrnova.composeapp.generated.resources.ic_privacy
 import kotlinx.coroutines.launch
@@ -57,7 +56,7 @@ fun PrivacyScreen(
 
         Text(
             text = "隐私政策",
-            fontSize = 20.sp,
+            style = MiuixTheme.textStyles.title3,
             fontWeight = FontWeight.SemiBold
         )
 

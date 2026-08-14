@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,9 +35,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.domain.model.GradeCourse
+import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
@@ -48,7 +48,6 @@ import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
-import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Icon
@@ -124,7 +123,7 @@ fun ElectiveCreditScreen(
                                 .background(colors.surfaceContainerHigh)
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(fontSize = 12.sp, text = uiState.error)
+                            Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error)
                         }
                     }
                 }
@@ -215,27 +214,27 @@ private fun CategoryCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = category.code,
-                        fontSize = 18.sp,
+                        style = MiuixTheme.textStyles.title4,
                         fontWeight = FontWeight.Bold,
                         color = accentColor
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = category.name,
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = formatCredits(category.credits),
-                        fontSize = 20.sp,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
                         color = accentColor,
                     )
                     Text(
                         text = "${category.courses.size}门课程",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary
                     )
                 }

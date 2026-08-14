@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
@@ -56,7 +55,7 @@ fun StarVerificationDialog(
                 error?.let {
                     Text(
                         text = it,
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.error,
                     )
                 }

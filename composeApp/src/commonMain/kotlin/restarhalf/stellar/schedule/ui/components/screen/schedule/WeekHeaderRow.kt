@@ -18,9 +18,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 周次头部行组件
@@ -51,7 +51,7 @@ fun WeekHeaderRow(
             ) {
                 Text(
                     text = day,
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
                     color = if (isToday) primary else textSecondary,
                     maxLines = 1
@@ -68,7 +68,7 @@ fun WeekHeaderRow(
                 ) {
                     Text(
                         text = date,
-                        fontSize = 10.sp,
+                        style = MiuixTheme.textStyles.footnote2,
                         fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                         color = if (isToday) Color.White else textSecondary,
                         maxLines = 1,

@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -44,13 +43,13 @@ fun PersonalInfoCard(
         ) {
             Text(
                 text = nickname,
-                fontSize = 18.sp,
+                style = MiuixTheme.textStyles.title4,
                 fontWeight = FontWeight.Medium,
                 color = colors.onBackground,
             )
             Text(
                 text = academyName,
-                fontSize = 14.sp,
+                style = MiuixTheme.textStyles.body2,
                 color = colors.onSurfaceVariantSummary,
             )
         }

@@ -31,7 +31,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -47,7 +46,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.domain.model.Examination
@@ -187,7 +186,7 @@ fun EMSScreen(
                                 .background(colors.surfaceContainerHigh)
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(fontSize = 12.sp, text = statusText ?: "")
+                            Text(style = MiuixTheme.textStyles.footnote1, text = statusText ?: "")
                         }
                     }
                 }
@@ -290,28 +289,28 @@ fun EMSScreen(
                                             ) {
                                                 Text(
                                                     text = "",
-                                                    fontSize = 12.sp,
+                                                    style = MiuixTheme.textStyles.footnote1,
                                                     color = colors.onSurfaceVariantSummary
                                                 )
                                                 Text(
                                                     text = "",
-                                                    fontSize = 12.sp,
+                                                    style = MiuixTheme.textStyles.footnote1,
                                                     color = colors.onSurfaceVariantSummary
                                                 )
                                                 Text(
                                                     text = "添加考试",
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 15.sp,
+                                                    style = MiuixTheme.textStyles.body1,
                                                     color = colors.primary
                                                 )
                                                 Text(
                                                     text = "",
-                                                    fontSize = 12.sp,
+                                                    style = MiuixTheme.textStyles.footnote1,
                                                     color = colors.onSurfaceVariantSummary
                                                 )
                                                 Text(
                                                     text = "",
-                                                    fontSize = 12.sp,
+                                                    style = MiuixTheme.textStyles.footnote1,
                                                     color = colors.onSurfaceVariantSummary
                                                 )
                                             }

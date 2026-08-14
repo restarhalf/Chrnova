@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.alexzhirkevich.qrose.options.QrErrorCorrectionLevel
 import io.github.alexzhirkevich.qrose.options.QrOptions
@@ -108,7 +107,7 @@ fun PEQRCodeScreen(
                     ) {
                         Text(
                             text = "体测二维码",
-                            fontSize = 20.sp,
+                            style = MiuixTheme.textStyles.title3,
                             fontWeight = FontWeight.Bold,
                             color = colors.onBackground,
                         )
@@ -117,7 +116,7 @@ fun PEQRCodeScreen(
 
                         Text(
                             text = "请将此二维码展示给体测老师扫描",
-                            fontSize = 13.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                         )
 
@@ -164,12 +163,12 @@ fun PEQRCodeScreen(
                                 ) {
                                     Text(
                                         text = "学号",
-                                        fontSize = 14.sp,
+                                        style = MiuixTheme.textStyles.body2,
                                         color = colors.onSurfaceVariantSummary,
                                     )
                                     Text(
                                         text = id,
-                                        fontSize = 14.sp,
+                                        style = MiuixTheme.textStyles.body2,
                                         fontWeight = FontWeight.Medium,
                                     )
                                 }
@@ -179,12 +178,12 @@ fun PEQRCodeScreen(
                                 ) {
                                     Text(
                                         text = "姓名",
-                                        fontSize = 14.sp,
+                                        style = MiuixTheme.textStyles.body2,
                                         color = colors.onSurfaceVariantSummary,
                                     )
                                     Text(
                                         text = name,
-                                        fontSize = 14.sp,
+                                        style = MiuixTheme.textStyles.body2,
                                         fontWeight = FontWeight.Medium,
                                     )
                                 }
@@ -207,13 +206,13 @@ fun PEQRCodeScreen(
                     ) {
                         Text(
                             text = "暂无学生信息",
-                            fontSize = 16.sp,
+                            style = MiuixTheme.textStyles.body1,
                             color = colors.onSurfaceVariantSummary,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "请先登录教务系统或体测系统",
-                            fontSize = 13.sp,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                         )
                     }

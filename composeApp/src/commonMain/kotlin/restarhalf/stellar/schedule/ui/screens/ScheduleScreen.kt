@@ -45,7 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -158,6 +157,7 @@ fun ScheduleScreen(
     val restHeight = 24.dp
     val cellInset = 0.5.dp
     val restBarTextMeasurer = rememberTextMeasurer()
+    val footnoteStyle = MiuixTheme.textStyles.footnote1
 
     val effectiveCoursesCache =
         remember(courses) { mutableMapOf<Int, List<restarhalf.stellar.schedule.domain.model.Course>>() }
@@ -303,7 +303,7 @@ fun ScheduleScreen(
                             items(conflicts, key = { it.id }) { c ->
                                 Text(
                                     text = "${c.name} \n@${c.location}   |   第${c.startSection}-${c.startSection + c.sectionCount - 1}节",
-                                    fontSize = 16.sp
+                                    style = MiuixTheme.textStyles.body1
                                 )
                             }
 
@@ -539,10 +539,7 @@ fun ScheduleScreen(
                                         val textLayout =
                                             restBarTextMeasurer.measure(
                                                 text = label,
-                                                style = TextStyle(
-                                                    fontSize = 12.sp,
-                                                    color = textSecondary,
-                                                ),
+                                                style = footnoteStyle.copy(color = textSecondary),
                                             )
 
                                         drawText(
@@ -638,7 +635,7 @@ private fun ScheduleSectionLabels(
                 ) {
                     Text(
                         text = section.toString(),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         fontWeight = FontWeight.Bold,
                         color = textSecondary
                     )

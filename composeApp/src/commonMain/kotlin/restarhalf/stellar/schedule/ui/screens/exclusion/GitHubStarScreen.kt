@@ -75,14 +75,14 @@ fun GitHubStarScreen(pagerState: PagerState, onStarClick: () -> Unit, onNext: ()
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = "喜欢这个应用吗？",
-                fontSize = 28.sp,
+                style = MiuixTheme.textStyles.title2,
                 fontWeight = FontWeight.Medium,
                 color = colors.onBackground
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "如果 Chrnova 帮助到了你\n请在 GitHub 上给我一个 Star",
-                fontSize = 16.sp,
+                style = MiuixTheme.textStyles.body1,
                 color = colors.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
@@ -90,7 +90,7 @@ fun GitHubStarScreen(pagerState: PagerState, onStarClick: () -> Unit, onNext: ()
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Star 是对我最大的鼓励",
-                fontSize = 14.sp,
+                style = MiuixTheme.textStyles.body2,
                 color = colors.onBackground.copy(alpha = 0.5f)
             )
         }

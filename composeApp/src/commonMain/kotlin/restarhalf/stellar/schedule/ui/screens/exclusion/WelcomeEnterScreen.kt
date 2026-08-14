@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.ui.icons.Forward
@@ -76,7 +75,7 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
         ) {
             Text(
                 text = "欢迎使用",
-                fontSize = 24.sp,
+                style = MiuixTheme.textStyles.title2,
                 fontWeight = FontWeight.Medium,
                 color = colors.onBackground.copy(alpha = 0.75f)
             )
@@ -84,7 +83,7 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
             Text(
                 text = appName,
                 color = colors.onBackground,
-                fontSize = 39.sp,
+                style = MiuixTheme.textStyles.title1,
                 fontWeight = FontWeight(560)
             )
         }

@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -121,7 +120,7 @@ fun AnnouncementDetailScreen(
                             Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -135,7 +134,7 @@ fun AnnouncementDetailScreen(
                             Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.error,
                     )
                 }
@@ -165,7 +164,7 @@ fun AnnouncementDetailScreen(
                         }
                         Text(
                             text = announcement.title,
-                            fontSize = 22.sp,
+                            style = MiuixTheme.textStyles.title3,
                             fontWeight = FontWeight.Bold,
                             color = colors.onSurface,
                         )
@@ -173,7 +172,7 @@ fun AnnouncementDetailScreen(
                             if (date.isNotEmpty()) {
                                 Text(
                                     text = date,
-                                    fontSize = 12.sp,
+                                    style = MiuixTheme.textStyles.footnote1,
                                     color = colors.onSurfaceVariantSummary,
                                 )
                             }
@@ -192,7 +191,7 @@ fun AnnouncementDetailScreen(
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp),
-                                fontSize = 15.sp,
+                                style = MiuixTheme.textStyles.body1,
                                 color = colors.onSurfaceVariantSummary,
                             )
                         } else {

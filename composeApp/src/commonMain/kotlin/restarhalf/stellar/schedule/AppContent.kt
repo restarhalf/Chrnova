@@ -1,11 +1,5 @@
 package restarhalf.stellar.schedule
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,9 +12,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -28,23 +28,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberDecoratedNavEntries
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.NavDisplayTransitionEffects
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
@@ -54,8 +40,10 @@ import restarhalf.stellar.schedule.ui.navigation.AppScaffoldBody
 import restarhalf.stellar.schedule.ui.navigation.LocalAppChromeState
 import restarhalf.stellar.schedule.ui.navigation.LocalMainPagerState
 import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
+import restarhalf.stellar.schedule.ui.navigation.MainPagerState
 import restarhalf.stellar.schedule.ui.navigation.RootTabs
 import restarhalf.stellar.schedule.ui.navigation.Screen
+import restarhalf.stellar.schedule.ui.navigation.TransparentStackTransition
 import restarhalf.stellar.schedule.ui.navigation.rememberMainPagerState
 import restarhalf.stellar.schedule.ui.navigation.rootTabAt
 import restarhalf.stellar.schedule.ui.screens.AboutScreen
@@ -69,32 +57,32 @@ import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.ProfileScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
-import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
+import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
+import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
+import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
+import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
 import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodItem
 import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodRouletteScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
-import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
-import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
-import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
-import org.koin.compose.viewmodel.koinViewModel
-import restarhalf.stellar.schedule.ui.navigation.MainPagerState
 import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
@@ -104,26 +92,30 @@ import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.nav.core.NavCornerClipMode
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 应用主内容组件
- * 
+ *
  * 负责渲染应用的主要UI结构，包括：
  * - 底部导航栏
  * - 页面导航和转场动画
  * - 背景图片显示
  * - 各功能页面的路由
- * 
- * 使用Navigation3实现页面导航，支持左右滑动切换页面和返回手势。
+ *
+ * 使用 miuix-nav 实现页面导航：连续栈深度驱动（animatedTop），内置滑动转场、
+ * 预测返回与边缘滑动返回。
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -134,8 +126,6 @@ fun AppContent(
     bgVm: BackgroundViewModel,
     /** 应用更新端口，处理版本检查和下载 */
     appUpdate: AppUpdatePort,
-    /** 应用图标，用于关于页面展示 */
-    appIcon: ImageBitmap? = null,
     /** 图片选择器宿主组件，用于处理图片选择回调 */
     pictureSelectorHost: @Composable (
         show: Boolean,
@@ -181,7 +171,10 @@ fun AppContent(
         mainPagerState.syncPage()
     }
 
-    val backStack = remember { mutableStateListOf<NavKey>(Screen.Main) }
+    // miuix-nav 返回栈。显式 <Screen> 超类型参数是必须的：裸写
+    // rememberNavBackStack(Screen.Main) 会把 T 推断为 Screen.Main 单例类型，
+    // 导致整个密封层级无法序列化（保存/恢复时失败）。
+    val backStack = rememberNavBackStack<Screen>(Screen.Main)
     val navigator = remember(backStack) { AppNavigator(backStack) }
     val scope = rememberCoroutineScope()
     val currentRoute = (navigator.current() as? Screen) ?: Screen.Main
@@ -222,312 +215,25 @@ fun AppContent(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val entryProvider =
-        remember(
-            appIcon,
-            canSaveAwardPicture,
-            appUpdate,
-        ) {
-            entryProvider<NavKey> {
-                entry(Screen.Main) {
-                    MainRouteContent(
-                        bgVm = bgVm,
-                        vm = vm,
-                        announcementVm = announcementVm,
-                        runSync = runSyncState,
-                        ensureNotificationPermission = ensureNotificationPermissionState,
-                        saveCsv = saveCsv,
-                        showMessage = showMessage,
-                    )
-                }
-                entry(Screen.ChangeBackground) {
-                    ChangeBackgroundScreen(
-                        vm = bgVm,
-                        onBack = { navigator.pop() },
-                        pictureSelectorHost = pictureSelectorHostState,
-                    )
-                }
-                entry(Screen.About) {
-                    val aboutVm: AboutViewModel = koinViewModel()
-                    AboutScreen(
-                        vm = aboutVm,
-                        onBack = { navigator.pop() },
-                        showMessage = showMessageState,
-                        canSaveAwardPicture = canSaveAwardPicture,
-                        onSaveAwardPicture = saveAwardPictureState,
-                        onIconTap = { navigator.push(Screen.Log) },
-                        onHandleEvent = { event ->
-                            when (event) {
-                                is AboutUiEvent.OpenUri -> {
-                                    if (!openUriState(event.uri)) {
-                                        showMessageState("无法打开链接")
-                                    }
-                                }
-
-                                is AboutUiEvent.JoinQqGroup -> {
-                                    if (!appUpdate.joinQqGroup(key = event.key)) {
-                                        showMessageState("请检查是否安装了 QQ")
-                                    }
-                                }
-
-                                AboutUiEvent.WxPayAwardRequested -> {
-                                    val saved = appUpdate.saveWxpayToPictures()
-                                    showMessageState(
-                                        if (saved) {
-                                            "赞赏码已保存到相册，即将跳转到微信扫一扫"
-                                        } else {
-                                            "保存赞赏码失败，请重试"
-                                        },
-                                    )
-                                    if (!appUpdate.openWeChatScanDirect()) {
-                                        showMessageState("微信启动失败，请检查是否安装微信")
-                                    }
-                                }
-                            }
-                        },
-                        onStartDownload = { info -> appUpdate.startDirectDownload(info) },
-                    )
-                }
-                entry<Screen.ClassEdit> { screen ->
-                    val isEdit = remember(screen.courseId) { screen.courseId != null }
-                    val courseEditVm: CourseEditViewModel = koinViewModel()
-                    CourseEditScreen(
-                        vm = courseEditVm,
-                        onBack = { navigator.pop() },
-                        isEdit = isEdit,
-                        onEditChanged = { },
-                        courseId = screen.courseId,
-                        initialDayOfWeek = screen.dayOfWeek,
-                        initialStartSection = screen.startSection,
-                        initialSelectedWeek = screen.selectedWeek, totalWeeks = appState.totalWeeks,
-                    )
-                }
-                entry<Screen.ExamEdit> { screen ->
-                    val isEdit = remember(screen.examinationId) { screen.examinationId != null }
-                    val examEditVm: ExamEditViewModel = koinViewModel()
-                    ExamEditScreen(
-                        vm = examEditVm,
-                        onBack = { navigator.pop() },
-                        isEdit = isEdit,
-                        onEditChanged = { },
-                        examinationId = screen.examinationId,
-                    )
-                }
-                entry(Screen.Log) {
-                    LogScreen(
-                        onBack = { navigator.pop() },
-                        onExport = { fileName, content ->
-                            scope.launch {
-                                val path = saveLog(fileName, content)
-                                showMessageState(if (path != null) "已保存: $path" else "保存失败")
-                            }
-                        },
-                    )
-                }
-                entry<Screen.PEDetail> { screen ->
-                    val peVm: PEViewModel = koinViewModel()
-                    PEDetailScreen(
-                        vm = peVm,
-                        schoolYear = screen.schoolYear,
-                        onBack = { navigator.pop() }
-                    )
-                }
-                entry(Screen.PEQRCode) {
-                    val settingsVm: SettingsViewModel = koinViewModel()
-                    val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
-                    val peVm: PEViewModel = koinViewModel()
-                    PEQRCodeScreen(
-                        vm = peVm,
-                        authProfile = settingsUiState.profile,
-                        onBack = { navigator.pop() },
-                    )
-                }
-                entry(Screen.Profile) {
-                    val settingsVm: SettingsViewModel = koinViewModel()
-                    val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
-                    val peVm: PEViewModel = koinViewModel()
-                    val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
-                    ProfileScreen(
-                        peVm = peVm,
-                        authProfile = settingsUiState.profile,
-                        onBack = { navigator.pop() },
-                        onLogoutJW = { vm.logout() },
-                        pictureSelectorHost = pictureSelectorHostState,
-                        personalInfoViewModel = personalInfoViewModel,
-                    )
-                }
-                entry(Screen.Papers) {
-                    val paperVm: PapersViewModel = koinViewModel()
-                    PapersListScreen(
-                        vm = paperVm,
-                        onBack = { navigator.pop() },
-                        onPaperDetail = { paperId ->
-                            navigator.push(Screen.PapersDetail(paperId))
-                        },
-                        onUploadClick = { navigator.push(Screen.PapersUpload) },
-                    )
-                }
-                entry<Screen.PapersDetail> { screen ->
-                    val paperVm: PapersViewModel = koinViewModel()
-                    PapersDetailScreen(
-                        vm = paperVm,
-                        paperId = screen.paperId,
-                        onBack = { navigator.pop() },
-                        onDownload = { url, title -> openUriState(url) },
-                    )
-                }
-                entry(Screen.PapersUpload) {
-                    val paperVm: PapersViewModel = koinViewModel()
-                    PapersUploadScreen(
-                        vm = paperVm,
-                        onBack = { navigator.pop() },
-                        onResult = { showMessageState(it) },
-                        pdfFilePickerHost = pdfFilePickerHost,
-                    )
-                }
-                entry(Screen.Evaluation) {
-                    val evalVm: CourseEvaluationViewModel = koinViewModel()
-                    EvaluationListScreen(
-                        vm = evalVm,
-                        onBack = { navigator.pop() },
-                        onCourseClick = { courseName, teacher ->
-                            navigator.push(Screen.EvaluationCourse(courseName, teacher))
-                        },
-                        onEvaluationDetail = { evaluationId ->
-                            navigator.push(Screen.EvaluationDetail(evaluationId))
-                        },
-                        onSubmitClick = { navigator.push(Screen.EvaluationSubmit()) },
-                    )
-                }
-                entry<Screen.EvaluationCourse> { screen ->
-                    val evalVm: CourseEvaluationViewModel = koinViewModel()
-                    EvaluationCourseScreen(
-                        vm = evalVm,
-                        courseName = screen.courseName,
-                        teacher = screen.teacher,
-                        onBack = { navigator.pop() },
-                        onEvaluationDetail = { evaluationId ->
-                            navigator.push(Screen.EvaluationDetail(evaluationId))
-                        },
-                    )
-                }
-                entry<Screen.EvaluationDetail> { screen ->
-                    val evalVm: CourseEvaluationViewModel = koinViewModel()
-                    EvaluationDetailScreen(
-                        vm = evalVm,
-                        evaluationId = screen.evaluationId,
-                        onBack = { navigator.pop() },
-                        onEditEvaluation = { evaluationId ->
-                            navigator.push(Screen.EvaluationSubmit(evaluationId))
-                        },
-                    )
-                }
-                entry<Screen.EvaluationSubmit> { screen ->
-                    val evalVm: CourseEvaluationViewModel = koinViewModel()
-                    EvaluationSubmitScreen(
-                        vm = evalVm,
-                        onBack = { navigator.pop() },
-                        onSubmitted = { navigator.pop() },
-                        evaluationId = screen.evaluationId,
-                    )
-                }
-                entry(Screen.JWLogin) {
-                    val jwLoginVm: JWLoginViewModel = koinViewModel()
-                    JWLoginScreen(
-                        vm = jwLoginVm,
-                        onBack = { navigator.pop() },
-                        onLoginSuccess = { navigator.pop() },
-                        inWel = false,
-                        next = {}
-                    )
-                }
-                entry(Screen.PELogin) {
-                    val peLoginVm: PELoginViewModel = koinViewModel()
-                    PELoginScreen(
-                        vm = peLoginVm,
-                        onBack = { navigator.pop() },
-                        onLoginSuccess = { navigator.pop() },
-                        inWel = false,
-                        next = {}
-                    )
-                }
-                entry(Screen.ElectiveCredit) {
-                    val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
-                    ElectiveCreditScreen(
-                        vm = electiveCreditVm,
-                        onBack = { navigator.pop() },
-                    )
-                }
-                entry(Screen.FoodRoulette) {
-                    FoodRouletteScreen(
-                        onBack = { navigator.pop() },
-                        onFoodSelected = { food ->
-                            navigator.push(
-                                Screen.FoodQRCode(
-                                    foodName = food.name,
-                                    qrContent = food.qrContent,
-                                )
-                            )
-                        },
-                    )
-                }
-                entry<Screen.FoodQRCode> { screen ->
-                    FoodQRCodeScreen(
-                        food = FoodItem(
-                            name = screen.foodName,
-                            qrContent = screen.qrContent,
-                        ),
-                        onBack = { navigator.pop() },
-                    )
-                }
-                entry(Screen.CourseSelection) {
-                    val courseSelectionVm: CourseSelectionViewModel = koinViewModel()
-                    CourseSelectionScreen(
-                        vm = courseSelectionVm,
-                        onBack = { navigator.pop() },
-                        ensureNotificationPermission = ensureNotificationPermissionState,
-                    )
-                }
-                entry(Screen.AnnouncementList) {
-                    AnnouncementListScreen(
-                        vm = announcementVm,
-                        onBack = { navigator.pop() },
-                        onAnnouncementClick = { announcementId ->
-                            navigator.push(Screen.AnnouncementDetail(announcementId))
-                        },
-                    )
-                }
-                entry<Screen.AnnouncementDetail> { screen ->
-                    AnnouncementDetailScreen(
-                        vm = announcementVm,
-                        announcementId = screen.announcementId,
-                        onBack = { navigator.pop() },
-                    )
-                }
-            }
-        }
-
-    val entries =
-        rememberDecoratedNavEntries(
-            backStack = backStack,
-            entryDecorators =
-                listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-            entryProvider = entryProvider,
-        )
-    val transitionEffects =
+    // 导航视觉效果，对齐 example：前缘平滑圆角裁剪跟随设备屏幕圆角，
+    // 转场期间拦截输入。不设置转场调暗（dimAmount = 0f）——透明页面栈下
+    // 调暗遮罩会形成黑屏感，且静止时默认线性 scrim 会在透明顶层下常驻黑幕。
+    // 注意：不设置 backdropColor（保持 Color.Unspecified）。example 的页面本身
+    // 不透明，backdropColor 只用于转场露底；Chrnova 页面透明、背景图从宿主
+    // 透出，若画一层不透明底色会把背景图盖住。
+    val navCornerRadius = rememberNavSystemCornerRadius()
+    val navEffects =
         remember(
             appState.enableCornerClip,
             appState.blockInputDuringTransition,
-            appState.popDirectionFollowsSwipeEdge,
+            navCornerRadius,
         ) {
-            NavDisplayTransitionEffects(
+            NavDisplayEffects(
                 enableCornerClip = appState.enableCornerClip,
+                cornerClipRadius = navCornerRadius,
+                cornerClipMode = NavCornerClipMode.Leading,
                 dimAmount = 0f,
                 blockInputDuringTransition = appState.blockInputDuringTransition,
-                popDirectionFollowsSwipeEdge = appState.popDirectionFollowsSwipeEdge,
             )
         }
 
@@ -574,30 +280,291 @@ fun AppContent(
                         componentsAlpha = backgroundUiState.componentsAlpha,
                     ) {
                         NavDisplay(
-                            entries = entries,
+                            backStack = backStack,
                             onBack = { navigator.pop() },
-                            transitionEffects = transitionEffects,
-                            transitionSpec = {
-                                slideInHorizontally(
-                                    initialOffsetX = { fullWidth -> fullWidth / 3 },
-                                    animationSpec = tween(durationMillis = 260),
-                                ) + fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
-                                    slideOutHorizontally(
-                                        targetOffsetX = { fullWidth -> -fullWidth / 10 },
-                                        animationSpec = tween(durationMillis = 260),
-                                    ) + fadeOut(animationSpec = tween(durationMillis = 220))
-                            },
-                            popTransitionSpec = {
-                                slideInHorizontally(
-                                    initialOffsetX = { fullWidth -> -fullWidth / 5 },
-                                    animationSpec = tween(durationMillis = 240),
-                                ) + fadeIn(animationSpec = tween(durationMillis = 200)) togetherWith
-                                    slideOutHorizontally(
-                                        targetOffsetX = { fullWidth -> fullWidth / 3 },
-                                        animationSpec = tween(durationMillis = 240),
-                                    ) + fadeOut(animationSpec = tween(durationMillis = 200))
-                            },
-                        )
+                            // 透明页面 + 宿主背景图方案不能直接用 MiuixDefault：
+                            // 其 covered 处理保持下层可见（静止时 alpha 0.9 + parallax），
+                            // 一级页会从透明二级页里透出；TransparentStackTransition
+                            // 让被覆盖层淡出到透明，scrim 转场中途峰值、静止归零。
+                            transition = TransparentStackTransition,
+                            effects = navEffects,
+                        ) {
+                            entry<Screen.Main> {
+                                MainRouteContent(
+                                    bgVm = bgVm,
+                                    vm = vm,
+                                    announcementVm = announcementVm,
+                                    runSync = runSyncState,
+                                    ensureNotificationPermission = ensureNotificationPermissionState,
+                                    saveCsv = saveCsv,
+                                    showMessage = showMessage,
+                                )
+                            }
+                            entry<Screen.ChangeBackground> {
+                                ChangeBackgroundScreen(
+                                    vm = bgVm,
+                                    onBack = { navigator.pop() },
+                                    pictureSelectorHost = pictureSelectorHostState,
+                                )
+                            }
+                            entry<Screen.About> {
+                                val aboutVm: AboutViewModel = koinViewModel()
+                                AboutScreen(
+                                    vm = aboutVm,
+                                    onBack = { navigator.pop() },
+                                    showMessage = showMessageState,
+                                    canSaveAwardPicture = canSaveAwardPicture,
+                                    onSaveAwardPicture = saveAwardPictureState,
+                                    onIconTap = { navigator.push(Screen.Log) },
+                                    onHandleEvent = { event ->
+                                        when (event) {
+                                            is AboutUiEvent.OpenUri -> {
+                                                if (!openUriState(event.uri)) {
+                                                    showMessageState("无法打开链接")
+                                                }
+                                            }
+
+                                            is AboutUiEvent.JoinQqGroup -> {
+                                                if (!appUpdate.joinQqGroup(key = event.key)) {
+                                                    showMessageState("请检查是否安装了 QQ")
+                                                }
+                                            }
+
+                                            AboutUiEvent.WxPayAwardRequested -> {
+                                                val saved = appUpdate.saveWxpayToPictures()
+                                                showMessageState(
+                                                    if (saved) {
+                                                        "赞赏码已保存到相册，即将跳转到微信扫一扫"
+                                                    } else {
+                                                        "保存赞赏码失败，请重试"
+                                                    },
+                                                )
+                                                if (!appUpdate.openWeChatScanDirect()) {
+                                                    showMessageState("微信启动失败，请检查是否安装微信")
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onStartDownload = { info -> appUpdate.startDirectDownload(info) },
+                                )
+                            }
+                            entry<Screen.ClassEdit> { screen ->
+                                val isEdit = remember(screen.courseId) { screen.courseId != null }
+                                val courseEditVm: CourseEditViewModel = koinViewModel()
+                                CourseEditScreen(
+                                    vm = courseEditVm,
+                                    onBack = { navigator.pop() },
+                                    isEdit = isEdit,
+                                    onEditChanged = { },
+                                    courseId = screen.courseId,
+                                    initialDayOfWeek = screen.dayOfWeek,
+                                    initialStartSection = screen.startSection,
+                                    initialSelectedWeek = screen.selectedWeek, totalWeeks = appState.totalWeeks,
+                                )
+                            }
+                            entry<Screen.ExamEdit> { screen ->
+                                val isEdit = remember(screen.examinationId) { screen.examinationId != null }
+                                val examEditVm: ExamEditViewModel = koinViewModel()
+                                ExamEditScreen(
+                                    vm = examEditVm,
+                                    onBack = { navigator.pop() },
+                                    isEdit = isEdit,
+                                    onEditChanged = { },
+                                    examinationId = screen.examinationId,
+                                )
+                            }
+                            entry<Screen.Log> {
+                                LogScreen(
+                                    onBack = { navigator.pop() },
+                                    onExport = { fileName, content ->
+                                        scope.launch {
+                                            val path = saveLog(fileName, content)
+                                            showMessageState(if (path != null) "已保存: $path" else "保存失败")
+                                        }
+                                    },
+                                )
+                            }
+                            entry<Screen.PEDetail> { screen ->
+                                val peVm: PEViewModel = koinViewModel()
+                                PEDetailScreen(
+                                    vm = peVm,
+                                    schoolYear = screen.schoolYear,
+                                    onBack = { navigator.pop() }
+                                )
+                            }
+                            entry<Screen.PEQRCode> {
+                                val settingsVm: SettingsViewModel = koinViewModel()
+                                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
+                                val peVm: PEViewModel = koinViewModel()
+                                PEQRCodeScreen(
+                                    vm = peVm,
+                                    authProfile = settingsUiState.profile,
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                            entry<Screen.Profile> {
+                                val settingsVm: SettingsViewModel = koinViewModel()
+                                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
+                                val peVm: PEViewModel = koinViewModel()
+                                val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
+                                ProfileScreen(
+                                    peVm = peVm,
+                                    authProfile = settingsUiState.profile,
+                                    onBack = { navigator.pop() },
+                                    onLogoutJW = { vm.logout() },
+                                    pictureSelectorHost = pictureSelectorHostState,
+                                    personalInfoViewModel = personalInfoViewModel,
+                                )
+                            }
+                            entry<Screen.Papers> {
+                                val paperVm: PapersViewModel = koinViewModel()
+                                PapersListScreen(
+                                    vm = paperVm,
+                                    onBack = { navigator.pop() },
+                                    onPaperDetail = { paperId ->
+                                        navigator.push(Screen.PapersDetail(paperId))
+                                    },
+                                    onUploadClick = { navigator.push(Screen.PapersUpload) },
+                                )
+                            }
+                            entry<Screen.PapersDetail> { screen ->
+                                val paperVm: PapersViewModel = koinViewModel()
+                                PapersDetailScreen(
+                                    vm = paperVm,
+                                    paperId = screen.paperId,
+                                    onBack = { navigator.pop() },
+                                    onDownload = { url, title -> openUriState(url) },
+                                )
+                            }
+                            entry<Screen.PapersUpload> {
+                                val paperVm: PapersViewModel = koinViewModel()
+                                PapersUploadScreen(
+                                    vm = paperVm,
+                                    onBack = { navigator.pop() },
+                                    onResult = { showMessageState(it) },
+                                    pdfFilePickerHost = pdfFilePickerHost,
+                                )
+                            }
+                            entry<Screen.Evaluation> {
+                                val evalVm: CourseEvaluationViewModel = koinViewModel()
+                                EvaluationListScreen(
+                                    vm = evalVm,
+                                    onBack = { navigator.pop() },
+                                    onCourseClick = { courseName, teacher ->
+                                        navigator.push(Screen.EvaluationCourse(courseName, teacher))
+                                    },
+                                    onEvaluationDetail = { evaluationId ->
+                                        navigator.push(Screen.EvaluationDetail(evaluationId))
+                                    },
+                                    onSubmitClick = { navigator.push(Screen.EvaluationSubmit()) },
+                                )
+                            }
+                            entry<Screen.EvaluationCourse> { screen ->
+                                val evalVm: CourseEvaluationViewModel = koinViewModel()
+                                EvaluationCourseScreen(
+                                    vm = evalVm,
+                                    courseName = screen.courseName,
+                                    teacher = screen.teacher,
+                                    onBack = { navigator.pop() },
+                                    onEvaluationDetail = { evaluationId ->
+                                        navigator.push(Screen.EvaluationDetail(evaluationId))
+                                    },
+                                )
+                            }
+                            entry<Screen.EvaluationDetail> { screen ->
+                                val evalVm: CourseEvaluationViewModel = koinViewModel()
+                                EvaluationDetailScreen(
+                                    vm = evalVm,
+                                    evaluationId = screen.evaluationId,
+                                    onBack = { navigator.pop() },
+                                    onEditEvaluation = { evaluationId ->
+                                        navigator.push(Screen.EvaluationSubmit(evaluationId))
+                                    },
+                                )
+                            }
+                            entry<Screen.EvaluationSubmit> { screen ->
+                                val evalVm: CourseEvaluationViewModel = koinViewModel()
+                                EvaluationSubmitScreen(
+                                    vm = evalVm,
+                                    onBack = { navigator.pop() },
+                                    onSubmitted = { navigator.pop() },
+                                    evaluationId = screen.evaluationId,
+                                )
+                            }
+                            entry<Screen.JWLogin> {
+                                val jwLoginVm: JWLoginViewModel = koinViewModel()
+                                JWLoginScreen(
+                                    vm = jwLoginVm,
+                                    onBack = { navigator.pop() },
+                                    onLoginSuccess = { navigator.pop() },
+                                    inWel = false,
+                                    next = {}
+                                )
+                            }
+                            entry<Screen.PELogin> {
+                                val peLoginVm: PELoginViewModel = koinViewModel()
+                                PELoginScreen(
+                                    vm = peLoginVm,
+                                    onBack = { navigator.pop() },
+                                    onLoginSuccess = { navigator.pop() },
+                                    inWel = false,
+                                    next = {}
+                                )
+                            }
+                            entry<Screen.ElectiveCredit> {
+                                val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
+                                ElectiveCreditScreen(
+                                    vm = electiveCreditVm,
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                            entry<Screen.FoodRoulette> {
+                                FoodRouletteScreen(
+                                    onBack = { navigator.pop() },
+                                    onFoodSelected = { food ->
+                                        navigator.push(
+                                            Screen.FoodQRCode(
+                                                foodName = food.name,
+                                                qrContent = food.qrContent,
+                                            )
+                                        )
+                                    },
+                                )
+                            }
+                            entry<Screen.FoodQRCode> { screen ->
+                                FoodQRCodeScreen(
+                                    food = FoodItem(
+                                        name = screen.foodName,
+                                        qrContent = screen.qrContent,
+                                    ),
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                            entry<Screen.CourseSelection> {
+                                val courseSelectionVm: CourseSelectionViewModel = koinViewModel()
+                                CourseSelectionScreen(
+                                    vm = courseSelectionVm,
+                                    onBack = { navigator.pop() },
+                                    ensureNotificationPermission = ensureNotificationPermissionState,
+                                )
+                            }
+                            entry<Screen.AnnouncementList> {
+                                AnnouncementListScreen(
+                                    vm = announcementVm,
+                                    onBack = { navigator.pop() },
+                                    onAnnouncementClick = { announcementId ->
+                                        navigator.push(Screen.AnnouncementDetail(announcementId))
+                                    },
+                                )
+                            }
+                            entry<Screen.AnnouncementDetail> { screen ->
+                                AnnouncementDetailScreen(
+                                    vm = announcementVm,
+                                    announcementId = screen.announcementId,
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                        }
                     }
                 }
             }

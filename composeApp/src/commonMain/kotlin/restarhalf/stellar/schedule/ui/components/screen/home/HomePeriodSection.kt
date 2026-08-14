@@ -18,10 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRenderRowsUseCase
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 课程行渲染UI类型别名
@@ -50,7 +50,7 @@ fun HomePeriodSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(text = title, fontSize = 14.sp, color = textSecondary)
+        Text(text = title, style = MiuixTheme.textStyles.body2, color = textSecondary)
         rows.forEach { row ->
             val rowUi = row.rowUi
             val accentColor = pickCourseSubColor(row.accentCourseName, false)
@@ -65,8 +65,8 @@ fun HomePeriodSection(
                     modifier = Modifier.width(56.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(text = row.timeRange.first, fontSize = 13.sp, color = textSecondary)
-                    Text(text = row.timeRange.second, fontSize = 13.sp, color = textSecondary)
+                    Text(text = row.timeRange.first, style = MiuixTheme.textStyles.footnote1, color = textSecondary)
+                    Text(text = row.timeRange.second, style = MiuixTheme.textStyles.footnote1, color = textSecondary)
                 }
                 Box(
                     modifier =
@@ -82,7 +82,7 @@ fun HomePeriodSection(
                 ) {
                     Text(
                         text = rowUi.primaryText,
-                        fontSize = 16.sp,
+                        style = MiuixTheme.textStyles.body1,
                         fontWeight = if (rowUi.isPastOrEmpty) FontWeight.Normal else FontWeight.SemiBold,
                         color = currentPrimaryTextColor,
                         maxLines = 1,
@@ -90,7 +90,7 @@ fun HomePeriodSection(
                     )
                     Text(
                         text = rowUi.secondaryText,
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = textSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -99,7 +99,7 @@ fun HomePeriodSection(
                 if (row.status != null) {
                     Text(
                         text = row.status,
-                        fontSize = 13.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = textSecondary,
                         modifier = Modifier.padding(start = 8.dp)
                     )

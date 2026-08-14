@@ -148,7 +148,6 @@ fun AppRoot(
             vm = vm,
             bgVm = bgVm,
             appUpdate = appUpdate,
-            appIcon = appIcon,
             pictureSelectorHost = pictureSelectorHost,
             pdfFilePickerHost = pdfFilePickerHost,
             ensureNotificationPermission = ensureNotificationPermission,

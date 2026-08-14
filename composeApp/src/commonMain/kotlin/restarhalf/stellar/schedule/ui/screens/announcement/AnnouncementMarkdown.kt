@@ -370,7 +370,7 @@ private fun AnnouncementCheckBox(
                 if (checked) {
                     Text(
                         text = "✓",
-                        fontSize = 12.sp,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = colors.onPrimary,
                     )
                 }

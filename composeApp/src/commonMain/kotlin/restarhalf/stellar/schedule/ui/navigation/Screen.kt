@@ -1,14 +1,15 @@
 package restarhalf.stellar.schedule.ui.navigation
 
-import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 /**
  * 屏幕路由密封接口
  * 
- * 定义应用中所有页面的路由，实现Navigation3的NavKey接口。
- * 使用@Serializable注解支持路由参数序列化。
+ * 定义应用中所有页面的路由，实现miuix-nav的NavKey接口。
+ * 使用@Serializable注解支持返回栈的保存/恢复（进程死亡后恢复）。
  */
+@Serializable
 sealed interface Screen : NavKey {
     /** 主页面容器（包含底部导航栏） */
     @Serializable

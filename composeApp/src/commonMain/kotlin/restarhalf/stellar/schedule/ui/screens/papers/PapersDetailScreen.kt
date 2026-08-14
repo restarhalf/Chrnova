@@ -11,14 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -116,7 +115,7 @@ fun PapersDetailScreen(
                     Text(
                         text = "加载中...",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.onSurfaceVariantSummary,
                     )
                 }
@@ -127,7 +126,7 @@ fun PapersDetailScreen(
                     Text(
                         text = uiState.error ?: "",
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        fontSize = 14.sp,
+                        style = MiuixTheme.textStyles.body2,
                         color = colors.error,
                     )
                 }

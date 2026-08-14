@@ -31,6 +31,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 
 /**
@@ -81,7 +82,7 @@ fun CourseDetailItem(
             Text(
                 text = course.name,
                 modifier = Modifier.weight(1f),
-                fontSize = 15.sp,
+                style = MiuixTheme.textStyles.body1,
                 fontWeight = FontWeight.Bold,
                 color = textPrimary,
                 lineHeight = 24.sp
@@ -103,7 +104,7 @@ fun CourseDetailItem(
                             .background(tagBackground)
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Text(text = tagText, fontSize = 11.sp, color = textSecondary)
+                    Text(text = tagText, style = MiuixTheme.textStyles.footnote2, color = textSecondary)
                 }
             }
         }
@@ -117,13 +118,13 @@ fun CourseDetailItem(
 
                 Text(
                     text = detailUi.weekLine,
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = textSecondary
                 )
 
                 Text(
                     text = detailUi.locationLine,
-                    fontSize = 12.sp,
+                    style = MiuixTheme.textStyles.footnote1,
                     color = textSecondary
                 )
             }
