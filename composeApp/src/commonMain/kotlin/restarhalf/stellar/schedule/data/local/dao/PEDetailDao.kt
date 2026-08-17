@@ -38,15 +38,11 @@ interface PEDetailDao {
     @Query("DELETE FROM pe_scores")
     suspend fun deleteAllPeScores()
 
-    @Query("DELETE FROM pe_student_info")
-    suspend fun deleteAllPeStudentInfo()
-
     @Transaction
     suspend fun deleteAllPeData() {
         deleteAllScores()
         deleteAllSummary()
         deleteAllPeScores()
-        deleteAllPeStudentInfo()
     }
 
     @Transaction

@@ -76,7 +76,7 @@ class PEClient(
             is PELoginResponse -> parsed.status
             is PEScoreListResponse -> parsed.status
             is PEDetailResponse -> parsed.status
-            is PEStudentInfoResponse -> parsed.status
+            is PEProfileResponse -> parsed.status
             else -> "PASS"
         }
         if (status != "PASS") {
@@ -126,8 +126,6 @@ class PEClient(
             if (parsed.status == "PASS") {
                 parsed.token?.let { authStore.setToken(it) }
                 parsed.userId?.let { authStore.setUserId(it) }
-                authStore.setUsername(username)
-                authStore.setPassword(password)
             }
             parsed
         }
@@ -163,7 +161,7 @@ class PEClient(
         return parseAndVerify(body, PEDetailResponse.serializer())
     }
 
-    override suspend fun getStudentInfo(): PEStudentInfoResponse {
+    override suspend fun getProfile(): PEProfileResponse {
         val userId = authStore.getUserId() ?: throw PETokenExpiredException()
         val sign = passwordEncryption.generatePESign(mapOf("userId" to userId))
         val requestBody = buildJsonObject {
@@ -174,6 +172,6 @@ class PEClient(
             url = "$baseUrl/sysUser/mobile/findStudent",
             requestBody = requestBody,
         )
-        return parseAndVerify(body, PEStudentInfoResponse.serializer())
+        return parseAndVerify(body, PEProfileResponse.serializer())
     }
 }

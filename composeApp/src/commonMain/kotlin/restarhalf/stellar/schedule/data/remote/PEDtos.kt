@@ -67,15 +67,15 @@ data class PESubjectScore(
 
 /** 学生信息响应 */
 @Serializable
-data class PEStudentInfoResponse(
+data class PEProfileResponse(
     @SerialName("status") val status: String = "",
     @SerialName("message") val message: String = "",
-    @SerialName("data") val data: PEStudentInfo? = null,
+    @SerialName("data") val data: PEProfile? = null,
 )
 
 /** 学生信息 */
 @Serializable
-data class PEStudentInfo(
+data class PEProfile(
     @SerialName("testCode") val testCode: String = "",
     @SerialName("stuName") val stuName: String = "",
     @SerialName("stdNumber") val stdNumber: String = "",

@@ -8,27 +8,26 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.SerializationException
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PEStudentInfo
-import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
 import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
-import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
-import restarhalf.stellar.schedule.domain.usecase.PELogoutUseCase
+import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
-import restarhalf.stellar.schedule.domain.usecase.PEStudentInfoUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEProfileUseCase
 
 /**
  * 体育成绩ViewModel
@@ -40,12 +39,11 @@ import restarhalf.stellar.schedule.domain.usecase.PEStudentInfoUseCase
  * - 本地缓存读取
  */
 class PEViewModel(
-    private val peLoginUseCase: PELoginUseCase,
-    private val peLogoutUseCase: PELogoutUseCase,
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
-    private val peStudentInfoUseCase: PEStudentInfoUseCase,
+    private val peProfileUseCase: PEProfileUseCase,
     private val peAuth: PEAuthPort,
+    private val peAuthWorkflow: PEAuthWorkflowPort,
 ) : ViewModel() {
 
     /**
@@ -53,7 +51,7 @@ class PEViewModel(
      *
      * @param yearScores 年度成绩列表
      * @param detailData 体测详情数据
-     * @param studentInfo 学生信息
+     * @param peProfile 学生信息
      * @param loading 是否正在加载
      * @param error 错误消息
      * @param loadedScoreList 是否已加载成绩列表
@@ -63,7 +61,7 @@ class PEViewModel(
     data class PeUiState(
         val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
         val detailData: PEDetailData? = null,
-        val studentInfo: PEStudentInfo? = null,
+        val peProfile: PEProfile? = null,
         val loading: Boolean = false,
         val error: String? = null,
         val loadedScoreList: Boolean = false,
@@ -75,17 +73,21 @@ class PEViewModel(
     /** 统一的UI状态流 */
     val uiState: StateFlow<PeUiState> = _uiState
 
-    private val _isLoggedIn = MutableStateFlow(peLoginUseCase.isLoggedIn())
-
-    /** 是否已登录（响应式） */
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+    /** 是否已登录（响应式，由token变化驱动） */
+    val isLoggedIn: StateFlow<Boolean> = peAuth.observeToken()
+        .map { token -> token.isNotBlank() }
+        .catch { e ->
+            if (e is CancellationException) throw e
+            AppLogger.log("PE", "观察token变化异常", e)
+            emit(false)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val loadMutex = Mutex()
 
     init {
         observeCachedScores()
-        observeCachedStudentInfo()
-        observeTokenChanges()
+        observeCachedProfile()
     }
 
     private fun observeCachedScores() {
@@ -103,44 +105,34 @@ class PEViewModel(
                             } else state
                         }
                     }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 AppLogger.log("PE", "读取缓存成绩失败", e)
             }
         }
     }
 
-    private fun observeCachedStudentInfo() {
+    private fun observeCachedProfile() {
         viewModelScope.launch {
             try {
-                peStudentInfoUseCase.observeStudentInfo()
+                peAuth.observeProfile()
                     .catch { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("PE", "缓存学生信息Flow异常", e)
+                        AppLogger.log("PE", "观察用户档案Flow异常", e)
                     }
-                    .collect { info ->
+                    .collect { profile ->
                         _uiState.update { state ->
-                            if (state.studentInfo == null && info != null) {
-                                state.copy(studentInfo = info)
+                            if (profile.stuName.isNotBlank()) {
+                                state.copy(peProfile = profile)
                             } else state
                         }
                     }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                AppLogger.log("PE", "读取缓存学生信息失败", e)
+                AppLogger.log("PE", "读取用户档案失败", e)
             }
-        }
-    }
-
-    private fun observeTokenChanges() {
-        viewModelScope.launch {
-            peAuth.observeToken()
-                .map { token -> !token.isNullOrBlank() }
-                .catch { e ->
-                    if (e is CancellationException) throw e
-                    AppLogger.log("PE", "观察token变化异常", e)
-                }
-                .collect { loggedIn ->
-                    _isLoggedIn.value = loggedIn
-                }
         }
     }
 
@@ -164,6 +156,8 @@ class PEViewModel(
                             } else state
                         }
                     }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 AppLogger.log("PE", "读取缓存详情失败", e)
             }
@@ -189,45 +183,18 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 检查是否已登录
-     *
-     * @return 是否已登录
-     */
-    fun isLoggedIn(): Boolean = _isLoggedIn.value
-
     private suspend fun <T> withAuthRetry(
         action: suspend () -> T,
         onSuccess: (T) -> Unit,
         errorKind: UserFacingErrorKind,
         logTag: String = "PE",
     ) {
-        val firstAttempt = runCatching { action() }
-        if (firstAttempt.isSuccess) {
-            onSuccess(firstAttempt.getOrThrow())
-        } else {
-            val ex = firstAttempt.exceptionOrNull()!!
+        try {
+            onSuccess(action())
+        } catch (ex: Exception) {
             if (ex is CancellationException) throw ex
-            if (ex is PETokenExpiredException || ex is SerializationException) {
-                val reloginResult = peLoginUseCase.autoLogin()
-                if (reloginResult?.status == "PASS") {
-                    _isLoggedIn.value = true
-                    runCatching { action() }
-                        .onSuccess { result -> onSuccess(result) }
-                        .onFailure { retryEx ->
-                            if (retryEx is CancellationException) throw retryEx
-                            AppLogger.log(logTag, "重试失败", retryEx)
-                            _isLoggedIn.value = false
-                            _uiState.update { s -> s.copy(error = retryEx.toUserFacingMessage(errorKind)) }
-                        }
-                } else {
-                    _isLoggedIn.value = false
-                    _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
-                }
-            } else {
-                AppLogger.log(logTag, "加载失败", ex)
-                _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
-            }
+            AppLogger.log(logTag, "加载失败", ex)
+            _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
         }
     }
 
@@ -274,25 +241,20 @@ class PEViewModel(
         }
     }
 
-    /** 加载学生信息 */
-    fun loadStudentInfo() {
+    /** 加载学生信息（结果通过 observeProfile 响应式更新） */
+    fun loadProfile() {
         viewModelScope.launch {
             withAuthRetry(
-                action = { peStudentInfoUseCase() },
-                onSuccess = { result ->
-                    _uiState.update { s -> s.copy(studentInfo = result.data) }
-                },
+                action = { peProfileUseCase() },
+                onSuccess = { },
                 errorKind = UserFacingErrorKind.LoadPEScores,
             )
         }
     }
 
-    /** 用户登出，清除所有数据 */
+    /** 用户登出，清除会话并重置状态 */
     fun logout() {
-        viewModelScope.launch {
-            peLogoutUseCase()
-            _isLoggedIn.value = false
-            _uiState.value = PeUiState()
-        }
+        peAuthWorkflow.logout()
+        _uiState.value = PeUiState()
     }
 }

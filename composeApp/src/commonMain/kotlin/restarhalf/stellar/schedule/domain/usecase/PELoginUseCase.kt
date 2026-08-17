@@ -1,42 +1,34 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.PELoginResponse
-import restarhalf.stellar.schedule.data.repository.PERepository
-import restarhalf.stellar.schedule.domain.port.PEAuthPort
+import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 /**
  * 体育系统登录用例
+ *
+ * 封装体育系统登录的业务逻辑，调用认证工作流端口执行登录操作。
  */
 class PELoginUseCase(
-    private val repository: PERepository,
-    private val peAuth: PEAuthPort,
+    private val peAuthWorkflow: PEAuthWorkflowPort,
 ) {
     /**
-     * 检查是否已登录
-     */
-    fun isLoggedIn(): Boolean = peAuth.getToken() != null
-
-    /**
-     * 用户登录
-     */
-    suspend operator fun invoke(username: String, password: String): PELoginResponse {
-        return repository.login(username, password)
-    }
-
-    /**
-     * 使用存储的凭据自动重新登录
+     * 执行登录
      *
-     * @return 登录结果，失败返回null
+     * @param username 用户名
+     * @param password 密码
      */
-    suspend fun autoLogin(): PELoginResponse? {
-        val username = peAuth.getUsername() ?: return null
-        val password = peAuth.getPassword() ?: return null
-        return try {
-            repository.login(username, password)
+    suspend operator fun invoke(
+        username: String,
+        password: String,
+    ) {
+        try {
+            peAuthWorkflow.login(
+                username = username,
+                password = password,
+            )
         } catch (e: Exception) {
-            AppLogger.log("PE", "自动重试失败", e)
-            null
+            AppLogger.log("PEAuth", "登录失败 username=$username", e)
+            throw e
         }
     }
 }

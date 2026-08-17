@@ -13,7 +13,6 @@ import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
 import restarhalf.stellar.schedule.data.local.dao.GradeDao
-import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
@@ -34,7 +33,6 @@ private val androidPlatformModule = module {
     single<ExaminationDao> { get<AppDatabase>().examinationDao() }
     single<GradeDao> { get<AppDatabase>().gradeDao() }
     single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
-    single<PEStudentInfoDao> { get<AppDatabase>().peStudentInfoDao() }
     single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
 
     single<ObservableSettings>(named("calendar_codes")) {

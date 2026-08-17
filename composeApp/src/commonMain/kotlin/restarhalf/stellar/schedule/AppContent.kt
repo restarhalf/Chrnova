@@ -406,12 +406,14 @@ fun AppContent(
                                 val settingsVm: SettingsViewModel = koinViewModel()
                                 val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
                                 val peVm: PEViewModel = koinViewModel()
+                                val peUiState by peVm.uiState.collectAsStateWithLifecycle()
                                 val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
                                 ProfileScreen(
-                                    peVm = peVm,
+                                    peProfile = peUiState.peProfile,
                                     authProfile = settingsUiState.profile,
                                     onBack = { navigator.pop() },
                                     onLogoutJW = { vm.logout() },
+                                    onLogoutPE = { peVm.logout() },
                                     pictureSelectorHost = pictureSelectorHostState,
                                     personalInfoViewModel = personalInfoViewModel,
                                 )

@@ -74,7 +74,7 @@ fun PEDetailScreen(
     val loading = uiState.loading
     val statusText = vm.buildStatusText(isDetail = true)
     val colors = MiuixTheme.colorScheme
-    val loggedIn = vm.isLoggedIn()
+    val loggedIn by vm.isLoggedIn.collectAsStateWithLifecycle()
 
     LaunchedEffect(schoolYear, loggedIn) {
         if (loggedIn) {

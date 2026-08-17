@@ -4,27 +4,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
-import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PEStudentInfo
 import restarhalf.stellar.schedule.data.remote.PEYearScore
 
 class PERoomRepository(
     private val peYearScoreDao: PEYearScoreDao,
-    private val peStudentInfoDao: PEStudentInfoDao,
     private val peDetailDao: PEDetailDao
 ) {
     fun observeAllScores(): Flow<List<PEYearScore>> {
         return peYearScoreDao.observeAllScores().map { entities ->
             entities.map { it.toDomain() }
         }
-    }
-
-    fun observeStudentInfo(): Flow<PEStudentInfo?> {
-        return peStudentInfoDao.observeStudentInfo().map { it?.toDomain() }
     }
 
     fun observeDetailData(schoolYear: String): Flow<PEDetailData?> {
@@ -38,10 +31,6 @@ class PERoomRepository(
 
     suspend fun replaceScores(scores: List<PEYearScore>) {
         peYearScoreDao.replaceAll(scores.map { it.toEntity() })
-    }
-
-    suspend fun saveStudentInfo(info: PEStudentInfo) {
-        peStudentInfoDao.insertStudentInfo(info.toEntity())
     }
 
     suspend fun saveDetailData(schoolYear: String, detail: PEDetailData) {

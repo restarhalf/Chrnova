@@ -4,7 +4,7 @@ import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.data.remote.PEDetailResponse
 import restarhalf.stellar.schedule.data.remote.PELoginResponse
 import restarhalf.stellar.schedule.data.remote.PEScoreListResponse
-import restarhalf.stellar.schedule.data.remote.PEStudentInfoResponse
+import restarhalf.stellar.schedule.data.remote.PEProfileResponse
 
 /**
  * 体育数据仓库
@@ -22,5 +22,5 @@ class PERepository(private val peGateway: PEGateway) {
     suspend fun getScoreDetail(schoolYear: String): PEDetailResponse =
         peGateway.getScoreDetail(schoolYear)
 
-    suspend fun getStudentInfo(): PEStudentInfoResponse = peGateway.getStudentInfo()
+    suspend fun getProfile(): PEProfileResponse = peGateway.getProfile()
 }

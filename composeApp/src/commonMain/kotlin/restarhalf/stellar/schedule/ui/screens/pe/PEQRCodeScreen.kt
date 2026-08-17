@@ -53,10 +53,10 @@ fun PEQRCodeScreen(
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val studentInfo = uiState.studentInfo
+    val peProfile = uiState.peProfile
 
-    val id = studentInfo?.stdNumber ?: authProfile?.userNo
-    val name = studentInfo?.stuName ?: authProfile?.name
+    val id = peProfile?.stdNumber ?: authProfile?.userNo
+    val name = peProfile?.stuName ?: authProfile?.name
     val colors = MiuixTheme.colorScheme
 
     Scaffold(

@@ -80,13 +80,13 @@ fun PEScoreScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val yearScores = uiState.yearScores
     val loading = uiState.loading
-    val loggedIn = vm.isLoggedIn()
+    val loggedIn by vm.isLoggedIn.collectAsStateWithLifecycle()
     val hasQRCodeInfo =
         loggedIn || (authProfile?.userNo?.isNotBlank() == true && authProfile.name.isNotBlank())
     LaunchedEffect(loggedIn) {
         if (loggedIn) {
             vm.loadScoreList()
-            vm.loadStudentInfo()
+            vm.loadProfile()
         }
     }
     val statusText = vm.buildStatusText()

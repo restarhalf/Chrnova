@@ -12,7 +12,6 @@ import restarhalf.stellar.schedule.data.local.AppDatabase
 import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
 import restarhalf.stellar.schedule.data.local.dao.GradeDao
-import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
@@ -47,7 +46,6 @@ private val iosPlatformModule = module {
     single<CourseDao> { get<AppDatabase>().courseDao() }
     single<ExaminationDao> { get<AppDatabase>().examinationDao() }
     single<GradeDao> { get<AppDatabase>().gradeDao() }
-    single<PEStudentInfoDao> { get<AppDatabase>().peStudentInfoDao() }
     single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
     single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
 

@@ -13,13 +13,11 @@ import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
 import restarhalf.stellar.schedule.data.local.dao.GradeDao
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
-import restarhalf.stellar.schedule.data.local.dao.PEStudentInfoDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 import restarhalf.stellar.schedule.data.local.entity.PEDetailSummaryEntity
-import restarhalf.stellar.schedule.data.local.entity.PEStudentInfoEntity
 import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -32,7 +30,6 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * - examinations: 考试安排
  * - grades: 成绩
  * - pe_scores: 体育成绩
- * - pe_student_info: 体育学生信息
  * - pe_detail_scores: 体育详情成绩
  * - pe_detail_summary: 体育成绩摘要
  */
@@ -42,11 +39,10 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
         ExaminationEntity::class,
         GradeEntity::class,
         PEYearScoreEntity::class,
-        PEStudentInfoEntity::class,
         PESubjectScoreEntity::class,
         PEDetailSummaryEntity::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 @ColumnTypeConverters(Converters::class)
@@ -61,8 +57,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun gradeDao(): GradeDao
     /** 体育年度成绩DAO */
     abstract fun peYearScoreDao(): PEYearScoreDao
-    /** 体育学生信息DAO */
-    abstract fun peStudentInfoDao(): PEStudentInfoDao
     /** 体育详情DAO */
     abstract fun peDetailDao(): PEDetailDao
 
@@ -214,6 +208,13 @@ private val migration18To19 = object : Migration(18, 19) {
     }
 }
 
+/** 数据库迁移：删除体育学生信息表（学生档案改存KV） */
+private val migration19To20 = object : Migration(19, 20) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS pe_student_info")
+    }
+}
+
 /**
  * 构建应用数据库
  * 
@@ -242,6 +243,7 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration15To16,
             migration16To17,
             migration17To18,
-            migration18To19
+            migration18To19,
+            migration19To20
         )
         .build()

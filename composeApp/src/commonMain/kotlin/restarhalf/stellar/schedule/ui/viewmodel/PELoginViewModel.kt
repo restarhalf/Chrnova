@@ -69,22 +69,13 @@ class PELoginViewModel(
                 _uiState.update { it.copy(loading = true, error = null) }
                 runCatching {
                     peLoginUseCase(username, password)
-                }.onSuccess { response ->
-                    if (response.status == "PASS") {
-                        _uiState.update { it.copy(password = "", loading = false) }
-                        onSuccess()
-                    } else {
-                        AppLogger.log(
-                            "PE",
-                            "体育系统登录失败: ${response.message}",
-                            level = AppLogger.Level.ERROR
-                        )
-                        _uiState.update { it.copy(loading = false, error = response.message) }
-                    }
+                }.onSuccess {
+                    _uiState.update { it.copy(password = "", loading = false) }
+                    onSuccess()
                 }.onFailure { throwable ->
                     if (throwable is CancellationException) throw throwable
                     val errorMsg = throwable.message ?: "登录失败"
-                    AppLogger.log("PE", "体育系统登录失败", throwable)
+                    AppLogger.log("PEAuth", "体育系统登录失败", throwable)
                     _uiState.update { it.copy(loading = false, error = errorMsg) }
                 }
             }

@@ -22,7 +22,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import restarhalf.stellar.schedule.domain.model.AuthProfile
+import restarhalf.stellar.schedule.domain.model.PEProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoEditCard
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -32,7 +34,6 @@ import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
-import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -44,13 +45,15 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ProfileScreen(
-    peVm: PEViewModel,
+    peProfile: PEProfile?,
     authProfile: AuthProfile?,
     onBack: () -> Unit,
     onLogoutJW: () -> Unit = {},
+    onLogoutPE: () -> Unit = {},
     pictureSelectorHost: @Composable (
         show: Boolean,
         onDismissRequest: () -> Unit,
@@ -62,14 +65,13 @@ fun ProfileScreen(
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val peUiState by peVm.uiState.collectAsStateWithLifecycle()
-    val peStudentInfo = peUiState.studentInfo
 
     val isLoggedIn = authProfile?.userNo?.isNotBlank() == true
-    val isPeLoggedIn = peVm.isLoggedIn()
+    val isPeLoggedIn = peProfile?.stdNumber?.isNotBlank() == true
 
     LaunchedEffect(isLoggedIn, isPeLoggedIn) {
         if (!isLoggedIn && !isPeLoggedIn) {
+            delay(300.milliseconds)
             onBack()
         }
     }
@@ -151,7 +153,7 @@ fun ProfileScreen(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
-                                peVm.logout()
+                                onLogoutPE()
                                 showLogoutPEConfirm = false
                             }
                         ) {
@@ -252,7 +254,7 @@ fun ProfileScreen(
 
             // 体测系统信息
             item {
-                if (isPeLoggedIn && peStudentInfo != null) {
+                if (isPeLoggedIn) {
                     SmallTitle(text = "体测平台")
                     AppCard(modifier = Modifier.fillMaxWidth()) {
 
@@ -262,9 +264,9 @@ fun ProfileScreen(
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            ProfileInfoRow(label = "姓名", value = peStudentInfo.stuName)
+                            ProfileInfoRow(label = "姓名", value = peProfile.stuName)
                             HorizontalDivider()
-                            ProfileInfoRow(label = "学号", value = peStudentInfo.stdNumber)
+                            ProfileInfoRow(label = "学号", value = peProfile.stdNumber)
                             HorizontalDivider()
                             Row(
                                 modifier = Modifier
