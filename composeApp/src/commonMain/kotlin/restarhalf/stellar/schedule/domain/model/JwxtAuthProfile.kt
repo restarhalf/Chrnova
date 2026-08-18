@@ -8,7 +8,7 @@ import androidx.compose.runtime.Immutable
  * 存储从教务系统获取的用户基本信息，用于展示和身份识别。
  */
 @Immutable
-data class AuthProfile(
+data class JwxtAuthProfile(
     /** 学生姓名 */
     val name: String = "",
     /** 学号 */

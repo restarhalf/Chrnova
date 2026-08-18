@@ -18,8 +18,8 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.core.time.SemesterUtils
@@ -31,9 +31,9 @@ import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
  * 统计X1-X5类别的选修课学分，支持Z到X的转换映射。
  */
 class ElectiveCreditViewModel(
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val gradeRepository: GradeRepository,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,

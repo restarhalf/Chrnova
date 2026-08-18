@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import restarhalf.stellar.schedule.domain.model.GradeCourse
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
 /**
@@ -16,7 +16,7 @@ import restarhalf.stellar.schedule.domain.repository.GradeRepository
  */
 class ObserveAllGradesUseCase(
     private val repository: GradeRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<List<GradeCourse>> {

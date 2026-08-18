@@ -1,15 +1,15 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 
 /**
  * 登录用例
  * 
  * 封装用户登录的业务逻辑，调用认证工作流端口执行登录操作。
  */
-class LoginUseCase(
-    private val authWorkflow: AuthWorkflowPort,
+class JwxtLoginUseCase(
+    private val authWorkflow: JwxtAuthWorkflowPort,
 ) {
     /**
      * 执行登录

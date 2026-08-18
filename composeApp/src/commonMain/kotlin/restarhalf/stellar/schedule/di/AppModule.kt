@@ -13,13 +13,13 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
-import restarhalf.stellar.schedule.data.impl.AuthPortImpl
-import restarhalf.stellar.schedule.data.impl.AuthWorkflowPortImpl
+import restarhalf.stellar.schedule.data.impl.JwxtAuthPortImpl
+import restarhalf.stellar.schedule.data.impl.JwxtAuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.BackgroundSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.PEAuthPortImpl
 import restarhalf.stellar.schedule.data.impl.PEAuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.PEPasswordEncryptionPortImpl
-import restarhalf.stellar.schedule.data.impl.PasswordEncryptionPortImpl
+import restarhalf.stellar.schedule.data.impl.JwxtPasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
@@ -40,15 +40,15 @@ import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -76,14 +76,14 @@ import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
-import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.MarkAnnouncementsReadUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
-import restarhalf.stellar.schedule.domain.usecase.PEProfileUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
@@ -195,8 +195,7 @@ val portModule = module {
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
-    single { restarhalf.stellar.schedule.data.repository.PERepository(peGateway = get()) }
-    single { restarhalf.stellar.schedule.data.repository.PERoomRepository(peYearScoreDao = get(), peDetailDao = get()) }
+    single { restarhalf.stellar.schedule.data.repository.RoomPERepository(peYearScoreDao = get(), peDetailDao = get()) }
 
     // 课件系统HTTP客户端
     single(named("papers")) {
@@ -214,15 +213,15 @@ val portModule = module {
 
     // 端口实现
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
-    single<PasswordEncryptionPort> { PasswordEncryptionPortImpl() }
+    single<JwxtPasswordEncryptionPort> { JwxtPasswordEncryptionPortImpl() }
     single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
     single<BackgroundSettingsPort> {
         BackgroundSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME)))
     }
-    single<AuthPort> { AuthPortImpl(authStore = get()) }
+    single<JwxtAuthPort> { JwxtAuthPortImpl(authStore = get()) }
     single<AcademicPort> { AcademicPortImpl(gateway = get(), settings = get()) }
-    single<AuthWorkflowPort> {
-        AuthWorkflowPortImpl(
+    single<JwxtAuthWorkflowPort> {
+        JwxtAuthWorkflowPortImpl(
             gateway = get(),
             authStore = get(),
             courseRepository = get()
@@ -231,9 +230,9 @@ val portModule = module {
     single<PEAuthPort> { PEAuthPortImpl(authStore = get()) }
     single<PEAuthWorkflowPort> {
         PEAuthWorkflowPortImpl(
-            repository = get(),
+            gateway = get(),
             authStore = get(),
-            roomRepository = get()
+            repository = get()
         )
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
@@ -320,7 +319,7 @@ val useCaseModule = module {
     factory { DeleteExaminationUseCase(repository = get()) }
     factory { ObserveAllGradesUseCase(repository = get(), auth = get()) }
     factory { FetchSemesterIdsUseCase(authWorkflow = get(), academic = get(), settings = get()) }
-    factory { LoginUseCase(authWorkflow = get()) }
+    factory { JwxtLoginUseCase(authWorkflow = get()) }
     factory { CalculateElectiveCreditsUseCase() }
     factory { BuildScheduleUiStateUseCase(timetable = get()) }
     factory { BuildHomeTodayScheduleUseCase() }
@@ -367,9 +366,9 @@ val useCaseModule = module {
     factory { TransCourseUseCase() }
     factory { TransCourseWithConflictsUseCase(courseRepository = get(), transCourse = get()) }
     factory { PELoginUseCase(peAuthWorkflow = get()) }
-    factory { PEScoreListUseCase(repository = get(), peAuthWorkflow = get(), roomRepository = get()) }
-    factory { PEScoreDetailUseCase(repository = get(), peAuthWorkflow = get(), roomRepository = get()) }
-    factory { PEProfileUseCase(repository = get(), peAuth = get(), peAuthWorkflow = get()) }
+    factory { PEScoreListUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
+    factory { PEScoreDetailUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
+    factory { PEAuthProfileUseCase(gateway = get(), auth = get(), authWorkflow = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
     factory { CheckAppUpdateUseCase(appUpdate = get()) }
     factory {
@@ -396,7 +395,7 @@ val viewModelModule = module {
             settings = get(),
             fetchExaminations = get(),
             fetchGrades = get(),
-            loginUseCase = get(),
+            jwxtLoginUseCase = get(),
             runSyncUseCase = get(),
             bindUnboundData = get(),
             syncCourseEventsToCalendar = get(),
@@ -480,14 +479,14 @@ val viewModelModule = module {
         restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(
             peScoreListUseCase = get(),
             peScoreDetailUseCase = get(),
-            peProfileUseCase = get(),
+            peAuthProfileUseCase = get(),
             peAuth = get(),
             peAuthWorkflow = get(),
         )
     }
     viewModel {
-        restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel(
-            loginUseCase = get(),
+        restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel(
+            jwxtLoginUseCase = get(),
         )
     }
     viewModel {

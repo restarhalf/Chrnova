@@ -53,7 +53,7 @@ import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.ElectiveCreditScreen
 import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
-import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
+import restarhalf.stellar.schedule.ui.screens.JwxtLoginScreen
 import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.ProfileScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
@@ -88,7 +88,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
@@ -398,7 +398,7 @@ fun AppContent(
                                 val peVm: PEViewModel = koinViewModel()
                                 PEQRCodeScreen(
                                     vm = peVm,
-                                    authProfile = settingsUiState.profile,
+                                    jwxtAuthProfile = settingsUiState.profile,
                                     onBack = { navigator.pop() },
                                 )
                             }
@@ -409,8 +409,8 @@ fun AppContent(
                                 val peUiState by peVm.uiState.collectAsStateWithLifecycle()
                                 val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
                                 ProfileScreen(
-                                    peProfile = peUiState.peProfile,
-                                    authProfile = settingsUiState.profile,
+                                    peAuthProfile = peUiState.authProfile,
+                                    jwxtAuthProfile = settingsUiState.profile,
                                     onBack = { navigator.pop() },
                                     onLogoutJW = { vm.logout() },
                                     onLogoutPE = { peVm.logout() },
@@ -493,9 +493,9 @@ fun AppContent(
                                     evaluationId = screen.evaluationId,
                                 )
                             }
-                            entry<Screen.JWLogin> {
-                                val jwLoginVm: JWLoginViewModel = koinViewModel()
-                                JWLoginScreen(
+                            entry<Screen.JwxtLogin> {
+                                val jwLoginVm: JwxtLoginViewModel = koinViewModel()
+                                JwxtLoginScreen(
                                     vm = jwLoginVm,
                                     onBack = { navigator.pop() },
                                     onLoginSuccess = { navigator.pop() },
@@ -681,7 +681,7 @@ private fun MainRouteContent(
                     },
                     onQRCode = { navigator.push(Screen.PEQRCode) },
                     onLogin = { navigator.push(Screen.PELogin) },
-                    authProfile = settingsUiState.profile
+                    jwxtAuthProfile = settingsUiState.profile
                 )
             }
 
@@ -714,7 +714,7 @@ private fun MainRouteContent(
                     onPaper = { navigator.push(Screen.Papers) },
                     onEvaluation = { navigator.push(Screen.Evaluation) },
                     onCourseSelection = { navigator.push(Screen.CourseSelection) },
-                    onLogin = { navigator.push(Screen.JWLogin) },
+                    onLogin = { navigator.push(Screen.JwxtLogin) },
                     onProfile = { navigator.push(Screen.Profile) },
                     onFoodRoulette = { navigator.push(Screen.FoodRoulette) },
                     isPeLoggedIn = isPeLoggedIn,

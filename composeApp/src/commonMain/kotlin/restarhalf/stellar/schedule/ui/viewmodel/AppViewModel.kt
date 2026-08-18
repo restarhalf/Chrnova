@@ -15,13 +15,13 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
-import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
@@ -33,12 +33,12 @@ import restarhalf.stellar.schedule.ui.sync.SyncUiState
  * 负责处理同步、登录、登出等全局操作。
  */
 class AppViewModel(
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val timetable: TimetablePort,
     private val settings: SettingsPort,
     private val fetchExaminations: FetchExaminationsSimpleUseCase,
     private val fetchGrades: FetchGradesSimpleUseCase,
-    private val loginUseCase: LoginUseCase,
+    private val jwxtLoginUseCase: JwxtLoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
     private val bindUnboundData: BindUnboundDataUseCase,
     private val syncCourseEventsToCalendar: SyncCourseEventsToCalendarUseCase,
@@ -209,7 +209,7 @@ class AppViewModel(
         codeVal: String = "",
         p: String? = null
     ) {
-        loginUseCase(
+        jwxtLoginUseCase(
             userNo = userNo,
             password = password,
             captchaData = captchaData,

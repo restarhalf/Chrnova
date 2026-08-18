@@ -7,7 +7,7 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -23,7 +23,7 @@ import restarhalf.stellar.schedule.domain.port.TimetablePort
  * 5. 同步日历事件(若开启)
  */
 class RunSyncUseCase(
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val timetable: TimetablePort,
     private val settings: SettingsPort,

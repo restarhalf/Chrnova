@@ -108,7 +108,7 @@ sealed interface Screen : NavKey {
 
     /** 教务系统登录页面 */
     @Serializable
-    data object JWLogin : Screen
+    data object JwxtLogin : Screen
 
     /** 体育系统登录页面 */
     @Serializable

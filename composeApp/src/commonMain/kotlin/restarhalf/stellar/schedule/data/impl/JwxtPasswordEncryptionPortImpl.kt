@@ -4,7 +4,7 @@ import dev.whyoleg.cryptography.*
 import dev.whyoleg.cryptography.algorithms.*
 import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.config.LocalSecrets
-import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -15,7 +15,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
  * 使用AES-ECB加密算法，密钥从LocalSecrets.AES_KEY获取。
  */
 @OptIn(DelicateCryptographyApi::class, ExperimentalEncodingApi::class)
-class PasswordEncryptionPortImpl : PasswordEncryptionPort {
+class JwxtPasswordEncryptionPortImpl : JwxtPasswordEncryptionPort {
 
     private val json = Json
 

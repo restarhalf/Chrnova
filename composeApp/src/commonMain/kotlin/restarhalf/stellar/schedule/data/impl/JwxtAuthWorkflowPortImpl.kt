@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -19,11 +19,11 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  * @param authStore 教务系统认证存储
  * @param courseRepository 课程仓库
  */
-class AuthWorkflowPortImpl(
+class JwxtAuthWorkflowPortImpl(
     private val gateway: JwxtGateway,
     private val authStore: JwxtAuthStore,
     private val courseRepository: CourseRepository,
-) : AuthWorkflowPort {
+) : JwxtAuthWorkflowPort {
 
     /**
      * 确保用户已登录

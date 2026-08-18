@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 
 /**
@@ -13,7 +13,7 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
  * 从教务系统获取所有可用的学期ID列表。
  */
 class FetchSemesterIdsUseCase(
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val settings: SettingsPort,
 ) {

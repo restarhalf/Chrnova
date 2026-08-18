@@ -34,9 +34,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.screens.JWLoginScreen
+import restarhalf.stellar.schedule.ui.screens.JwxtLoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
-import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -51,7 +51,7 @@ fun WelcomeScreen(
 ) {
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val coroutineScope = rememberCoroutineScope()
-    val jwLoginVm: JWLoginViewModel = koinViewModel()
+    val jwxtLoginVm: JwxtLoginViewModel = koinViewModel()
     val peLoginVm: PELoginViewModel = koinViewModel()
     val colors = MiuixTheme.colorScheme
 
@@ -122,8 +122,8 @@ fun WelcomeScreen(
                         settings[SettingsKeys.CONFIRM_PRIVACY] = false
                         exitApp()
                     })
-                    2 -> JWLoginScreen(
-                        vm = jwLoginVm,
+                    2 -> JwxtLoginScreen(
+                        vm = jwxtLoginVm,
                         onBack = {
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(pagerState.settledPage - 1)

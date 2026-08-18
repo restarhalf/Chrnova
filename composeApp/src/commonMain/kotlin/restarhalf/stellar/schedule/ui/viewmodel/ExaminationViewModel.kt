@@ -24,7 +24,7 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
@@ -42,7 +42,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val settings: SettingsPort,
     private val syncExamEventsToCalendar: SyncExamEventsToCalendarUseCase,
 ) : ViewModel() {

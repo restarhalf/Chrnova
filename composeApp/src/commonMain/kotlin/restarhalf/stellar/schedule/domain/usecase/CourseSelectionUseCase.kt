@@ -17,7 +17,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionResponse
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import kotlin.runCatching
 
 /**
@@ -32,7 +32,7 @@ import kotlin.runCatching
  */
 class CourseSelectionUseCase(
     private val gateway: JwxtGateway,
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
 ) {
 
     /** 初始化会话后返回的上下文，后续选课/退课都需要带上 */

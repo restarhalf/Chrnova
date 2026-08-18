@@ -8,7 +8,7 @@ import androidx.compose.runtime.Immutable
  * 存储从体育系统获取的用户基本信息，用于展示和身份识别。
  */
 @Immutable
-data class PEProfile(
+data class PEAuthProfile(
     /** 学生姓名 */
     val stuName: String = "",
     /** 学号 */

@@ -5,8 +5,8 @@ import com.russhwolf.settings.coroutines.getStringFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
-import restarhalf.stellar.schedule.domain.model.AuthProfile
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 
 /**
  * 认证端口实现类
@@ -17,9 +17,9 @@ import restarhalf.stellar.schedule.domain.port.AuthPort
  * @param authStore 教务系统认证存储
  */
 @OptIn(ExperimentalSettingsApi::class)
-class AuthPortImpl(
+class JwxtAuthPortImpl(
     private val authStore: JwxtAuthStore,
-) : AuthPort {
+) : JwxtAuthPort {
 
     /**
      * 观察认证令牌变化
@@ -35,7 +35,7 @@ class AuthPortImpl(
      * 
      * @return 用户档案Flow
      */
-    override fun observeProfile(): Flow<AuthProfile> {
+    override fun observeProfile(): Flow<JwxtAuthProfile> {
         val settings = authStore.getSettings()
         return combine(
             settings.getStringFlow(JwxtAuthStore.KEY_NAME, ""),
@@ -43,7 +43,7 @@ class AuthPortImpl(
             settings.getStringFlow(JwxtAuthStore.KEY_CLS_NAME, ""),
             settings.getStringFlow(JwxtAuthStore.KEY_ACADEMY_NAME, "")
         ) { name, userNo, clsName, academyName ->
-            AuthProfile(
+            JwxtAuthProfile(
                 name = name, userNo = userNo, clsName = clsName, academyName = academyName
             )
         }

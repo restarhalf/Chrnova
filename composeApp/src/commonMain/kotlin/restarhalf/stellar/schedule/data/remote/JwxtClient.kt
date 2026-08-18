@@ -20,7 +20,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.port.PasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -32,7 +32,7 @@ class JwxtClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },
     private val authStore: JwxtAuthStore? = null,
-    private val passwordEncryption: PasswordEncryptionPort,
+    private val passwordEncryption: JwxtPasswordEncryptionPort,
 ) : JwxtGateway {
 
     private companion object {

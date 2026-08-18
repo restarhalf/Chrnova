@@ -36,5 +36,5 @@ interface PEGateway {
      *
      * @return 学生信息响应
      */
-    suspend fun getProfile(): PEProfileResponse
+    suspend fun getProfile(): PEAuthProfileResponse
 }

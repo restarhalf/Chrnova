@@ -10,7 +10,7 @@ import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEYearScore
 
-class PERoomRepository(
+class RoomPERepository(
     private val peYearScoreDao: PEYearScoreDao,
     private val peDetailDao: PEDetailDao
 ) {

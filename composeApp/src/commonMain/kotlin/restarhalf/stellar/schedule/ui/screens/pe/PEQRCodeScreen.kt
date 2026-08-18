@@ -31,7 +31,7 @@ import io.github.alexzhirkevich.qrose.options.QrErrorCorrectionLevel
 import io.github.alexzhirkevich.qrose.options.QrOptions
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.ktor.http.encodeURLParameter
-import restarhalf.stellar.schedule.domain.model.AuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -48,15 +48,15 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun PEQRCodeScreen(
     vm: PEViewModel,
-    authProfile: AuthProfile?,
+    jwxtAuthProfile: JwxtAuthProfile?,
     onBack: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val peProfile = uiState.peProfile
+    val peAuthProfile = uiState.authProfile
 
-    val id = peProfile?.stdNumber ?: authProfile?.userNo
-    val name = peProfile?.stuName ?: authProfile?.name
+    val id = peAuthProfile?.stdNumber ?: jwxtAuthProfile?.userNo
+    val name = peAuthProfile?.stuName ?: jwxtAuthProfile?.name
     val colors = MiuixTheme.colorScheme
 
     Scaffold(

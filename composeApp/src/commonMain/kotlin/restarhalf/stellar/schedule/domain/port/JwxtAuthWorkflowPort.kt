@@ -5,7 +5,7 @@ package restarhalf.stellar.schedule.domain.port
  * 
  * 定义用户认证流程的抽象接口，包括登录、登出、会话刷新等。
  */
-interface AuthWorkflowPort {
+interface JwxtAuthWorkflowPort {
     /**
      * 确保用户已登录
      * 

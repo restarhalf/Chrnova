@@ -17,7 +17,7 @@ import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
 import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.port.SettingsPort
@@ -31,7 +31,7 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 class CourseEvaluationViewModel(
     private val port: CourseEvaluationPort,
     private val courseRepository: CourseRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val settings: SettingsPort,
 ) : ViewModel() {
 

@@ -10,7 +10,7 @@ import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
@@ -27,7 +27,7 @@ import restarhalf.stellar.schedule.domain.repository.CourseRepository
 class RoomCourseRepository(
     private val courseDao: CourseDao,
     private val settings: SettingsPort,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
 ) : CourseRepository {
 
     /**

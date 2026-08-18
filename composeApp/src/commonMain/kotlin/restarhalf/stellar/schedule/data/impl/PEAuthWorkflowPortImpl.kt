@@ -3,8 +3,8 @@ package restarhalf.stellar.schedule.data.impl
 import kotlinx.coroutines.CancellationException
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
-import restarhalf.stellar.schedule.data.repository.PERepository
-import restarhalf.stellar.schedule.data.repository.PERoomRepository
+import restarhalf.stellar.schedule.data.remote.PEGateway
+import restarhalf.stellar.schedule.data.repository.RoomPERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 /**
@@ -13,14 +13,14 @@ import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
  * 实现PEAuthWorkflowPort接口，负责体育系统认证流程的完整处理。
  * 包括登录、登出、会话刷新等操作。
  *
- * @param repository 体育数据仓库
+ * @param gateway 体育网关
  * @param authStore 体育系统认证存储
- * @param roomRepository 体育本地缓存仓库
+ * @param repository 体育本地缓存仓库
  */
 class PEAuthWorkflowPortImpl(
-    private val repository: PERepository,
+    private val gateway: PEGateway,
     private val authStore: PEAuthStore,
-    private val roomRepository: PERoomRepository,
+    private val repository: RoomPERepository,
 ) : PEAuthWorkflowPort {
 
     /**
@@ -53,7 +53,7 @@ class PEAuthWorkflowPortImpl(
         password: String,
     ) {
         val oldUsername = authStore.getLastUsername().orEmpty().trim()
-        val resp = repository.login(
+        val resp = gateway.login(
             username = username,
             password = password
         )
@@ -70,7 +70,7 @@ class PEAuthWorkflowPortImpl(
         // 如果用户切换，清除旧用户的体育缓存数据
         val newUsername = username.trim()
         if (oldUsername.isNotBlank() && newUsername.isNotBlank() && oldUsername != newUsername) {
-            roomRepository.clearAll()
+            repository.clearAll()
         }
 
         authStore.setLastUsername(newUsername)

@@ -18,7 +18,7 @@ import restarhalf.stellar.schedule.core.course.buildCourseNames
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -33,7 +33,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
  */
 class CourseEditViewModel(
     private val courseRepository: CourseRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
 ) : ViewModel() {
 
     /**

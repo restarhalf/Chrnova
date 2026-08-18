@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
-import restarhalf.stellar.schedule.domain.model.AuthProfile
-import restarhalf.stellar.schedule.domain.model.PEProfile
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoEditCard
 import restarhalf.stellar.schedule.ui.icons.Back
@@ -49,8 +49,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ProfileScreen(
-    peProfile: PEProfile?,
-    authProfile: AuthProfile?,
+    peAuthProfile: PEAuthProfile?,
+    jwxtAuthProfile: JwxtAuthProfile?,
     onBack: () -> Unit,
     onLogoutJW: () -> Unit = {},
     onLogoutPE: () -> Unit = {},
@@ -66,8 +66,8 @@ fun ProfileScreen(
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
 
-    val isLoggedIn = authProfile?.userNo?.isNotBlank() == true
-    val isPeLoggedIn = peProfile?.stdNumber?.isNotBlank() == true
+    val isLoggedIn = jwxtAuthProfile?.userNo?.isNotBlank() == true
+    val isPeLoggedIn = peAuthProfile?.stdNumber?.isNotBlank() == true
 
     LaunchedEffect(isLoggedIn, isPeLoggedIn) {
         if (!isLoggedIn && !isPeLoggedIn) {
@@ -76,7 +76,7 @@ fun ProfileScreen(
         }
     }
 
-    var showLogoutJWConfirm by remember { mutableStateOf(false) }
+    var showLogoutJwxtConfirm by remember { mutableStateOf(false) }
     var showLogoutPEConfirm by remember { mutableStateOf(false) }
     var showPictureSelector by remember { mutableStateOf(false) }
     val personalInfoUiState by personalInfoViewModel.uiState.collectAsStateWithLifecycle()
@@ -101,12 +101,12 @@ fun ProfileScreen(
         },
         popupHost = {
             // 教务系统退出确认
-            if (showLogoutJWConfirm) {
+            if (showLogoutJwxtConfirm) {
                 WindowDialog(
-                    show = showLogoutJWConfirm,
+                    show = showLogoutJwxtConfirm,
                     title = "确认退出教务系统",
                     summary = "退出后需要重新登录才能同步课表和考务",
-                    onDismissRequest = { showLogoutJWConfirm = false }
+                    onDismissRequest = { showLogoutJwxtConfirm = false }
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -114,7 +114,7 @@ fun ProfileScreen(
                     ) {
                         Button(
                             modifier = Modifier.weight(1f),
-                            onClick = { showLogoutJWConfirm = false }
+                            onClick = { showLogoutJwxtConfirm = false }
                         ) {
                             Text(text = "取消")
                         }
@@ -123,7 +123,7 @@ fun ProfileScreen(
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
                                 onLogoutJW()
-                                showLogoutJWConfirm = false
+                                showLogoutJwxtConfirm = false
                             }
                         ) {
                             Text(text = "确认退出", color = colors.onPrimary)
@@ -215,23 +215,23 @@ fun ProfileScreen(
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            ProfileInfoRow(label = "姓名", value = authProfile.name)
+                            ProfileInfoRow(label = "姓名", value = jwxtAuthProfile.name)
                             HorizontalDivider()
-                            ProfileInfoRow(label = "学号", value = authProfile.userNo)
+                            ProfileInfoRow(label = "学号", value = jwxtAuthProfile.userNo)
                             HorizontalDivider()
                             ProfileInfoRow(
                                 label = "班级",
-                                value = authProfile.clsName.takeIf { it.isNotBlank() } ?: "暂无")
+                                value = jwxtAuthProfile.clsName.takeIf { it.isNotBlank() } ?: "暂无")
                             HorizontalDivider()
                             ProfileInfoRow(
                                 label = "学院",
-                                value = authProfile.academyName.takeIf { it.isNotBlank() }
+                                value = jwxtAuthProfile.academyName.takeIf { it.isNotBlank() }
                                     ?: "暂无")
                             HorizontalDivider()
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { showLogoutJWConfirm = true }
+                                    .clickable { showLogoutJwxtConfirm = true }
                                     .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -264,9 +264,9 @@ fun ProfileScreen(
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            ProfileInfoRow(label = "姓名", value = peProfile.stuName)
+                            ProfileInfoRow(label = "姓名", value = peAuthProfile.stuName)
                             HorizontalDivider()
-                            ProfileInfoRow(label = "学号", value = peProfile.stdNumber)
+                            ProfileInfoRow(label = "学号", value = peAuthProfile.stdNumber)
                             HorizontalDivider()
                             Row(
                                 modifier = Modifier

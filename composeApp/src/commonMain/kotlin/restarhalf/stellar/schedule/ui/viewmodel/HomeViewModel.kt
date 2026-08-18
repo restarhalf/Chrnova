@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildHomeClockSnapshotUseCase
@@ -48,7 +48,7 @@ import kotlin.time.Instant
 class HomeViewModel(
     private val courseRepository: CourseRepository,
     observeAllExaminations: ObserveAllExaminationsUseCase,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val isExamNotEnded: IsExamNotEndedUseCase,
     private val timetable: TimetablePort,
     private val buildHomeClockSnapshotUseCase: BuildHomeClockSnapshotUseCase,

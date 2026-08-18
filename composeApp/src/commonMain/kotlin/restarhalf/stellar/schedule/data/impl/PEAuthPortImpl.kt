@@ -5,7 +5,7 @@ import com.russhwolf.settings.coroutines.getStringFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
-import restarhalf.stellar.schedule.domain.model.PEProfile
+import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 
 /**
@@ -35,14 +35,14 @@ class PEAuthPortImpl(
      *
      * @return 用户档案Flow
      */
-    override fun observeProfile(): Flow<PEProfile> {
+    override fun observeProfile(): Flow<PEAuthProfile> {
         val settings = authStore.getSettings()
         return combine(
             settings.getStringFlow(PEAuthStore.KEY_STU_NAME, ""),
             settings.getStringFlow(PEAuthStore.KEY_STD_NUMBER, ""),
             settings.getStringFlow(PEAuthStore.KEY_TEST_CODE, "")
         ) { stuName, stdNumber, testCode ->
-            PEProfile(
+            PEAuthProfile(
                 stuName = stuName, stdNumber = stdNumber, testCode = testCode
             )
         }
@@ -53,7 +53,7 @@ class PEAuthPortImpl(
      *
      * @param profile 用户档案
      */
-    override fun setProfile(profile: PEProfile) {
+    override fun setProfile(profile: PEAuthProfile) {
         authStore.setProfile(
             stuName = profile.stuName,
             stdNumber = profile.stdNumber,

@@ -166,7 +166,7 @@ fun AboutScreen(
 
     Scaffold(
         topBar = {
-            BlurredBar(backdrop = backdrop, blurActive = blurActive) {
+            BlurredBar(backdrop = backdrop, blurEnabled = blurActive) {
                 AppPageTopBar(
                     title = "关于",
                     scrollBehavior = scrollBehavior,

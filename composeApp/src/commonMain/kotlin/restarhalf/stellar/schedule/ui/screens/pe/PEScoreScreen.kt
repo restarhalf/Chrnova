@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import restarhalf.stellar.schedule.domain.model.AuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.QrCode
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -72,7 +72,7 @@ fun PEScoreScreen(
     onNavigateToDetail: (String) -> Unit,
     onLogin: () -> Unit,
     onQRCode: () -> Unit = {},
-    authProfile: AuthProfile? = null,
+    jwxtAuthProfile: JwxtAuthProfile? = null,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -82,7 +82,7 @@ fun PEScoreScreen(
     val loading = uiState.loading
     val loggedIn by vm.isLoggedIn.collectAsStateWithLifecycle()
     val hasQRCodeInfo =
-        loggedIn || (authProfile?.userNo?.isNotBlank() == true && authProfile.name.isNotBlank())
+        loggedIn || (jwxtAuthProfile?.userNo?.isNotBlank() == true && jwxtAuthProfile.name.isNotBlank())
     LaunchedEffect(loggedIn) {
         if (loggedIn) {
             vm.loadScoreList()

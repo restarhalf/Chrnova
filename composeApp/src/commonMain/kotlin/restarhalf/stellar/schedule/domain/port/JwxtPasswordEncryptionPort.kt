@@ -5,7 +5,7 @@ package restarhalf.stellar.schedule.domain.port
  * 
  * 定义密码加密的抽象接口，用于教务系统登录前的密码加密处理。
  */
-interface PasswordEncryptionPort {
+interface JwxtPasswordEncryptionPort {
 
     /**
      * 加密密码用于登录

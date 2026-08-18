@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.domain.port
 
 import kotlinx.coroutines.flow.Flow
-import restarhalf.stellar.schedule.domain.model.PEProfile
+import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 
 /**
  * 体育系统认证端口接口
@@ -14,14 +14,14 @@ interface PEAuthPort {
     fun observeToken(): Flow<String>
 
     /** 观察用户档案信息的变化 */
-    fun observeProfile(): Flow<PEProfile>
+    fun observeProfile(): Flow<PEAuthProfile>
 
     /**
      * 设置用户档案
      *
      * @param profile 用户档案
      */
-    fun setProfile(profile: PEProfile)
+    fun setProfile(profile: PEAuthProfile)
 
     /** 设置用户凭据（用户名和密码） */
     fun setCredentials(username: String, password: String)

@@ -6,7 +6,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.JwxtTimeParser
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.SyncResult
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
@@ -22,7 +22,7 @@ import restarhalf.stellar.schedule.domain.repository.CourseRepository
 class SyncPortImpl(
     private val jwxtSync: JwxtSync,
     private val courseRepository: CourseRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
 ) : SyncPort {
 
     /**

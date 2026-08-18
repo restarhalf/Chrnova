@@ -22,12 +22,12 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEDetailData
 import restarhalf.stellar.schedule.data.remote.PEYearScore
-import restarhalf.stellar.schedule.domain.model.PEProfile
+import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
-import restarhalf.stellar.schedule.domain.usecase.PEProfileUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 
 /**
  * 体育成绩ViewModel
@@ -41,7 +41,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEProfileUseCase
 class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
-    private val peProfileUseCase: PEProfileUseCase,
+    private val peAuthProfileUseCase: PEAuthProfileUseCase,
     private val peAuth: PEAuthPort,
     private val peAuthWorkflow: PEAuthWorkflowPort,
 ) : ViewModel() {
@@ -51,7 +51,7 @@ class PEViewModel(
      *
      * @param yearScores 年度成绩列表
      * @param detailData 体测详情数据
-     * @param peProfile 学生信息
+     * @param authProfile 学生信息
      * @param loading 是否正在加载
      * @param error 错误消息
      * @param loadedScoreList 是否已加载成绩列表
@@ -61,7 +61,7 @@ class PEViewModel(
     data class PeUiState(
         val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
         val detailData: PEDetailData? = null,
-        val peProfile: PEProfile? = null,
+        val authProfile: PEAuthProfile? = null,
         val loading: Boolean = false,
         val error: String? = null,
         val loadedScoreList: Boolean = false,
@@ -124,7 +124,7 @@ class PEViewModel(
                     .collect { profile ->
                         _uiState.update { state ->
                             if (profile.stuName.isNotBlank()) {
-                                state.copy(peProfile = profile)
+                                state.copy(authProfile = profile)
                             } else state
                         }
                     }
@@ -245,7 +245,7 @@ class PEViewModel(
     fun loadProfile() {
         viewModelScope.launch {
             withAuthRetry(
-                action = { peProfileUseCase() },
+                action = { peAuthProfileUseCase() },
                 onSuccess = { },
                 errorKind = UserFacingErrorKind.LoadPEScores,
             )

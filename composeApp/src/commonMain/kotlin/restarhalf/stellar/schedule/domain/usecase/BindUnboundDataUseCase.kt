@@ -3,7 +3,7 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.coroutines.flow.firstOrNull
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
@@ -15,7 +15,7 @@ import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
  * 用于数据库升级后，将旧数据归属到当前账号。
  */
 class BindUnboundDataUseCase(
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val courseRepository: CourseRepository,
     private val examinationRepository: ExaminationRepository,
     private val academic: AcademicPort,

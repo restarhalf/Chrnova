@@ -14,7 +14,7 @@ import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 
 /**
  * 教务系统登录ViewModel
@@ -24,23 +24,23 @@ import restarhalf.stellar.schedule.domain.usecase.LoginUseCase
  * - 登录loading状态
  * - 错误提示
  */
-class JWLoginViewModel(
-    private val loginUseCase: LoginUseCase,
+class JwxtLoginViewModel(
+    private val jwxtLoginUseCase: JwxtLoginUseCase,
 ) : ViewModel() {
 
     /**
      * JW登录UI状态
      */
     @Immutable
-    data class JWLoginUiState(
+    data class JwxtLoginUiState(
         val userNo: String = "",
         val password: String = "",
         val error: String = "",
         val loading: Boolean = false,
     )
 
-    private val _uiState = MutableStateFlow(JWLoginUiState())
-    val uiState: StateFlow<JWLoginUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(JwxtLoginUiState())
+    val uiState: StateFlow<JwxtLoginUiState> = _uiState.asStateFlow()
 
     private val loginMutex = Mutex()
 
@@ -69,7 +69,7 @@ class JWLoginViewModel(
                 if (userNo.isBlank() || password.isBlank()) return@withLock
 
                 _uiState.update { it.copy(loading = true, error = "") }
-                runCatching { loginUseCase(userNo, password) }
+                runCatching { jwxtLoginUseCase(userNo, password) }
                     .onSuccess {
                         _uiState.update {
                             it.copy(

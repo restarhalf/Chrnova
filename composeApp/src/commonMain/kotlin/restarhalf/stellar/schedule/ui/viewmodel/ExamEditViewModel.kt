@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
@@ -39,7 +39,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
 class ExamEditViewModel(
     private val courseRepository: CourseRepository,
     private val examinationRepository: ExaminationRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val settings: SettingsPort,
     private val academic: AcademicPort,
     private val saveExaminationUseCase: SaveExaminationUseCase,

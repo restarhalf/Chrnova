@@ -32,7 +32,7 @@ import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
-import restarhalf.stellar.schedule.ui.viewmodel.JWLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -50,8 +50,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param onLoginSuccess 登录成功回调
  */
 @Composable
-fun JWLoginScreen(
-    vm: JWLoginViewModel,
+fun JwxtLoginScreen(
+    vm: JwxtLoginViewModel,
     onBack: () -> Unit,
     onLoginSuccess: () -> Unit,
     inWel: Boolean,

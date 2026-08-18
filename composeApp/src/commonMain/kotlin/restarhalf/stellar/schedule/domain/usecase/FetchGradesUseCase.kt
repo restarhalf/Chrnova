@@ -6,8 +6,8 @@ import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
@@ -18,11 +18,11 @@ import restarhalf.stellar.schedule.domain.repository.GradeRepository
  * 支持学期回退：如果当前学期没有成绩，会尝试获取上一学期的成绩。
  */
 class FetchGradesUseCase(
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val settings: SettingsPort,
     private val repository: GradeRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
 ) {
     /**
      * 获取成绩报告

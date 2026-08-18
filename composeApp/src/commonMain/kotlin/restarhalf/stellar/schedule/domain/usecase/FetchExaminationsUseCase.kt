@@ -5,8 +5,8 @@ import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.AuthPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
@@ -18,10 +18,10 @@ import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
  * 同时传递学号作为nameOrNumber参数进行筛选。
  */
 class FetchExaminationsUseCase(
-    private val authWorkflow: AuthWorkflowPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val repository: ExaminationRepository,
-    private val auth: AuthPort,
+    private val auth: JwxtAuthPort,
     private val settings: SettingsPort,
 ) {
     /**

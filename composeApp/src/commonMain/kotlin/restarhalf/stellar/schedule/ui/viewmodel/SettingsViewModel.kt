@@ -19,10 +19,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.model.AuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
-import restarhalf.stellar.schedule.domain.port.AuthPort
-import restarhalf.stellar.schedule.domain.port.AuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
@@ -45,8 +45,8 @@ import kotlin.time.Instant
  * - 浮动导航栏样式
  */
 class SettingsViewModel(
-    private val auth: AuthPort,
-    private val authWorkflow: AuthWorkflowPort,
+    private val auth: JwxtAuthPort,
+    private val authWorkflow: JwxtAuthWorkflowPort,
     private val settings: SettingsPort,
     private val syncCourseEventsToCalendar: SyncCourseEventsToCalendarUseCase,
     private val syncExamEventsToCalendar: SyncExamEventsToCalendarUseCase,
@@ -76,7 +76,7 @@ class SettingsViewModel(
     @Immutable
     private data class SettingsAuthState(
         val authToken: String,
-        val profile: AuthProfile,
+        val profile: JwxtAuthProfile,
     )
 
     /**
@@ -140,7 +140,7 @@ class SettingsViewModel(
         val selectedTerm: String,
         val logEnabled: Boolean,
         val authToken: String,
-        val profile: AuthProfile,
+        val profile: JwxtAuthProfile,
         val remoteTermItems: ImmutableList<String>,
     )
 
@@ -222,7 +222,7 @@ class SettingsViewModel(
                         selectedTerm = "",
                         logEnabled = false,
                         authToken = "",
-                        profile = AuthProfile(),
+                        profile = JwxtAuthProfile(),
                         remoteTermItems = persistentListOf(),
                     ),
             )
@@ -296,7 +296,7 @@ class SettingsViewModel(
      * @param profile 用户档案
      * @return 账户UI
      */
-    fun buildAccountUi(authToken: String, profile: AuthProfile): AccountUi {
+    fun buildAccountUi(authToken: String, profile: JwxtAuthProfile): AccountUi {
         val loggedIn =
             authToken.isNotBlank() && (profile.name.isNotBlank() || profile.userNo.isNotBlank())
         val summary =
