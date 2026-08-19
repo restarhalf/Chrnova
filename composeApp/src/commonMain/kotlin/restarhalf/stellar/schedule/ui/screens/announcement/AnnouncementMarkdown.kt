@@ -56,6 +56,7 @@ import com.mikepenz.markdown.model.ReferenceLinkHandler
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
+import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType
 import top.yukonga.miuix.kmp.basic.Text
@@ -129,8 +130,8 @@ fun AnnouncementMarkdown(
             heading4 = { AnnouncementHeading(it, mdTypography.h4, accent = false) },
             heading5 = { AnnouncementHeading(it, mdTypography.h5, accent = false) },
             heading6 = { AnnouncementHeading(it, mdTypography.h6, accent = false) },
-            setextHeading1 = { AnnouncementHeading(it, mdTypography.h1, accent = true) },
-            setextHeading2 = { AnnouncementHeading(it, mdTypography.h2, accent = true) },
+            setextHeading1 = { AnnouncementHeading(it, mdTypography.h1, accent = true, contentChildType = MarkdownTokenTypes.SETEXT_CONTENT) },
+            setextHeading2 = { AnnouncementHeading(it, mdTypography.h2, accent = true, contentChildType = MarkdownTokenTypes.SETEXT_CONTENT) },
             blockQuote = { model ->
                 AnnouncementBlockQuote(model.content, model.node, model.typography.quote)
             },
@@ -177,6 +178,7 @@ private fun AnnouncementHeading(
     model: MarkdownComponentModel,
     style: TextStyle,
     accent: Boolean,
+    contentChildType: IElementType = MarkdownTokenTypes.ATX_CONTENT,
 ) {
     val colors = MiuixTheme.colorScheme
     Row(
@@ -199,6 +201,7 @@ private fun AnnouncementHeading(
             content = model.content,
             node = model.node,
             style = style.copy(color = colors.onSurface),
+            contentChildType = contentChildType,
         )
     }
 }
