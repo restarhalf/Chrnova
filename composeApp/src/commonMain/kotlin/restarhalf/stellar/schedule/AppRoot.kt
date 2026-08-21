@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.russhwolf.settings.ObservableSettings
 import org.koin.compose.koinInject
@@ -30,7 +29,6 @@ import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
  */
 @Composable
 fun AppRoot(
-    appIcon: ImageBitmap? = null,
     pictureSelectorHost: @Composable (
         show: Boolean,
         onDismissRequest: () -> Unit,
@@ -48,6 +46,8 @@ fun AppRoot(
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    canSaveImage: Boolean = false,
+    saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     exitApp: () -> Unit = {},
 ) {
     val vm: AppViewModel = koinViewModel()
@@ -157,6 +157,8 @@ fun AppRoot(
             saveAwardPicture = saveAwardPicture,
             saveLog = saveLog,
             saveCsv = saveCsv,
+            canSaveImage = canSaveImage,
+            saveImage = saveImage,
             runSync = runSync,
         )
 

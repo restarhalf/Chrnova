@@ -1,8 +1,6 @@
 package restarhalf.stellar.schedule
 
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.window.ComposeUIViewController
 import com.russhwolf.settings.ObservableSettings
 import kotlinx.cinterop.BetaInteropApi
@@ -13,7 +11,6 @@ import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.jetbrains.skia.Image
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
@@ -50,12 +47,10 @@ import platform.UIKit.UIGraphicsBeginImageContextWithOptions
 import platform.UIKit.UIGraphicsEndImageContext
 import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
-import platform.UIKit.UIImagePNGRepresentation
 import platform.UIKit.UIViewController
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
-import platform.posix.memcpy
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
@@ -74,11 +69,9 @@ fun AppRoot(): UIViewController {
             remember {
                 KoinPlatform.getKoin().get<ObservableSettings>(named(SettingsKeys.PREFS_NAME))
             }
-        val appIcon = remember { loadIosAppIcon() }
         val themeController = rememberAppThemeController(settings)
         MiuixTheme(controller = themeController) {
             AppRoot(
-                appIcon = appIcon,
                 pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
                     PictureSelectorHost(
                         hostViewController = hostViewController,
@@ -114,6 +107,13 @@ fun AppRoot(): UIViewController {
                 },
                 saveCsv = { fileName, content ->
                     saveLogToFile(fileName, content)
+                },
+                canSaveImage = true,
+                saveImage = { _, bytes ->
+                    saveAwardPicture(
+                        controller = hostViewController,
+                        bytes = bytes,
+                    )
                 },
                 exitApp = {
                     UIApplication.sharedApplication.performSelector(
@@ -289,24 +289,6 @@ private fun runOnMainSyncBoolean(block: () -> Boolean): Boolean {
     return result
 }
 
-private fun loadIosAppIcon(): ImageBitmap? {
-    val candidates =
-        listOf(
-            "AppIcon60x60",
-            "AppIcon76x76",
-            "AppIcon83.5x83.5",
-            "AppIcon1024x1024",
-            "AppIcon",
-        )
-    for (name in candidates) {
-        val image = UIImage.imageNamed(name) ?: continue
-        val png = UIImagePNGRepresentation(image) ?: continue
-        val bitmap = png.toComposeImageBitmapOrNull()
-        if (bitmap != null) return bitmap
-    }
-    return null
-}
-
 private suspend fun saveAwardPicture(
     controller: UIViewController,
     bytes: ByteArray,
@@ -401,7 +383,7 @@ private fun ByteArray.toUIImageForPhotoSave(): UIImage? {
                 length = size.toULong(),
             )
         }
-    val image = UIImage(data = data) ?: return null
+    val image = UIImage(data = data)
     return image.normalizeForPhotoSave() ?: image
 }
 
@@ -418,22 +400,4 @@ private fun UIImage.normalizeForPhotoSave(): UIImage? {
     } finally {
         UIGraphicsEndImageContext()
     }
-}
-
-@OptIn(ExperimentalForeignApi::class)
-private fun NSData.toComposeImageBitmapOrNull(): ImageBitmap? {
-    val size = length.toInt()
-    if (size <= 0) return null
-    val source = bytes ?: return null
-    val bytesArray =
-        ByteArray(size).also { buffer ->
-            buffer.usePinned { pinned ->
-                memcpy(pinned.addressOf(0), source, length)
-            }
-        }
-    return runCatching { Image.makeFromEncoded(bytesArray).toComposeImageBitmap() }
-        .onFailure {
-            AppLogger.log("Image", "解码图片失败", it)
-        }
-        .getOrNull()
 }

@@ -23,10 +23,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import com.russhwolf.settings.ObservableSettings
 import restarhalf.stellar.schedule.core.log.AppLogger
@@ -83,7 +80,6 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                 )
             }
 
-        val appIcon = rememberAppIcon()
         var pendingNotificationGrant by remember { mutableStateOf<(() -> Unit)?>(null) }
         val notificationPermissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
@@ -97,7 +93,6 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
 
         MiuixTheme(controller = themeController) {
             AppRoot(
-                appIcon = appIcon,
                 pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
                     PictureSelectorHost(
                         show = show,
@@ -186,21 +181,32 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                         AppLogger.log("App", "保存CSV文件失败: fileName=$fileName", it)
                     }.getOrDefault(null)
                 },
+                canSaveImage = true,
+                saveImage = { fileName, bytes ->
+                    runCatching {
+                        val collection =
+                            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                        val values = ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                            put(
+                                MediaStore.MediaColumns.RELATIVE_PATH,
+                                Environment.DIRECTORY_PICTURES + "/Chrnova",
+                            )
+                        }
+                        val uri = contentResolver.insert(collection, values) ?: return@runCatching false
+                        contentResolver.openOutputStream(uri)?.use { os -> os.write(bytes) }
+                            ?: return@runCatching false
+                        true
+                    }.onFailure {
+                        AppLogger.log("App", "保存图片失败: fileName=$fileName", it)
+                    }.getOrDefault(false)
+                },
                 exitApp = { finishAffinity() },
             )
         }
     }
 }
-
-@Composable
-private fun ComponentActivity.rememberAppIcon(): ImageBitmap? =
-    remember(this) {
-        runCatching {
-            packageManager.getApplicationIcon(packageName).toBitmap().asImageBitmap()
-        }.onFailure {
-            AppLogger.log("App", "获取应用图标失败", it)
-        }.getOrNull()
-    }
 
 @Composable
 private fun rememberThemeMode(settings: ObservableSettings): Int {

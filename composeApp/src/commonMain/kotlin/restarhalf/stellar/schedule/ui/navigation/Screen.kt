@@ -158,4 +158,12 @@ sealed interface Screen : NavKey {
     @Serializable
     data class AnnouncementDetail(val announcementId: String) : Screen
 
+    /**
+     * 公告图片全屏看图器（QQ 风格：黑底、缩放、保存）
+     *
+     * @param url 图片网络地址
+     */
+    @Serializable
+    data class AnnouncementImageViewer(val url: String) : Screen
+
 }

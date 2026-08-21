@@ -29,8 +29,16 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import coil3.compose.AsyncImage
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import restarhalf.stellar.schedule.platform.AppIoDispatcher
+import kotlin.time.Clock
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
@@ -59,6 +67,7 @@ import restarhalf.stellar.schedule.ui.screens.ProfileScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
 import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
+import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementImageViewerScreen
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
 import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
@@ -154,6 +163,10 @@ fun AppContent(
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     /** 保存CSV文件的回调，返回保存路径或null */
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    /** 是否允许把图片（如公告配图）保存到相册 */
+    canSaveImage: Boolean = false,
+    /** 保存图片字节到相册（fileName 为保存名），返回是否成功 */
+    saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val appState = LocalAppState.current
     val colors = MiuixTheme.colorScheme
@@ -197,7 +210,27 @@ fun AppContent(
     val openUriState by rememberUpdatedState(openUri)
     val showMessageState by rememberUpdatedState(showMessage)
     val saveAwardPictureState by rememberUpdatedState(saveAwardPicture)
+    val saveImageState by rememberUpdatedState(saveImage)
+    val canSaveImageState by rememberUpdatedState(canSaveImage)
     val runSyncState by rememberUpdatedState(runSync)
+
+    // 把网络图片 URL 拉取为字节后，经平台 saveImage 存入相册。复用公告 HttpClient
+    // （无鉴权，适合任意公开图床地址），文件名从 URL 末段推导。
+    val announcementHttpClient = koinInject<HttpClient>(named("announcement"))
+    val saveImageFromUrl: suspend (String) -> Boolean = remember(
+        announcementHttpClient,
+        saveImageState,
+    ) {
+        { url ->
+            withContext(AppIoDispatcher) {
+                runCatching {
+                    val bytes = announcementHttpClient.get(url).body<ByteArray>()
+                    val name = deriveImageFileName(url)
+                    saveImageState(name, bytes)
+                }.getOrDefault(false)
+            }
+        }
+    }
 
     // 公告全局共享一个 ViewModel：首页/列表/详情三处共用同一实例与状态，
     // 列表页标记已读后首页红点立即消失，无需跨实例流同步。
@@ -564,6 +597,19 @@ fun AppContent(
                                     vm = announcementVm,
                                     announcementId = screen.announcementId,
                                     onBack = { navigator.pop() },
+                                    onImageClick = { url ->
+                                        navigator.push(Screen.AnnouncementImageViewer(url))
+                                    },
+                                )
+                            }
+                            entry<Screen.AnnouncementImageViewer> { screen ->
+                                AnnouncementImageViewerScreen(
+                                    url = screen.url,
+                                    alt = null,
+                                    canSaveImage = canSaveImageState,
+                                    saveImage = saveImageFromUrl,
+                                    showMessage = showMessageState,
+                                    onBack = { navigator.pop() },
                                 )
                             }
                         }
@@ -751,4 +797,14 @@ private fun MainScreenBackHandler(
             mainState.animateToPage(0)
         },
     )
+}
+
+/** 从图片 URL 推导保存文件名，无合适末段时回退到带时间戳的默认名。 */
+private fun deriveImageFileName(url: String): String {
+    val tail = url.substringAfterLast('/', "")
+        .substringBefore('?')
+        .substringBefore('#')
+        .takeIf { it.isNotBlank() && !it.contains('/') && it.length <= 120 }
+        ?: return "chrnova_${Clock.System.now().toEpochMilliseconds()}.jpg"
+    return if (tail.contains('.')) tail else "$tail.jpg"
 }

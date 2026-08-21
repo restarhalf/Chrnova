@@ -17,15 +17,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
@@ -35,10 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
-import coil3.compose.LocalPlatformContext
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import com.mikepenz.markdown.coil3.Coil3ImageTransformerImpl
 import com.mikepenz.markdown.compose.LocalReferenceLinkHandler
 import com.mikepenz.markdown.compose.Markdown
@@ -60,8 +52,6 @@ import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -79,6 +69,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun AnnouncementMarkdown(
     content: String,
     modifier: Modifier = Modifier,
+    onImageClick: (String) -> Unit = {},
 ) {
     val colors = MiuixTheme.colorScheme
     val textStyles = MiuixTheme.textStyles
@@ -153,7 +144,7 @@ fun AnnouncementMarkdown(
                     AnnouncementCodeBlock(code = code, language = language, style = style)
                 }
             },
-            image = { model -> AnnouncementMarkdownImage(model.content, model.node) },
+            image = { model -> AnnouncementMarkdownImage(model.content, model.node, onImageClick) },
             checkbox = { model ->
                 AnnouncementCheckBox(model.content, model.node, model.typography.text)
             },
@@ -261,16 +252,16 @@ private fun AnnouncementCodeBlock(
 }
 
 /**
- * 块级图片：圆角 + 点击全屏预览。
+ * 块级图片：圆角 + 点击跳转全屏看图器。
  */
 @Composable
 private fun AnnouncementMarkdownImage(
     content: String,
     node: ASTNode,
+    onImageClick: (String) -> Unit,
 ) {
     val link = node.resolveAnnouncementImageLink(content, LocalReferenceLinkHandler.current) ?: return
     val alt = node.resolveAnnouncementImageAlt(content)
-    var previewing by remember(link) { mutableStateOf(false) }
 
     Coil3ImageTransformerImpl.transform(link).let { imageData ->
         Box(
@@ -278,7 +269,7 @@ private fun AnnouncementMarkdownImage(
                 .fillMaxWidth()
                 .padding(vertical = 6.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { previewing = true },
+                .clickable { onImageClick(link) },
         ) {
             Image(
                 painter = imageData.painter,
@@ -291,53 +282,6 @@ private fun AnnouncementMarkdownImage(
             )
         }
     }
-
-    if (previewing) {
-        AnnouncementImagePreviewDialog(
-            url = link,
-            alt = alt,
-            onDismiss = { previewing = false },
-        )
-    }
-}
-
-/**
- * 全屏图片预览：miuix WindowDialog 承载网络大图，点击图片/外部关闭。
- */
-@Composable
-private fun AnnouncementImagePreviewDialog(
-    url: String,
-    alt: String?,
-    onDismiss: () -> Unit,
-) {
-    WindowDialog(
-        show = true,
-        title = alt ?: "图片预览",
-        titleColor = DialogDefaults.titleColor(),
-        summary = "点击图片关闭",
-        summaryColor = DialogDefaults.summaryColor(),
-        backgroundColor = DialogDefaults.backgroundColor(),
-        enableWindowDim = true,
-        onDismissRequest = onDismiss,
-        onDismissFinished = null,
-        outsideMargin = DialogDefaults.outsideMargin,
-        insideMargin = DialogDefaults.insideMargin,
-        defaultWindowInsetsPadding = true,
-        content = {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalPlatformContext.current)
-                    .data(url)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = alt,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onDismiss() },
-            )
-        },
-    )
 }
 
 /**
