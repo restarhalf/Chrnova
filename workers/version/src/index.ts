@@ -13,6 +13,15 @@ interface VersionInfo {
   updatedAt: string;
 }
 
+/** 灰度发布配置，存于 KV `gray` 键；uids 为命中学号的 SHA-256 hex 列表，空列表表示关闭 */
+interface GrayConfig {
+  version: string;
+  url: string;
+  changelog: string;
+  uids: string[];
+  updatedAt: string;
+}
+
 const DEFAULT_URL = 'https://pan.quark.cn/s/2326de687ab1?pwd=E97u';
 
 /**
@@ -92,12 +101,59 @@ function isAllowedUrl(raw: string): boolean {
   return ALLOWED_URL_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
 }
 
-// 仅公开接口开放跨域；/api/* 由同源的管理页调用，无需放开 CORS。
-app.use('/version.json', cors());
+/** SHA-256 hex（小写），与客户端 CourseEvaluationPort.hashUserNo 算法一致 */
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * 解析管理页提交的学号名单：兼容数组或以逗号/空白分隔的字符串，
+ * 去空、去重、上限 1000，返回学号 SHA-256 列表。明文学号不落盘。
+ */
+async function parseGrayTargets(raw: unknown): Promise<string[]> {
+  const items = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'string'
+      ? raw.split(/[\s,;，；]+/)
+      : [];
+  const hashes = new Set<string>();
+  for (const item of items) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    if (hashes.size >= 1000) break;
+    hashes.add(await sha256Hex(trimmed));
+  }
+  return [...hashes];
+}
+
+// 仅公开接口开放跨域，且限定为自有前端域，杜绝第三方站点驱动本 API；
+// /api/* 由同源的管理页调用，无需放开 CORS。
+const CORS_ORIGINS = [
+  'https://chrnova.restarhalf.dpdns.org',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+app.use('/version.json', cors({ origin: CORS_ORIGINS }));
 
 // Public: Get version.json
+// 客户端携带稳定标识（学号 SHA-256 的 uid 查询参数）；命中灰度名单则下发灰度版本，
+// 否则下发正式版，未带 uid 的一律走正式版。
 app.get('/version.json', async (c) => {
   const data = await c.env.VERSION_KV.get('latest', 'json');
+  const uid = (c.req.query('uid') || '').trim().toLowerCase();
+  if (uid) {
+    const gray = await c.env.VERSION_KV.get<GrayConfig>('gray', 'json');
+    if (gray?.uids?.includes(uid)) {
+      return c.json({
+        version: gray.version,
+        url: gray.url,
+        changelog: gray.changelog,
+        updatedAt: gray.updatedAt,
+      });
+    }
+  }
   if (!data) {
     return c.json({ version: '0.0.0', url: DEFAULT_URL, changelog: '', updatedAt: '' });
   }
@@ -154,6 +210,74 @@ app.get('/api/version', async (c) => {
 
   const data = await c.env.VERSION_KV.get('latest', 'json');
   return c.json(data || { version: '', url: DEFAULT_URL, changelog: '', updatedAt: '' });
+});
+
+// Protected: Get gray config (for web UI)
+app.get('/api/gray', async (c) => {
+  if (!isAuthorized(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const data = await c.env.VERSION_KV.get<GrayConfig>('gray', 'json');
+  return c.json({
+    version: data?.version || '',
+    url: data?.url || '',
+    changelog: data?.changelog || '',
+    count: data?.uids?.length || 0,
+    updatedAt: data?.updatedAt || '',
+  });
+});
+
+// Protected: Set gray config（userNos 为学号明文列表，仅用于本次哈希，不落盘）
+app.post('/api/gray', async (c) => {
+  if (!(await allowRequest(c.env.VERSION_KV, `w:${clientIp(c)}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW_SEC))) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+  if (!isAuthorized(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  let body: { version?: string; url?: string; changelog?: string; userNos?: string[] | string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const version = (body.version || '').trim();
+  if (!version || !VERSION_PATTERN.test(version)) {
+    return c.json({ error: 'version 格式不合法（示例：1.2.3 或 1.2.3-beta.1）' }, 400);
+  }
+
+  const url = (body.url || '').trim() || DEFAULT_URL;
+  if (!isAllowedUrl(url)) {
+    return c.json(
+      { error: `下载地址必须是 HTTPS 且属于白名单域名：${ALLOWED_URL_HOSTS.join(', ')}` },
+      400
+    );
+  }
+
+  const changelog = (body.changelog || '').slice(0, MAX_CHANGELOG_LENGTH);
+  const uids = await parseGrayTargets(body.userNos);
+
+  const info: GrayConfig = {
+    version,
+    url,
+    changelog,
+    uids,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await c.env.VERSION_KV.put('gray', JSON.stringify(info));
+  return c.json({ ok: true, data: { ...info, count: uids.length } });
+});
+
+// Protected: Clear gray config
+app.delete('/api/gray', async (c) => {
+  if (!isAuthorized(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  await c.env.VERSION_KV.delete('gray');
+  return c.json({ ok: true });
 });
 
 // Web UI
@@ -332,6 +456,32 @@ function getWebUI(): string {
         <div id="status" class="status"></div>
       </div>
 
+      <div class="current-version" style="margin-top: 24px;">
+        <h3>灰度发布（指定学号）</h3>
+        <div id="grayState" style="font-size: 13px; color: #666; margin-bottom: 16px;">-</div>
+        <div class="form-group">
+          <label>灰度版本号</label>
+          <input type="text" id="grayVersionInput" placeholder="例如: 1.3.0-beta.1">
+        </div>
+        <div class="form-group">
+          <label>灰度下载链接（留空则用正式版默认链接）</label>
+          <input type="text" id="grayUrlInput" placeholder="">
+        </div>
+        <div class="form-group">
+          <label>灰度更新日志</label>
+          <textarea id="grayChangelogInput" placeholder="输入灰度版本更新内容..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>灰度名单（学号，逗号或换行分隔；留空保存 = 关闭灰度）</label>
+          <textarea id="grayUserNosInput" placeholder="例如:&#10;2021081125,&#10;2021081126"></textarea>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="graySaveBtn" onclick="saveGray()" style="flex: 1; width: auto;">保存灰度</button>
+          <button id="grayClearBtn" onclick="clearGray()" style="flex: 1; width: auto; background: #cc0000;">清除灰度</button>
+        </div>
+        <div id="grayStatusMsg" class="status"></div>
+      </div>
+
       <div class="preview">
         <div class="preview-label">version.json 预览</div>
         <code id="preview">{\n  "version": "",\n  "url": "",\n  "changelog": ""\n}</code>
@@ -367,9 +517,100 @@ function getWebUI(): string {
         document.getElementById('urlInput').value = data.url || '';
         document.getElementById('changelogInput').value = data.changelog || '';
         updatePreview();
+        loadGray();
       } catch (e) {
         alert('登录失败，请检查令牌');
       }
+    }
+
+    function updateGrayState(data) {
+      const el = document.getElementById('grayState');
+      if (data && data.version && Number(data.count) > 0) {
+        el.textContent = '进行中：' + data.version + ' · ' + data.count
+          + ' 名指定用户 · 更新于 ' + new Date(data.updatedAt).toLocaleString();
+      } else {
+        el.textContent = '未启用';
+      }
+    }
+
+    async function loadGray() {
+      try {
+        const res = await fetch('/api/gray', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('grayVersionInput').value = data.version || '';
+        document.getElementById('grayUrlInput').value = data.url || '';
+        document.getElementById('grayChangelogInput').value = data.changelog || '';
+        document.getElementById('grayUserNosInput').value = '';
+        updateGrayState(data);
+      } catch (e) { /* 忽略：灰度配置加载失败不影响主表单 */ }
+    }
+
+    async function saveGray() {
+      const version = document.getElementById('grayVersionInput').value.trim();
+      const url = document.getElementById('grayUrlInput').value.trim();
+      const changelog = document.getElementById('grayChangelogInput').value;
+      const userNos = document.getElementById('grayUserNosInput').value;
+
+      if (!version) {
+        showGrayStatus('请输入灰度版本号', false);
+        return;
+      }
+
+      const btn = document.getElementById('graySaveBtn');
+      btn.disabled = true;
+      btn.textContent = '保存中...';
+
+      try {
+        const res = await fetch('/api/gray', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ version, url, changelog, userNos })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+        updateGrayState(data.data);
+        showGrayStatus(data.data.count > 0 ? '灰度已保存（' + data.data.count + ' 名用户）' : '灰度已保存（名单为空，已关闭）', true);
+      } catch (e) {
+        showGrayStatus('保存失败: ' + e.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '保存灰度';
+      }
+    }
+
+    async function clearGray() {
+      const btn = document.getElementById('grayClearBtn');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/gray', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (!res.ok) throw new Error('Clear failed');
+        ['grayVersionInput', 'grayUrlInput'].forEach((id) => { document.getElementById(id).value = ''; });
+        document.getElementById('grayChangelogInput').value = '';
+        document.getElementById('grayUserNosInput').value = '';
+        updateGrayState(null);
+        showGrayStatus('灰度已清除，全部用户回到正式版', true);
+      } catch (e) {
+        showGrayStatus('清除失败: ' + e.message, false);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function showGrayStatus(msg, success) {
+      const el = document.getElementById('grayStatusMsg');
+      el.textContent = msg;
+      el.className = 'status ' + (success ? 'success' : 'error');
+      setTimeout(() => { el.className = 'status'; }, 3000);
     }
 
     function updatePreview() {

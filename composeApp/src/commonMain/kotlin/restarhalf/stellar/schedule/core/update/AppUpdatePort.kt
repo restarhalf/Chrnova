@@ -7,9 +7,14 @@ package restarhalf.stellar.schedule.core.update
  * 同时提供QQ群和微信赞赏码等辅助功能。
  */
 interface AppUpdatePort {
-    /** 检查是否有新版本，默认从 Cloudflare Worker 获取 */
-    suspend fun check(currentVersionName: String): AppUpdateInfo? =
-        checkUpdateFromWorker(currentVersionName)
+    /**
+     * 检查是否有新版本，默认从 Cloudflare Worker 获取
+     *
+     * @param currentVersionName 当前版本名称
+     * @param grayUid 灰度标识（学号 SHA-256 hex），为 null 时不参与灰度，仅获取正式版
+     */
+    suspend fun check(currentVersionName: String, grayUid: String? = null): AppUpdateInfo? =
+        checkUpdateFromWorker(currentVersionName, grayUid)
 
     /** 跳转到浏览器下载 */
     fun startDirectDownload(info: AppUpdateInfo)

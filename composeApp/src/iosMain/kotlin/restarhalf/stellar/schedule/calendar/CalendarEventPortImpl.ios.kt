@@ -188,9 +188,9 @@ class CalendarEventPortImpl(
         val b = removeAllExamEvents()
         return if (a is CalendarEventPort.SyncResult.Success && b is CalendarEventPort.SyncResult.Success) {
             CalendarEventPort.SyncResult.Success(a.affected + b.affected)
-        } else if (a is CalendarEventPort.SyncResult.Failed) a
-        else if (b is CalendarEventPort.SyncResult.Failed) b
-        else CalendarEventPort.SyncResult.Success(0)
+        } else a as? CalendarEventPort.SyncResult.Failed
+            ?: (b as? CalendarEventPort.SyncResult.Failed
+                ?: CalendarEventPort.SyncResult.Success(0))
     }
 
     private fun removeAllCourseEventsInternal(): Int {

@@ -62,6 +62,22 @@ function safeFileName(title: string): string {
   return (title || '').replace(/[^\w一-龥\-_. ]/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'paper';
 }
 
+/** 文件头魔数校验：仅放行真实 PDF / DOC / DOCX，防止扩展名伪造上传任意二进制 */
+async function isAllowedDocument(file: File): Promise<boolean> {
+  let buf: Uint8Array;
+  try {
+    buf = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  } catch {
+    return false;
+  }
+  if (buf.length < 4) return false;
+  const eq = (sig: number[]) => sig.every((b, i) => buf[i] === b);
+  if (eq([0x25, 0x50, 0x44, 0x46])) return true;        // %PDF
+  if (eq([0x50, 0x4B, 0x03, 0x04])) return true;        // PK..（docx 实为 zip）
+  if (eq([0xD0, 0xCF, 0x11, 0xE0])) return true;        // OLE（旧版 .doc）
+  return false;
+}
+
 /** 剥离 device_id 等敏感字段，仅返回公开安全字段（防 IDOR 泄漏） */
 function publicPaper(p: Paper): Omit<Paper, 'device_id'> {
   const { device_id, ...rest } = p;
@@ -87,13 +103,18 @@ function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读接口开放；管理接口同源（管理后台同源部署），无需 CORS。
-app.use('/papers', cors());
-app.use('/papers/*', cors());
-app.use('/courses', cors());
-app.use('/folders', cors());
-app.use('/download/*', cors());
-app.use('/verify-star', cors());
+// CORS 仅对公开只读接口开放，且限定为自有前端域；管理接口同源（管理后台同源部署），无需 CORS。
+const CORS_ORIGINS = [
+  'https://chrnova.restarhalf.dpdns.org',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+app.use('/papers', cors({ origin: CORS_ORIGINS }));
+app.use('/papers/*', cors({ origin: CORS_ORIGINS }));
+app.use('/courses', cors({ origin: CORS_ORIGINS }));
+app.use('/folders', cors({ origin: CORS_ORIGINS }));
+app.use('/download/*', cors({ origin: CORS_ORIGINS }));
+app.use('/verify-star', cors({ origin: CORS_ORIGINS }));
 
 // Get all papers with optional filters
 app.get('/papers', async (c) => {
@@ -196,6 +217,12 @@ app.post('/upload', async (c) => {
     return c.json({ error: 'X-Device-Id header required' }, 400);
   }
 
+  // IP 级限流：即使轮换 device_id 也无法绕过，遏制批量注入 GitHub / D1。
+  // 上限 30/min：容纳校园网同 IP 整班并发上传课件。
+  if (!rateLimit(`ip-upload:${clientIp(c)}`, 30, 60)) {
+    return c.json({ error: '上传过于频繁，请稍后再试' }, 429);
+  }
+
   if (!rateLimit(`upload:${clientIp(c)}:${deviceId}`, 30, 60)) {
     return c.json({ error: '上传过于频繁，请稍后再试' }, 429);
   }
@@ -217,6 +244,11 @@ app.post('/upload', async (c) => {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!ALLOWED_EXT.includes(ext)) {
       return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
+    }
+
+    // 扩展名之外再校验文件头魔数，防止伪造类型上传任意二进制
+    if (!(await isAllowedDocument(file))) {
+      return c.json({ error: '文件内容与扩展名不符，仅支持真实 PDF / DOC / DOCX' }, 400);
     }
 
     const id = crypto.randomUUID();
@@ -431,6 +463,11 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!ALLOWED_EXT.includes(ext)) {
       return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
+    }
+
+    // 扩展名之外再校验文件头魔数，防止伪造类型上传任意二进制
+    if (!(await isAllowedDocument(file))) {
+      return c.json({ error: '文件内容与扩展名不符，仅支持真实 PDF / DOC / DOCX' }, 400);
     }
 
     const id = crypto.randomUUID();

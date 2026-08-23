@@ -52,6 +52,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import org.koin.compose.koinInject
+import restarhalf.stellar.schedule.config.LocalSecrets
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -346,13 +347,13 @@ fun SettingsScreen(
                             onClick = onEvaluation,
                         )
                     })
-//                    add(CardItem("courseSelection") {
-//                        ArrowPreference(
-//                            title = "自动抢课",
-//                            summary = "自动监控并提交选课请求",
-//                            onClick = onCourseSelection,
-//                        )
-//                    })
+//                        add(CardItem("courseSelection") {
+//                            ArrowPreference(
+//                                title = "自动抢课",
+//                                summary = "自动监控并提交选课请求",
+//                                onClick = onCourseSelection,
+//                            )
+//                        })
                     add(CardItem("exportCsv") {
                         ArrowPreference(
                             title = "导出课表CSV",

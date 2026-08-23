@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.platform
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 
-expect val AppIoDispatcher: CoroutineDispatcher
+val AppIoDispatcher: CoroutineDispatcher = Dispatchers.IO

@@ -139,7 +139,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(libs.navigationevent)
+                implementation(libs.androidx.navigationevent)
                 implementation(libs.miuix.ui)
                 implementation(libs.miuix.blur)
                 implementation(libs.miuix.preference)

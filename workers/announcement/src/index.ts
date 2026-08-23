@@ -90,9 +90,14 @@ function validateInput(body: any): string | null {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读接口开放；管理接口同源（管理后台同源部署），无需 CORS。
-app.use('/announcements', cors());
-app.use('/announcements/*', cors());
+// CORS 仅对公开只读接口开放，且限定为自有前端域；管理接口同源（管理后台同源部署），无需 CORS。
+const CORS_ORIGINS = [
+  'https://chrnova.restarhalf.dpdns.org',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+app.use('/announcements', cors({ origin: CORS_ORIGINS }));
+app.use('/announcements/*', cors({ origin: CORS_ORIGINS }));
 
 // ─── 公开只读接口（仅返回已发布） ───
 

@@ -5,9 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CancellationException
@@ -20,7 +18,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.context.GlobalContext
+import restarhalf.stellar.schedule.CourseSelectionService.Companion.latestLogFlow
+import restarhalf.stellar.schedule.CourseSelectionService.Companion.pendingConfig
+import restarhalf.stellar.schedule.CourseSelectionService.Companion.runningFlow
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
 import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
@@ -29,8 +32,7 @@ import restarhalf.stellar.schedule.domain.port.SnatchServiceConfig
 import restarhalf.stellar.schedule.domain.port.SnatchTarget
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import kotlin.time.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 /**
@@ -108,7 +110,7 @@ class CourseSelectionService : Service() {
         try {
             while (scope.isActive) {
                 attempt++
-                if (cfg.maxAttempts > 0 && attempt > cfg.maxAttempts) {
+                if (cfg.maxAttempts in 1..<attempt) {
                     emitLog("已达最大尝试次数 ${cfg.maxAttempts}，停止", ServiceLogEntry.LEVEL_WARN)
                     break
                 }
@@ -157,7 +159,7 @@ class CourseSelectionService : Service() {
                     }
                 }
                 try {
-                    delay(cfg.intervalMs)
+                    delay(cfg.intervalMs.milliseconds)
                 } catch (e: CancellationException) {
                     throw e
                 }
@@ -201,7 +203,7 @@ class CourseSelectionService : Service() {
             .toLocalDateTime(TimeZone.currentSystemDefault())
         return "${dt.hour.toString().padStart(2, '0')}:" +
             "${dt.minute.toString().padStart(2, '0')}:" +
-            "${dt.second.toString().padStart(2, '0')}"
+                dt.second.toString().padStart(2, '0')
     }
 
     private fun buildNotification(title: String, content: String): Notification {
@@ -224,24 +226,22 @@ class CourseSelectionService : Service() {
     }
 
     private fun updateNotification(title: String, content: String) {
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(NOTIFICATION_ID, buildNotification(title, content))
     }
 
     private fun ensureChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (nm.getNotificationChannel(CHANNEL_ID) == null) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID,
-                    "自动抢课",
-                    NotificationManager.IMPORTANCE_LOW,
-                ).apply {
-                    description = "后台抢课服务运行状态通知"
-                    setShowBadge(false)
-                }
-                nm.createNotificationChannel(channel)
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "自动抢课",
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = "后台抢课服务运行状态通知"
+                setShowBadge(false)
             }
+            nm.createNotificationChannel(channel)
         }
     }
 

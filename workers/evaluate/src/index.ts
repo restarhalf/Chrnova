@@ -130,10 +130,15 @@ async function checkAdmin(c: any): Promise<boolean> {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读接口开放；管理接口同源（管理后台同源部署），无需 CORS。
-app.use('/courses', cors());
-app.use('/evaluations', cors());
-app.use('/evaluations/*', cors());
+// CORS 仅对公开只读 GET 接口开放，且限定为自有前端域；
+// 写接口（POST /evaluations、like、delete、patch）不开放跨域，
+// 防止第三方网页借访客浏览器向本平台注入内容。
+const CORS_ORIGINS = [
+  'https://chrnova.restarhalf.dpdns.org',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+app.use('/courses', cors({ origin: CORS_ORIGINS }));
 
 // ─── Helpers ───
 
@@ -201,6 +206,17 @@ function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
 
+// 进程内"相同内容短时重复提交"去重：遏制轮换 user_hash 刷同一条垃圾内容
+const recentPosts = new Map<string, number>();
+function isDuplicatePost(ip: string, content: string): boolean {
+  const key = `${ip}:${content}`;
+  const now = Date.now();
+  const exp = recentPosts.get(key);
+  if (exp && now < exp) return true;
+  recentPosts.set(key, now + 60_000);
+  return false;
+}
+
 // ─── Public: list course summaries (aggregated) ───
 // 按 (course_name, teacher) 联合聚合：平均分、评价数、最新评价时间。
 // 同一门课不同老师各自独立一条（教学班差异大，不应混合平均）。
@@ -234,7 +250,7 @@ app.get('/courses', async (c) => {
 
 // ─── Public: list evaluations ───
 // 去掉审核后，所有评价默认可见。仍保留 status 字段做向前兼容（旧数据可能含 pending/rejected）。
-app.get('/evaluations', async (c) => {
+app.get('/evaluations', cors({ origin: CORS_ORIGINS }), async (c) => {
   const course = c.req.query('course');
   const teacher = c.req.query('teacher');
   const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1);
@@ -274,7 +290,7 @@ app.get('/evaluations', async (c) => {
 });
 
 // ─── Public: evaluation detail ───
-app.get('/evaluations/:id', async (c) => {
+app.get('/evaluations/:id', cors({ origin: CORS_ORIGINS }), async (c) => {
   const id = c.req.param('id');
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?')
     .bind(id)
@@ -308,6 +324,13 @@ app.post('/evaluations', async (c) => {
       return c.json({ error: '账号已被封禁，无法提交评价' }, 403);
     }
 
+    // IP 级限流：user_hash 可由客户端伪造，纯靠 per-user 限制可被轮换绕过，
+    // 叠加 IP 维度遏制批量刷内容（即"被他人利用生成违规内容"的主要入口）。
+    // 上限 30/min：仍远低于攻击者所需吞吐，但容纳校园网同 IP 整班并发。
+    if (!rateLimit(`ip-submit:${clientIp(c)}`, 30, 60)) {
+      return c.json({ error: '提交过于频繁，请稍后再试' }, 429);
+    }
+
     if (!rateLimit(`submit:${uh}`, 10, 60)) {
       return c.json({ error: '提交过于频繁，请稍后再试' }, 429);
     }
@@ -337,6 +360,9 @@ app.post('/evaluations', async (c) => {
     const content = (body.content || '').trim();
     if (!content) {
       return c.json({ error: 'content is required' }, 400);
+    }
+    if (isDuplicatePost(clientIp(c), content)) {
+      return c.json({ error: '请勿在短时间内重复提交相同内容' }, 429);
     }
     if (content.length > MAX_CONTENT_LEN) {
       return c.json({ error: 'content 过长' }, 400);
@@ -377,6 +403,10 @@ app.post('/evaluations/:id/like', async (c) => {
   }
   if (await isBanned(c.env.DB, uh)) {
     return c.json({ error: '账号已被封禁，无法点赞' }, 403);
+  }
+
+  if (!rateLimit(`ip-like:${clientIp(c)}`, 20, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
   }
 
   if (!rateLimit(`like:${uh}`, 30, 60)) {
@@ -425,6 +455,10 @@ app.delete('/evaluations/:id', async (c) => {
     return c.json({ error: '账号已被封禁，无法删除评价' }, 403);
   }
 
+  if (!rateLimit(`ip-del:${clientIp(c)}`, 10, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ? AND user_hash = ?')
     .bind(id, uh)
     .first<EvaluationRow>();
@@ -449,6 +483,10 @@ app.patch('/evaluations/:id', async (c) => {
     }
     if (await isBanned(c.env.DB, uh)) {
       return c.json({ error: '账号已被封禁，无法修改评价' }, 403);
+    }
+
+    if (!rateLimit(`ip-upd:${clientIp(c)}`, 10, 60)) {
+      return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
     }
 
     const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ? AND user_hash = ?')

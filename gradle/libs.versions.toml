@@ -6,7 +6,7 @@ kotlin = "2.4.10"
 kotlinx-collections-immutable = "0.5.1"
 kotlinx-coroutines = "1.11.0"
 coil-compose = "3.5.0"
-markdown-renderer = "0.43.0"
+markdown-renderer = "0.44.0"
 glance = "1.1.1"
 miuix = "0.9.4-rc01"
 qrose = "1.1.2"
@@ -29,6 +29,7 @@ androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance"}
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-navigationevent = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 # Compose Multiplatform
 compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "compose" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
@@ -54,7 +55,6 @@ miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui", version.ref = "miuix" }
 miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur", version.ref = "miuix" }
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference", version.ref = "miuix" }
 miuix-nav = { module = "top.yukonga.miuix.kmp:miuix-nav", version.ref = "miuix" }
-navigationevent = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 # Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

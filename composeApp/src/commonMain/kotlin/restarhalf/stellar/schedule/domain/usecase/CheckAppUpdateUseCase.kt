@@ -5,7 +5,8 @@ import restarhalf.stellar.schedule.core.update.AppUpdatePort
 
 class CheckAppUpdateUseCase(
     private val appUpdate: AppUpdatePort,
+    private val getGrayUid: () -> String? = { null },
 ) {
     suspend operator fun invoke(currentVersionName: String): AppUpdateInfo? =
-        appUpdate.check(currentVersionName)
+        appUpdate.check(currentVersionName, getGrayUid())
 }

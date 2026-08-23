@@ -370,7 +370,20 @@ val useCaseModule = module {
     factory { PEScoreDetailUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
     factory { PEAuthProfileUseCase(gateway = get(), auth = get(), authWorkflow = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
-    factory { CheckAppUpdateUseCase(appUpdate = get()) }
+    factory {
+        CheckAppUpdateUseCase(
+            appUpdate = get(),
+            getGrayUid = {
+                val store = get<JwxtAuthStore>()
+                val userNo = store.getUserNo()
+                    ?: store.getLastUserNo()
+                    ?: store.getCredentials()?.first
+                userNo?.takeIf { it.isNotBlank() }
+                    ?.let { CourseEvaluationPort.hashUserNo(it) }
+                    ?.takeIf { it.isNotBlank() }
+            },
+        )
+    }
     factory {
         CourseSelectionUseCase(
             gateway = get(),

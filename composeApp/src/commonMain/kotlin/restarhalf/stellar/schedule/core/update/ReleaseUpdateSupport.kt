@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.core.update
 
+import io.ktor.http.encodeURLParameter
 import kotlinx.serialization.Serializable
 
 internal const val VERSION_WORKER_URL = "https://chrnova.version.restarhalf.dpdns.org"
@@ -32,4 +33,8 @@ internal fun isNewerVersion(latest: String, current: String): Boolean {
     return false
 }
 
-internal fun buildVersionWorkerUrl(): String = "$VERSION_WORKER_URL/version.json"
+internal fun buildVersionWorkerUrl(grayUid: String? = null): String {
+    val base = "$VERSION_WORKER_URL/version.json"
+    val uid = grayUid?.trim()?.takeIf { it.isNotEmpty() } ?: return base
+    return "$base?uid=${uid.encodeURLParameter()}"
+}
