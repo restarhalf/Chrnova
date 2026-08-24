@@ -1,13 +1,14 @@
 package restarhalf.stellar.schedule.ui.screens.announcement
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,11 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
@@ -46,6 +51,10 @@ import com.mikepenz.markdown.model.DefaultMarkdownColors
 import com.mikepenz.markdown.model.DefaultMarkdownTypography
 import com.mikepenz.markdown.model.ReferenceLinkHandler
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
+import coil3.compose.LocalPlatformContext
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -253,6 +262,10 @@ private fun AnnouncementCodeBlock(
 
 /**
  * 块级图片：圆角 + 点击跳转全屏看图器。
+ *
+ * 加载为异步：加载中显示固定比例占位块（避免未返回时高度塌缩导致正文跳动），
+ * 失败显示"点击重试"（给 URL 追加 fragment 触发重新执行），成功后 crossfade 淡入。
+ * 错误态的点击只重试，不冒泡到外层的看图器跳转。
  */
 @Composable
 private fun AnnouncementMarkdownImage(
@@ -262,25 +275,77 @@ private fun AnnouncementMarkdownImage(
 ) {
     val link = node.resolveAnnouncementImageLink(content, LocalReferenceLinkHandler.current) ?: return
     val alt = node.resolveAnnouncementImageAlt(content)
+    val colors = MiuixTheme.colorScheme
 
-    Coil3ImageTransformerImpl.transform(link).let { imageData ->
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { onImageClick(link) },
-        ) {
-            Image(
-                painter = imageData.painter,
-                contentDescription = alt ?: imageData.contentDescription,
-                modifier = Modifier.fillMaxWidth(),
-                alignment = imageData.alignment,
-                contentScale = imageData.contentScale,
-                alpha = imageData.alpha,
-                colorFilter = imageData.colorFilter,
-            )
-        }
+    var attempt by remember(link) { mutableIntStateOf(0) }
+    val platformContext = LocalPlatformContext.current
+    val model = remember(link, attempt) {
+        // Coil 3 无请求参数机制；重试时给 URL 追加 fragment 使请求实例变化以重新执行，
+        // 首次加载仍用原始链接，保证缓存键稳定
+        ImageRequest.Builder(platformContext)
+            .data(if (attempt > 0) "$link#retry-$attempt" else link)
+            .crossfade(true)
+            .build()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onImageClick(link) },
+    ) {
+        SubcomposeAsyncImage(
+            model = model,
+            contentDescription = alt,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier.fillMaxWidth(),
+            loading = {
+                PlaceholderBox {
+                    Text(
+                        text = "图片加载中…",
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = colors.onSurfaceVariantSummary,
+                    )
+                }
+            },
+            error = {
+                PlaceholderBox(
+                    modifier = Modifier.clickable { attempt++ },
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "图片加载失败",
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = colors.onSurfaceVariantSummary,
+                        )
+                        Text(
+                            text = "点击重试",
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = colors.primary,
+                        )
+                    }
+                }
+            },
+        )
+    }
+}
+
+/** 图片加载中/失败的固定比例占位块 */
+@Composable
+private fun PlaceholderBox(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .background(MiuixTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
+            .then(modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
     }
 }
 

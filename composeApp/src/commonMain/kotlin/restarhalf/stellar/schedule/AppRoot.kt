@@ -11,12 +11,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ObservableSettings
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
@@ -50,9 +53,18 @@ fun AppRoot(
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     exitApp: () -> Unit = {},
 ) {
+    // Coil 网络 fetcher 需显式注册：Android 经 ServiceLoader 自动注册，
+    // iOS/native 无该机制，不配置则单例 ImageLoader 无网络能力，所有网络图加载失败。
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components { add(coil3.network.ktor3.KtorNetworkFetcherFactory()) }
+            .build()
+    }
+
     val vm: AppViewModel = koinViewModel()
     val bgVm: BackgroundViewModel = koinViewModel()
     val appUpdate: AppUpdatePort = koinInject()
+    val checkAppUpdate: CheckAppUpdateUseCase = koinInject()
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
 
@@ -109,7 +121,8 @@ fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        runCatching { appUpdate.check(currentVersionName = appInfo.versionName) }
+        // 经用例层检查，自动携带灰度 uid（学号哈希），与关于页手动检查行为一致
+        runCatching { checkAppUpdate(currentVersionName = appInfo.versionName) }
             .onSuccess { latest ->
                 if (latest != null) {
                     updateAppState { current ->

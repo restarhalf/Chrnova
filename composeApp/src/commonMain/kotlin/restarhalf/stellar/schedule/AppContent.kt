@@ -184,9 +184,6 @@ fun AppContent(
         mainPagerState.syncPage()
     }
 
-    // miuix-nav 返回栈。显式 <Screen> 超类型参数是必须的：裸写
-    // rememberNavBackStack(Screen.Main) 会把 T 推断为 Screen.Main 单例类型，
-    // 导致整个密封层级无法序列化（保存/恢复时失败）。
     val backStack = rememberNavBackStack<Screen>(Screen.Main)
     val navigator = remember(backStack) { AppNavigator(backStack) }
     val scope = rememberCoroutineScope()
@@ -203,8 +200,6 @@ fun AppContent(
                 barMode = appState.barMode,
             )
         }
-
-    // 将不稳定 lambda 用 rememberUpdatedState 包装，避免每次重组都使 remember 失效
     val pictureSelectorHostState by rememberUpdatedState(pictureSelectorHost)
     val ensureNotificationPermissionState by rememberUpdatedState(ensureNotificationPermission)
     val openUriState by rememberUpdatedState(openUri)
@@ -213,9 +208,6 @@ fun AppContent(
     val saveImageState by rememberUpdatedState(saveImage)
     val canSaveImageState by rememberUpdatedState(canSaveImage)
     val runSyncState by rememberUpdatedState(runSync)
-
-    // 把网络图片 URL 拉取为字节后，经平台 saveImage 存入相册。复用公告 HttpClient
-    // （无鉴权，适合任意公开图床地址），文件名从 URL 末段推导。
     val announcementHttpClient = koinInject<HttpClient>(named("announcement"))
     val saveImageFromUrl: suspend (String) -> Boolean = remember(
         announcementHttpClient,
@@ -231,12 +223,7 @@ fun AppContent(
             }
         }
     }
-
-    // 公告全局共享一个 ViewModel：首页/列表/详情三处共用同一实例与状态，
-    // 列表页标记已读后首页红点立即消失，无需跨实例流同步。
     val announcementVm: AnnouncementViewModel = koinViewModel()
-
-    // App 回到前台（含冷启动）时刷新公告，让新发布的公告及时点亮首页红点
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -248,12 +235,6 @@ fun AppContent(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // 导航视觉效果，对齐 example：前缘平滑圆角裁剪跟随设备屏幕圆角，
-    // 转场期间拦截输入。不设置转场调暗（dimAmount = 0f）——透明页面栈下
-    // 调暗遮罩会形成黑屏感，且静止时默认线性 scrim 会在透明顶层下常驻黑幕。
-    // 注意：不设置 backdropColor（保持 Color.Unspecified）。example 的页面本身
-    // 不透明，backdropColor 只用于转场露底；Chrnova 页面透明、背景图从宿主
-    // 透出，若画一层不透明底色会把背景图盖住。
     val navCornerRadius = rememberNavSystemCornerRadius()
     val navEffects =
         remember(

@@ -110,7 +110,7 @@ app.get('/announcements', async (c) => {
     'SELECT * FROM announcements WHERE status = \'published\' ORDER BY pinned DESC, created_at DESC LIMIT ?'
   ).bind(limit).all<Announcement>();
 
-  return c.json(result.results.map(toWireAnnouncement));
+  return c.json(result.results.map((a) => toWireAnnouncement(a, new URL(c.req.url).origin)));
 });
 
 // Get published announcement detail
@@ -123,7 +123,7 @@ app.get('/announcements/:id', async (c) => {
   if (!result) {
     return c.json({ error: 'Announcement not found' }, 404);
   }
-  return c.json(toWireAnnouncement(result));
+  return c.json(toWireAnnouncement(result, new URL(c.req.url).origin));
 });
 
 // ─── 管理接口（Bearer ADMIN_TOKEN） ───
@@ -327,11 +327,73 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
 /**
  * 转换对外输出：剥离 status 管理字段，并把 DB 的 pinned 0/1 转为布尔，
  * 与客户端 @Serializable 模型（pinned: Boolean）一一对应。
+ * 同时把正文中直连图床的地址改写为本 Worker 的 /img 反代——
+ * imgbb 的 i.ibb.co 在大陆网络经常不可达，走自有域名过 Cloudflare 更稳。
  */
-function toWireAnnouncement(a: Announcement): Omit<Announcement, 'status' | 'pinned'> & { pinned: boolean } {
+function toWireAnnouncement(
+  a: Announcement,
+  origin: string,
+): Omit<Announcement, 'status' | 'pinned'> & { pinned: boolean } {
   const { status, pinned, ...rest } = a;
-  return { ...rest, pinned: !!pinned };
+  return { ...rest, content: rewriteImageUrls(a.content, origin), pinned: !!pinned };
 }
+
+/** 允许反代的图床域名（含子域） */
+const IMG_PROXY_HOSTS = ['ibb.co'];
+const IMG_PROXY_URL_RE = new RegExp(
+  `https?://([a-z0-9-]+\\.)*(${IMG_PROXY_HOSTS.join('|').replace(/\./g, '\\.')})/[^\\s)\\]]+`,
+  'gi',
+);
+
+function rewriteImageUrls(content: string, origin: string): string {
+  if (!content) return content;
+  return content.replace(IMG_PROXY_URL_RE, (m) => `${origin}/img?url=${encodeURIComponent(m)}`);
+}
+
+// ─── 图片反代（公开）：客户端经自有域名拉取图床资源 ───
+
+app.get('/img', async (c) => {
+  const raw = c.req.query('url') || '';
+  let target: URL;
+  try {
+    target = new URL(raw);
+  } catch {
+    return c.json({ error: 'Invalid url' }, 400);
+  }
+  const host = target.hostname.toLowerCase();
+  const allowed = target.protocol === 'https:' &&
+    IMG_PROXY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  if (!allowed) {
+    return c.json({ error: 'Host not allowed' }, 400);
+  }
+  // 图片请求数远多于写接口，限流阈值放宽；进程内窗口仅防单实例滥用
+  if (!rateLimit(`img:${clientIp(c)}`, 120, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(target.toString(), { signal: AbortSignal.timeout(20_000) });
+  } catch (_) {
+    return c.json({ error: '图片服务暂时不可用' }, 502);
+  }
+  if (!upstream.ok || !upstream.body) {
+    return c.json({ error: `图片获取失败（HTTP ${upstream.status}）` }, 502);
+  }
+  const size = parseInt(upstream.headers.get('Content-Length') || '0', 10);
+  if (size > MAX_IMG_BYTES) {
+    return c.json({ error: '图片过大' }, 502);
+  }
+
+  const headers = new Headers();
+  headers.set(
+    'Content-Type',
+    upstream.headers.get('Content-Type') || 'application/octet-stream',
+  );
+  // 图床直链内容不变，可长缓存，减轻 Worker 与图床压力
+  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  return new Response(upstream.body, { status: 200, headers });
+});
 
 // ─── Admin Web UI ───
 
@@ -630,7 +692,10 @@ function getAdminHTML(): string {
         const dataUri = await readAsDataURL(file);
         const res = await apiFetch('/admin/api/upload', { method: 'POST', body: JSON.stringify({ image: dataUri }) });
         const data = await res.json();
-        insertAtCursor('editContent', '![图片](' + data.url + ')\\n');
+        // 直链经本 Worker 的 /img 反代下发，绕开 imgbb 大陆直连不可达问题；
+        // 公开接口返回时也会对历史直链自动改写，这里提前写入保持一致
+        const proxied = location.origin + '/img?url=' + encodeURIComponent(data.url);
+        insertAtCursor('editContent', '![图片](' + proxied + ')\\n');
         toast('图片已上传，将显示在公告正文', true);
       } catch (e) {
         toast(e.message || '上传失败', false);
