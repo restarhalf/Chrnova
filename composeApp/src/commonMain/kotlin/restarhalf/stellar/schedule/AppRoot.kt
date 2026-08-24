@@ -17,8 +17,10 @@ import com.russhwolf.settings.ObservableSettings
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.core.stats.DauReporter
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import org.koin.compose.viewmodel.koinViewModel
@@ -67,6 +69,7 @@ fun AppRoot(
     val checkAppUpdate: CheckAppUpdateUseCase = koinInject()
     val appInfo: AppInfoPort = koinInject()
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
+    val settingsPort: SettingsPort = koinInject()
 
     val appUiState by vm.uiState.collectAsStateWithLifecycle()
     var appState by remember {
@@ -135,6 +138,14 @@ fun AppRoot(
             }
             .onFailure {
                 AppLogger.log("Update", "自动检查更新失败", it)
+            }
+    }
+
+    LaunchedEffect(Unit) {
+        // 每日匿名日活上报：仅发送本地随机设备标识，不含任何个人信息；失败静默不影响使用
+        runCatching { DauReporter.pingTodayIfDue(settings = settings, deviceId = settingsPort.getDeviceId()) }
+            .onFailure {
+                AppLogger.log("Dau", "日活上报失败", it)
             }
     }
 

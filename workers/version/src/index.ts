@@ -4,6 +4,8 @@ import { cors } from 'hono/cors';
 interface Env {
   VERSION_KV: KVNamespace;
   AUTH_TOKEN: string;
+  /** 日活统计 D1，未配置时 /ping 静默忽略（见 wrangler.toml 中 DAU_DB 说明） */
+  DAU_DB?: D1Database;
 }
 
 interface VersionInfo {
@@ -43,6 +45,16 @@ const MAX_CHANGELOG_LENGTH = 5000;
 /** 写接口限流：同一 IP 60 秒内最多 20 次 */
 const WRITE_RATE_LIMIT = 20;
 const WRITE_RATE_WINDOW_SEC = 60;
+
+/** 日活心跳限流：同一 IP 60 秒内最多 30 次 */
+const PING_RATE_LIMIT = 30;
+const PING_RATE_WINDOW_SEC = 60;
+
+/** 设备标识格式：客户端本地随机生成的 16~64 位字母数字串，仅用于按日去重 */
+const AID_PATTERN = /^[0-9A-Za-z]{16,64}$/;
+
+/** 日活数据保留天数，超期数据由心跳写入时概率性清理 */
+const DAU_RETENTION_DAYS = 730;
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -158,6 +170,56 @@ app.get('/version.json', async (c) => {
     return c.json({ version: '0.0.0', url: DEFAULT_URL, changelog: '', updatedAt: '' });
   }
   return c.json(data);
+});
+
+// Public: Daily active ping
+// 匿名心跳：客户端每日冷启动上报一次本地随机设备标识，按 (UTC 日期, aid) 去重，
+// 仅用于统计日活；不携带任何学号、课表等个人信息。未配置 D1 时静默忽略。
+app.post('/ping', async (c) => {
+  const db = c.env.DAU_DB;
+  if (!db) return c.body(null, 204);
+
+  if (!(await allowRequest(c.env.VERSION_KV, `p:${clientIp(c)}`, PING_RATE_LIMIT, PING_RATE_WINDOW_SEC))) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+
+  let body: { aid?: unknown };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+  const aid = typeof body.aid === 'string' ? body.aid.trim() : '';
+  if (!AID_PATTERN.test(aid)) {
+    return c.json({ error: 'Invalid aid' }, 400);
+  }
+
+  const day = new Date().toISOString().slice(0, 10);
+  await db.prepare('INSERT INTO dau (day, aid) VALUES (?1, ?2) ON CONFLICT DO NOTHING').bind(day, aid).run();
+
+  // 概率性清理超期数据（约 1% 心跳触发），避免表无限增长
+  if (Math.random() < 0.01) {
+    const cutoff = new Date(Date.now() - DAU_RETENTION_DAYS * 86_400_000).toISOString().slice(0, 10);
+    await db.prepare('DELETE FROM dau WHERE day < ?1').bind(cutoff).run();
+  }
+  return c.body(null, 204);
+});
+
+// Protected: DAU statistics (for web UI)
+app.get('/api/stats/dau', async (c) => {
+  if (!isAuthorized(c)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const db = c.env.DAU_DB;
+  if (!db) return c.json({ error: 'DAU 数据库未配置' }, 503);
+
+  const days = Math.min(Math.max(Number.parseInt(c.req.query('days') || '30', 10) || 30, 1), 365);
+  const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+  const result = await db
+    .prepare('SELECT day, COUNT(*) AS count FROM dau WHERE day >= ?1 GROUP BY day ORDER BY day DESC LIMIT ?2')
+    .bind(since, days)
+    .all<{ day: string; count: number }>();
+  return c.json({ ok: true, data: result.results ?? [] });
 });
 
 // Protected: Update version
@@ -416,6 +478,24 @@ function getWebUI(): string {
       margin-bottom: 8px;
     }
     .hidden { display: none; }
+    .dau-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 3px 0;
+    }
+    .dau-day { color: #666; width: 84px; flex-shrink: 0; }
+    .dau-bar-track {
+      flex: 1;
+      background: #eef1f5;
+      border-radius: 4px;
+      height: 14px;
+      overflow: hidden;
+    }
+    .dau-bar { height: 100%; background: #0066ff; border-radius: 4px; }
+    .dau-count { width: 56px; text-align: right; flex-shrink: 0; color: #333; font-variant-numeric: tabular-nums; }
+    .dau-empty { font-size: 13px; color: #999; }
   </style>
 </head>
 <body>
@@ -482,6 +562,11 @@ function getWebUI(): string {
         <div id="grayStatusMsg" class="status"></div>
       </div>
 
+      <div class="current-version" style="margin-top: 24px;">
+        <h3>日活统计（近 30 天）</h3>
+        <div id="dauList" class="dau-empty">加载中...</div>
+      </div>
+
       <div class="preview">
         <div class="preview-label">version.json 预览</div>
         <code id="preview">{\n  "version": "",\n  "url": "",\n  "changelog": ""\n}</code>
@@ -518,6 +603,7 @@ function getWebUI(): string {
         document.getElementById('changelogInput').value = data.changelog || '';
         updatePreview();
         loadGray();
+        loadDau();
       } catch (e) {
         alert('登录失败，请检查令牌');
       }
@@ -611,6 +697,38 @@ function getWebUI(): string {
       el.textContent = msg;
       el.className = 'status ' + (success ? 'success' : 'error');
       setTimeout(() => { el.className = 'status'; }, 3000);
+    }
+
+    async function loadDau() {
+      const el = document.getElementById('dauList');
+      try {
+        const res = await fetch('/api/stats/dau?days=30', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        if (res.status === 503) {
+          el.textContent = '未配置 D1 数据库（见 wrangler.toml 说明）';
+          return;
+        }
+        if (!res.ok) throw new Error('加载失败');
+        const data = await res.json();
+        const rows = data.data || [];
+        if (!rows.length) {
+          el.textContent = '暂无数据';
+          return;
+        }
+        const max = Math.max.apply(null, rows.map(function (r) { return r.count; })) || 1;
+        el.className = '';
+        el.innerHTML = rows.map(function (r) {
+          const width = Math.max(2, Math.round(r.count / max * 100));
+          return '<div class="dau-row">'
+            + '<span class="dau-day">' + String(r.day).slice(5) + '</span>'
+            + '<div class="dau-bar-track"><div class="dau-bar" style="width:' + width + '%"></div></div>'
+            + '<span class="dau-count">' + Number(r.count) + '</span>'
+            + '</div>';
+        }).join('');
+      } catch (e) {
+        el.textContent = '日活数据加载失败';
+      }
     }
 
     function updatePreview() {

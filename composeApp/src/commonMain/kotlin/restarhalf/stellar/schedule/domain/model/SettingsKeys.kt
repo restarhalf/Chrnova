@@ -39,6 +39,8 @@ object SettingsKeys {
     const val LOG_ENABLED = "log_enabled"
     /** 设备唯一标识符 */
     const val DEVICE_ID = "device_id"
+    /** 上次匿名日活上报的日期（UTC，yyyy-MM-dd） */
+    const val DAU_LAST_PING_DAY = "dau_last_ping_day"
     /** Star 验证状态 */
     const val STAR_VERIFIED = "star_verified"
 

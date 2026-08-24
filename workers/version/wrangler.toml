@@ -6,6 +6,15 @@ compatibility_date = "2024-12-01"
 binding = "VERSION_KV"
 id = "f88540855628441e833ffa29908232c0"
 
+# 日活统计（可选）：创建并初始化 D1 后取消下方注释并填入 database_id。
+# 未配置时 /ping 会静默忽略，客户端无感，不影响其余功能。
+#   npx wrangler d1 create chrnova-dau
+#   npx wrangler d1 execute chrnova-dau --remote --file=./schema/dau.sql
+ [[d1_databases]]
+ binding = "DAU_DB"
+ database_name = "chrnova-dau"
+ database_id = "747d9a1b-1d9f-46a8-8d05-d9b4551fd334"
+
 [vars]
 # AUTH_TOKEN should be set via `wrangler secret put AUTH_TOKEN`
 # Generate a strong random token for API authentication
