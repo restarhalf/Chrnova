@@ -32,14 +32,13 @@ import coil3.compose.AsyncImage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import restarhalf.stellar.schedule.platform.AppIoDispatcher
-import kotlin.time.Clock
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
+import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
 import restarhalf.stellar.schedule.ui.navigation.AppChromeState
@@ -84,7 +83,6 @@ import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
-import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -113,6 +111,7 @@ import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.time.Clock
 
 /**
  * 应用主内容组件
@@ -169,6 +168,7 @@ fun AppContent(
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val appState = LocalAppState.current
+    val appUiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
     val backgroundUiState by bgVm.uiState.collectAsStateWithLifecycle()
@@ -332,19 +332,19 @@ fun AppContent(
                                     onIconTap = { navigator.push(Screen.Log) },
                                     onHandleEvent = { event ->
                                         when (event) {
-                                            is AboutUiEvent.OpenUri -> {
+                                            is AboutViewModel.AboutUiEvent.OpenUri -> {
                                                 if (!openUriState(event.uri)) {
                                                     showMessageState("无法打开链接")
                                                 }
                                             }
 
-                                            is AboutUiEvent.JoinQqGroup -> {
+                                            is AboutViewModel.AboutUiEvent.JoinQqGroup -> {
                                                 if (!appUpdate.joinQqGroup(key = event.key)) {
                                                     showMessageState("请检查是否安装了 QQ")
                                                 }
                                             }
 
-                                            AboutUiEvent.WxPayAwardRequested -> {
+                                            AboutViewModel.AboutUiEvent.WxPayAwardRequested -> {
                                                 val saved = appUpdate.saveWxpayToPictures()
                                                 showMessageState(
                                                     if (saved) {
@@ -373,7 +373,7 @@ fun AppContent(
                                     courseId = screen.courseId,
                                     initialDayOfWeek = screen.dayOfWeek,
                                     initialStartSection = screen.startSection,
-                                    initialSelectedWeek = screen.selectedWeek, totalWeeks = appState.totalWeeks,
+                                    initialSelectedWeek = screen.selectedWeek, totalWeeks = appUiState.totalWeeks,
                                 )
                             }
                             entry<Screen.ExamEdit> { screen ->
@@ -637,7 +637,8 @@ private fun MainRouteContent(
     val peVm: PEViewModel = koinViewModel()
     val settingsVm: SettingsViewModel = koinViewModel()
     val appState = LocalAppState.current
-    val updateAppState = LocalUpdateAppState.current
+    val appUiState by vm.uiState.collectAsStateWithLifecycle()
+    val syncUiState by vm.syncUiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val mainPagerState = LocalMainPagerState.current
     val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
@@ -663,9 +664,9 @@ private fun MainRouteContent(
                     vm = homeVm,
                     announcementVm = announcementVm,
                     onAnnouncementClick = { navigator.push(Screen.AnnouncementList) },
-                    campus = appState.campus,
-                    termStartMs = appState.termStartMs,
-                    totalWeeks = appState.totalWeeks,
+                    campus = appUiState.campus,
+                    termStartMs = appUiState.termStartMs,
+                    totalWeeks = appUiState.totalWeeks,
                     componentsAlpha = bgUiState.componentsAlpha,
                     hasBackground = bgUiState.backgroundImageUri != null
                 )
@@ -675,9 +676,9 @@ private fun MainRouteContent(
                 ScheduleScreen(
                     vm = scheduleVm,
                     onSync = runSync,
-                    campus = appState.campus,
-                    termStartMs = appState.termStartMs,
-                    totalWeeks = appState.totalWeeks,
+                    campus = appUiState.campus,
+                    termStartMs = appUiState.termStartMs,
+                    totalWeeks = appUiState.totalWeeks,
                     onAddLabCourse = { dayOfWeek, startSection, selectedWeek ->
                         navigator.push(Screen.ClassEdit(dayOfWeek = dayOfWeek, startSection = startSection, selectedWeek = selectedWeek))
                     },
@@ -716,26 +717,17 @@ private fun MainRouteContent(
                 val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
                 SettingsScreen(
                     vm = settingsVm,
-                    syncUiState = appState.syncUiState,
-                    campus = appState.campus,
-                    termStartMs = appState.termStartMs,
-                    totalWeeks = appState.totalWeeks,
+                    syncUiState = syncUiState,
+                    campus = appUiState.campus,
+                    termStartMs = appUiState.termStartMs,
+                    totalWeeks = appUiState.totalWeeks,
                     onSync = runSync,
                     onLogout = { vm.logout() },
                     ensureCourseReminderPermission = ensureNotificationPermission,
                     ensureExamReminderPermission = ensureNotificationPermission,
-                    onCampusChange = { campus ->
-                        updateAppState { current -> current.copy(campus = campus) }
-                        vm.onCampusChanged(campus)
-                    },
-                    onTermStartChange = { termStartMs ->
-                        updateAppState { current -> current.copy(termStartMs = termStartMs) }
-                        vm.onTermStartMsChanged(termStartMs)
-                    },
-                    onTotalWeeksChange = { totalWeeks ->
-                        updateAppState { current -> current.copy(totalWeeks = totalWeeks) }
-                        vm.onTotalWeeksChanged(totalWeeks)
-                    },
+                    onCampusChange = { campus -> vm.onCampusChanged(campus) },
+                    onTermStartChange = { termStartMs -> vm.onTermStartMsChanged(termStartMs) },
+                    onTotalWeeksChange = { totalWeeks -> vm.onTotalWeeksChanged(totalWeeks) },
                     onChangeBackground = { navigator.push(Screen.ChangeBackground) },
                     onAbout = { navigator.push(Screen.About) },
                     onPaper = { navigator.push(Screen.Papers) },

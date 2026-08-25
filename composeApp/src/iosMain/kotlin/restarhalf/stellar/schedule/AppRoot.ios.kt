@@ -1,8 +1,6 @@
 package restarhalf.stellar.schedule
 
-import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
-import com.russhwolf.settings.ObservableSettings
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -12,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.koin.core.context.startKoin
-import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSData
 import platform.Foundation.NSDocumentDirectory
@@ -53,11 +50,8 @@ import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_sync
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
-import restarhalf.stellar.schedule.ui.theme.rememberAppThemeController
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
@@ -65,62 +59,55 @@ fun AppRoot(): UIViewController {
     ensureKoinStarted()
     lateinit var hostViewController: UIViewController
     hostViewController = ComposeUIViewController {
-        val settings =
-            remember {
-                KoinPlatform.getKoin().get<ObservableSettings>(named(SettingsKeys.PREFS_NAME))
-            }
-        val themeController = rememberAppThemeController(settings)
-        MiuixTheme(controller = themeController) {
-            AppRoot(
-                pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
-                    PictureSelectorHost(
-                        hostViewController = hostViewController,
-                        show = show,
-                        onDismissRequest = onDismissRequest,
-                        onPicked = onPicked,
-                        outputWidthPx = outputWidthPx,
-                        outputHeightPx = outputHeightPx,
-                    )
-                },
-                pdfFilePickerHost = { onPicked ->
-                    PdfFilePickerHost(onPicked = onPicked)
-                },
-                openUri = ::openUri,
-                ensureNotificationPermission = { onGranted ->
-                    ensureNotificationPermission(
-                        controller = hostViewController,
-                        onGranted = onGranted,
-                    )
-                },
-                showMessage = { message ->
-                    showNativeMessage(hostViewController, message)
-                },
-                canSaveAwardPicture = true,
-                saveAwardPicture = { _, bytes ->
-                    saveAwardPicture(
-                        controller = hostViewController,
-                        bytes = bytes,
-                    )
-                },
-                saveLog = { fileName, content ->
-                    saveLogToFile(fileName, content)
-                },
-                saveCsv = { fileName, content ->
-                    saveLogToFile(fileName, content)
-                },
-                canSaveImage = true,
-                saveImage = { _, bytes ->
-                    saveAwardPicture(
-                        controller = hostViewController,
-                        bytes = bytes,
-                    )
-                },
-                exitApp = {
-                    UIApplication.sharedApplication.performSelector(
-                        NSSelectorFromString("suspend")
-                    ) },
-            )
-        }
+        AppRoot(
+            pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
+                PictureSelectorHost(
+                    hostViewController = hostViewController,
+                    show = show,
+                    onDismissRequest = onDismissRequest,
+                    onPicked = onPicked,
+                    outputWidthPx = outputWidthPx,
+                    outputHeightPx = outputHeightPx,
+                )
+            },
+            pdfFilePickerHost = { onPicked ->
+                PdfFilePickerHost(onPicked = onPicked)
+            },
+            openUri = ::openUri,
+            ensureNotificationPermission = { onGranted ->
+                ensureNotificationPermission(
+                    controller = hostViewController,
+                    onGranted = onGranted,
+                )
+            },
+            showMessage = { message ->
+                showNativeMessage(hostViewController, message)
+            },
+            canSaveAwardPicture = true,
+            saveAwardPicture = { _, bytes ->
+                saveAwardPicture(
+                    controller = hostViewController,
+                    bytes = bytes,
+                )
+            },
+            saveLog = { fileName, content ->
+                saveLogToFile(fileName, content)
+            },
+            saveCsv = { fileName, content ->
+                saveLogToFile(fileName, content)
+            },
+            canSaveImage = true,
+            saveImage = { _, bytes ->
+                saveAwardPicture(
+                    controller = hostViewController,
+                    bytes = bytes,
+                )
+            },
+            exitApp = {
+                UIApplication.sharedApplication.performSelector(
+                    NSSelectorFromString("suspend")
+                ) },
+        )
     }
     return hostViewController
 }

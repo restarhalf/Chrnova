@@ -4,8 +4,10 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -95,14 +97,15 @@ class AppViewModel(
     /** 对外暴露的UI状态流 */
     val uiState: StateFlow<AppUiState> = _uiState
 
-    /**
-     * 执行教务系统同步
-     * 
-     * @param updateState 状态更新回调，用于通知UI同步进度
-     */
-    suspend fun runSync(updateState: (SyncUiState) -> Unit) {
-        updateState(SyncUiState.Loading)
-        val uiState =
+    private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
+
+    /** 教务系统同步进度状态流 */
+    val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
+
+    /** 执行教务系统同步，进度与结果通过 [syncUiState] 暴露 */
+    suspend fun runSync() {
+        _syncUiState.value = SyncUiState.Loading
+        _syncUiState.value =
             runCatching { runSyncUseCase() }
                 .fold(
                     onSuccess = {
@@ -117,8 +120,6 @@ class AppViewModel(
                         SyncUiState.Error(e.toUserFacingMessage(UserFacingErrorKind.Sync))
                     },
                 )
-
-        updateState(uiState)
     }
 
     /** 用户登出，清除认证信息 */

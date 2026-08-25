@@ -66,7 +66,6 @@ import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
-import restarhalf.stellar.schedule.ui.viewmodel.AboutUiEvent
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
@@ -96,7 +95,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun AboutScreen(
     vm: AboutViewModel,
     onBack: () -> Unit,
-    onHandleEvent: (AboutUiEvent) -> Unit = {},
+    onHandleEvent: (AboutViewModel.AboutUiEvent) -> Unit = {},
     onStartDownload: (AppUpdateInfo) -> Unit = {},
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,

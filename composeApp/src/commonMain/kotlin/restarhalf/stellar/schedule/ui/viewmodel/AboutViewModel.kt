@@ -22,20 +22,6 @@ import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
- * 关于页面UI事件密封接口
- */
-sealed interface AboutUiEvent {
-    /** 打开URI */
-    data class OpenUri(val uri: String) : AboutUiEvent
-
-    /** 加入QQ群 */
-    data class JoinQqGroup(val key: String) : AboutUiEvent
-
-    /** 微信赞赏请求 */
-    data object WxPayAwardRequested : AboutUiEvent
-}
-
-/**
  * 关于页面ViewModel
  * 
  * 管理关于页面的UI状态，包括：
@@ -46,7 +32,19 @@ sealed interface AboutUiEvent {
 class AboutViewModel(
     private val checkAppUpdate: CheckAppUpdateUseCase,
 ) : ViewModel() {
+    /**
+     * 关于页面UI事件密封接口
+     */
+    sealed interface AboutUiEvent {
+        /** 打开URI */
+        data class OpenUri(val uri: String) : AboutUiEvent
 
+        /** 加入QQ群 */
+        data class JoinQqGroup(val key: String) : AboutUiEvent
+
+        /** 微信赞赏请求 */
+        data object WxPayAwardRequested : AboutUiEvent
+    }
     /**
      * 关于页面UI状态
      * 

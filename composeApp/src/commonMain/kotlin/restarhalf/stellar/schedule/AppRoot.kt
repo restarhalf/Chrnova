@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.snapshotFlow
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.russhwolf.settings.ObservableSettings
@@ -18,6 +18,7 @@ import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.stats.DauReporter
+import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.SettingsPort
@@ -28,6 +29,9 @@ import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
 /**
  * 应用根组件，负责初始化应用状态和管理全局UI逻辑
@@ -54,6 +58,7 @@ fun AppRoot(
     canSaveImage: Boolean = false,
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     exitApp: () -> Unit = {},
+    onThemeModeChange: (Int) -> Unit = {},
 ) {
     // Coil 网络 fetcher 需显式注册：Android 经 ServiceLoader 自动注册，
     // iOS/native 无该机制，不配置则单例 ImageLoader 无网络能力，所有网络图加载失败。
@@ -71,13 +76,11 @@ fun AppRoot(
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val settingsPort: SettingsPort = koinInject()
 
-    val appUiState by vm.uiState.collectAsStateWithLifecycle()
+    // 全局 UI 偏好（对齐 miuix example：AppState 只放界面开关，业务数据走 ViewModel）
     var appState by remember {
         mutableStateOf(
             AppState(
-                campus = appUiState.campus,
-                termStartMs = appUiState.termStartMs,
-                totalWeeks = appUiState.totalWeeks,
+                themeMode = settings.getInt(SettingsKeys.THEME_MODE, 0),
                 barMode = settings.getInt(SettingsKeys.FLOATING_BAR, 0),
             ),
         )
@@ -92,34 +95,37 @@ fun AppRoot(
     }
 
     DisposableEffect(settings) {
-        val listener = settings.addIntListener(SettingsKeys.FLOATING_BAR, appState.barMode) { newValue ->
+        val barListener = settings.addIntListener(SettingsKeys.FLOATING_BAR, appState.barMode) { newValue ->
             updateAppState { current -> current.copy(barMode = newValue) }
         }
-        onDispose { listener.deactivate() }
-    }
-
-    LaunchedEffect(appUiState) {
-        updateAppState { current ->
-            current.copy(
-                campus = appUiState.campus,
-                termStartMs = appUiState.termStartMs,
-                totalWeeks = appUiState.totalWeeks,
-            )
+        val themeListener = settings.addIntListener(SettingsKeys.THEME_MODE, appState.themeMode) { newValue ->
+            updateAppState { current -> current.copy(themeMode = newValue) }
+        }
+        onDispose {
+            barListener.deactivate()
+            themeListener.deactivate()
         }
     }
 
-    val runSync = remember(vm, updateAppState) {
-        suspend {
-            vm.runSync { state ->
-                updateAppState { current -> current.copy(syncUiState = state) }
-            }
-        }
+    // 主题模式外推给宿主（Android 用于 edge-to-edge 系统栏），含初始值同步
+    val currentOnThemeModeChange by rememberUpdatedState(onThemeModeChange)
+    LaunchedEffect(Unit) {
+        snapshotFlow { appState.themeMode }.collect { currentOnThemeModeChange(it) }
     }
+
+    val runSync = remember(vm) {
+        suspend { vm.runSync() }
+    }
+
+    // 更新弹窗与隐私引导属于根级一次性流程状态，仅 AppRoot 自用，无需下发
+    var pendingUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    val showWelcome = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val hasShown = settings.getBoolean(SettingsKeys.CONFIRM_PRIVACY, false)
         if (!hasShown) {
-            updateAppState { current -> current.copy(confirmPrivacy = true) }
+            showWelcome.value = true
         }
     }
 
@@ -128,12 +134,8 @@ fun AppRoot(
         runCatching { checkAppUpdate(currentVersionName = appInfo.versionName) }
             .onSuccess { latest ->
                 if (latest != null) {
-                    updateAppState { current ->
-                        current.copy(
-                            pendingUpdate = latest,
-                            showUpdateDialog = true,
-                        )
-                    }
+                    pendingUpdate = latest
+                    showUpdateDialog = true
                 }
             }
             .onFailure {
@@ -149,80 +151,61 @@ fun AppRoot(
             }
     }
 
-    val showUpdateDialogState =
-        linkedMutableState(
-            valueProvider = { appState.showUpdateDialog },
-            onValueChange = { visible ->
-                updateAppState { current -> current.copy(showUpdateDialog = visible) }
-            },
-        )
-    val confirmPrivacyState =
-        linkedMutableState(
-            valueProvider = { appState.confirmPrivacy },
-            onValueChange = { visible ->
-                updateAppState { current -> current.copy(confirmPrivacy = visible) }
-            },
-        )
-
-    CompositionLocalProvider(
-        LocalAppState provides appState,
-        LocalUpdateAppState provides updateAppState,
-    ) {
-        AppContent(
-            vm = vm,
-            bgVm = bgVm,
-            appUpdate = appUpdate,
-            pictureSelectorHost = pictureSelectorHost,
-            pdfFilePickerHost = pdfFilePickerHost,
-            ensureNotificationPermission = ensureNotificationPermission,
-            openUri = openUri,
-            showMessage = showMessage,
-            canSaveAwardPicture = canSaveAwardPicture,
-            saveAwardPicture = saveAwardPicture,
-            saveLog = saveLog,
-            saveCsv = saveCsv,
-            canSaveImage = canSaveImage,
-            saveImage = saveImage,
-            runSync = runSync,
-        )
-
-        if (appState.showUpdateDialog) {
-            UpdateConfirmDialog(
-                show = showUpdateDialogState.value,
-                onDismissRequest = { showUpdateDialogState.value = false },
-                pendingUpdate = appState.pendingUpdate,
-                onStartDownload = { info ->
-                    appUpdate.startDirectDownload(info)
-                },
+    val themeController =
+        remember(appState.themeMode) {
+            ThemeController(
+                colorSchemeMode =
+                    when (appState.themeMode) {
+                        1 -> ColorSchemeMode.Light
+                        2 -> ColorSchemeMode.Dark
+                        else -> ColorSchemeMode.System
+                    },
             )
         }
 
-        if (appState.confirmPrivacy) {
-            val welcomePagerState = rememberPagerState(pageCount = { 6 })
-            WelcomeScreen(
-                show = confirmPrivacyState,
-                pagerState = welcomePagerState,
-                exitApp = exitApp,
-                openUri = { openUri(it) },
+    MiuixTheme(controller = themeController) {
+        CompositionLocalProvider(
+            LocalAppState provides appState,
+            LocalUpdateAppState provides updateAppState,
+        ) {
+            AppContent(
+                vm = vm,
+                bgVm = bgVm,
+                appUpdate = appUpdate,
+                pictureSelectorHost = pictureSelectorHost,
+                pdfFilePickerHost = pdfFilePickerHost,
+                ensureNotificationPermission = ensureNotificationPermission,
+                openUri = openUri,
+                showMessage = showMessage,
+                canSaveAwardPicture = canSaveAwardPicture,
+                saveAwardPicture = saveAwardPicture,
+                saveLog = saveLog,
+                saveCsv = saveCsv,
+                canSaveImage = canSaveImage,
+                saveImage = saveImage,
+                runSync = runSync,
             )
+
+            if (showUpdateDialog) {
+                UpdateConfirmDialog(
+                    show = showUpdateDialog,
+                    onDismissRequest = { showUpdateDialog = false },
+                    pendingUpdate = pendingUpdate,
+                    onStartDownload = { info ->
+                        appUpdate.startDirectDownload(info)
+                    },
+                )
+            }
+
+            if (showWelcome.value) {
+                val welcomePagerState = rememberPagerState(pageCount = { 6 })
+                WelcomeScreen(
+                    show = showWelcome,
+                    pagerState = welcomePagerState,
+                    exitApp = exitApp,
+                    openUri = { openUri(it) },
+                )
+            }
         }
     }
 }
-
-private fun linkedMutableState(
-    valueProvider: () -> Boolean,
-    onValueChange: (Boolean) -> Unit,
-): MutableState<Boolean> =
-    object : MutableState<Boolean> {
-        override var value: Boolean
-            get() = valueProvider()
-            set(value) {
-                onValueChange(value)
-            }
-
-        override operator fun component1(): Boolean = value
-
-        override operator fun component2(): (Boolean) -> Unit = { updated ->
-            value = updated
-        }
-    }
