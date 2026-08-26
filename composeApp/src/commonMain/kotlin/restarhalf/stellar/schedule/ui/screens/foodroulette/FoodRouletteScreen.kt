@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
@@ -51,10 +52,16 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FoodRouletteScreen(
+    campus: Campus,
     onBack: () -> Unit,
     onFoodSelected: (FoodItem) -> Unit,
-    foods: List<FoodItem> = defaultFoodItems,
 ) {
+    // 按当前设置校区取食物池
+    val foods = remember(campus) { foodItemsFor(campus) }
+    val campusLabel = when (campus) {
+        Campus.Development -> "开发区"
+        Campus.Jinshitan -> "金石滩"
+    }
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val colors = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current
@@ -95,7 +102,7 @@ fun FoodRouletteScreen(
         containerColor = Color.Transparent,
         topBar = {
             AppPageTopBar(
-                title = "今天吃什么",
+                title = "今天吃什么 · $campusLabel",
                 scrollBehavior = topAppBarScrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -188,13 +195,13 @@ fun FoodRouletteScreen(
                     .fillMaxWidth(0.7f)
                     .height(52.dp),
                 onClick = {
-                    if (foods.isNotEmpty()) {
-                        onFoodSelected(foods[centerIndex])
-                    }
+                    val centerFood = foods.getOrNull(centerIndex) ?: return@Button
+                    onFoodSelected(centerFood)
                 },
             ) {
+                val hasQr = foods.getOrNull(centerIndex)?.qrContent?.isNotBlank() == true
                 Text(
-                    text = "选这个，看二维码",
+                    text = if (hasQr) "选这个，看二维码" else "就吃这个！",
                     style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Medium,
                 )

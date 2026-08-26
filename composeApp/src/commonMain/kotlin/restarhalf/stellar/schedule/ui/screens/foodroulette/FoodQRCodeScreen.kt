@@ -47,6 +47,7 @@ fun FoodQRCodeScreen(
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val colors = MiuixTheme.colorScheme
+    val hasQr = food.qrContent.isNotBlank()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -95,45 +96,55 @@ fun FoodQRCodeScreen(
                 ) {
                     Text(
                         text = food.name,
-                        style = MiuixTheme.textStyles.title3,
+                        style = if (hasQr) MiuixTheme.textStyles.title3 else MiuixTheme.textStyles.title2,
                         fontWeight = FontWeight.Bold,
                         color = colors.onBackground,
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .size(260.dp)
-                            .shadow(
-                                elevation = 8.dp,
-                                shape = RoundedCornerShape(16.dp),
-                                clip = false,
-                            )
-                            .squircleClip(16.dp)
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            modifier = Modifier.size(220.dp),
-                            painter = rememberQrCodePainter(
-                                data = food.qrContent.ifBlank { "food://${food.name}" },
-                                options = QrOptions(
-                                    errorCorrectionLevel = QrErrorCorrectionLevel.High,
-                                ),
-                            ),
-                            contentDescription = "${food.name}二维码",
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "扫码点餐",
-                        style = MiuixTheme.textStyles.footnote1,
-                        color = colors.onSurfaceVariantSummary,
                         textAlign = TextAlign.Center,
                     )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    if (hasQr) {
+                        Box(
+                            modifier = Modifier
+                                .size(260.dp)
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    clip = false,
+                                )
+                                .squircleClip(16.dp)
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                modifier = Modifier.size(220.dp),
+                                painter = rememberQrCodePainter(
+                                    data = food.qrContent,
+                                    options = QrOptions(
+                                        errorCorrectionLevel = QrErrorCorrectionLevel.High,
+                                    ),
+                                ),
+                                contentDescription = "${food.name}二维码",
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "扫码点餐",
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = colors.onSurfaceVariantSummary,
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        Text(
+                            text = "今晚就吃它！",
+                            style = MiuixTheme.textStyles.body1,
+                            color = colors.onSurfaceVariantSummary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }

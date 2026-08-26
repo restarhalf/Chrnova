@@ -25,6 +25,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.text.CsvExporter
 import restarhalf.stellar.schedule.core.text.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -51,8 +52,6 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import org.koin.compose.koinInject
-import restarhalf.stellar.schedule.config.LocalSecrets
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -347,13 +346,13 @@ fun SettingsScreen(
                             onClick = onEvaluation,
                         )
                     })
-                        add(CardItem("courseSelection") {
-                            ArrowPreference(
-                                title = "自动抢课",
-                                summary = "自动监控并提交选课请求",
-                                onClick = onCourseSelection,
-                            )
-                        })
+//                        add(CardItem("courseSelection") {
+//                            ArrowPreference(
+//                                title = "自动抢课",
+//                                summary = "自动监控并提交选课请求",
+//                                onClick = onCourseSelection,
+//                            )
+//                        })
                     add(CardItem("exportCsv") {
                         ArrowPreference(
                             title = "导出课表CSV",
@@ -395,13 +394,13 @@ fun SettingsScreen(
                                 }
                             })
                     })
-                    add(CardItem("foodRoulette") {
-                        ArrowPreference(
-                            title = "今天吃什么",
-                            summary = "选择困难症？让滚轮帮你决定",
-                            onClick = onFoodRoulette,
-                        )
-                    })
+//                    add(CardItem("foodRoulette") {
+//                        ArrowPreference(
+//                            title = "今天吃什么",
+//                            summary = "选择困难症？让滚轮帮你决定",
+//                            onClick = onFoodRoulette,
+//                        )
+//                    })
                 }
             )
 

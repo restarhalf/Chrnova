@@ -538,6 +538,7 @@ fun AppContent(
                             }
                             entry<Screen.FoodRoulette> {
                                 FoodRouletteScreen(
+                                    campus = appUiState.campus,
                                     onBack = { navigator.pop() },
                                     onFoodSelected = { food ->
                                         navigator.push(
