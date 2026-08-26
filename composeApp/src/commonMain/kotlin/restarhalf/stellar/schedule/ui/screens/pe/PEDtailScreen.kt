@@ -87,9 +87,9 @@ fun PEDetailScreen(
         containerColor = Color.Transparent,
         topBar = {
             Column {
-                val nextYear=schoolYear.toInt()+1
+                val nextYear = schoolYear.toIntOrNull()?.plus(1)
                 AppPageTopBar(
-                    title = "${schoolYear}-${nextYear}学年体测成绩",
+                    title = if (nextYear != null) "${schoolYear}-${nextYear}学年体测成绩" else "${schoolYear}学年体测成绩",
                     scrollBehavior = topAppBarScrollBehavior,
                     navigationIcon = {
                         IconButton(

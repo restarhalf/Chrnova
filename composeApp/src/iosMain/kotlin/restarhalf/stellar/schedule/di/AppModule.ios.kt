@@ -21,7 +21,9 @@ import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
+import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 
 private val iosPlatformModule = module {
     single { NSUserDefaultsSettings.Factory() }
@@ -51,6 +53,7 @@ private val iosPlatformModule = module {
 
     single<PictureSelectorPort> { PictureSelectorPortImpl() }
     single<AppInfoPort> { AppInfoPortImpl() }
+    single<ScreenTunerPort> { ScreenTunerPortImpl() }
     single<CalendarEventPort> { CalendarEventPortImpl(prefs = get(named("calendar_codes"))) }
     single<AppUpdatePort> { AppUpdatePortImpl() }
     single<CourseSelectionServicePort> { CourseSelectionServicePortImpl() }

@@ -55,6 +55,8 @@ fun PapersDetailScreen(
         uiState.downloadUrl?.let { url ->
             val title = uiState.selectedPaper?.title ?: ""
             onDownload(url, title)
+            // 立即消费，避免返回列表再进其他详情时重复触发旧链接
+            vm.consumeDownloadUrl()
         }
     }
 
@@ -83,8 +85,9 @@ fun PapersDetailScreen(
                     modifier = Modifier.fillMaxWidth().padding( 8.dp),
                     colors = ButtonDefaults.buttonColorsPrimary(),
                     onClick = { vm.downloadPaper(paper.id) },
+                    enabled = !uiState.loading,
                 ) {
-                    Text(text = "下载", color = colors.onPrimary)
+                    Text(text = if (uiState.loading) "获取下载链接中..." else "下载", color = colors.onPrimary)
                 }
             }
         }

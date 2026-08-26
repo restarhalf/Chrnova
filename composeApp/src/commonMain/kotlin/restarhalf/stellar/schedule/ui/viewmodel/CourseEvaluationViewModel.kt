@@ -210,10 +210,17 @@ class CourseEvaluationViewModel(
         }
     }
 
-    fun deleteEvaluation(id: String) {
+    /**
+     * 删除评价。
+     *
+     * @param id 评价ID
+     * @param onResult 删除结果回调（true=成功）；失败时调用方应留在本页展示错误
+     */
+    fun deleteEvaluation(id: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
                 _uiState.update { it.copy(error = "请先登录教务系统后再操作") }
+                onResult(false)
                 return@launch
             }
             _uiState.update { it.copy(loading = true, error = null) }
@@ -221,11 +228,13 @@ class CourseEvaluationViewModel(
                 .onSuccess {
                     _uiState.update { it.copy(loading = false, successMessage = "已删除") }
                     loadEvaluations()
+                    onResult(true)
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "删除评价失败", e)
                     _uiState.update { it.copy(loading = false, error = e.message ?: "删除失败") }
+                    onResult(false)
                 }
         }
     }

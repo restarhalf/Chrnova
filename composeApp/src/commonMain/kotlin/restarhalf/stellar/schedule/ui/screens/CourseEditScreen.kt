@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.SectionRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPalette
@@ -66,6 +65,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param initialDayOfWeek 预选星期几（1-7），用于新建时预填
  * @param initialStartSection 预选开始节次（1-12），用于新建时预填
  * @param initialSelectedWeek 预选周次（1-n），用于新建时预填
+ * @param showMessage 轻提示回调（Toast）
  */
 @Composable
 fun CourseEditScreen(
@@ -78,11 +78,13 @@ fun CourseEditScreen(
     initialStartSection: Int = 1,
     initialSelectedWeek: Int = 1,
     totalWeeks: Int = 20,
+    showMessage: (String) -> Unit = {},
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val courseEditUiState by vm.uiState.collectAsStateWithLifecycle()
+    val isSaving by vm.isSaving.collectAsStateWithLifecycle()
 
     val editingCourse by
     remember(courseId) { vm.observeEditingCourse(courseId) }
@@ -162,7 +164,7 @@ fun CourseEditScreen(
                             val selectedName = if(changeToSelect.value){courseNames.getOrNull(selectedIndex).orEmpty()}else{inputCourseName.value}
                             if (selectedName.isBlank()) {
                                 courseNameError = true
-                                AppLogger.log("EDIT", level = AppLogger.Level.ERROR, message = "课名为空，保存失败")
+                                showMessage("请输入课程名")
                                 return@IconButton
                             }
                             val toSave =
@@ -177,10 +179,20 @@ fun CourseEditScreen(
                                     existing = editingCourse,
                                     courses = courseEditUiState.courses
                                 )
-                            if (toSave != null) {
-                                vm.saveLabCourse(toSave, onSaved = onBack)
+                            if (toSave == null) {
+                                showMessage("请至少选择一个上课周")
+                                return@IconButton
                             }
-                        }) {
+                            vm.saveLabCourse(toSave) { saved ->
+                                if (saved) {
+                                    onBack()
+                                } else {
+                                    showMessage("保存失败，请重试")
+                                }
+                            }
+                        },
+                        enabled = !isSaving
+                    ) {
                         Icon(imageVector = Check, contentDescription = "确定")
                     }
                 },
@@ -245,7 +257,13 @@ fun CourseEditScreen(
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
                                 val c = editingCourse ?: return@Button
-                                vm.deleteCourse(c, onDeleted = onBack)
+                                vm.deleteCourse(c) { deleted ->
+                                    if (deleted) {
+                                        onBack()
+                                    } else {
+                                        showMessage("删除失败，请重试")
+                                    }
+                                }
                                 showDeleteConfirm = false
                             }
                         ) {

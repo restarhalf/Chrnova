@@ -86,7 +86,8 @@ class PapersViewModel(
 
     fun loadPaperDetail(id: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(loading = true, error = null) }
+            // 打开新详情时清掉上一次的下载链接，避免误触发旧试卷的下载
+            _uiState.update { it.copy(loading = true, error = null, downloadUrl = null) }
             runCatching {
                 papersPort.getPaper(id)
             }.onSuccess { paper ->
@@ -112,6 +113,11 @@ class PapersViewModel(
                 _uiState.update { it.copy(loading = false, error = e.message ?: "下载失败") }
             }
         }
+    }
+
+    /** UI 消费掉 [PapersUiState.downloadUrl] 后调用，置空防止重复触发 */
+    fun consumeDownloadUrl() {
+        _uiState.update { it.copy(downloadUrl = null) }
     }
 
     fun uploadPaper(

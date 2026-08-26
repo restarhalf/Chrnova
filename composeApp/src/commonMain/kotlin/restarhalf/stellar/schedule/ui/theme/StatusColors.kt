@@ -51,13 +51,25 @@ object StatusColors {
         @Composable @ReadOnlyComposable
         get() = if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5)
 
-    /** 非本周课程 muted 标题 */
+    /** 非本周课程 muted 标题（浅色下与 mutedBackground 对比度 ≥ 4.5:1） */
     val mutedTitle: Color
         @Composable @ReadOnlyComposable
-        get() = if (isDark) Color(0xFFBDBDBD) else Color(0xFF999999)
+        get() = if (isDark) Color(0xFFBDBDBD) else Color(0xFF6B6B6B)
 
-    /** 非本周课程 muted 副标题 */
+    /** 非本周课程 muted 副标题（浅色下与 mutedBackground 对比度 ≥ 4.5:1） */
     val mutedSub: Color
         @Composable @ReadOnlyComposable
-        get() = if (isDark) Color(0xFF9E9E9E) else Color(0xFFB3B3B3)
+        get() = if (isDark) Color(0xFF9E9E9E) else Color(0xFF6E6E6E)
+
+    private const val STATUS_LUMINANCE_THRESHOLD = 0.45f
+
+    /**
+     * 状态色之上的可读前景色。
+     *
+     * 深色模式下的语义色（healthy/neutral 等）被提亮为浅色底，
+     * 白字对比度会跌破 2:1，此时改用深字；浅色模式保持原有白字观感。
+     */
+    fun onStatusOf(background: Color): Color =
+        if (background.luminance() < STATUS_LUMINANCE_THRESHOLD) Color.White
+        else Color(0xFF1F1F1F)
 }

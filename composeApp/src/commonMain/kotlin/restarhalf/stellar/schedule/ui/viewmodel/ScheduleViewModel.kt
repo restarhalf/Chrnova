@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
@@ -608,41 +607,42 @@ class ScheduleViewModel(
 
     /**
      * 插入课程
-     * 
+     *
      * @param course 要插入的课程
+     * @return 是否写入成功
      */
-    fun insertCourse(course: Course) {
-        viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
-                .onFailure { e ->
-                    if (e is CancellationException) throw e
-                    AppLogger.log("Schedule", "插入课程失败", e)
-                }
-        }
+    suspend fun insertCourse(course: Course): Boolean {
+        return runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
+            .onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Schedule", "插入课程失败", e)
+            }
+            .isSuccess
     }
 
     /**
      * 删除课程
-     * 
+     *
      * @param course 要删除的课程
+     * @return 是否删除成功
      */
-    fun deleteCourse(course: Course) {
-        viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
-                .onFailure { e ->
-                    if (e is CancellationException) throw e
-                    AppLogger.log("Schedule", "删除课程失败", e)
-                }
-        }
+    suspend fun deleteCourse(course: Course): Boolean {
+        return runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
+            .onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Schedule", "删除课程失败", e)
+            }
+            .isSuccess
     }
 
     /**
      * 保存调课后的课程
-     * 
+     *
      * @param overrideCourse 覆盖的课程
+     * @return 是否保存成功
      */
-    fun saveTransCourse(overrideCourse: Course) {
-        insertCourse(overrideCourse)
+    suspend fun saveTransCourse(overrideCourse: Course): Boolean {
+        return insertCourse(overrideCourse)
     }
 
     /**

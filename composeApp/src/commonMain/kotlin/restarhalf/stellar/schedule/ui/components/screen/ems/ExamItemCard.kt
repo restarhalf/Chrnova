@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -152,7 +151,7 @@ fun ExamItemCard(
                     ) {
                         Text(
                             text = "已结束",
-                            color = Color.White,
+                            color = StatusColors.onStatusOf(StatusColors.neutral),
                             style = MiuixTheme.textStyles.footnote2
                         )
                     }

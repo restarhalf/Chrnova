@@ -246,7 +246,8 @@ class ExaminationViewModel(
             "考试时间:$timePart"
         }
         return ExamCardUi(
-            idKey = exam.courseNumber + exam.zwh + exam.time,
+            // 拼上数据库 id 保证唯一：手动添加的考试字段可完全相同，仅靠业务字段会撞 key
+            idKey = "${exam.id}-${exam.courseNumber}-${exam.zwh}-${exam.time}",
             exam = exam,
             title = title,
             dateText = dateText,

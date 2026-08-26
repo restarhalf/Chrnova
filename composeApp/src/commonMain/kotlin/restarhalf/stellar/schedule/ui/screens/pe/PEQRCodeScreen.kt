@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,12 +32,14 @@ import io.github.alexzhirkevich.qrose.options.QrErrorCorrectionLevel
 import io.github.alexzhirkevich.qrose.options.QrOptions
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.ktor.http.encodeURLParameter
+import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -58,6 +61,13 @@ fun PEQRCodeScreen(
     val id = peAuthProfile?.stdNumber ?: jwxtAuthProfile?.userNo
     val name = peAuthProfile?.stuName ?: jwxtAuthProfile?.name
     val colors = MiuixTheme.colorScheme
+
+    // 扫码场景：屏幕常亮 + 临时拉满亮度，离开页面时恢复
+    val screenTuner: ScreenTunerPort = koinInject()
+    DisposableEffect(Unit) {
+        screenTuner.enterScanPresentation()
+        onDispose { screenTuner.exitScanPresentation() }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,

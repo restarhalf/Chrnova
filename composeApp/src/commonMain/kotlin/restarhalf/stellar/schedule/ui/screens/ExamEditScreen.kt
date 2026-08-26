@@ -62,11 +62,13 @@ fun ExamEditScreen(
     isEdit: Boolean,
     onEditChanged: (Boolean) -> Unit,
     examinationId: Long? = null,
+    showMessage: (String) -> Unit = {},
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val examEditUiState by vm.uiState.collectAsStateWithLifecycle()
+    val isSaving by vm.isSaving.collectAsStateWithLifecycle()
 
     val editingExamination by
     remember(examinationId) { vm.observeEditingExamination(examinationId) }
@@ -123,7 +125,8 @@ fun ExamEditScreen(
         }
         if (formState.timePart.isNotBlank()) {
             try {
-                val parts = formState.timePart.split("-")
+                // 兼容手动保存的 "HH:mm~HH:mm" 与教务同步的 "HH:mm-HH:mm"
+                val parts = formState.timePart.split(Regex("[~-]"))
                 if (parts.size == 2) {
                     val startParts = parts[0].trim().split(":")
                     val endParts = parts[1].trim().split(":")
@@ -158,7 +161,7 @@ fun ExamEditScreen(
                             }
                             if (selectedName.isBlank()) {
                                 courseNameError = true
-                                AppLogger.log("EXAM_EDIT", level = AppLogger.Level.ERROR, message = "课程名为空，保存失败")
+                                showMessage("请输入课程名")
                                 return@IconButton
                             }
                             val toSave = vm.buildExaminationToSave(
@@ -171,10 +174,20 @@ fun ExamEditScreen(
                                 courses = courses,
                                 existing = editingExamination,
                             )
-                            if (toSave != null) {
-                                vm.saveExamination(toSave, onSaved = onBack)
+                            if (toSave == null) {
+                                showMessage("请输入课程名")
+                                return@IconButton
                             }
-                        }) {
+                            vm.saveExamination(toSave) { saved ->
+                                if (saved) {
+                                    onBack()
+                                } else {
+                                    showMessage("保存失败，请重试")
+                                }
+                            }
+                        },
+                        enabled = !isSaving
+                    ) {
                         Icon(imageVector = Check, contentDescription = "确定")
                     }
                 },
@@ -244,7 +257,13 @@ fun ExamEditScreen(
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
                                 if (examinationId != null) {
-                                    vm.deleteExamination(examinationId, onDeleted = onBack)
+                                    vm.deleteExamination(examinationId) { deleted ->
+                                        if (deleted) {
+                                            onBack()
+                                        } else {
+                                            showMessage("删除失败，请重试")
+                                        }
+                                    }
                                 }
                                 showDeleteConfirm = false
                             }

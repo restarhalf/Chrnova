@@ -374,6 +374,7 @@ fun AppContent(
                                     initialDayOfWeek = screen.dayOfWeek,
                                     initialStartSection = screen.startSection,
                                     initialSelectedWeek = screen.selectedWeek, totalWeeks = appUiState.totalWeeks,
+                                    showMessage = showMessageState,
                                 )
                             }
                             entry<Screen.ExamEdit> { screen ->
@@ -385,6 +386,7 @@ fun AppContent(
                                     isEdit = isEdit,
                                     onEditChanged = { },
                                     examinationId = screen.examinationId,
+                                    showMessage = showMessageState,
                                 )
                             }
                             entry<Screen.Log> {
@@ -676,6 +678,9 @@ private fun MainRouteContent(
                 ScheduleScreen(
                     vm = scheduleVm,
                     onSync = runSync,
+                    syncUiState = syncUiState,
+                    showMessage = showMessage,
+                    onSyncErrorConsumed = { vm.acknowledgeSyncResult() },
                     campus = appUiState.campus,
                     termStartMs = appUiState.termStartMs,
                     totalWeeks = appUiState.totalWeeks,

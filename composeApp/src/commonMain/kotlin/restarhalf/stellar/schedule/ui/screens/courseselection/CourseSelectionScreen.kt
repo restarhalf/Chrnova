@@ -80,6 +80,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * 自动抢课屏幕
@@ -497,6 +498,9 @@ private fun SelectedTab(
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
 ) {
+    // 退课是不可逆操作，先记录待退课程，经确认弹窗后再执行
+    var pendingDropCourse by remember { mutableStateOf<JwxtSelectedCourse?>(null) }
+
     PullToRefresh(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
@@ -524,7 +528,7 @@ private fun SelectedTab(
             items(uiState.selectedCourses, key = { it.noticeId }) { course ->
                 SelectedCourseCard(
                     course = course,
-                    onDrop = { vm.dropSelectedCourse(course) },
+                    onDrop = { pendingDropCourse = course },
                 )
             }
         } else if (!uiState.loadingSelected) {
@@ -533,6 +537,38 @@ private fun SelectedTab(
             }
         }
         item { Spacer(modifier = Modifier.height(12.dp)) }
+        }
+    }
+
+    val dropTarget = pendingDropCourse
+    if (dropTarget != null) {
+        WindowDialog(
+            show = true,
+            title = "确认退课",
+            summary = "确定要退选「${dropTarget.courseName.ifBlank { "未命名课程" }}」（班次 ${dropTarget.kxh}）吗？退课后如需重选可能受选课人数限制。",
+            onDismissRequest = { pendingDropCourse = null },
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = { pendingDropCourse = null },
+                ) {
+                    Text(text = "取消")
+                }
+                Button(
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                    onClick = {
+                        pendingDropCourse = null
+                        vm.dropSelectedCourse(dropTarget)
+                    },
+                ) {
+                    Text(text = "确认退课", color = MiuixTheme.colorScheme.onPrimary)
+                }
+            }
         }
     }
 }
@@ -827,7 +863,7 @@ private fun TargetCard(
                             text = "${index + 1}",
                             style = MiuixTheme.textStyles.footnote1,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = StatusColors.onStatusOf(stateColor),
                         )
                     }
                     Column(
@@ -861,7 +897,7 @@ private fun TargetCard(
                                 text = "成功",
                                 style = MiuixTheme.textStyles.footnote1,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White,
+                                color = StatusColors.onStatusOf(StatusColors.healthy),
                             )
                         }
                     }

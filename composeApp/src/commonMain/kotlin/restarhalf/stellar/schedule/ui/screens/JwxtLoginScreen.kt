@@ -12,8 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.Color
@@ -22,11 +27,16 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.icons.Eye
+import restarhalf.stellar.schedule.ui.icons.EyeOff
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -62,6 +72,18 @@ fun JwxtLoginScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
     val focusManager = LocalFocusManager.current
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    fun submitFromIme() {
+        if (uiState.loading ||
+            uiState.userNo.isBlank() ||
+            uiState.password.isBlank()
+        ) {
+            return
+        }
+        focusManager.clearFocus()
+        vm.submitLogin(onSuccess = onLoginSuccess)
+    }
     
     Scaffold(
         containerColor = Color.Transparent,
@@ -147,6 +169,11 @@ fun JwxtLoginScreen(
                         label = "账号",
                         value = uiState.userNo,
                         onValueChange = { vm.onUserNoChange(it) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next,
+                        ),
                         modifier = Modifier.fillMaxWidth().semantics {
                             contentType = ContentType.Username
                         }
@@ -155,7 +182,24 @@ fun JwxtLoginScreen(
                         label = "密码",
                         value = uiState.password,
                         onValueChange = { vm.onPasswordChange(it) },
-                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        visualTransformation =
+                            if (passwordVisible) VisualTransformation.None
+                            else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(onDone = { submitFromIme() }),
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible) EyeOff else Eye,
+                                    contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
+                                    tint = colors.onSurfaceVariantSummary,
+                                )
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().semantics {
                             contentType = ContentType.Password
                         }
@@ -186,7 +230,7 @@ fun JwxtLoginScreen(
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "账号是你的学号，密码是新教务系统的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取课程和考务等",
+                            text = "账号是你的学号，密码是信息门户的密码\n如：\n学号：2021081125\n密码：your_password\n登录后可获取课程和考务等",
                             style = MiuixTheme.textStyles.footnote1,
                             color = colors.onSurfaceVariantSummary,
                         )

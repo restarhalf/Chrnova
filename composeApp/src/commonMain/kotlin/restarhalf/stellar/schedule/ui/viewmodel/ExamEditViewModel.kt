@@ -9,8 +9,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -45,6 +47,12 @@ class ExamEditViewModel(
     private val saveExaminationUseCase: SaveExaminationUseCase,
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
 ) : ViewModel() {
+
+    /** 保存进行中标志，用于防连点重复提交 */
+    private val _saving = MutableStateFlow(false)
+
+    /** 保存进行中状态，UI 据此禁用保存按钮 */
+    val isSaving: StateFlow<Boolean> = _saving.asStateFlow()
 
     /**
      * 考试编辑UI状态
@@ -245,18 +253,26 @@ class ExamEditViewModel(
     /**
      * 保存考试
      *
+     * 进行中会忽略重复调用（防连点重复插入），结果通过回调返回。
+     *
      * @param examination 考试数据
-     * @param onSaved 保存完成回调
+     * @param onResult 保存结果回调（true=成功）
      */
-    fun saveExamination(examination: Examination, onSaved: () -> Unit) {
+    fun saveExamination(examination: Examination, onResult: (Boolean) -> Unit) {
+        if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
-            val semesterId = resolveSemesterId()
-            runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
-                .onSuccess { onSaved() }
-                .onFailure { e ->
-                    if (e is CancellationException) throw e
-                    AppLogger.log("ExamEdit", "保存考试失败", e)
-                }
+            try {
+                val semesterId = resolveSemesterId()
+                val saved = runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
+                    .onFailure { e ->
+                        if (e is CancellationException) throw e
+                        AppLogger.log("ExamEdit", "保存考试失败", e)
+                    }
+                    .isSuccess
+                onResult(saved)
+            } finally {
+                _saving.value = false
+            }
         }
     }
 
@@ -280,18 +296,19 @@ class ExamEditViewModel(
 
     /**
      * 删除考试
-     * 
+     *
      * @param id 考试ID
-     * @param onDeleted 删除完成回调
+     * @param onResult 删除结果回调（true=成功）
      */
-    fun deleteExamination(id: Long, onDeleted: () -> Unit) {
+    fun deleteExamination(id: Long, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }
-                .onSuccess { onDeleted() }
+            val deleted = runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("ExamEdit", "删除考试失败", e)
                 }
+                .isSuccess
+            onResult(deleted)
         }
     }
 }

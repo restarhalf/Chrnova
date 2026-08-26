@@ -69,9 +69,11 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.theme.StatusColors
+import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -97,6 +99,9 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * - 点击空格子添加实验课
  * 
  * @param onSync 同步回调
+ * @param syncUiState 全局同步状态（用于展示同步中/失败提示）
+ * @param showMessage 轻提示回调（Toast）
+ * @param onSyncErrorConsumed 错误提示展示后的确认回调，避免重复弹出
  * @param campus 当前校区
  * @param termStartMs 学期开始时间戳
  * @param totalWeeks 学期总周数
@@ -106,6 +111,9 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun ScheduleScreen(
     vm: ScheduleViewModel,
     onSync: suspend () -> Unit,
+    syncUiState: SyncUiState = SyncUiState.Idle,
+    showMessage: (String) -> Unit = {},
+    onSyncErrorConsumed: () -> Unit = {},
     campus: Campus,
     termStartMs: Long,
     totalWeeks: Int,
@@ -141,6 +149,15 @@ fun ScheduleScreen(
 
     LaunchedEffect(pagerState.currentPage) {
         selectedEmptyCell = null
+    }
+
+    // 自动/手动同步失败时给出可见反馈，并向上确认消费，避免切页后重复弹出
+    LaunchedEffect(syncUiState) {
+        val state = syncUiState
+        if (state is SyncUiState.Error) {
+            showMessage("课表同步失败：${state.message}")
+            onSyncErrorConsumed()
+        }
     }
     val primary = colors.primary
     val surfaceSoft = colors.surfaceContainerHigh
@@ -228,7 +245,19 @@ fun ScheduleScreen(
                         }
                     }
                 },
-                actions = {},
+                actions = {
+                    if (syncUiState is SyncUiState.Loading) {
+                        Box(
+                            modifier = Modifier.size(40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                size = 18.dp,
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    }
+                },
             )
         },
         popupHost = {
@@ -266,8 +295,12 @@ fun ScheduleScreen(
                                 vm.showTransConflict(result.conflicts, result.overrideCourse)
                                 return@launch
                             }
-                            vm.saveTransCourse(result.overrideCourse)
-                            vm.closeTransDialogAndClear()
+                            val saved = vm.saveTransCourse(result.overrideCourse)
+                            if (saved) {
+                                vm.closeTransDialogAndClear()
+                            } else {
+                                showMessage("调课保存失败，请重试")
+                            }
                         }
                     }
                 )
@@ -327,12 +360,19 @@ fun ScheduleScreen(
                                         modifier = Modifier.weight(1f),
                                         onClick = {
                                             val pending = vm.consumePendingOverride()
-                                            if (pending != null) {
-                                                vm.saveTransCourse(pending)
-                                            } else {
+                                            if (pending == null) {
                                                 vm.clearTransConflict()
+                                                vm.closeTransDialogAndClear()
+                                                return@Button
                                             }
-                                            vm.closeTransDialogAndClear()
+                                            scope.launch {
+                                                val saved = vm.saveTransCourse(pending)
+                                                if (saved) {
+                                                    vm.closeTransDialogAndClear()
+                                                } else {
+                                                    showMessage("保存失败，请重试")
+                                                }
+                                            }
                                         },
                                         colors = ButtonDefaults.buttonColorsPrimary()
                                     ) {
@@ -404,7 +444,12 @@ fun ScheduleScreen(
                                         vm.closeDetailSheet()
                                         val toDelete = courses.firstOrNull { it.id == id }
                                         if (toDelete != null) {
-                                            vm.deleteCourse(toDelete)
+                                            scope.launch {
+                                                val deleted = vm.deleteCourse(toDelete)
+                                                if (!deleted) {
+                                                    showMessage("撤销调课失败，请重试")
+                                                }
+                                            }
                                         }
                                     })
                             }

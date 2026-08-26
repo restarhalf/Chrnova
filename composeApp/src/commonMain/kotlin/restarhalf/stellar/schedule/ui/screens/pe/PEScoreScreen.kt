@@ -184,9 +184,9 @@ fun PEScoreScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    val nextYear = score.schoolYear.toInt() + 1
+                                    val nextYear = score.schoolYear.toIntOrNull()?.plus(1)
                                     Text(
-                                        text = "${score.schoolYear}-${nextYear}学年",
+                                        text = if (nextYear != null) "${score.schoolYear}-${nextYear}学年" else "${score.schoolYear}学年",
                                         style = MiuixTheme.textStyles.body1,
                                         fontWeight = FontWeight.Bold
                                     )

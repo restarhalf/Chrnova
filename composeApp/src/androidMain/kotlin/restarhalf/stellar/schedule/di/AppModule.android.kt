@@ -22,11 +22,14 @@ import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
+import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 
 private val androidPlatformModule = module {
     single<PictureSelectorPort> { PictureSelectorPortImpl(androidContext()) }
     single<AppInfoPort> { AppInfoPortImpl(androidContext()) }
+    single<ScreenTunerPort> { ScreenTunerPortImpl(androidContext()) }
 
     single<AppDatabase> { buildPlatformAppDatabase(androidContext()) }
     single<CourseDao> { get<AppDatabase>().courseDao() }

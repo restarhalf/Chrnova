@@ -196,7 +196,16 @@ class GradeViewModel(
         error: String,
     ): GradeScreenUi {
         val courses = report.achievements
-        val cards = courses.map { buildGradeCardUi(it) }
+        // 兜底去重：gradeId 缺失时 fallback key 可能重复（如同名课程多学期重修），撞 key 会让 LazyColumn 崩溃
+        val seenKeys = HashSet<String>()
+        val cards = courses.map { grade ->
+            val card = buildGradeCardUi(grade)
+            if (seenKeys.add(card.idKey)) {
+                card
+            } else {
+                card.copy(idKey = "${card.idKey}#${seenKeys.size}")
+            }
+        }
         val summary = GradeSummary(
             earnedCredits = report.earnedCredits,
             totalGradePoints = report.totalGradePoints,
@@ -311,7 +320,7 @@ class GradeViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Grades", "加载成绩数据失败", e)
-                    _summary.value = TermGradeReport()
+                    // 刷新失败时保留已展示的汇总，避免用户正在看的数据被清空
                     _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }
             _loading.value = false

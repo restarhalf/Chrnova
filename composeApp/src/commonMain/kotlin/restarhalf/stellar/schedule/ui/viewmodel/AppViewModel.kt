@@ -102,6 +102,16 @@ class AppViewModel(
     /** 教务系统同步进度状态流 */
     val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
 
+    /**
+     * UI 层展示过同步错误提示后调用，把状态复位为 Idle，
+     * 避免用户切回旧页面时对同一次失败重复弹提示。
+     */
+    fun acknowledgeSyncResult() {
+        if (_syncUiState.value is SyncUiState.Error) {
+            _syncUiState.value = SyncUiState.Idle
+        }
+    }
+
     /** 执行教务系统同步，进度与结果通过 [syncUiState] 暴露 */
     suspend fun runSync() {
         _syncUiState.value = SyncUiState.Loading

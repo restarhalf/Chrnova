@@ -149,8 +149,10 @@ fun EvaluationDetailScreen(
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
                                 showDeleteConfirm = false
-                                vm.deleteEvaluation(evaluation.id)
-                                onBack()
+                                // 等删除结果：成功才返回，失败留在本页由错误药丸提示
+                                vm.deleteEvaluation(evaluation.id) { deleted ->
+                                    if (deleted) onBack()
+                                }
                             },
                         ) {
                             Text(text = "确认删除", color = colors.onPrimary)
