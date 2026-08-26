@@ -18,6 +18,18 @@ interface Announcement {
   updated_at: number;
 }
 
+interface AdConfig {
+  id: number;
+  image_url: string | null;
+  target_url: string | null;
+  announcement_id: string | null;
+  enabled: number;
+  updated_at: number;
+}
+
+/** 宽松 URL 校验：仅要求 http(s):// 开头，避免把明显非链接串入库 */
+const URL_RE = /^https?:\/\/.+/i;
+
 /** 字段上限：与客户端模型对应，防止超长内容拖垮列表与详情页 */
 const MAX_TITLE_LEN = 200;
 const MAX_CONTENT_LEN = 20000;
@@ -82,8 +94,8 @@ function validateInput(body: any): string | null {
   if (body.pinned !== undefined && body.pinned !== 0 && body.pinned !== 1) {
     return 'pinned 仅支持 0 或 1';
   }
-  if (body.status !== undefined && body.status !== 'published' && body.status !== 'draft') {
-    return 'status 仅支持 published 或 draft';
+  if (body.status !== undefined && body.status !== 'published' && body.status !== 'draft' && body.status !== 'ad') {
+    return 'status 仅支持 published、draft 或 ad';
   }
   return null;
 }
@@ -98,6 +110,7 @@ const CORS_ORIGINS = [
 ];
 app.use('/announcements', cors({ origin: CORS_ORIGINS }));
 app.use('/announcements/*', cors({ origin: CORS_ORIGINS }));
+app.use('/ad', cors({ origin: CORS_ORIGINS }));
 
 // ─── 公开只读接口（仅返回已发布） ───
 
@@ -117,13 +130,45 @@ app.get('/announcements', async (c) => {
 app.get('/announcements/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
-    'SELECT * FROM announcements WHERE id = ? AND status = \'published\''
+    'SELECT * FROM announcements WHERE id = ? AND status IN (\'published\', \'ad\')'
   ).bind(id).first<Announcement>();
 
   if (!result) {
     return c.json({ error: 'Announcement not found' }, 404);
   }
   return c.json(toWireAnnouncement(result, new URL(c.req.url).origin));
+});
+
+// 运行时自愈：确保 ad_config 表存在（与 src/schema.sql 结构一致）。
+// 即使部署后未手动执行迁移，接口也能自动建表，避免 "no such table" 导致 500。
+async function ensureAdTable(c: any): Promise<void> {
+  await c.env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS ad_config (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      image_url TEXT,
+      target_url TEXT,
+      announcement_id TEXT,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      updated_at INTEGER NOT NULL
+    )`
+  ).run();
+}
+
+// 公告列表页顶部广告位：单例配置（ad_config.id=1）
+app.get('/ad', async (c) => {
+  await ensureAdTable(c);
+  const row = await c.env.DB.prepare(
+    'SELECT * FROM ad_config WHERE id = 1'
+  ).first<AdConfig>();
+  // 未配置 / 未启用 / 三个字段全空 → 返回 null，客户端据此隐藏广告位
+  if (!row || !row.enabled) return c.json(null);
+  if (!row.image_url && !row.target_url && !row.announcement_id) return c.json(null);
+  const origin = new URL(c.req.url).origin;
+  return c.json({
+    imageUrl: row.image_url ? maybeProxyImage(row.image_url, origin) : null,
+    targetUrl: row.target_url || null,
+    announcementId: row.announcement_id || null,
+  });
 });
 
 // ─── 管理接口（Bearer ADMIN_TOKEN） ───
@@ -136,11 +181,24 @@ const adminAuth = async (c: any, next: any) => {
 };
 
 // Admin: list all announcements (含草稿；管理端需要 status 字段，返回原始行)
+// 广告位配置（单例 id=1）随公告列表一起下发，不再单独提供 /admin/api/ad 读接口
 app.get('/admin/api/announcements', adminAuth, async (c) => {
   const result = await c.env.DB.prepare(
     'SELECT * FROM announcements ORDER BY pinned DESC, created_at DESC'
   ).all<Announcement>();
-  return c.json(result.results);
+  await ensureAdTable(c);
+  const adRow = await c.env.DB.prepare(
+    'SELECT * FROM ad_config WHERE id = 1'
+  ).first<AdConfig>();
+  const adConfig = adRow
+    ? {
+        imageUrl: adRow.image_url || '',
+        targetUrl: adRow.target_url || '',
+        announcementId: adRow.announcement_id || '',
+        enabled: !!adRow.enabled,
+      }
+    : { imageUrl: '', targetUrl: '', announcementId: '', enabled: false };
+  return c.json({ items: result.results, adConfig });
 });
 
 // Admin: get detail
@@ -260,6 +318,57 @@ app.delete('/admin/api/announcements/:id', adminAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// Admin: upsert ad config（单例，id 固定为 1；读取已并入 GET /admin/api/announcements）
+app.put('/admin/api/ad', adminAuth, async (c) => {
+  await ensureAdTable(c);
+  if (!rateLimit(`admin:${clientIp(c)}`, 30, 60)) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch (_) {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
+  const targetUrl = typeof body.targetUrl === 'string' ? body.targetUrl.trim() : '';
+  const announcementId = typeof body.announcementId === 'string' ? body.announcementId.trim() : '';
+  const enabled = body.enabled === true || body.enabled === 'true' || body.enabled === 1;
+
+  if (imageUrl && !URL_RE.test(imageUrl)) {
+    return c.json({ error: '横幅图需以 http(s):// 开头' }, 400);
+  }
+  if (targetUrl && !URL_RE.test(targetUrl)) {
+    return c.json({ error: '跳转链接需以 http(s):// 开头' }, 400);
+  }
+  if (!imageUrl && !targetUrl && !announcementId) {
+    return c.json({ error: '至少填写横幅图或跳转目标' }, 400);
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  await c.env.DB.prepare(
+    `INSERT INTO ad_config (id, image_url, target_url, announcement_id, enabled, updated_at)
+     VALUES (1, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       image_url=excluded.image_url,
+       target_url=excluded.target_url,
+       announcement_id=excluded.announcement_id,
+       enabled=excluded.enabled,
+       updated_at=excluded.updated_at`
+  )
+    .bind(
+      imageUrl || null,
+      targetUrl || null,
+      announcementId || null,
+      enabled ? 1 : 0,
+      now,
+    )
+    .run();
+
+  return c.json({ ok: true });
+});
+
 // ─── 图片上传（代理 imgbb，API key 仅存于 Worker secret，不暴露给前端/客户端） ───
 
 /** 单张图片上限：imgbb 免费 key 单图上限 32MB，这里保守限制 10MB */
@@ -348,6 +457,23 @@ const IMG_PROXY_URL_RE = new RegExp(
 function rewriteImageUrls(content: string, origin: string): string {
   if (!content) return content;
   return content.replace(IMG_PROXY_URL_RE, (m) => `${origin}/img?url=${encodeURIComponent(m)}`);
+}
+
+/**
+ * 单条图片 URL 的反代改写：ibb.co（含子域）走本 Worker 的 /img 反代，
+ * 绕开 imgbb 大陆直连不可达；其余域名（如自有 CDN）原样返回，避免被 /img 的白名单拒绝。
+ */
+function maybeProxyImage(url: string, origin: string): string {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    const proxied = u.protocol === 'https:' &&
+      IMG_PROXY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+    if (proxied) return `${origin}/img?url=${encodeURIComponent(url)}`;
+  } catch {
+    /* 非法 URL 原样返回，由上层校验拦截 */
+  }
+  return url;
 }
 
 // ─── 图片反代（公开）：客户端经自有域名拉取图床资源 ───
@@ -450,6 +576,7 @@ function getAdminHTML(): string {
     .badge-pinned { background: #ffe8cc; color: #b45309; }
     .badge-important { background: #fee2e2; color: #b91c1c; }
     .badge-draft { background: #e5e7eb; color: #4b5563; }
+    .badge-ad { background: #e0f2fe; color: #0369a1; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
     .modal { background: #fff; border-radius: 14px; padding: 24px; width: 90%; max-width: 560px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
@@ -486,7 +613,10 @@ function getAdminHTML(): string {
     </div>
     <div class="toolbar">
       <span style="font-size:13px;color:#888;">管理公告内容，客户端首页与公告列表实时可见</span>
-      <button class="btn-primary" onclick="openCreate()">+ 新建公告</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost" onclick="openAd()">广告位配置</button>
+        <button class="btn-primary" onclick="openCreate()">+ 新建公告</button>
+      </div>
     </div>
     <div id="list" class="list"></div>
     <div id="emptyState" class="empty hidden">还没有公告</div>
@@ -512,6 +642,7 @@ function getAdminHTML(): string {
           <select id="editStatus">
             <option value="published">发布</option>
             <option value="draft">草稿</option>
+            <option value="ad">广告位（不进列表）</option>
           </select>
         </div>
       </div>
@@ -534,9 +665,38 @@ function getAdminHTML(): string {
     </div>
   </div>
 
+  <div id="adModal" class="modal-overlay hidden" onclick="if(event.target===this)closeAd()">
+    <div class="modal">
+      <h2>广告位配置（公告列表页顶部横幅）</h2>
+      <div class="form-group">
+        <label>横幅图 URL</label>
+        <input type="text" id="adImageUrl" placeholder="https://... 图片直链（ibb.co 链接请填 i.ibb.co 直链）">
+      </div>
+      <div class="form-group">
+        <label>跳转链接（仅单个外链时点击直接跳转）</label>
+        <input type="text" id="adTargetUrl" placeholder="https://... 留空则使用下方关联公告">
+      </div>
+      <div class="form-group">
+        <label>关联公告（无外链时，点击走与公告详情一致的打开方式）</label>
+        <select id="adAnnouncementId">
+          <option value="">— 不关联（点击无反应）—</option>
+        </select>
+        <span style="font-size:12px;color:#888;">先建一条状态为「广告位（不进列表）」的公告，这里即可选择它</span>
+      </div>
+      <div class="form-group checkbox-line">
+        <input type="checkbox" id="adEnabled"><label for="adEnabled">启用广告位</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeAd()">取消</button>
+        <button class="btn-primary" id="adSaveBtn" onclick="saveAd()">保存</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let token = '';
     let all = [];
+    let adConfig = { imageUrl: '', targetUrl: '', announcementId: '', enabled: false };
     let editingId = null;
 
     function login() {
@@ -544,10 +704,11 @@ function getAdminHTML(): string {
       if (!token) return;
       apiFetch('/admin/api/announcements')
         .then(r => r.json())
-        .then(items => {
+        .then(data => {
           document.getElementById('loginView').classList.add('hidden');
           document.getElementById('mainView').classList.remove('hidden');
-          all = items;
+          all = data.items || [];
+          adConfig = data.adConfig || { imageUrl: '', targetUrl: '', announcementId: '', enabled: false };
           render();
         })
         .catch(() => alert('登录失败'));
@@ -574,7 +735,8 @@ function getAdminHTML(): string {
         const badges = [];
         if (a.pinned) badges.push('<span class="badge badge-pinned">置顶</span>');
         if (a.priority) badges.push('<span class="badge badge-important">重要</span>');
-        if (a.status !== 'published') badges.push('<span class="badge badge-draft">草稿</span>');
+        if (a.status === 'ad') badges.push('<span class="badge badge-ad">广告位</span>');
+        else if (a.status !== 'published') badges.push('<span class="badge badge-draft">草稿</span>');
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML =
@@ -620,6 +782,47 @@ function getAdminHTML(): string {
 
     function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
 
+    // ─── 广告位配置（随公告列表一起加载，无需单独请求） ───
+    function openAd() {
+      const ad = adConfig || { imageUrl: '', targetUrl: '', announcementId: '', enabled: false };
+      const sel = document.getElementById('adAnnouncementId');
+      sel.innerHTML = '<option value="">— 不关联（点击无反应）—</option>';
+      all.forEach((a) => {
+        const o = document.createElement('option');
+        o.value = a.id;
+        o.textContent = (a.status === 'ad' ? '[广告位] ' : '') + (a.title || a.id);
+        sel.appendChild(o);
+      });
+      sel.value = ad.announcementId || '';
+      document.getElementById('adImageUrl').value = ad.imageUrl || '';
+      document.getElementById('adTargetUrl').value = ad.targetUrl || '';
+      document.getElementById('adEnabled').checked = !!ad.enabled;
+      document.getElementById('adModal').classList.remove('hidden');
+    }
+
+    function closeAd() { document.getElementById('adModal').classList.add('hidden'); }
+
+    async function saveAd() {
+      const payload = {
+        imageUrl: document.getElementById('adImageUrl').value.trim(),
+        targetUrl: document.getElementById('adTargetUrl').value.trim(),
+        announcementId: document.getElementById('adAnnouncementId').value.trim(),
+        enabled: document.getElementById('adEnabled').checked,
+      };
+      if (!payload.imageUrl && !payload.targetUrl && !payload.announcementId) {
+        toast('至少填写横幅图或跳转目标', false); return;
+      }
+      const btn = document.getElementById('adSaveBtn');
+      btn.disabled = true; btn.textContent = '保存中...';
+      try {
+        await apiFetch('/admin/api/ad', { method: 'PUT', body: JSON.stringify(payload) });
+        adConfig = { ...payload };
+        toast('广告位配置已保存', true);
+        closeAd();
+      } catch (e) { toast(e.message || '保存失败', false); }
+      finally { btn.disabled = false; btn.textContent = '保存'; }
+    }
+
     async function save() {
       const payload = {
         title: document.getElementById('editTitle').value.trim(),
@@ -641,7 +844,9 @@ function getAdminHTML(): string {
         }
         closeModal();
         const res = await apiFetch('/admin/api/announcements');
-        all = await res.json();
+        const data = await res.json();
+        all = data.items || [];
+        adConfig = data.adConfig || adConfig;
         render();
       } catch (e) { toast(e.message || '保存失败', false); }
       finally { btn.disabled = false; btn.textContent = '保存'; }
@@ -653,7 +858,9 @@ function getAdminHTML(): string {
         .then(async () => {
           toast('已删除', true);
           const res = await apiFetch('/admin/api/announcements');
-          all = await res.json();
+          const data = await res.json();
+          all = data.items || [];
+          adConfig = data.adConfig || adConfig;
           render();
         })
         .catch(e => toast('删除失败', false));

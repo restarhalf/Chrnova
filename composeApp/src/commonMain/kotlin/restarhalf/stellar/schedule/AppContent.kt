@@ -574,6 +574,7 @@ fun AppContent(
                                     onAnnouncementClick = { announcementId ->
                                         navigator.push(Screen.AnnouncementDetail(announcementId))
                                     },
+                                    onAdOpenUrl = { openUriState(it) },
                                 )
                             }
                             entry<Screen.AnnouncementDetail> { screen ->

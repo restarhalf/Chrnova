@@ -15,3 +15,15 @@ CREATE TABLE IF NOT EXISTS announcements (
 
 CREATE INDEX IF NOT EXISTS idx_announcements_status_created
   ON announcements(status, created_at DESC);
+
+-- 公告列表页顶部广告位配置（单例：id 固定为 1）。
+-- enabled=1 且至少配置 imageUrl / targetUrl / announcementId 之一时，公开接口 /ad 才返回内容。
+-- imageUrl 走与公告图片一致的反代（ibb.co 域走本 Worker /img，其余直链原样返回）。
+CREATE TABLE IF NOT EXISTS ad_config (
+  id              INTEGER PRIMARY KEY CHECK (id = 1),
+  image_url       TEXT,
+  target_url      TEXT,
+  announcement_id TEXT,
+  enabled         INTEGER NOT NULL DEFAULT 0,
+  updated_at      INTEGER NOT NULL
+);

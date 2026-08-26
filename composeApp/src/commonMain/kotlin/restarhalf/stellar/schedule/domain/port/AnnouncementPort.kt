@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.domain.port
 
+import restarhalf.stellar.schedule.domain.model.AdConfig
 import restarhalf.stellar.schedule.domain.model.Announcement
 
 /**
@@ -25,4 +26,11 @@ interface AnnouncementPort {
      * @return 公告详情
      */
     suspend fun getAnnouncement(id: String): Announcement
+
+    /**
+     * 获取公告列表页顶部广告位配置。
+     *
+     * @return 广告配置；后端未配置 / 未启用时返回 null
+     */
+    suspend fun getAdConfig(): AdConfig?
 }

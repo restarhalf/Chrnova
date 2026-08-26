@@ -58,15 +58,16 @@ fun AnnouncementListScreen(
     vm: AnnouncementViewModel,
     onBack: () -> Unit,
     onAnnouncementClick: (String) -> Unit,
+    onAdOpenUrl: (String) -> Unit = {},
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
-    // 进入列表页：强制刷新，忽略缓存拿到最新公告
+    // 进入列表页：强制刷新公告与广告位配置，忽略缓存拿到最新内容（广告后端改动实时生效）
     LaunchedEffect(Unit) {
-        vm.load(forceRefresh = true)
+        vm.refresh()
     }
 
     Scaffold(
@@ -113,11 +114,7 @@ fun AnnouncementListScreen(
             }
         },
     ) { paddingValues ->
-        PullToRefresh(
-            isRefreshing = uiState.loading,
-            onRefresh = { vm.refresh() },
-            pullToRefreshState = pullToRefreshState,
-            refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+        Column(
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -130,6 +127,27 @@ fun AnnouncementListScreen(
                         ),
                     ),
         ) {
+            // 广告位（顶栏下方、列表上方，固定不随列表滚动）
+            // 配置由公告 Worker 的 /ad 接口下发；后端未配置时 uiState.adConfig 为 null，整条隐藏
+            AdBanner(
+                config = uiState.adConfig?.let {
+                    AdBannerConfig(
+                        imageUrl = it.imageUrl,
+                        targetUrl = it.targetUrl,
+                        announcementId = it.announcementId,
+                    )
+                },
+                onOpenUrl = onAdOpenUrl,
+                onOpenAnnouncement = onAnnouncementClick,
+            )
+
+            PullToRefresh(
+                isRefreshing = uiState.loading,
+                onRefresh = { vm.refresh() },
+                pullToRefreshState = pullToRefreshState,
+                refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+            ) {
             LazyColumn(
                 modifier =
                     Modifier
@@ -203,6 +221,7 @@ fun AnnouncementListScreen(
                     }
                 }
             }
+        }
         }
     }
 }

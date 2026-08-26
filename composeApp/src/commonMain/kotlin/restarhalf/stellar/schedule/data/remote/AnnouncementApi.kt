@@ -8,6 +8,7 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.domain.model.AdConfig
 import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
@@ -34,6 +35,16 @@ class AnnouncementApi(
         withContext(AppIoDispatcher) {
             val body = executeGet("$baseUrl/announcements/$id")
             json.decodeFromString(Announcement.serializer(), body)
+        }
+
+    override suspend fun getAdConfig(): AdConfig? =
+        withContext(AppIoDispatcher) {
+            val response: HttpResponse = httpClient.get("$baseUrl/ad")
+            if (!response.status.isSuccess()) return@withContext null
+            val raw = response.body<String>()
+            // 后端未配置/未启用时返回 JSON 字面量 null，需显式判定为空配置
+            if (raw.isBlank() || raw.trim() == "null") return@withContext null
+            json.decodeFromString<AdConfig>(raw)
         }
 
     private suspend fun executeGet(url: String): String {

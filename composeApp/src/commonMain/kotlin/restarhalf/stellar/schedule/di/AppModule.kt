@@ -71,6 +71,8 @@ import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
@@ -391,6 +393,8 @@ val useCaseModule = module {
         )
     }
     factory { FetchAnnouncementsUseCase(port = get(), store = get()) }
+    factory { FetchAdConfigUseCase(port = get()) }
+    factory { FetchAnnouncementUseCase(port = get()) }
     factory { MarkAnnouncementsReadUseCase(store = get()) }
 }
 
@@ -547,6 +551,8 @@ val viewModelModule = module {
         AnnouncementViewModel(
             fetchAnnouncements = get(),
             markAnnouncementsRead = get(),
+            fetchAdConfig = get(),
+            fetchAnnouncement = get(),
         )
     }
 }

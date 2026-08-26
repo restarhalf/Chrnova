@@ -12,13 +12,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.domain.model.AdConfig
 import restarhalf.stellar.schedule.domain.model.Announcement
+import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementsUseCase
 import restarhalf.stellar.schedule.domain.usecase.MarkAnnouncementsReadUseCase
 
 class AnnouncementViewModel(
     private val fetchAnnouncements: FetchAnnouncementsUseCase,
     private val markAnnouncementsRead: MarkAnnouncementsReadUseCase,
+    private val fetchAdConfig: FetchAdConfigUseCase,
+    private val fetchAnnouncement: FetchAnnouncementUseCase,
 ) : ViewModel() {
 
     @Stable
@@ -34,6 +39,8 @@ class AnnouncementViewModel(
         val lastReadAtMs: Long = 0L,
         /** 当前查看的公告详情 */
         val selectedAnnouncement: Announcement? = null,
+        /** 公告列表页顶部广告位配置；后端未下发时为 null（广告位隐藏） */
+        val adConfig: AdConfig? = null,
     )
 
     private val _uiState = MutableStateFlow(AnnouncementUiState())
@@ -41,6 +48,19 @@ class AnnouncementViewModel(
 
     init {
         load()
+        loadAdConfig()
+    }
+
+    /** 拉取广告位配置；失败不影响主流程，广告位保持隐藏（adConfig 默认 null） */
+    private fun loadAdConfig() {
+        viewModelScope.launch {
+            runCatching { fetchAdConfig() }
+                .onSuccess { ad -> _uiState.update { it.copy(adConfig = ad) } }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Announcement", "加载广告配置失败", e)
+                }
+        }
     }
 
     fun load(forceRefresh: Boolean = false) {
@@ -68,7 +88,11 @@ class AnnouncementViewModel(
         }
     }
 
-    fun refresh() = load(forceRefresh = true)
+    /** 下拉刷新 / App 回到前台：公告列表与广告位配置都重拉，保证后端改动实时生效 */
+    fun refresh() {
+        load(forceRefresh = true)
+        loadAdConfig()
+    }
 
     /** 把最后阅读时间推进到该条公告的内容最后变化时间（单调递增），并同步重算未读数量 */
     fun markAnnouncementRead(announcement: Announcement) {
@@ -83,10 +107,30 @@ class AnnouncementViewModel(
         }
     }
 
-    /** 从已加载的列表里按 id 取出详情（列表页保证详情数据已加载） */
+    /** 选中详情：优先从已加载的公开列表命中（缓存）；命中不到（如 status='ad' 隐藏公告）则单独拉取 */
     fun selectAnnouncement(id: String) {
-        _uiState.update {
-            it.copy(selectedAnnouncement = it.announcements.firstOrNull { a -> a.id == id })
+        val local = _uiState.value.announcements.firstOrNull { a -> a.id == id }
+        if (local != null) {
+            _uiState.update { it.copy(selectedAnnouncement = local) }
+            return
+        }
+        // 不在列表缓存中：走公开详情接口单拉（后端对 ad 状态已放行）
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true, error = null, selectedAnnouncement = null) }
+            runCatching { fetchAnnouncement(id) }
+                .onSuccess { a ->
+                    _uiState.update { it.copy(loading = false, selectedAnnouncement = a) }
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("Announcement", "加载公告详情失败 id=$id", e)
+                    _uiState.update {
+                        it.copy(
+                            loading = false,
+                            error = e.message ?: "加载失败",
+                            selectedAnnouncement = null,
+                        )
+                    }
+                }
         }
     }
 }
