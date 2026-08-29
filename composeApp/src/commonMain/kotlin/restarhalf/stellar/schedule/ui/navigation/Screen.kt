@@ -45,11 +45,29 @@ sealed interface Screen : NavKey {
 
     /**
      * 体育成绩详情页面
-     * 
+     *
      * @param schoolYear 学年（如"2023-2024"）
      */
     @Serializable
     data class PEDetail(val schoolYear: String) : Screen
+
+    /**
+     * 单科体测成绩历史页面
+     *
+     * @param schoolYear 学年
+     * @param subjectId 科目ID
+     * @param subjectName 科目名称（如"肺活量"）
+     * @param unit 成绩单位（如"ml"）
+     * @param currentResult 详情页当前采用的成绩，用于在历史记录中标记
+     */
+    @Serializable
+    data class PESubjectHistory(
+        val schoolYear: String,
+        val subjectId: String,
+        val subjectName: String,
+        val unit: String = "",
+        val currentResult: String? = null,
+    ) : Screen
 
     /** 日志页面 */
     @Serializable

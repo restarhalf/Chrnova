@@ -32,11 +32,14 @@ import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
+import restarhalf.stellar.schedule.data.remote.PEAuthStore
+import restarhalf.stellar.schedule.data.remote.PEClient
 import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.data.remote.PapersApi
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
+import restarhalf.stellar.schedule.data.repository.RoomPERepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
@@ -84,6 +87,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
@@ -107,6 +111,9 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -141,7 +148,7 @@ val portModule = module {
     // 教务系统认证存储
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
     // 体育系统认证存储
-    single { restarhalf.stellar.schedule.data.remote.PEAuthStore(get(named("pe_auth"))) }
+    single { PEAuthStore(get(named("pe_auth"))) }
 
     // 教务系统HTTP客户端，配置JSON序列化和认证插件
     single(named("jwxt")) {
@@ -179,7 +186,7 @@ val portModule = module {
 
     // 体育系统客户端
     single<PEGateway> {
-        restarhalf.stellar.schedule.data.remote.PEClient(
+        PEClient(
             httpClient = get(named("pe")),
             json = get(),
             authStore = get(),
@@ -197,7 +204,7 @@ val portModule = module {
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
-    single { restarhalf.stellar.schedule.data.repository.RoomPERepository(peYearScoreDao = get(), peDetailDao = get()) }
+    single { RoomPERepository(peYearScoreDao = get(), peDetailDao = get()) }
 
     // 课件系统HTTP客户端
     single(named("papers")) {
@@ -370,6 +377,7 @@ val useCaseModule = module {
     factory { PELoginUseCase(peAuthWorkflow = get()) }
     factory { PEScoreListUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
     factory { PEScoreDetailUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
+    factory { PESubjectScoreHistoryUseCase(gateway = get(), authWorkflow = get()) }
     factory { PEAuthProfileUseCase(gateway = get(), auth = get(), authWorkflow = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
     factory {
@@ -493,21 +501,22 @@ val viewModelModule = module {
     }
     viewModel { AboutViewModel(checkAppUpdate = get()) }
     viewModel {
-        restarhalf.stellar.schedule.ui.viewmodel.PEViewModel(
+        PEViewModel(
             peScoreListUseCase = get(),
             peScoreDetailUseCase = get(),
             peAuthProfileUseCase = get(),
             peAuth = get(),
             peAuthWorkflow = get(),
+            peSubjectScoreHistoryUseCase = get(),
         )
     }
     viewModel {
-        restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel(
+        JwxtLoginViewModel(
             jwxtLoginUseCase = get(),
         )
     }
     viewModel {
-        restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel(
+        PELoginViewModel(
             peLoginUseCase = get(),
         )
     }

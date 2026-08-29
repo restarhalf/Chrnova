@@ -76,6 +76,7 @@ class PEClient(
             is PELoginResponse -> parsed.status
             is PEScoreListResponse -> parsed.status
             is PEDetailResponse -> parsed.status
+            is PESubjectHistoryResponse -> parsed.status
             is PEAuthProfileResponse -> parsed.status
             else -> "PASS"
         }
@@ -159,6 +160,37 @@ class PEClient(
             requestBody = requestBody,
         )
         return parseAndVerify(body, PEDetailResponse.serializer())
+    }
+
+    override suspend fun getSubjectScoreHistory(
+        schoolYear: String,
+        subjectId: String,
+        pageNum: Int,
+        pageSize: Int,
+    ): PESubjectHistoryResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException()
+        val sign = passwordEncryption.generatePESign(
+            mapOf(
+                "user_id" to userId,
+                "school_year" to schoolYear,
+                "subject_id" to subjectId,
+                "page_num" to pageNum,
+                "page_size" to pageSize,
+            )
+        )
+        val requestBody = buildJsonObject {
+            put("user_id", userId)
+            put("school_year", schoolYear)
+            put("subject_id", subjectId)
+            put("page_num", pageNum)
+            put("page_size", pageSize)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/gymResult/selectUserPlanSubjectScore",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PESubjectHistoryResponse.serializer())
     }
 
     override suspend fun getProfile(): PEAuthProfileResponse {

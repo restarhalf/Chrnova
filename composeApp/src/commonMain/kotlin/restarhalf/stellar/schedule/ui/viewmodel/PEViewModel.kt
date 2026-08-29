@@ -21,12 +21,14 @@ import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEDetailData
+import restarhalf.stellar.schedule.data.remote.PESubjectHistoryItem
 import restarhalf.stellar.schedule.data.remote.PEYearScore
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
+import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 
 /**
@@ -41,6 +43,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
+    private val peSubjectScoreHistoryUseCase: PESubjectScoreHistoryUseCase,
     private val peAuthProfileUseCase: PEAuthProfileUseCase,
     private val peAuth: PEAuthPort,
     private val peAuthWorkflow: PEAuthWorkflowPort,
@@ -51,6 +54,7 @@ class PEViewModel(
      *
      * @param yearScores 年度成绩列表
      * @param detailData 体测详情数据
+     * @param subjectHistory 当前查看的单科成绩历史，null 表示未打开
      * @param authProfile 学生信息
      * @param loading 是否正在加载
      * @param error 错误消息
@@ -61,11 +65,34 @@ class PEViewModel(
     data class PeUiState(
         val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
         val detailData: PEDetailData? = null,
+        val subjectHistory: SubjectHistoryUiState? = null,
         val authProfile: PEAuthProfile? = null,
         val loading: Boolean = false,
         val error: String? = null,
         val loadedScoreList: Boolean = false,
         val loadedDetail: Boolean = false,
+    )
+
+    /**
+     * 单科成绩历史UI状态
+     *
+     * @param subjectId 科目ID
+     * @param subjectName 科目名称
+     * @param unit 成绩单位
+     * @param currentResult 详情页当前采用的成绩，用于标记历史记录
+     * @param records 历史记录（按时间倒序）
+     * @param loading 是否正在加载
+     * @param loaded 是否已完成一次加载（含失败）
+     */
+    @Stable
+    data class SubjectHistoryUiState(
+        val subjectId: String = "",
+        val subjectName: String = "",
+        val unit: String = "",
+        val currentResult: String? = null,
+        val records: ImmutableList<PESubjectHistoryItem> = persistentListOf(),
+        val loading: Boolean = false,
+        val loaded: Boolean = false,
     )
 
     private val _uiState = MutableStateFlow(PeUiState())
@@ -237,6 +264,82 @@ class PEViewModel(
                     errorKind = UserFacingErrorKind.LoadPEDetail,
                 )
                 _uiState.update { it.copy(loading = false) }
+            }
+        }
+    }
+
+    /**
+     * 构建单科成绩历史页面的状态文本
+     *
+     * @return 状态文本，无需显示时返回null
+     */
+    fun buildSubjectHistoryStatusText(): String? {
+        val state = uiState.value
+        val history = state.subjectHistory ?: return null
+        return when {
+            state.error != null -> state.error
+            history.loaded && history.records.isEmpty() -> "暂无${history.subjectName}成绩记录"
+            else -> null
+        }
+    }
+
+    /**
+     * 加载单科成绩历史记录
+     *
+     * @param schoolYear 学年
+     * @param subjectId 科目ID
+     * @param subjectName 科目名称
+     * @param unit 成绩单位
+     * @param currentResult 详情页当前采用的成绩，用于标记历史记录
+     */
+    fun loadSubjectHistory(
+        schoolYear: String,
+        subjectId: String,
+        subjectName: String,
+        unit: String,
+        currentResult: String?,
+    ) {
+        viewModelScope.launch {
+            loadMutex.withLock {
+                _uiState.update {
+                    it.copy(
+                        error = null,
+                        subjectHistory = SubjectHistoryUiState(
+                            subjectId = subjectId,
+                            subjectName = subjectName,
+                            unit = unit,
+                            currentResult = currentResult,
+                            loading = true,
+                        ),
+                    )
+                }
+                withAuthRetry(
+                    action = { peSubjectScoreHistoryUseCase(schoolYear, subjectId) },
+                    onSuccess = { records ->
+                        _uiState.update { s ->
+                            val history = s.subjectHistory
+                            if (history == null || history.subjectId != subjectId) {
+                                s
+                            } else {
+                                s.copy(
+                                    subjectHistory = history.copy(
+                                        records = records.toPersistentList(),
+                                        loading = false,
+                                        loaded = true,
+                                    )
+                                )
+                            }
+                        }
+                    },
+                    errorKind = UserFacingErrorKind.LoadPESubjectHistory,
+                )
+                // 失败路径兜底：清除加载标记（成功路径已在 onSuccess 中处理）
+                _uiState.update { s ->
+                    val history = s.subjectHistory
+                    if (history != null && history.subjectId == subjectId && history.loading) {
+                        s.copy(subjectHistory = history.copy(loading = false, loaded = true))
+                    } else s
+                }
             }
         }
     }

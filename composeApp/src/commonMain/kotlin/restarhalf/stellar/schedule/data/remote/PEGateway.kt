@@ -32,6 +32,22 @@ interface PEGateway {
     suspend fun getScoreDetail(schoolYear: String): PEDetailResponse
 
     /**
+     * 获取单科成绩历史记录（分页）
+     *
+     * @param schoolYear 学年
+     * @param subjectId 科目ID
+     * @param pageNum 页码（从1开始）
+     * @param pageSize 每页条数
+     * @return 单科成绩历史响应
+     */
+    suspend fun getSubjectScoreHistory(
+        schoolYear: String,
+        subjectId: String,
+        pageNum: Int = 1,
+        pageSize: Int = 50,
+    ): PESubjectHistoryResponse
+
+    /**
      * 获取学生信息
      *
      * @return 学生信息响应

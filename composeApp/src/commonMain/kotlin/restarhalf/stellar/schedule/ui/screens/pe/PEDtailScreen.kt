@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -33,8 +35,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import restarhalf.stellar.schedule.data.remote.PESubjectScore
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
+import restarhalf.stellar.schedule.ui.icons.Forward
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -51,19 +55,21 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 体育成绩详情屏幕
- * 
+ *
  * 显示指定学年的体测详情，包括：
- * - 各项体测成绩
+ * - 各项体测成绩（点击可查看该项目的全部历史成绩记录）
  * - 成绩等级
  * - 总分和总等级
- * 
+ *
  * @param schoolYear 学年
+ * @param onSubjectClick 点击某个科目卡片，跳转单科成绩历史
  * @param onBack 返回回调
  */
 @Composable
 fun PEDetailScreen(
     vm: PEViewModel,
     schoolYear: String,
+    onSubjectClick: (PESubjectScore) -> Unit,
     onBack: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -198,7 +204,10 @@ fun PEDetailScreen(
                                 placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
                             )
                         ) {
-                            AppCard(modifier = Modifier.fillMaxWidth()) {
+                            AppCard(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clickable { onSubjectClick(subject) }
+                            ) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -213,17 +222,28 @@ fun PEDetailScreen(
                                             style = MiuixTheme.textStyles.body1,
                                             fontWeight = FontWeight.Bold
                                         )
-                                        if (subject.isJoin == 1) {
-                                            Text(
-                                                text = "${subject.score ?: "--"}分",
-                                                style = MiuixTheme.textStyles.title4,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                        } else {
-                                            Text(
-                                                text = "未参加",
-                                                style = MiuixTheme.textStyles.body2,
-                                                color = colors.onSurfaceVariantSummary
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            if (subject.isJoin == 1) {
+                                                Text(
+                                                    text = "${subject.score ?: "--"}分",
+                                                    style = MiuixTheme.textStyles.title4,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = "未参加",
+                                                    style = MiuixTheme.textStyles.body2,
+                                                    color = colors.onSurfaceVariantSummary
+                                                )
+                                            }
+                                            Icon(
+                                                imageVector = Forward,
+                                                contentDescription = "查看成绩记录",
+                                                tint = colors.onSurfaceVariantSummary,
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
                                     }

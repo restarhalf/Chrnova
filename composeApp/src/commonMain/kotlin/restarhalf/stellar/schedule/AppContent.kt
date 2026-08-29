@@ -80,6 +80,7 @@ import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PESubjectHistoryScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
@@ -403,6 +404,29 @@ fun AppContent(
                                 PEDetailScreen(
                                     vm = peVm,
                                     schoolYear = screen.schoolYear,
+                                    onSubjectClick = { subject ->
+                                        navigator.push(
+                                            Screen.PESubjectHistory(
+                                                schoolYear = screen.schoolYear,
+                                                subjectId = subject.subjectId,
+                                                subjectName = subject.subName,
+                                                unit = subject.unit,
+                                                currentResult = subject.result,
+                                            )
+                                        )
+                                    },
+                                    onBack = { navigator.pop() }
+                                )
+                            }
+                            entry<Screen.PESubjectHistory> { screen ->
+                                val peVm: PEViewModel = koinViewModel()
+                                PESubjectHistoryScreen(
+                                    vm = peVm,
+                                    schoolYear = screen.schoolYear,
+                                    subjectId = screen.subjectId,
+                                    subjectName = screen.subjectName,
+                                    unit = screen.unit,
+                                    currentResult = screen.currentResult,
                                     onBack = { navigator.pop() }
                                 )
                             }

@@ -50,6 +50,11 @@ enum class UserFacingErrorKind(
         fallbackMessage = "加载体测详情失败，请稍后重试",
         invalidDataMessage = "体测详情暂时无法解析，请稍后重试",
     ),
+    /** 单科成绩历史加载失败 */
+    LoadPESubjectHistory(
+        fallbackMessage = "加载成绩记录失败，请稍后重试",
+        invalidDataMessage = "成绩记录暂时无法解析，请稍后重试",
+    ),
     ;
 }
 

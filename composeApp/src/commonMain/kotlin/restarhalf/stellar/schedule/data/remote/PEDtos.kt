@@ -65,6 +65,32 @@ data class PESubjectScore(
     @SerialName("is_join") val isJoin: Int = 0,
 )
 
+/** 单科成绩历史响应 */
+@Serializable
+data class PESubjectHistoryResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("data") val data: PESubjectHistoryData? = null,
+)
+
+/** 单科成绩历史数据 */
+@Serializable
+data class PESubjectHistoryData(
+    @SerialName("data_list") val dataList: List<PESubjectHistoryItem> = emptyList(),
+    @SerialName("total_rows") val totalRows: Int = 0,
+)
+
+/** 单科成绩历史记录 */
+@Serializable
+data class PESubjectHistoryItem(
+    @SerialName("result") val result: String? = null,
+    @SerialName("session_name") val sessionName: String = "",
+    @SerialName("score_time") val scoreTime: String = "",
+    @SerialName("sourceScoreId") val sourceScoreId: String = "",
+    @SerialName("sub_name") val subName: String = "",
+    @SerialName("score_status") val scoreStatus: String = "",
+)
+
 /** 学生信息响应 */
 @Serializable
 data class PEAuthProfileResponse(
