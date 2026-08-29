@@ -64,6 +64,7 @@ class SettingsViewModel(
     @Immutable
     private data class SettingsPrefsState(
         val showNonCurrentWeek: Boolean,
+        val scheduleRowHeight: Int,
         val reminderEnabled: Boolean,
         val examReminderEnabled: Boolean,
         val themeMode: Int,
@@ -133,6 +134,7 @@ class SettingsViewModel(
     @Stable
     data class SettingsUiState(
         val showNonCurrentWeek: Boolean,
+        val scheduleRowHeight: Int,
         val reminderEnabled: Boolean,
         val examReminderEnabled: Boolean,
         val themeMode: Int,
@@ -161,6 +163,7 @@ class SettingsViewModel(
     ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
         SettingsPrefsState(
             showNonCurrentWeek = showNonCurrentWeek,
+            scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
             reminderEnabled = reminderEnabled,
             examReminderEnabled = examReminderEnabled,
             themeMode = themeMode,
@@ -173,15 +176,20 @@ class SettingsViewModel(
     private val extraPrefsFlow = combine(
         settings.observeSelectedTerm(),
         settings.observeLogEnabled(),
-    ) { selectedTerm, logEnabled ->
-        selectedTerm to logEnabled
+        settings.observeScheduleRowHeight(),
+    ) { selectedTerm, logEnabled, scheduleRowHeight ->
+        Triple(selectedTerm, logEnabled, scheduleRowHeight)
     }
 
     private val prefsFlow = combine(
         basePrefsFlow,
         extraPrefsFlow,
-    ) { base, (selectedTerm, logEnabled) ->
-        base.copy(selectedTerm = selectedTerm, logEnabled = logEnabled)
+    ) { base, (selectedTerm, logEnabled, scheduleRowHeight) ->
+        base.copy(
+            selectedTerm = selectedTerm,
+            logEnabled = logEnabled,
+            scheduleRowHeight = scheduleRowHeight,
+        )
     }.distinctUntilChanged()
 
     private val authFlow =
@@ -197,6 +205,7 @@ class SettingsViewModel(
         ) { prefs, auth, remoteTermItems ->
             SettingsUiState(
                 showNonCurrentWeek = prefs.showNonCurrentWeek,
+                scheduleRowHeight = prefs.scheduleRowHeight,
                 reminderEnabled = prefs.reminderEnabled,
                 examReminderEnabled = prefs.examReminderEnabled,
                 themeMode = prefs.themeMode,
@@ -215,6 +224,7 @@ class SettingsViewModel(
                 initialValue =
                     SettingsUiState(
                         showNonCurrentWeek = true,
+                        scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
                         reminderEnabled = false,
                         examReminderEnabled = false,
                         themeMode = 0,
@@ -414,11 +424,20 @@ class SettingsViewModel(
 
     /**
      * 是否显示非本周课程变更回调
-     * 
+     *
      * @param show 是否显示
      */
     fun onShowNonCurrentWeekChanged(show: Boolean) {
         settings.setShowNonCurrentWeek(show)
+    }
+
+    /**
+     * 课程表格子高度变更回调
+     *
+     * @param heightDp 格子高度（dp）
+     */
+    fun onScheduleRowHeightChanged(heightDp: Int) {
+        settings.setScheduleRowHeight(heightDp)
     }
 
     /**

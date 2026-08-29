@@ -8,10 +8,24 @@ import kotlinx.coroutines.flow.Flow
  * 定义应用设置的抽象接口，提供响应式的数据观察和更新能力。
  */
 interface SettingsPort {
+    companion object {
+        /** 课程表格子高度默认值（dp） */
+        const val DEFAULT_ROW_HEIGHT_DP = 64
+        /** 课程表格子高度下限（dp） */
+        const val MIN_ROW_HEIGHT_DP = 48
+        /** 课程表格子高度上限（dp） */
+        const val MAX_ROW_HEIGHT_DP = 120
+    }
+
     /** 观察是否显示非当前周课程 */
     fun observeShowNonCurrentWeek(): Flow<Boolean>
     /** 设置是否显示非当前周课程 */
     fun setShowNonCurrentWeek(show: Boolean)
+
+    /** 观察课程表格子高度（dp） */
+    fun observeScheduleRowHeight(): Flow<Int>
+    /** 设置课程表格子高度（dp，范围 48-120） */
+    fun setScheduleRowHeight(heightDp: Int)
 
     /** 观察主题模式变化 */
     fun observeThemeMode(): Flow<Int>

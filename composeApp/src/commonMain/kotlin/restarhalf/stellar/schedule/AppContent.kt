@@ -238,16 +238,14 @@ fun AppContent(
     val navCornerRadius = rememberNavSystemCornerRadius()
     val navEffects =
         remember(
-            appState.enableCornerClip,
-            appState.blockInputDuringTransition,
             navCornerRadius,
         ) {
             NavDisplayEffects(
-                enableCornerClip = appState.enableCornerClip,
+                enableCornerClip = true,
                 cornerClipRadius = navCornerRadius,
                 cornerClipMode = NavCornerClipMode.Leading,
                 dimAmount = 0f,
-                blockInputDuringTransition = appState.blockInputDuringTransition,
+                blockInputDuringTransition = true,
             )
         }
 
@@ -640,7 +638,6 @@ private fun MainRouteContent(
     val gradeVm: GradeViewModel = koinViewModel()
     val peVm: PEViewModel = koinViewModel()
     val settingsVm: SettingsViewModel = koinViewModel()
-    val appState = LocalAppState.current
     val appUiState by vm.uiState.collectAsStateWithLifecycle()
     val syncUiState by vm.syncUiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
@@ -658,7 +655,7 @@ private fun MainRouteContent(
     HorizontalPager(
         state = mainPagerState.pagerState,
         modifier = Modifier.fillMaxSize(),
-        userScrollEnabled = appState.enablePageUserScroll,
+        userScrollEnabled = true,
         verticalAlignment = Alignment.Top,
     ) { page ->
         when (rootTabAt(page)) {

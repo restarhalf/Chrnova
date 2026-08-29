@@ -84,8 +84,9 @@ class ScheduleViewModel(
 
     /**
      * 课程表UI状态
-     * 
+     *
      * @param showNonCurrentWeek 是否显示非本周课程
+     * @param scheduleRowHeight 课程表格子高度（dp）
      * @param transDialogUiState 调课对话框状态
      * @param transConflictUiState 调课冲突状态
      * @param detailSheetUiState 课程详情弹窗状态
@@ -93,6 +94,7 @@ class ScheduleViewModel(
     @Immutable
     data class ScheduleUiState(
         val showNonCurrentWeek: Boolean,
+        val scheduleRowHeight: Int,
         val transDialogUiState: TransDialogUiState,
         val transConflictUiState: TransConflictUiState,
         val detailSheetUiState: DetailSheetUiState,
@@ -209,12 +211,14 @@ class ScheduleViewModel(
     private val _uiState: StateFlow<ScheduleUiState> =
         combine(
             settings.observeShowNonCurrentWeek(),
+            settings.observeScheduleRowHeight(),
             _transDialogUiState,
             _transConflictUiState,
             _detailSheetUiState,
-        ) { showNonCurrentWeek, transDialogUiState, transConflictUiState, detailSheetUiState ->
+        ) { showNonCurrentWeek, scheduleRowHeight, transDialogUiState, transConflictUiState, detailSheetUiState ->
             ScheduleUiState(
                 showNonCurrentWeek = showNonCurrentWeek,
+                scheduleRowHeight = scheduleRowHeight,
                 transDialogUiState = transDialogUiState,
                 transConflictUiState = transConflictUiState,
                 detailSheetUiState = detailSheetUiState,
@@ -226,6 +230,7 @@ class ScheduleViewModel(
                 initialValue =
                     ScheduleUiState(
                         showNonCurrentWeek = true,
+                        scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
                         transDialogUiState = TransDialogUiState(),
                         transConflictUiState = TransConflictUiState(),
                         detailSheetUiState = DetailSheetUiState(),

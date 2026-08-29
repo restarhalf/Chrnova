@@ -17,12 +17,6 @@ data class AppState(
     val themeMode: Int = 0,
     /** 浮动导航栏模式：0=标准模式，1=紧凑模式 */
     val barMode: Int = 0,
-    /** 是否允许页面用户滚动 */
-    val enablePageUserScroll: Boolean = true,
-    /** 是否启用页面角落裁剪效果 */
-    val enableCornerClip: Boolean = true,
-    /** 页面切换时是否阻塞用户输入 */
-    val blockInputDuringTransition: Boolean = true,
 )
 
 /**

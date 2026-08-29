@@ -169,7 +169,7 @@ fun ScheduleScreen(
     val mutedTitleColor = StatusColors.mutedTitle
     val mutedSubColor = StatusColors.mutedSub
     val dayCount = 7
-    val rowHeight = 64.dp
+    val rowHeight = scheduleUiState.scheduleRowHeight.dp
     val rowGap = 1.dp
     val restHeight = 24.dp
     val cellInset = 0.5.dp
@@ -518,6 +518,7 @@ fun ScheduleScreen(
                             weekCourses,
                             page,
                             scheduleUiState.showNonCurrentWeek,
+                            scheduleUiState.scheduleRowHeight,
                             isDarkMode,
                             mutedCourseColor,
                             mutedTitleColor,

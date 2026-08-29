@@ -37,11 +37,35 @@ class SettingsPortImpl(
 
     /**
      * 设置是否显示非当前周课程
-     * 
+     *
      * @param show 是否显示
      */
     override fun setShowNonCurrentWeek(show: Boolean) {
         settings[SettingsKeys.SHOW_NON_CURRENT_WEEK] = show
+    }
+
+    /**
+     * 观察课程表格子高度
+     *
+     * @return 格子高度Flow（dp）
+     */
+    override fun observeScheduleRowHeight(): Flow<Int> {
+        return settings.getIntFlow(
+            SettingsKeys.SCHEDULE_ROW_HEIGHT,
+            SettingsPort.DEFAULT_ROW_HEIGHT_DP,
+        )
+    }
+
+    /**
+     * 设置课程表格子高度
+     *
+     * @param heightDp 格子高度（dp）
+     */
+    override fun setScheduleRowHeight(heightDp: Int) {
+        settings[SettingsKeys.SCHEDULE_ROW_HEIGHT] = heightDp.coerceIn(
+            SettingsPort.MIN_ROW_HEIGHT_DP,
+            SettingsPort.MAX_ROW_HEIGHT_DP,
+        )
     }
 
     /**

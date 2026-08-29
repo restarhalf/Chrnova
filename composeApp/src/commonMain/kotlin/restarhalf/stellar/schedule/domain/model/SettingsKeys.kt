@@ -11,6 +11,8 @@ object SettingsKeys {
     const val PREFS_NAME = "schedule_settings"
     /** 是否显示非当前周课程 */
     const val SHOW_NON_CURRENT_WEEK = "show_non_current_week"
+    /** 课程表格子高度（dp，48-120） */
+    const val SCHEDULE_ROW_HEIGHT = "schedule_row_height"
     /** 课程提醒是否启用 */
     const val REMINDER_ENABLED = "calendar_enabled"
     /** 考试提醒是否启用 */

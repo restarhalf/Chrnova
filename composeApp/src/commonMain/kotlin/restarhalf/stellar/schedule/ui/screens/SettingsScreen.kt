@@ -30,11 +30,13 @@ import restarhalf.stellar.schedule.core.text.CsvExporter
 import restarhalf.stellar.schedule.core.text.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.CardItem
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
+import restarhalf.stellar.schedule.ui.components.RowHeightPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.groupedCardItems
@@ -126,6 +128,7 @@ fun SettingsScreen(
 
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
+    val showRowHeightPicker = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val starVerificationState by vm.starVerification.state.collectAsStateWithLifecycle()
 
@@ -190,6 +193,19 @@ fun SettingsScreen(
                     onConfirm = { week: Int ->
                         onTotalWeeksChange(week)
                         showTotalWeeksPicker.value = false
+                    },
+                )
+            }
+            if (showRowHeightPicker.value) {
+                RowHeightPickerBottomSheet(
+                    show = showRowHeightPicker.value,
+                    title = "课程格子高度（dp）",
+                    initialHeightDp = settingsUiState.scheduleRowHeight,
+                    heightRange = SettingsPort.MIN_ROW_HEIGHT_DP..SettingsPort.MAX_ROW_HEIGHT_DP,
+                    onDismissRequest = { showRowHeightPicker.value = false },
+                    onConfirm = { heightDp: Int ->
+                        vm.onScheduleRowHeightChanged(heightDp)
+                        showRowHeightPicker.value = false
                     },
                 )
             }
@@ -346,13 +362,13 @@ fun SettingsScreen(
                             onClick = onEvaluation,
                         )
                     })
-                        add(CardItem("courseSelection") {
-                            ArrowPreference(
-                                title = "自动抢课",
-                                summary = "自动监控并提交选课请求",
-                                onClick = onCourseSelection,
-                            )
-                        })
+//                        add(CardItem("courseSelection") {
+//                            ArrowPreference(
+//                                title = "自动抢课",
+//                                summary = "自动监控并提交选课请求",
+//                                onClick = onCourseSelection,
+//                            )
+//                        })
                     add(CardItem("exportCsv") {
                         ArrowPreference(
                             title = "导出课表CSV",
@@ -434,6 +450,12 @@ fun SettingsScreen(
                             }
                         )
                     },
+                    CardItem("scheduleRowHeight") {
+                        ArrowPreference(
+                            title = "课程格子高度",
+                            summary = "${settingsUiState.scheduleRowHeight}dp",
+                            onClick = { showRowHeightPicker.value = true })
+                    },
                     CardItem("background") {
                         ArrowPreference(
                             title = "更换背景",
@@ -441,6 +463,7 @@ fun SettingsScreen(
                             onClick = onChangeBackground
                         )
                     },
+
                 ),
             )
 
