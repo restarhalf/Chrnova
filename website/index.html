@@ -13,17 +13,23 @@
       name="description"
       content="Chrnova - 校园课程表，一站式课程管理，成绩查询、考试安排、课程提醒尽在掌握。"
     />
-    <script type="module" crossorigin src="./assets/index-hU24YBl5.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BFnpDdGC.css">
+    <script type="module" crossorigin src="./assets/index-Dj43UtNk.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-W2X0GlOw.css">
   </head>
   <body>
     <div id="root"></div>
-    <!-- Liquid-glass refraction: gentle edge lensing of the backdrop (Chromium only) -->
+    <!-- Liquid-glass refraction: a soft edge lens that warps the backdrop
+         toward the surface rim, plus a large-scale ripple. Both turbulence
+         fields are animated from JS (useLiquidLens) so the refraction
+         flows like a living liquid (Chromium only) -->
     <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0">
       <filter id="liquid-lens" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="92" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="1.4" result="soft" />
-        <feDisplacementMap in="SourceGraphic" in2="soft" scale="8" xChannelSelector="R" yChannelSelector="G" />
+        <feTurbulence id="lens-noise-a" type="fractalNoise" baseFrequency="0.008 0.014" numOctaves="3" seed="92" result="noise" />
+        <feGaussianBlur in="noise" stdDeviation="1.2" result="soft" />
+        <feDisplacementMap id="lens-displace-a" in="SourceGraphic" in2="soft" scale="14" xChannelSelector="R" yChannelSelector="G" result="warped" />
+        <feTurbulence id="lens-noise-b" type="turbulence" baseFrequency="0.004 0.006" numOctaves="2" seed="7" result="ripple-noise" />
+        <feGaussianBlur in="ripple-noise" stdDeviation="0.6" result="ripple-soft" />
+        <feDisplacementMap id="lens-displace-b" in="warped" in2="ripple-soft" scale="6" xChannelSelector="R" yChannelSelector="G" />
       </filter>
     </svg>
   </body>

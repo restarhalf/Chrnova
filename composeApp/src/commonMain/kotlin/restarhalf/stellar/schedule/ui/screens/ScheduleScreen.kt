@@ -61,6 +61,7 @@ import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseCard
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailItem
 import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
+import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekPickerSheet
 import restarhalf.stellar.schedule.ui.icons.Add
 import restarhalf.stellar.schedule.ui.mapper.CourseRenderItem
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -145,6 +146,7 @@ fun ScheduleScreen(
         vm.pageToWeek(page = pagerState.currentPage, includeWeek0 = uiState.includeWeek0)
     val scheduleUiState by vm.uiState.collectAsStateWithLifecycle()
     var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var showWeekPicker by remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(pagerState.currentPage) {
@@ -203,64 +205,100 @@ fun ScheduleScreen(
         )
     }
 
+    // 带动画跳转到指定周次（供"回到当前周"与周次选择弹窗复用）
+    fun animateToWeek(targetWeek: Int) {
+        scope.launch {
+            val targetPage = vm.weekToPage(
+                week = targetWeek,
+                includeWeek0 = uiState.includeWeek0
+            )
+            pagerState.scroll(MutatePriority.UserInput) {
+                val distance =
+                    kotlin.math.abs(targetPage - pagerState.currentPage).coerceAtLeast(2)
+                val duration = 100 * distance + 100
+                val pageSize =
+                    pagerState.layoutInfo.pageSize + pagerState.layoutInfo.pageSpacing
+                val currentDistanceInPages =
+                    targetPage - pagerState.currentPage - pagerState.currentPageOffsetFraction
+                val scrollPixels = currentDistanceInPages * pageSize
+
+                var previousValue = 0f
+                animate(
+                    initialValue = 0f,
+                    targetValue = scrollPixels,
+                    animationSpec = tween(easing = EaseInOut, durationMillis = duration),
+                ) { currentValue, _ ->
+                    previousValue += scrollBy(currentValue - previousValue)
+                }
+            }
+            if (pagerState.currentPage != targetPage) {
+                pagerState.scrollToPage(targetPage)
+            }
+        }
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            AppPageTopBar(
-                title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    if(currentWeek!=uiState.detectedWeekInfo.week){
-                        IconButton(onClick = {
-                            scope.launch {
-                                val targetPage = vm.weekToPage(
-                                    week = uiState.detectedWeekInfo.week,
-                                    includeWeek0 = uiState.includeWeek0
-                                )
-                                pagerState.scroll(MutatePriority.UserInput) {
-                                    val distance =
-                                        kotlin.math.abs(targetPage - pagerState.currentPage).coerceAtLeast(2)
-                                    val duration = 100 * distance + 100
-                                    val pageSize =
-                                        pagerState.layoutInfo.pageSize + pagerState.layoutInfo.pageSpacing
-                                    val currentDistanceInPages =
-                                        targetPage - pagerState.currentPage - pagerState.currentPageOffsetFraction
-                                    val scrollPixels = currentDistanceInPages * pageSize
-
-                                    var previousValue = 0f
-                                    animate(
-                                        initialValue = 0f,
-                                        targetValue = scrollPixels,
-                                        animationSpec = tween(easing = EaseInOut, durationMillis = duration),
-                                    ) { currentValue, _ ->
-                                        previousValue += scrollBy(currentValue - previousValue)
-                                    }
-                                }
-                                if (pagerState.currentPage != targetPage) {
-                                    pagerState.scrollToPage(targetPage)
-                                }
+            Box {
+                AppPageTopBar(
+                    title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        if (currentWeek != uiState.detectedWeekInfo.week) {
+                            IconButton(onClick = {
+                                animateToWeek(uiState.detectedWeekInfo.week)
+                            }) {
+                                Text(text = "回到当前周")
                             }
-                        }) {
-                            Text(text = "回到当前周")
                         }
-                    }
-                },
-                actions = {
-                    if (syncUiState is SyncUiState.Loading) {
-                        Box(
-                            modifier = Modifier.size(40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                size = 18.dp,
-                                strokeWidth = 2.dp,
-                            )
+                    },
+                    actions = {
+                        if (syncUiState is SyncUiState.Loading) {
+                            Box(
+                                modifier = Modifier.size(40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    size = 18.dp,
+                                    strokeWidth = 2.dp,
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+                // 点击顶栏标题区域弹出周次选择（matchParentSize 跟随顶栏高度，不参与测量）
+                Box(
+                    modifier = Modifier.matchParentSize(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { showWeekPicker = true }
+                    )
+                }
+            }
         },
         popupHost = {
+            WeekPickerSheet(
+                show = showWeekPicker,
+                onDismiss = { showWeekPicker = false },
+                totalWeeks = totalWeeks,
+                viewingWeek = currentWeek,
+                detectedWeek = uiState.detectedWeekInfo.week,
+                onWeekSelected = { week ->
+                    showWeekPicker = false
+                    if (week != currentWeek) {
+                        animateToWeek(week)
+                    }
+                }
+            )
+
             val tc = scheduleUiState.transDialogUiState.course
             if (scheduleUiState.transDialogUiState.show && tc != null) {
                 TransClassDialog(
