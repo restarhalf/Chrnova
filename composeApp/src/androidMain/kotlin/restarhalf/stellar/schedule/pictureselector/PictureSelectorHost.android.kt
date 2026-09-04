@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import org.koin.compose.koinInject
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun PictureSelectorHost(
     show: Boolean,

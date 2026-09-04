@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -53,13 +54,13 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
             enableEdgeToEdge(
                 statusBarStyle =
                     SystemBarStyle.auto(
-                        android.graphics.Color.TRANSPARENT,
-                        android.graphics.Color.TRANSPARENT,
+                        Color.TRANSPARENT,
+                        Color.TRANSPARENT,
                     ) { darkMode },
                 navigationBarStyle =
                     SystemBarStyle.auto(
-                        android.graphics.Color.TRANSPARENT,
-                        android.graphics.Color.TRANSPARENT,
+                        Color.TRANSPARENT,
+                        Color.TRANSPARENT,
                     ) { darkMode },
             )
             window.isNavigationBarContrastEnforced = false
