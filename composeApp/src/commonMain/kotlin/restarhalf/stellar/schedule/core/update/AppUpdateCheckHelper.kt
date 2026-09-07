@@ -23,8 +23,9 @@ internal val updateHttpClient = HttpClient {
 internal suspend fun checkUpdateFromWorker(
     currentVersionName: String,
     grayUid: String? = null,
+    client: HttpClient = updateHttpClient,
 ): AppUpdateInfo? {
-    val response = updateHttpClient.get(buildVersionWorkerUrl(grayUid))
+    val response = client.get(buildVersionWorkerUrl(grayUid))
     if (!response.status.isSuccess()) {
         throw IllegalStateException("检查更新失败（HTTP ${response.status.value}）")
     }

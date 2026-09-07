@@ -9,6 +9,50 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.androidx.room3)
+    alias(libs.plugins.mokkery)
+    alias(libs.plugins.kover)
+}
+
+kover {
+    reports {
+        filters {
+            // 排除 JVM 单测结构性无法覆盖的代码，让覆盖率反映真实可测层
+            excludes {
+                packages(
+                    // Compose UI —— 仅 androidDeviceTest（设备 UI 测试）可覆盖
+                    "restarhalf.stellar.schedule.ui.screens",
+                    "restarhalf.stellar.schedule.ui.components",
+                    "restarhalf.stellar.schedule.ui.navigation",
+                    "restarhalf.stellar.schedule.ui.effect",
+                    "restarhalf.stellar.schedule.ui.blur",
+                    "restarhalf.stellar.schedule.ui.icons",
+                    "restarhalf.stellar.schedule.ui.modifier",
+                    "restarhalf.stellar.schedule.ui.image",
+                    "restarhalf.stellar.schedule.ui.impl",
+                    // Android 运行时 / 生成代码 / 三方拷贝 / DI 装配
+                    "restarhalf.stellar.schedule.widget",
+                    "restarhalf.stellar.schedule.calendar",
+                    "restarhalf.stellar.schedule.pictureselector",
+                    "restarhalf.stellar.schedule.di",
+                    "restarhalf.stellar.schedule.androidapp",
+                    "restarhalf.stellar.schedule.config",
+                    "restarhalf.stellar.schedule.data.local.dao",
+                    // PDF 文件选择器胶水（@Composable + ActivityResult，仅设备可测）
+                    "restarhalf.stellar.schedule.papers",
+                    "chrnova.composeapp.generated.resources",
+                )
+                // 根包 AppRoot/AppContent/AppState（Compose 入口）
+                classes("restarhalf.stellar.schedule.App*")
+                // androidMain 运行时胶水 + Compose 编译器生成
+                classes(
+                    "restarhalf.stellar.schedule.AndroidApp*",
+                    "restarhalf.stellar.schedule.MainActivity*",
+                    "restarhalf.stellar.schedule.CourseSelectionService*",
+                    "restarhalf.stellar.schedule.ComposableSingletons*",
+                )
+            }
+        }
+    }
 }
 
 room3 {
@@ -112,6 +156,12 @@ kotlin {
         androidResources {
             enable = true
         }
+
+        withHostTest {}
+
+        withDeviceTest {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
     }
 
 
@@ -176,6 +226,21 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.multiplatform.settings.test)
+            implementation(libs.ktor.client.mock)
+        }
+
+        getByName("androidDeviceTest") {
+            dependencies {
+                implementation(libs.ultron.compose)
+                implementation(libs.androidx.test.runner)
+                implementation(libs.kotlinx.coroutines.test)
+            }
         }
     }
 }

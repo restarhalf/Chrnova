@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.core.stats
 
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
+import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -33,13 +34,17 @@ internal object DauReporter {
      * @return true 表示本次实际发送成功，false 表示今日已上报或未确认隐私政策
      * @throws IllegalStateException 网络请求失败时抛出，由调用方决定是否重试
      */
-    suspend fun pingTodayIfDue(settings: ObservableSettings, deviceId: String): Boolean {
+    suspend fun pingTodayIfDue(
+        settings: ObservableSettings,
+        deviceId: String,
+        client: HttpClient = updateHttpClient,
+    ): Boolean {
         if (!settings.getBoolean(SettingsKeys.CONFIRM_PRIVACY, false)) return false
 
         val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date.toString()
         if (settings.getStringOrNull(SettingsKeys.DAU_LAST_PING_DAY) == today) return false
 
-        val response = updateHttpClient.post("$VERSION_WORKER_URL/ping") {
+        val response = client.post("$VERSION_WORKER_URL/ping") {
             contentType(ContentType.Application.Json)
             setBody(DauPingBody(aid = deviceId))
         }
