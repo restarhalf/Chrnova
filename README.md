@@ -10,7 +10,9 @@
 [![Android](https://img.shields.io/badge/Android-9.0%2B-3DDC84.svg)](https://www.android.com)
 [![iOS](https://img.shields.io/badge/iOS-18%2B-000000.svg)](https://www.apple.com/ios)
 
-[项目网站](https://github.com/restarhalf/Chrnova/blob/main/website/index.html) · [问题反馈](https://github.com/restarhalf/Chrnova/issues)
+[项目网站](https://chrnova.restarhalf.dpdns.org/) · [问题反馈](https://github.com/restarhalf/Chrnova/issues)
+
+[IOS安装教程](./iOS自签与自动续签教程.md)
 
 </div>
 
@@ -96,24 +98,23 @@ Chrnova 是一款面向大学校园的课程表应用，基于 Kotlin Multiplatf
 
 ## 技术栈
 
-| 类别       | 技术                                     |
-|----------|----------------------------------------|
-| **语言**     | Kotlin 2.4.10                          |
-| **UI 框架** | Compose Multiplatform 1.12.0           |
-| **UI 组件** | Miuix 0.9.4-rc01                       |
-| **导航**     | Miuix Navigation + NavigationEvent 1.1.2 |
-| **网络**     | Ktor 3.5.2                             |
-| **数据库**   | Room3 3.0.2（SQLite Bundled）            |
-| **DI**     | Koin 4.2.2                             |
-| **序列化**   | Kotlinx Serialization 1.11.0           |
-| **异步**     | Kotlinx Coroutines 1.11.0              |
-| **日期**     | Kotlinx DateTime 0.8.0                 |
-| **图片**     | Coil 3.6.0                             |
-| **加密**     | WhyCryptography 0.6.0                  |
-| **二维码**   | QRose 1.1.2                            |
-| **Markdown** | Multiplatform Markdown Renderer 0.44.0 |
-| **小组件**   | Glance 1.2.0（Android）                 |
-| **后台任务** | WorkManager 2.11.2（Android）           |
+| 类别       | 技术                                      |
+|----------|-----------------------------------------|
+| **语言**     | Kotlin                                  |
+| **UI 框架** | Compose Multiplatform            |
+| **UI 组件** | Miuix                         |
+| **导航**     | Miuix Navigation + NavigationEvent  |
+| **网络**     | Ktor                              |
+| **数据库**   | Room3              |
+| **DI**     | Koin                             |
+| **序列化**   | Kotlinx Serialization            |
+| **异步**     | Kotlinx Coroutines                |
+| **日期**     | Kotlinx DateTime                  |
+| **图片**     | Coil                              |
+| **加密**     | WhyCryptography                   |
+| **二维码**   | QRose                             |
+| **Markdown** | Multiplatform Markdown Renderer  |
+| **小组件**   | Glance                  |
 
 ---
 
