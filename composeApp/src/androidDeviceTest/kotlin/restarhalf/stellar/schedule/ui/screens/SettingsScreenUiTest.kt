@@ -10,7 +10,6 @@ import com.atiurin.ultron.core.compose.runUltronUiTest
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.every
-import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -23,7 +22,8 @@ import org.koin.dsl.module
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
@@ -31,11 +31,12 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
@@ -47,7 +48,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
  * 设置大屏 Compose UI 测试（Ultron KMP 入口）。
  *
  * VM 配方同 JVM 测试（SettingsViewModelTest）：全部 observe 流用类级
- * MutableStateFlow stub，5 个 final UseCase 走真实实例。
+ * MutableStateFlow stub，final UseCase 走真实实例 + mock reminder 端口。
  * TimetablePort 经 koinInject 获取：测试内 startKoin / loadKoinModules 补注册。
  * LazyColumn 只组可见项，只断言顶部账号分区；弹层（日期/周数选择器）为
  * 独立窗口，只断言触发入口。
@@ -59,7 +60,8 @@ class SettingsScreenUiTest {
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
@@ -110,14 +112,16 @@ class SettingsScreenUiTest {
             auth = auth,
             authWorkflow = authWorkflow,
             settings = settings,
-            syncCourseEventsToCalendar = SyncCourseEventsToCalendarUseCase(
-                courseRepository, timetable, calendarEvent, settings,
-            ),
-            syncExamEventsToCalendar = SyncExamEventsToCalendarUseCase(
-                ObserveAllExaminationsUseCase(examRepository, auth), calendarEvent, settings,
-            ),
-            removeAllCalendarEvents = RemoveAllCalendarEventsUseCase(calendarEvent),
+            cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+            cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
             fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, settings),
+            scheduleNextCourseReminder = ScheduleNextCourseReminderUseCase(
+                courseRepository, courseReminder,
+            ),
+            scheduleNextExamReminder = ScheduleNextExamReminderUseCase(
+                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, settings),
+                examReminder,
+            ),
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, settings),
         )
     }

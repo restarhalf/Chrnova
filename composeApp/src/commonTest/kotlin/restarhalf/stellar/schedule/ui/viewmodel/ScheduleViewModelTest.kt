@@ -28,12 +28,12 @@ import restarhalf.stellar.schedule.core.time.AcademicCalendar
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import kotlin.test.AfterTest
@@ -52,16 +52,16 @@ import kotlinx.coroutines.delay
  * ScheduleViewModel 单元测试。
  *
  * uiState 是 combine 5 流 + stateIn(WhileSubscribed)：subscribeUi + awaitState 模板。
- * 三个 UseCase 全部用真实实例（BuildScheduleUiState/TransCourseWithConflicts/SyncCourseEventsToCalendar），
- * 只 mock 端口（settings/courseRepository/timetable/calendarEvent）。
- * shouldAutoSync/insertCourse/deleteCourse/refreshCourseCalendar 走 withContext(AppIoDispatcher) 真实跨线程。
+ * 三个 UseCase 全部用真实实例（BuildScheduleUiState/TransCourseWithConflicts/RefreshCourseRemindersIfEnabled），
+ * 只 mock 端口（settings/courseRepository/timetable/courseReminder）。
+ * shouldAutoSync/insertCourse/deleteCourse/refreshCourseRemindersIfEnabled 走 withContext(AppIoDispatcher) 真实跨线程。
  */
 class ScheduleViewModelTest {
 
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
 
     private val showNonCurrentWeekFlow = MutableStateFlow(true)
     private val rowHeightFlow = MutableStateFlow(SettingsPort.DEFAULT_ROW_HEIGHT_DP)
@@ -140,8 +140,10 @@ class ScheduleViewModelTest {
             transCourseWithConflicts = TransCourseWithConflictsUseCase(
                 courseRepository, TransCourseUseCase(),
             ),
-            syncCourseEventsToCalendarUseCase = SyncCourseEventsToCalendarUseCase(
-                courseRepository, timetable, calendarEvent, settings,
+            refreshCourseRemindersIfEnabledUseCase = RefreshCourseRemindersIfEnabledUseCase(
+                settings = settings,
+                courseRepository = courseRepository,
+                courseReminder = courseReminder,
             ),
         )
     }
@@ -948,7 +950,7 @@ class ScheduleViewModelTest {
 
     // endregion
 
-    // region shouldAutoSync / refreshCourseCalendar
+    // region shouldAutoSync / refreshCourseRemindersIfEnabled
 
     @Test
     fun `shouldAutoSync透传端口结果`() = runTest {
@@ -963,31 +965,28 @@ class ScheduleViewModelTest {
     }
 
     @Test
-    fun `refreshCourseCalendar提醒关闭时不写日历`() = runTest {
+    fun `refreshCourseRemindersIfEnabled提醒关闭时不调度`() = runTest {
         val vm = makeViewModel()
         reminderFlow.value = false
 
-        vm.refreshCourseCalendar(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
+        vm.refreshCourseRemindersIfEnabled(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
         advanceMain()
-        verifySuspend(VerifyMode.not) {
-            calendarEvent.syncCourseEvents(any(), any(), any())
+        verify(VerifyMode.not) {
+            courseReminder.scheduleNextReminder(any(), any(), any(), any())
         }
     }
 
     @Test
-    fun `refreshCourseCalendar开启且有权限时全量重建`() = runTest {
+    fun `refreshCourseRemindersIfEnabled开启时调度下一节`() = runTest {
         val vm = makeViewModel()
         reminderFlow.value = true
         val c1 = course()
-        everySuspend { calendarEvent.hasCalendarPermission() } returns true
         everySuspend { courseRepository.getAllCoursesOnce() } returns listOf(c1)
-        everySuspend { calendarEvent.syncCourseEvents(any(), any(), any()) } returns
-            CalendarEventPort.SyncResult.Success(3)
 
-        vm.refreshCourseCalendar(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
+        vm.refreshCourseRemindersIfEnabled(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
         advanceMain()
-        verifySuspend(VerifyMode.exactly(1)) {
-            calendarEvent.syncCourseEvents(listOf(c1), termStartMs, timetableSlots)
+        verify(VerifyMode.exactly(1)) {
+            courseReminder.scheduleNextReminder(listOf(c1), Campus.Jinshitan, termStartMs, 20)
         }
     }
 

@@ -483,14 +483,14 @@ fun SettingsScreen(
                     })
                     add(CardItem("courseReminder") {
                         SwitchPreference(
-                            title = "课程日历提醒",
-                            summary = "写入系统日历,课前15分钟提醒",
+                            title = "课程提醒",
+                            summary = "上课前15分钟推送本地通知",
                             checked = settingsUiState.reminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureCourseReminderPermission {
                                         vm.onReminderEnabledChanged(true)
-                                        vm.syncCourseCalendar(
+                                        vm.scheduleCourseReminder(
                                             campus = campus,
                                             termStartMs = termStartMs,
                                             totalWeeks = totalWeeks
@@ -503,14 +503,14 @@ fun SettingsScreen(
                     })
                     add(CardItem("examReminder") {
                         SwitchPreference(
-                            title = "考试日历提醒",
-                            summary = "写入系统日历,考前15分钟提醒",
+                            title = "考试提醒",
+                            summary = "考试前15分钟推送本地通知",
                             checked = settingsUiState.examReminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureExamReminderPermission {
                                         vm.onExamReminderEnabledChanged(true)
-                                        vm.syncExamCalendar(
+                                        vm.scheduleExamReminder(
                                             selectedTerm = settingsUiState.selectedTerm
                                         )
                                     }

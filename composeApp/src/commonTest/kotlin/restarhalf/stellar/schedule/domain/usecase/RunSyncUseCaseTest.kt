@@ -17,12 +17,11 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -34,18 +33,15 @@ class RunSyncUseCaseTest {
     private val timetable = mock<TimetablePort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
-    private val courseRepository = mock<CourseRepository>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
 
-    // SyncCourseEventsToCalendarUseCase 是 final class 无法 mock，用共享 mock 构造真实实例；
-    // 测试中把课程日历开关置为关闭，日历同步即变成 no-op
     private val useCase = RunSyncUseCase(
         authWorkflow = authWorkflow,
         academic = academic,
         timetable = timetable,
         settings = settings,
         sync = sync,
-        syncCourseEvents = SyncCourseEventsToCalendarUseCase(courseRepository, timetable, calendarEvent, settings),
+        reminderScheduler = reminderScheduler,
     )
 
     private val jinshitan = RemoteCampus(id = "c-js", name = "金石滩校区", isDefault = false)
@@ -66,7 +62,6 @@ class RunSyncUseCaseTest {
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(5, "c-js")
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns 1000L
         everySuspend { academic.fetchTeachingWeekTotal() } returns 20
-        every { settings.observeCourseReminderEnabled() } returns flowOf(false)
     }
 
     @Test
@@ -81,6 +76,7 @@ class RunSyncUseCaseTest {
         verify(VerifyMode.exactly(1)) { timetable.setTermStartMs(1000L) }
         verify(VerifyMode.exactly(1)) { timetable.setTotalWeeks(20) }
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
+        verify(VerifyMode.exactly(1)) { reminderScheduler.scheduleNow() }
     }
 
     @Test
@@ -92,7 +88,6 @@ class RunSyncUseCaseTest {
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(1, "c-js")
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns null
         everySuspend { academic.fetchTeachingWeekTotal() } returns 0
-        every { settings.observeCourseReminderEnabled() } returns flowOf(false)
 
         useCase()
 
@@ -109,6 +104,7 @@ class RunSyncUseCaseTest {
 
         assertFailsWith<IllegalStateException> { useCase() }
         verifySuspend(VerifyMode.not) { sync.sync(any(), any(), any()) }
+        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
     }
 
     @Test
@@ -120,7 +116,6 @@ class RunSyncUseCaseTest {
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(2, "c-main")
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns null
         everySuspend { academic.fetchTeachingWeekTotal() } returns 0
-        every { settings.observeCourseReminderEnabled() } returns flowOf(false)
 
         val result = useCase()
 
@@ -140,7 +135,6 @@ class RunSyncUseCaseTest {
         }
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns null
         everySuspend { academic.fetchTeachingWeekTotal() } returns 0
-        every { settings.observeCourseReminderEnabled() } returns flowOf(false)
 
         val result = useCase()
 
@@ -158,7 +152,6 @@ class RunSyncUseCaseTest {
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(0, "c-js")
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns null
         everySuspend { academic.fetchTeachingWeekTotal() } returns 0
-        every { settings.observeCourseReminderEnabled() } returns flowOf(false)
 
         val result = useCase()
 
@@ -174,6 +167,7 @@ class RunSyncUseCaseTest {
 
         assertFailsWith<RuntimeException> { useCase() }
         verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
+        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
     }
 
     @Test
@@ -191,5 +185,6 @@ class RunSyncUseCaseTest {
         assertEquals(4, result.inserted)
         assertEquals(2, attempts)
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
+        verify(VerifyMode.exactly(1)) { reminderScheduler.scheduleNow() }
     }
 }

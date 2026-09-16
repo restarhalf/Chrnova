@@ -28,7 +28,7 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 /**
@@ -44,7 +44,7 @@ class ExaminationViewModel(
     observeAllExaminations: ObserveAllExaminationsUseCase,
     private val auth: JwxtAuthPort,
     private val settings: SettingsPort,
-    private val syncExamEventsToCalendar: SyncExamEventsToCalendarUseCase,
+    private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
 
     /**
@@ -202,21 +202,20 @@ class ExaminationViewModel(
     }
 
     /**
-     * 刷新考试日历事件
+     * 刷新考试本地通知
      *
-     * 进入考试页或考试数据变化后调用,触发日历事件全量重建。
-     * 仅在已开启「考试日历提醒」时实际写入。
+     * 进入考试页或考试数据变化后调用，重新调度下一门考试提醒。
+     * 仅在已开启「考试提醒」时实际调度。
      */
-    fun refreshExamCalendar() {
+    fun refreshExamReminder() {
         viewModelScope.launch {
             runCatching {
                 withContext(AppIoDispatcher) {
-                    val term = _selectedTerm.value
-                    syncExamEventsToCalendar(selectedTerm = term)
+                    rescheduleNextExamReminderIfEnabled()
                 }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Calendar", "考试日历刷新失败", e)
+                AppLogger.log("Reminder", "考试提醒刷新失败", e)
             }
         }
     }

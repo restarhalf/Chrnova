@@ -28,11 +28,14 @@ import platform.Photos.PHAuthorizationStatusDenied
 import platform.Photos.PHAuthorizationStatusLimited
 import platform.Photos.PHAuthorizationStatusRestricted
 import platform.Photos.PHPhotoLibrary
-import platform.EventKit.EKEntityType
-import platform.EventKit.EKEventStore
-import platform.EventKit.EKAuthorizationStatusAuthorized
-import platform.EventKit.EKAuthorizationStatusFullAccess
-import platform.EventKit.EKAuthorizationStatusNotDetermined
+import platform.UserNotifications.UNAuthorizationOptionAlert
+import platform.UserNotifications.UNAuthorizationOptionBadge
+import platform.UserNotifications.UNAuthorizationOptionSound
+import platform.UserNotifications.UNAuthorizationStatusAuthorized
+import platform.UserNotifications.UNAuthorizationStatusEphemeral
+import platform.UserNotifications.UNAuthorizationStatusNotDetermined
+import platform.UserNotifications.UNAuthorizationStatusProvisional
+import platform.UserNotifications.UNUserNotificationCenter
 import platform.UIKit.UIAlertAction
 import platform.UIKit.UIAlertActionStyleCancel
 import platform.UIKit.UIAlertActionStyleDefault
@@ -158,23 +161,32 @@ private fun ensureNotificationPermission(
     controller: UIViewController,
     onGranted: () -> Unit,
 ) {
-    val store = EKEventStore()
-    val status = EKEventStore.authorizationStatusForEntityType(EKEntityType.EKEntityTypeEvent)
-    when (status) {
-        EKAuthorizationStatusAuthorized,
-        EKAuthorizationStatusFullAccess,
-        -> runOnMain { onGranted() }
+    val center = UNUserNotificationCenter.currentNotificationCenter()
+    center.getNotificationSettingsWithCompletionHandler { settings ->
+        val status = settings?.authorizationStatus
+        when (status) {
+            UNAuthorizationStatusAuthorized,
+            UNAuthorizationStatusProvisional,
+            UNAuthorizationStatusEphemeral,
+                -> runOnMain { onGranted() }
 
-        EKAuthorizationStatusNotDetermined -> {
-            store.requestAccessToEntityType(EKEntityType.EKEntityTypeEvent) { granted, _ ->
-                if (granted) {
-                    runOnMain { onGranted() }
-                }
+            UNAuthorizationStatusNotDetermined -> {
+                center.requestAuthorizationWithOptions(
+                    options =
+                        UNAuthorizationOptionAlert or
+                                UNAuthorizationOptionSound or
+                                UNAuthorizationOptionBadge,
+                    completionHandler = { granted, _ ->
+                        if (granted) {
+                            runOnMain { onGranted() }
+                        }
+                    },
+                )
             }
-        }
 
-        else -> runOnMain {
-            showNotificationPermissionAlert(controller)
+            else -> runOnMain {
+                showNotificationPermissionAlert(controller)
+            }
         }
     }
 }
@@ -183,8 +195,8 @@ private fun showNotificationPermissionAlert(controller: UIViewController) {
     val presenter = resolvePresenter(controller)
     val alert =
         UIAlertController.alertControllerWithTitle(
-            title = "日历权限未开启",
-            message = "请先在系统设置中允许访问日历，再开启课程或考试提醒。",
+            title = "通知权限未开启",
+            message = "请先在系统设置中允许通知，再开启课程或考试提醒。",
             preferredStyle = UIAlertControllerStyleAlert,
         )
     alert.addAction(

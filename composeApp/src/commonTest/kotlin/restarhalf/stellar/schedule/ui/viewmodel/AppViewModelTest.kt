@@ -23,9 +23,9 @@ import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -39,7 +39,6 @@ import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -71,7 +70,7 @@ class AppViewModelTest {
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
 
     /** observe 流类级持有，测试中可变更触发 uiState 更新 */
     private val campusFlow = MutableStateFlow(Campus.Jinshitan)
@@ -79,7 +78,6 @@ class AppViewModelTest {
     private val totalWeeksFlow = MutableStateFlow(20)
     private val logFlow = MutableStateFlow(false)
     private val selectedTermFlow = MutableStateFlow("2026-1")
-    private val courseReminderFlow = MutableStateFlow(false)
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
     /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
@@ -116,7 +114,6 @@ class AppViewModelTest {
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(5, "c-js")
         everySuspend { sync.fetchTermStartDate(any(), any()) } returns 1000L
         everySuspend { academic.fetchTeachingWeekTotal() } returns 20
-        every { settings.observeCourseReminderEnabled() } returns courseReminderFlow
     }
 
     /** 全部 stub 先于构造：initialValue 在构造期同步求值，init 块即收 observe 流 */
@@ -129,7 +126,6 @@ class AppViewModelTest {
         every { timetable.getTotalWeeks() } returns 20
         every { settings.observeLogEnabled() } returns logFlow
         every { settings.observeSelectedTerm() } returns selectedTermFlow
-        every { settings.observeCourseReminderEnabled() } returns courseReminderFlow
         every { auth.observeProfile() } returns profileFlow
         return AppViewModel(
             auth = auth,
@@ -148,14 +144,9 @@ class AppViewModelTest {
                 timetable = timetable,
                 settings = settings,
                 sync = sync,
-                syncCourseEvents = SyncCourseEventsToCalendarUseCase(
-                    courseRepository, timetable, calendarEvent, settings,
-                ),
+                reminderScheduler = reminderScheduler,
             ),
             bindUnboundData = BindUnboundDataUseCase(auth, courseRepository, examRepository, academic),
-            syncCourseEventsToCalendar = SyncCourseEventsToCalendarUseCase(
-                courseRepository, timetable, calendarEvent, settings,
-            ),
         )
     }
 
@@ -252,7 +243,6 @@ class AppViewModelTest {
         every { settings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } throws RuntimeException("网络故障")
-        every { settings.observeCourseReminderEnabled() } returns courseReminderFlow
         val vm = makeViewModel()
         advanceMain()
 
@@ -268,7 +258,6 @@ class AppViewModelTest {
         every { settings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } throws RuntimeException("网络故障")
-        every { settings.observeCourseReminderEnabled() } returns courseReminderFlow
         val vm = makeViewModel()
         advanceMain()
 
@@ -307,21 +296,14 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `onCampusChanged写timetable且开关关闭时日历no-op`() = runTest {
+    fun `onCampusChanged写timetable`() = runTest {
         val vm = makeViewModel()
         advanceMain()
 
         vm.onCampusChanged(Campus.Development)
         advanceMain()
-        // resyncCourseCalendar 走 viewModelScope.launch，真实跨线程需等待
-        withContext(Dispatchers.Default) { delay(100) }
-        advanceMain()
 
         verify(VerifyMode.exactly(1)) { timetable.setCampus(Campus.Development) }
-        // 课程提醒开关关闭，日历同步是 no-op，不写日历
-        verifySuspend(VerifyMode.not) {
-            calendarEvent.syncCourseEvents(any(), any(), any())
-        }
     }
 
     @Test

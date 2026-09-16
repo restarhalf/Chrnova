@@ -20,12 +20,12 @@ import org.junit.Test
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
@@ -39,7 +39,7 @@ import kotlin.time.Clock
  * 课程表大屏 Compose UI 测试（Ultron KMP 入口）。
  *
  * VM 配方同 JVM 测试：BuildScheduleUiState/TransCourseWithConflicts/
- * SyncCourseEventsToCalendar 全真实实例，只 mock 端口。
+ * RefreshCourseRemindersIfEnabled 全真实实例，只 mock 端口。
  * 学期开始时间取"本周周一 00:00"——真实时钟下 detectedWeek = 1，
  * 顶栏标题应为"第1周"，网格渲染周一表头与课程卡片。
  */
@@ -48,7 +48,7 @@ class ScheduleScreenUiTest {
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
 
     private val showNonCurrentWeekFlow = MutableStateFlow(true)
     private val rowHeightFlow = MutableStateFlow(SettingsPort.DEFAULT_ROW_HEIGHT_DP)
@@ -94,8 +94,10 @@ class ScheduleScreenUiTest {
             transCourseWithConflicts = TransCourseWithConflictsUseCase(
                 courseRepository, TransCourseUseCase(),
             ),
-            syncCourseEventsToCalendarUseCase = SyncCourseEventsToCalendarUseCase(
-                courseRepository, timetable, calendarEvent, settings,
+            refreshCourseRemindersIfEnabledUseCase = RefreshCourseRemindersIfEnabledUseCase(
+                settings = settings,
+                courseRepository = courseRepository,
+                courseReminder = courseReminder,
             ),
         )
     }

@@ -5,7 +5,6 @@ import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import restarhalf.stellar.schedule.calendar.CalendarEventPortImpl
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.data.impl.AppUpdatePortImpl
 import restarhalf.stellar.schedule.data.impl.CourseSelectionServicePortImpl
@@ -17,10 +16,17 @@ import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
+import restarhalf.stellar.schedule.reminder.CourseReminderScheduler
+import restarhalf.stellar.schedule.reminder.ExamReminderScheduler
+import restarhalf.stellar.schedule.reminder.impl.CourseReminderPortImpl
+import restarhalf.stellar.schedule.reminder.impl.ExamReminderPortImpl
+import restarhalf.stellar.schedule.reminder.impl.WorkManagerReminderSchedulerPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
 import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
@@ -38,8 +44,11 @@ private val androidPlatformModule = module {
     single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
     single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
 
-    single<ObservableSettings>(named("calendar_codes")) {
-        SharedPreferencesSettings.Factory(androidContext()).create("calendar_codes")
+    single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
+    single { ExamReminderScheduler(androidContext()) }
+
+    single<ObservableSettings>(named("reminder_codes")) {
+        SharedPreferencesSettings.Factory(androidContext()).create("reminder_codes")
     }
     single<ObservableSettings>(named(SettingsKeys.PREFS_NAME)) {
         SharedPreferencesSettings.Factory(androidContext()).create(SettingsKeys.PREFS_NAME)
@@ -54,9 +63,9 @@ private val androidPlatformModule = module {
         SharedPreferencesSettings.Factory(androidContext()).create("timetable_prefs")
     }
 
-    single<CalendarEventPort> {
-        CalendarEventPortImpl(context = androidContext(), prefs = get(named("calendar_codes")))
-    }
+    single<CourseReminderPort> { CourseReminderPortImpl(scheduler = get()) }
+    single<ExamReminderPort> { ExamReminderPortImpl(scheduler = get()) }
+    single<ReminderSchedulerPort> { WorkManagerReminderSchedulerPortImpl(context = androidContext()) }
     single<AppUpdatePort> { AppUpdatePortImpl(context = androidContext()) }
     single<CourseSelectionServicePort> {
         CourseSelectionServicePortImpl(context = androidContext())

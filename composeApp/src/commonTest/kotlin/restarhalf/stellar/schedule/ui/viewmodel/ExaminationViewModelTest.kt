@@ -2,32 +2,35 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
-import dev.mokkery.answering.throws
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
+import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
-import dev.mokkery.verifySuspend
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -36,19 +39,17 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
 
 /**
  * ExaminationViewModel 单元测试。
  *
  * IsExamNotEndedUseCase 无参纯逻辑类直接构造；ObserveAllExaminationsUseCase 与
- * SyncExamEventsToCalendarUseCase 是 final class，用真实实例 + mock 端口
- * （ExaminationRepository/JwxtAuthPort/SettingsPort/CalendarEventPort）。
+ * RescheduleNextExamReminderIfEnabledUseCase 是 final class，用真实实例 + mock 端口
+ * （ExaminationRepository/JwxtAuthPort/SettingsPort/ExamReminderPort）。
  *
  * 关键点：
  * 1. uiState 是 stateIn(WhileSubscribed) —— 必须先 subscribeUi 驱动 combine；
- * 2. refreshExamCalendar 内 withContext(AppIoDispatcher=Dispatchers.IO) 真实跨线程，
+ * 2. refreshExamReminder 内 withContext(AppIoDispatcher=Dispatchers.IO) 真实跨线程，
  *    等待用 delay + advanceMain drain。
  */
 class ExaminationViewModelTest {
@@ -56,7 +57,9 @@ class ExaminationViewModelTest {
     private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
+    private val academic = mock<AcademicPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
 
     /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
@@ -64,22 +67,32 @@ class ExaminationViewModelTest {
     private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
     private val examsFlow = MutableStateFlow<List<Examination>>(emptyList())
     private val termFlow = MutableStateFlow("")
+    private val examReminderEnabledFlow = MutableStateFlow(false)
 
     private fun makeViewModel(): ExaminationViewModel {
         every { auth.observeProfile() } returns profileFlow
         every { examinationRepository.observeAllExaminations() } returns examsFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
+        every { settings.observeExamReminderEnabled() } returns examReminderEnabledFlow
+        everySuspend { academic.fetchExaminations(any(), any()) } returns emptyList()
+        everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
         val observeAllExaminations = ObserveAllExaminationsUseCase(examinationRepository, auth)
         return ExaminationViewModel(
             isExamNotEnded = IsExamNotEndedUseCase(),
             observeAllExaminations = observeAllExaminations,
             auth = auth,
             settings = settings,
-            syncExamEventsToCalendar = SyncExamEventsToCalendarUseCase(
-                observeAllExaminations = observeAllExaminations,
-                calendarEvent = calendarEvent,
+            rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
                 settings = settings,
+                fetchExaminations = FetchExaminationsUseCase(
+                    authWorkflow = authWorkflow,
+                    academic = academic,
+                    repository = examinationRepository,
+                    auth = auth,
+                    settings = settings,
+                ),
+                examReminder = examReminder,
             ),
         )
     }
@@ -231,30 +244,31 @@ class ExaminationViewModelTest {
     }
 
     @Test
-    fun `refreshExamCalendar未开启提醒时不写日历`() = runTest {
+    fun `refreshExamReminder未开启提醒时不调度`() = runTest {
         val vm = makeViewModel()
-        every { settings.observeExamReminderEnabled() } returns flowOf(false)
+        examReminderEnabledFlow.value = false
 
-        vm.refreshExamCalendar()
+        vm.refreshExamReminder()
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verifySuspend(VerifyMode.not) { calendarEvent.syncExamEvents(any()) }
+        verify(VerifyMode.not) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test
-    fun `refreshExamCalendar开启提醒且有权限时同步日历`() = runTest {
+    fun `refreshExamReminder开启提醒时调度下次考试`() = runTest {
         val vm = makeViewModel()
-        every { settings.observeExamReminderEnabled() } returns flowOf(true)
-        every { calendarEvent.hasCalendarPermission() } returns true
-        everySuspend { calendarEvent.syncExamEvents(any()) } returns CalendarEventPort.SyncResult.Success(1)
+        examReminderEnabledFlow.value = true
+        everySuspend { academic.fetchExaminations(any(), any()) } returns listOf(
+            exam(courseName = "大学物理"),
+        )
 
-        vm.refreshExamCalendar()
+        vm.refreshExamReminder()
         // withContext(Dispatchers.IO) 真实跨线程，等待恢复后再 drain Main 队列
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verifySuspend(VerifyMode.exactly(1)) { calendarEvent.syncExamEvents(any()) }
+        verify(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test

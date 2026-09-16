@@ -93,16 +93,13 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                 PdfFilePickerHost(onPicked = onPicked)
             },
             ensureNotificationPermission = { onGranted ->
-                // 课表/考试提醒需要日历权限，后台抢课 Foreground Service 需要通知权限（Android 13+）
-                val perms = mutableListOf(
-                    Manifest.permission.READ_CALENDAR,
-                    Manifest.permission.WRITE_CALENDAR,
-                )
+                // 课程/考试本地通知需要 POST_NOTIFICATIONS（Android 13+）；抢课前台服务同样依赖
+                val perms = mutableListOf<String>()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     perms.add(Manifest.permission.POST_NOTIFICATIONS)
                 }
                 val permsArray = perms.toTypedArray()
-                val allGranted = permsArray.all {
+                val allGranted = permsArray.isEmpty() || permsArray.all {
                     ContextCompat.checkSelfPermission(this@AppRoot, it) == PackageManager.PERMISSION_GRANTED
                 }
                 if (allGranted) {

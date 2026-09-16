@@ -8,7 +8,6 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
-import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -21,19 +20,20 @@ import kotlinx.coroutines.test.setMain
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
-import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
-import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.test.AfterTest
@@ -48,17 +48,18 @@ import kotlinx.coroutines.delay
 /**
  * SettingsViewModel 单元测试。
  *
- * 全部依赖为接口（可直接 mock）+ 4 个 final class UseCase 走真实实例：
- * - SyncCourseEventsToCalendarUseCase(courseRepository, timetable, calendarEvent, settings)
- * - SyncExamEventsToCalendarUseCase(ObserveAllExaminationsUseCase(examRepository, auth), calendarEvent, settings)
- * - RemoveAllCalendarEventsUseCase(calendarEvent)
+ * 全部依赖为接口（可直接 mock）+ final class UseCase 走真实实例：
+ * - CancelAllCourseRemindersUseCase(courseReminder)
+ * - CancelAllExamRemindersUseCase(examReminder)
+ * - ScheduleNextCourseReminderUseCase(courseRepository, courseReminder)
+ * - ScheduleNextExamReminderUseCase(FetchExaminationsUseCase(...), examReminder)
  * - FetchSemesterIdsUseCase(authWorkflow, academic, settings)
  * - VerifyGitHubStarUseCase(papersPort, settings)
  *
  * 关键点：
  * 1. uiState 是 stateIn(WhileSubscribed) —— 先 subscribeUi 驱动多层 combine；
  * 2. 设置 observe 流用类级 MutableStateFlow stub，测试中改值驱动 uiState；
- * 3. 日历删除走 withContext(Dispatchers.IO) 真实跨线程 —— delay + advanceMain 后再 verify。
+ * 3. 取消提醒走 withContext(Dispatchers.IO) 真实跨线程 —— delay + advanceMain 后再 verify。
  */
 class SettingsViewModelTest {
 
@@ -66,8 +67,8 @@ class SettingsViewModelTest {
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
-    private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
@@ -100,18 +101,22 @@ class SettingsViewModelTest {
         every { settings.getStarVerified() } returns false
         every { auth.observeToken() } returns tokenFlow
         every { auth.observeProfile() } returns profileFlow
+        everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
+        everySuspend { academic.fetchExaminations(any(), any()) } returns emptyList()
         return SettingsViewModel(
             auth = auth,
             authWorkflow = authWorkflow,
             settings = settings,
-            syncCourseEventsToCalendar = SyncCourseEventsToCalendarUseCase(
-                courseRepository, timetable, calendarEvent, settings,
-            ),
-            syncExamEventsToCalendar = SyncExamEventsToCalendarUseCase(
-                ObserveAllExaminationsUseCase(examRepository, auth), calendarEvent, settings,
-            ),
-            removeAllCalendarEvents = RemoveAllCalendarEventsUseCase(calendarEvent),
+            cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+            cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
             fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, settings),
+            scheduleNextCourseReminder = ScheduleNextCourseReminderUseCase(
+                courseRepository, courseReminder,
+            ),
+            scheduleNextExamReminder = ScheduleNextExamReminderUseCase(
+                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, settings),
+                examReminder,
+            ),
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, settings),
         )
     }
@@ -227,19 +232,18 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `开启课程提醒只写设置不删日历`() = runTest {
+    fun `开启课程提醒只写设置不取消提醒`() = runTest {
         val vm = makeViewModel()
 
         vm.onReminderEnabledChanged(true)
         advanceMain()
 
         verify(VerifyMode.exactly(1)) { settings.setCourseReminderEnabled(true) }
-        verifySuspend(VerifyMode.not) { calendarEvent.removeAllCourseEvents() }
+        verify(VerifyMode.not) { courseReminder.cancelAll() }
     }
 
     @Test
-    fun `关闭课程提醒并清除课程日历事件`() = runTest {
-        everySuspend { calendarEvent.removeAllCourseEvents() } returns CalendarEventPort.SyncResult.Success(0)
+    fun `关闭课程提醒并取消课程提醒`() = runTest {
         val vm = makeViewModel()
 
         vm.onReminderEnabledChanged(false)
@@ -248,23 +252,22 @@ class SettingsViewModelTest {
         advanceMain()
 
         verify(VerifyMode.exactly(1)) { settings.setCourseReminderEnabled(false) }
-        verifySuspend(VerifyMode.exactly(1)) { calendarEvent.removeAllCourseEvents() }
+        verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
     }
 
     @Test
-    fun `开启考试提醒只写设置不删日历`() = runTest {
+    fun `开启考试提醒只写设置不取消提醒`() = runTest {
         val vm = makeViewModel()
 
         vm.onExamReminderEnabledChanged(true)
         advanceMain()
 
         verify(VerifyMode.exactly(1)) { settings.setExamReminderEnabled(true) }
-        verifySuspend(VerifyMode.not) { calendarEvent.removeAllExamEvents() }
+        verify(VerifyMode.not) { examReminder.cancelAll() }
     }
 
     @Test
-    fun `关闭考试提醒并清除考试日历事件`() = runTest {
-        everySuspend { calendarEvent.removeAllExamEvents() } returns CalendarEventPort.SyncResult.Success(0)
+    fun `关闭考试提醒并取消考试提醒`() = runTest {
         val vm = makeViewModel()
 
         vm.onExamReminderEnabledChanged(false)
@@ -272,19 +275,20 @@ class SettingsViewModelTest {
         advanceMain()
 
         verify(VerifyMode.exactly(1)) { settings.setExamReminderEnabled(false) }
-        verifySuspend(VerifyMode.exactly(1)) { calendarEvent.removeAllExamEvents() }
+        verify(VerifyMode.exactly(1)) { examReminder.cancelAll() }
     }
 
     @Test
-    fun `onSelectedTermChanged写学期且开关关闭时不写日历`() = runTest {
+    fun `onSelectedTermChanged写学期并调度考试提醒`() = runTest {
         val vm = makeViewModel()
 
         vm.onSelectedTermChanged("2025-2")
+        withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
         verify(VerifyMode.exactly(1)) { settings.setSelectedTerm("2025-2") }
         verify(VerifyMode.exactly(1)) { settings.setActiveScheduleTerm("2025-2") }
-        verifySuspend(VerifyMode.not) { calendarEvent.syncExamEvents(any()) }
+        verify(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test

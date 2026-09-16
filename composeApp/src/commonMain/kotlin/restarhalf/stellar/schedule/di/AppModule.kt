@@ -90,12 +90,18 @@ import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
-import restarhalf.stellar.schedule.domain.usecase.RemoveAllCalendarEventsUseCase
+import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -300,7 +306,7 @@ val useCaseModule = module {
             timetable = get(),
             settings = get(),
             sync = get(),
-            syncCourseEvents = get(),
+            reminderScheduler = get(),
         )
     }
     factory {
@@ -347,21 +353,43 @@ val useCaseModule = module {
     factory { BuildHomeSurfaceUiUseCase() }
     factory { ResolveCourseStatusUseCase() }
     factory {
-        SyncCourseEventsToCalendarUseCase(
-            courseRepository = get(),
-            timetable = get(),
-            calendarEvent = get(),
+        RefreshCourseRemindersIfEnabledUseCase(
             settings = get(),
+            courseRepository = get(),
+            courseReminder = get(),
+        )
+    }
+    factory { ScheduleNextCourseReminderUseCase(courseRepository = get(), courseReminder = get()) }
+    factory { ScheduleNextExamReminderUseCase(fetchExaminations = get(), examReminder = get()) }
+    factory { CancelAllCourseRemindersUseCase(courseReminder = get()) }
+    factory { CancelAllExamRemindersUseCase(examReminder = get()) }
+    factory { IsAnyReminderEnabledUseCase(settings = get()) }
+    factory {
+        RescheduleNextCourseReminderIfEnabledUseCase(
+            settings = get(),
+            timetable = get(),
+            courseRepository = get(),
+            courseReminder = get(),
         )
     }
     factory {
-        SyncExamEventsToCalendarUseCase(
-            observeAllExaminations = get(),
-            calendarEvent = get(),
+        RescheduleNextExamReminderIfEnabledUseCase(
             settings = get(),
+            fetchExaminations = get(),
+            examReminder = get(),
         )
     }
-    factory { RemoveAllCalendarEventsUseCase(calendarEvent = get()) }
+    factory {
+        RescheduleRemindersUseCase(
+            settings = get(),
+            courseRepository = get(),
+            timetable = get(),
+            courseReminder = get(),
+            examReminder = get(),
+            academic = get(),
+            authWorkflow = get(),
+        )
+    }
     factory { IsExamNotEndedUseCase() }
 
     factory {
@@ -423,7 +451,6 @@ val viewModelModule = module {
             jwxtLoginUseCase = get(),
             runSyncUseCase = get(),
             bindUnboundData = get(),
-            syncCourseEventsToCalendar = get(),
         )
     }
     viewModel {
@@ -443,7 +470,7 @@ val viewModelModule = module {
             courseRepository = get(),
             buildScheduleUiStateUseCase = get(),
             transCourseWithConflicts = get(),
-            syncCourseEventsToCalendarUseCase = get(),
+            refreshCourseRemindersIfEnabledUseCase = get(),
         )
     }
     viewModel {
@@ -451,10 +478,11 @@ val viewModelModule = module {
             auth = get(),
             authWorkflow = get(),
             settings = get(),
-            syncCourseEventsToCalendar = get(),
-            syncExamEventsToCalendar = get(),
-            removeAllCalendarEvents = get(),
+            cancelAllCourseReminders = get(),
+            cancelAllExamReminders = get(),
             fetchSemesterIds = get(),
+            scheduleNextCourseReminder = get(),
+            scheduleNextExamReminder = get(),
             verifyGitHubStar = get(),
         )
     }
@@ -464,7 +492,7 @@ val viewModelModule = module {
             observeAllExaminations = get(),
             auth = get(),
             settings = get(),
-            syncExamEventsToCalendar = get(),
+            rescheduleNextExamReminderIfEnabled = get(),
         )
     }
     viewModel {

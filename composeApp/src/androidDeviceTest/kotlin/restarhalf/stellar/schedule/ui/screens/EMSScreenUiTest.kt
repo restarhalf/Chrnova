@@ -13,20 +13,24 @@ import dev.mokkery.every
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Test
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
-import restarhalf.stellar.schedule.domain.port.CalendarEventPort
+import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
+import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncExamEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -46,7 +50,9 @@ class EMSScreenUiTest {
     private val settings = mock<SettingsPort>(MockMode.autofill)
     private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
-    private val calendarEvent = mock<CalendarEventPort>(MockMode.autofill)
+    private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
+    private val academic = mock<AcademicPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
 
     private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
     private val examsFlow = MutableStateFlow<List<Examination>>(emptyList())
@@ -58,16 +64,23 @@ class EMSScreenUiTest {
         every { examinationRepository.observeAllExaminations() } returns examsFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
+        every { settings.observeExamReminderEnabled() } returns flowOf(false)
         val observeAllExaminations = ObserveAllExaminationsUseCase(examinationRepository, auth)
         return ExaminationViewModel(
             isExamNotEnded = IsExamNotEndedUseCase(),
             observeAllExaminations = observeAllExaminations,
             auth = auth,
             settings = settings,
-            syncExamEventsToCalendar = SyncExamEventsToCalendarUseCase(
-                observeAllExaminations = observeAllExaminations,
-                calendarEvent = calendarEvent,
+            rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
                 settings = settings,
+                fetchExaminations = FetchExaminationsUseCase(
+                    authWorkflow = authWorkflow,
+                    academic = academic,
+                    repository = examinationRepository,
+                    auth = auth,
+                    settings = settings,
+                ),
+                examReminder = examReminder,
             ),
         )
     }

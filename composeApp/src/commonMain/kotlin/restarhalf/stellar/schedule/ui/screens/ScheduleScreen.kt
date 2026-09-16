@@ -198,7 +198,7 @@ fun ScheduleScreen(
 
     LaunchedEffect(Unit) {
         if (vm.shouldAutoSync()) onSync()
-        vm.refreshCourseCalendar(
+        vm.refreshCourseRemindersIfEnabled(
             campus = campus,
             termStartMs = termStartMs,
             totalWeeks = totalWeeks

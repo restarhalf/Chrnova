@@ -32,7 +32,7 @@ import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.SyncCourseEventsToCalendarUseCase
+import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
@@ -53,7 +53,7 @@ class ScheduleViewModel(
     private val courseRepository: CourseRepository,
     private val buildScheduleUiStateUseCase: BuildScheduleUiStateUseCase,
     private val transCourseWithConflicts: TransCourseWithConflictsUseCase,
-    private val syncCourseEventsToCalendarUseCase: SyncCourseEventsToCalendarUseCase,
+    private val refreshCourseRemindersIfEnabledUseCase: RefreshCourseRemindersIfEnabledUseCase,
 ) : ViewModel() {
 
     /**
@@ -665,21 +665,21 @@ class ScheduleViewModel(
     }
 
     /**
-     * 如果启用则同步课程日历事件
+     * 如果启用则刷新课程本地通知
      *
-     * 课表进入或编辑后调用,触发日历事件全量重建。
+     * 课表进入或编辑后调用，调度下一节课程提醒。
      *
      * @param campus 当前校区
      * @param termStartMs 学期开始时间戳
      * @param totalWeeks 学期总周数
      */
-    suspend fun refreshCourseCalendar(
+    suspend fun refreshCourseRemindersIfEnabled(
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
     ) {
         withContext(AppIoDispatcher) {
-            syncCourseEventsToCalendarUseCase(
+            refreshCourseRemindersIfEnabledUseCase(
                 campus = campus,
                 termStartMs = termStartMs,
                 totalWeeks = totalWeeks
