@@ -136,6 +136,10 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PEQRCode : Screen
 
+    /** 学生体测预约页面 */
+    @Serializable
+    data object PEAppointment : Screen
+
     /** 个人资料页面 */
     @Serializable
     data object Profile : Screen

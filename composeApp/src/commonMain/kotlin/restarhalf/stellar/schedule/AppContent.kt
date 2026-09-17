@@ -84,6 +84,7 @@ import restarhalf.stellar.schedule.ui.screens.pe.PESubjectHistoryScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -97,6 +98,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
@@ -440,6 +442,14 @@ fun AppContent(
                                     onBack = { navigator.pop() },
                                 )
                             }
+                            entry<Screen.PEAppointment> {
+                                val peAppointmentVm: PEAppointmentViewModel = koinViewModel()
+                                PEAppointmentScreen(
+                                    vm = peAppointmentVm,
+                                    onLogin = { navigator.push(Screen.PELogin) },
+                                    onBack = { navigator.pop() },
+                                )
+                            }
                             entry<Screen.Profile> {
                                 val settingsVm: SettingsViewModel = koinViewModel()
                                 val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
@@ -737,6 +747,7 @@ private fun MainRouteContent(
                     },
                     onQRCode = { navigator.push(Screen.PEQRCode) },
                     onLogin = { navigator.push(Screen.PELogin) },
+                    onAppointment = { navigator.push(Screen.PEAppointment) },
                     jwxtAuthProfile = settingsUiState.profile
                 )
             }

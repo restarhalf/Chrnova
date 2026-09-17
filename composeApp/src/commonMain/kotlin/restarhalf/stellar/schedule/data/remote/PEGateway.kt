@@ -53,4 +53,59 @@ interface PEGateway {
      * @return 学生信息响应
      */
     suspend fun getProfile(): PEAuthProfileResponse
+
+    /**
+     * 获取学生预约列表
+     *
+     * @param type "1"=我的预约，"2"=可预约
+     * @param pageNum 页码（从1开始）
+     * @param pageSize 每页条数
+     * @return 预约列表响应
+     */
+    suspend fun getAppointments(
+        type: String,
+        pageNum: Int = 1,
+        pageSize: Int = 20,
+    ): PEAppointmentListResponse
+
+    /**
+     * 获取预约详情（可选日期 + 时段摘要）
+     *
+     * @param appointmentId 场次 ID
+     * @param appointmentStatus 列表中的状态
+     */
+    suspend fun getAppointmentDetail(
+        appointmentId: String,
+        appointmentStatus: String,
+    ): PEAppointmentDetailResponse
+
+    /**
+     * 获取指定日期的可约时段（含 times_id）
+     *
+     * @param appointmentId 场次 ID
+     * @param appointmentDate 如 "2026-09-29"
+     */
+    suspend fun getAppointmentTimes(
+        appointmentId: String,
+        appointmentDate: String,
+    ): PEAppointmentTimesResponse
+
+    /**
+     * 取消预约
+     *
+     * @param temporaryId 我的预约记录标识
+     * @return 操作响应（含业务 message）
+     */
+    suspend fun cancelAppointment(temporaryId: String): PEAppointmentActionResponse
+
+    /**
+     * 提交体测预约
+     *
+     * 报文：appointment_id + times_id + enter_date（无 user_id）
+     */
+    suspend fun enterAppointment(
+        appointmentId: String,
+        timesId: String,
+        enterDate: String,
+    ): PEAppointmentActionResponse
 }

@@ -72,6 +72,7 @@ fun PEScoreScreen(
     onNavigateToDetail: (String) -> Unit,
     onLogin: () -> Unit,
     onQRCode: () -> Unit = {},
+    onAppointment: () -> Unit = {},
     jwxtAuthProfile: JwxtAuthProfile? = null,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -163,6 +164,17 @@ fun PEScoreScreen(
                                 title = "登录",
                                 summary = "用于获取体测成绩",
                                 onClick = onLogin
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        SmallTitle(text = "预约")
+                        AppCard {
+                            ArrowPreference(
+                                title = "体测预约",
+                                summary = "查看我的预约并报名体测场次",
+                                onClick = onAppointment
                             )
                         }
                     }

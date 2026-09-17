@@ -90,6 +90,10 @@ import restarhalf.stellar.schedule.domain.usecase.PEScoreDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEAppointmentListUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEAppointmentDetailUseCase
+import restarhalf.stellar.schedule.domain.usecase.PECancelAppointmentUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEEnterAppointmentUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
@@ -120,6 +124,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -407,6 +412,10 @@ val useCaseModule = module {
     factory { PEScoreDetailUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
     factory { PESubjectScoreHistoryUseCase(gateway = get(), authWorkflow = get()) }
     factory { PEAuthProfileUseCase(gateway = get(), auth = get(), authWorkflow = get()) }
+    factory { PEAppointmentListUseCase(gateway = get(), authWorkflow = get()) }
+    factory { PEAppointmentDetailUseCase(gateway = get(), authWorkflow = get()) }
+    factory { PECancelAppointmentUseCase(gateway = get(), authWorkflow = get()) }
+    factory { PEEnterAppointmentUseCase(gateway = get(), authWorkflow = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
     factory {
         CheckAppUpdateUseCase(
@@ -536,6 +545,15 @@ val viewModelModule = module {
             peAuth = get(),
             peAuthWorkflow = get(),
             peSubjectScoreHistoryUseCase = get(),
+        )
+    }
+    viewModel {
+        PEAppointmentViewModel(
+            appointmentListUseCase = get(),
+            appointmentDetailUseCase = get(),
+            cancelAppointmentUseCase = get(),
+            enterAppointmentUseCase = get(),
+            peAuth = get(),
         )
     }
     viewModel {

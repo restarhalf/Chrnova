@@ -55,6 +55,15 @@ enum class UserFacingErrorKind(
         fallbackMessage = "加载成绩记录失败，请稍后重试",
         invalidDataMessage = "成绩记录暂时无法解析，请稍后重试",
     ),
+    /** 体测预约列表加载失败 */
+    LoadPEAppointments(
+        fallbackMessage = "加载预约列表失败，请稍后重试",
+        invalidDataMessage = "预约数据暂时无法解析，请稍后重试",
+    ),
+    /** 体测预约操作失败 */
+    PEAppointmentAction(
+        fallbackMessage = "预约操作失败，请稍后重试",
+    ),
     ;
 }
 
@@ -77,8 +86,8 @@ fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
         return "操作已取消"
     }
 
-    // 检查登录状态失效
-    if (kind.usesLoginState() && isLoginStateHint(hints)) {
+    // 检查登录状态失效（权限类提示优先，避免「无权限」被写成登录过期）
+    if (kind.usesLoginState() && isLoginStateHint(hints) && !isPermissionHint(hints)) {
         return "登录已过期，请刷新重试"
     }
 
@@ -102,6 +111,10 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
         val message = current?.message?.normalizeForDisplay().orEmpty()
         if (message.isNotBlank() && isUserFacingMessage(message)) {
             // 如果消息包含登录状态关键词，不作为业务消息返回，交给后续登录状态检查处理
+            // 权限类文案直接作为业务消息展示
+            if (isPermissionHint(message.lowercase())) {
+                return message
+            }
             if (!isLoginStateHint(message.lowercase())) {
                 return message
             }
@@ -146,6 +159,18 @@ private fun String.normalizeForDisplay(): String =
         .trim()
 
 private fun isLoginStateHint(hints: String): Boolean = LOGIN_STATE_HINTS.any(hints::contains)
+
+private fun isPermissionHint(hints: String): Boolean = PERMISSION_HINTS.any(hints::contains)
+
+private val PERMISSION_HINTS =
+    listOf(
+        "权限",
+        "无权",
+        "未授权访问",
+        "nofun",
+        "没有操作权限",
+        "无操作权限",
+    )
 
 private fun isTimeoutHint(hints: String): Boolean = TIMEOUT_HINTS.any(hints::contains)
 

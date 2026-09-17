@@ -42,15 +42,22 @@ class PEClient(
         url: String,
         requestBody: kotlinx.serialization.json.JsonElement,
     ): String = withContext(AppIoDispatcher) {
-        val token = authStore.getToken() ?: throw PETokenExpiredException()
+        val token = authStore.getToken() ?: throw PETokenExpiredException("请先登录体测系统")
 
         val response: HttpResponse = httpClient.post(url) {
             contentType(ContentType.Application.Json)
             header("Authorization", token)
+            header("Referer", "$baseUrl/mobile/")
             setBody(requestBody)
         }
 
-        if (response.status.value == 401) throw PETokenExpiredException()
+        // 原生端通过响应头 abnormal 区分：NOFUN=无权限，TIMEOUT=登录超时
+        when (response.headers["abnormal"]?.uppercase()) {
+            "NOFUN" -> throw IllegalStateException("您没有操作权限")
+            "TIMEOUT" -> throw PETokenExpiredException("登录超时，请重新登录")
+        }
+
+        if (response.status.value == 401) throw PETokenExpiredException("登录已过期，请重新登录")
         if (!response.status.isSuccess()) {
             throw IllegalStateException(
                 response.extractServerErrorMessage(json, listOf("message", "msg"))
@@ -58,32 +65,53 @@ class PEClient(
             )
         }
 
-        val body = response.bodyAsText()
-        if (body.isBlank()) throw PETokenExpiredException()
-        body
+        response.bodyAsText()
     }
 
     /**
-     * 解析响应体并校验 status == "PASS"，否则抛出令牌过期异常。
+     * 解析响应体并校验 status == "PASS"。
+     * FAIL 时：像登录/令牌类问题抛 PETokenExpiredException；业务失败（如无权限）抛带服务端 message 的异常。
      */
     private inline fun <reified T> parseAndVerify(
         body: String,
         deserializer: kotlinx.serialization.KSerializer<T>,
     ): T {
         val parsed = json.decodeFromString(deserializer, body)
-        // 校验 status 字段（所有 PE 响应都有此字段）
-        val status = when (parsed) {
-            is PELoginResponse -> parsed.status
-            is PEScoreListResponse -> parsed.status
-            is PEDetailResponse -> parsed.status
-            is PESubjectHistoryResponse -> parsed.status
-            is PEAuthProfileResponse -> parsed.status
-            else -> "PASS"
+        val (status, message) = when (parsed) {
+            is PELoginResponse -> parsed.status to parsed.message
+            is PEScoreListResponse -> parsed.status to parsed.message
+            is PEDetailResponse -> parsed.status to parsed.message
+            is PESubjectHistoryResponse -> parsed.status to parsed.message
+            is PEAuthProfileResponse -> parsed.status to parsed.message
+            is PEAppointmentListResponse -> parsed.status to parsed.message
+            is PEAppointmentDetailResponse -> parsed.status to parsed.message
+            is PEAppointmentTimesResponse -> parsed.status to parsed.message
+            is PEAppointmentActionResponse -> parsed.status to parsed.message
+            else -> "PASS" to ""
         }
         if (status != "PASS") {
-            throw PETokenExpiredException()
+            throw peFailException(message)
         }
         return parsed
+    }
+
+    /**
+     * 将 PE 业务 FAIL 转为异常。
+     * 仅明确的登录/会话问题才抛 PETokenExpiredException；无权限、业务失败原样透出。
+     */
+    private fun peFailException(message: String): Exception {
+        val msg = message.trim()
+        val tokenLike = listOf("登录超时", "登录已过期", "会话过期", "重新登录", "未登录", "token失效", "令牌")
+            .any { msg.contains(it, ignoreCase = true) }
+        // 权限类优先，避免被登录态逻辑吞掉
+        val permissionLike = listOf("权限", "无权", "未授权访问", "NOFUN")
+            .any { msg.contains(it, ignoreCase = true) }
+        return when {
+            permissionLike -> IllegalStateException(msg.ifBlank { "您没有操作权限" })
+            tokenLike -> PETokenExpiredException(msg)
+            msg.isBlank() -> IllegalStateException("操作失败")
+            else -> IllegalStateException(msg)
+        }
     }
 
     override suspend fun login(username: String, password: String): PELoginResponse =
@@ -205,5 +233,128 @@ class PEClient(
             requestBody = requestBody,
         )
         return parseAndVerify(body, PEAuthProfileResponse.serializer())
+    }
+
+    override suspend fun getAppointments(
+        type: String,
+        pageNum: Int,
+        pageSize: Int,
+    ): PEAppointmentListResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException()
+        val params = mapOf(
+            "user_id" to userId,
+            "type" to type,
+            "page_num" to pageNum,
+            "page_size" to pageSize,
+        )
+        val sign = passwordEncryption.generatePESign(params)
+        val requestBody = buildJsonObject {
+            put("user_id", userId)
+            put("type", type)
+            put("page_num", pageNum)
+            put("page_size", pageSize)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/appointment/selectUserAppointmentList",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEAppointmentListResponse.serializer())
+    }
+
+    override suspend fun getAppointmentDetail(
+        appointmentId: String,
+        appointmentStatus: String,
+    ): PEAppointmentDetailResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException()
+        val params = mapOf(
+            "appointment_id" to appointmentId,
+            "appointment_status" to appointmentStatus,
+            "user_id" to userId,
+        )
+        val sign = passwordEncryption.generatePESign(params)
+        val requestBody = buildJsonObject {
+            put("appointment_id", appointmentId)
+            put("appointment_status", appointmentStatus)
+            put("user_id", userId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/appointment/selectUserAppointmentDetail",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEAppointmentDetailResponse.serializer())
+    }
+
+    override suspend fun getAppointmentTimes(
+        appointmentId: String,
+        appointmentDate: String,
+    ): PEAppointmentTimesResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException()
+        val params = mapOf(
+            "appointment_id" to appointmentId,
+            "appointment_date" to appointmentDate,
+            "user_id" to userId,
+        )
+        val sign = passwordEncryption.generatePESign(params)
+        val requestBody = buildJsonObject {
+            put("appointment_id", appointmentId)
+            put("appointment_date", appointmentDate)
+            put("user_id", userId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/appointment/selectAppointmentTimes",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEAppointmentTimesResponse.serializer())
+    }
+
+    override suspend fun cancelAppointment(temporaryId: String): PEAppointmentActionResponse {
+        val sign = passwordEncryption.generatePESign(mapOf("temporary_id" to temporaryId))
+        val requestBody = buildJsonObject {
+            put("temporary_id", temporaryId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/appointment/cancelRegistration",
+            requestBody = requestBody,
+        )
+        return parseActionOrThrow(body)
+    }
+
+    override suspend fun enterAppointment(
+        appointmentId: String,
+        timesId: String,
+        enterDate: String,
+    ): PEAppointmentActionResponse {
+        val params = mapOf(
+            "appointment_id" to appointmentId,
+            "times_id" to timesId,
+            "enter_date" to enterDate,
+        )
+        val sign = passwordEncryption.generatePESign(params)
+        val requestBody = buildJsonObject {
+            put("appointment_id", appointmentId)
+            put("times_id", timesId)
+            put("enter_date", enterDate)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/appointment/appointmentEnter",
+            requestBody = requestBody,
+        )
+        return parseActionOrThrow(body)
+    }
+
+    /**
+     * 解析预约操作响应；业务失败时抛出带服务端 message 的异常，避免被当作令牌过期。
+     */
+    private fun parseActionOrThrow(body: String): PEAppointmentActionResponse {
+        val parsed = json.decodeFromString(PEAppointmentActionResponse.serializer(), body)
+        if (parsed.status != "PASS") {
+            throw peFailException(parsed.message)
+        }
+        return parsed
     }
 }
