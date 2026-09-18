@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 val localProps = Properties().apply {
     runCatching { load(rootProject.file("local.properties").inputStream()) }
@@ -146,5 +147,7 @@ android {
 }
 dependencies {
     implementation(project(":composeApp"))
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 }
 

@@ -21,6 +21,10 @@ node_modules/
 **/release/
 **/debug/
 **/profile/
+# Baseline Profile sources must be committed so CI assembleRelease can package them
+!androidApp/src/release/
+!androidApp/src/release/generated/
+!androidApp/src/release/generated/**
 dlnusche.jks
 example/
 docs/
