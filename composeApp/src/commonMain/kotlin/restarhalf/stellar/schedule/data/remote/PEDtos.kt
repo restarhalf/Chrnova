@@ -133,7 +133,7 @@ data class PEAppointmentItem(
     /** 仅「我的预约」可能有，用于 cancelRegistration */
     @SerialName("temporary_id") val temporaryId: String = "",
     @SerialName("appointment_name") val appointmentName: String = "",
-    /** 0 已取消 / 1 已预约 / 2 已完成 / 3 可预约 / 4 已结束/不可约 */
+    /** 0 已取消 / 1 已预约 / 2 已取消 / 3 可预约 / 4 已结束/不可约 */
     @SerialName("appointment_status") val appointmentStatus: String = "",
     /** 可预约侧为日期区间字符串；已预约侧可能是具体日期 */
     @SerialName("appointment_date") val appointmentDate: String = "",

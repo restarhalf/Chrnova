@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.icons.Appointment
 import restarhalf.stellar.schedule.ui.icons.QrCode
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
@@ -101,6 +102,9 @@ fun PEScoreScreen(
                     title = "体测",
                     scrollBehavior = topAppBarScrollBehavior,
                     actions = {
+                        IconButton(onClick = onAppointment){
+                            Icon(imageVector = Appointment, contentDescription = "预约")
+                        }
                         if (hasQRCodeInfo) {
                             IconButton(onClick = onQRCode) {
                                 Icon(imageVector = QrCode, contentDescription = "二维码")
@@ -167,19 +171,7 @@ fun PEScoreScreen(
                             )
                         }
                     }
-                } else {
-                    item {
-                        SmallTitle(text = "预约")
-                        AppCard {
-                            ArrowPreference(
-                                title = "体测预约",
-                                summary = "查看我的预约并报名体测场次",
-                                onClick = onAppointment
-                            )
-                        }
-                    }
                 }
-
                 items(yearScores, key = { it.schoolYear }) { score ->
                     Box(
                         modifier = Modifier.animateItem(

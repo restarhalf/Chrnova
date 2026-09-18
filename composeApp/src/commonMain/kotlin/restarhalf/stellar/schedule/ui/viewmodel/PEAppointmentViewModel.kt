@@ -475,9 +475,9 @@ class PEAppointmentViewModel(
 
 /** 状态文案 */
 fun appointmentStatusText(status: String): String = when (status) {
-    "0" -> "已取消"
+    "0" -> "已失败"
     "1" -> "已预约"
-    "2" -> "已完成"
+    "2" -> "已取消"
     "3" -> "可预约"
     "4" -> "已截止"
     else -> status.ifBlank { "未知" }
