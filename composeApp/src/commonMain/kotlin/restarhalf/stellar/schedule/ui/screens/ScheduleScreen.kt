@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
@@ -194,7 +196,7 @@ fun ScheduleScreen(
     val totalHeight =
         remember(rowHeight, rowGap, restHeight) { rowHeight * 12 + rowGap * 11 + restHeight * 2 }
 
-    val timetable: List<TimetableSlot> = uiState.timetable
+    val timetable: ImmutableList<TimetableSlot> = uiState.timetable
 
     LaunchedEffect(Unit) {
         if (vm.shouldAutoSync()) onSync()
@@ -658,7 +660,7 @@ fun ScheduleScreen(
                                                     .fillMaxHeight()
                                             ) {
                                                 val dayData = pageRenderData[day]
-                                                val renderItems = dayData?.items.orEmpty()
+                                                val renderItems = dayData?.items ?: persistentListOf()
 
                                                 ScheduleDayContent(
                                                     renderItems = renderItems,
@@ -695,7 +697,7 @@ fun ScheduleScreen(
 
 @Composable
 private fun ScheduleSectionLabels(
-    timetable: List<TimetableSlot>,
+    timetable: ImmutableList<TimetableSlot>,
     rowHeight: Dp,
     rowGap: Dp,
     restHeight: Dp,
@@ -754,7 +756,7 @@ private fun ScheduleSectionLabels(
 
 @Composable
 private fun ScheduleDayContent(
-    renderItems: List<CourseRenderItem>,
+    renderItems: ImmutableList<CourseRenderItem>,
     day: Int,
     rowHeight: Dp,
     rowGap: Dp,

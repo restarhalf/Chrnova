@@ -101,7 +101,7 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
         ) {
             Icon(
                 imageVector = Forward,
-                contentDescription = "",
+                contentDescription = "继续",
                 tint = colors.primary,
                 modifier = Modifier.size(32.dp)
             )

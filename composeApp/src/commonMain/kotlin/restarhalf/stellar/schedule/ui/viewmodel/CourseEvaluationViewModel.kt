@@ -61,28 +61,48 @@ class CourseEvaluationViewModel(
         val userNickname: String? = null,
         /** 当前登录用户的 user_hash（学号 SHA-256），用于判断评价是否为本机提交 */
         val userHash: String = "",
+        /** 预计算：按搜索词过滤后的课程聚合（避免 UI 每次重组现算） */
+        val filteredCourseSummaries: ImmutableList<CourseEvaluationSummary> = persistentListOf(),
+        /** 预计算：onlyMine + 搜索词过滤后的评价列表 */
+        val filteredEvaluations: ImmutableList<Evaluation> = persistentListOf(),
     ) {
-        /** 课程聚合列表按搜索词过滤（仅匹配课程名/教师） */
-        val filteredCourseSummaries: List<CourseEvaluationSummary>
-            get() = if (searchQuery.isEmpty()) courseSummaries else courseSummaries.filter {
-                it.courseName.contains(searchQuery, ignoreCase = true) ||
-                    it.teacher.contains(searchQuery, ignoreCase = true)
-            }
-
-        val filteredEvaluations: List<Evaluation>
-            get() = evaluations
+        /** 在数据/筛选条件变化后填充 filtered* 字段 */
+        fun recomputed(): EvaluationUiState {
+            val summaries =
+                if (searchQuery.isEmpty()) {
+                    courseSummaries
+                } else {
+                    courseSummaries.filter {
+                        it.courseName.contains(searchQuery, ignoreCase = true) ||
+                            it.teacher.contains(searchQuery, ignoreCase = true)
+                    }.toPersistentList()
+                }
+            val evals = evaluations
                 .let { list ->
                     if (onlyMine && userHash.isNotBlank()) {
                         list.filter { it.userHash == userHash }
-                    } else list
-                }
-                .let { list ->
-                    if (searchQuery.isEmpty()) list else list.filter {
-                        it.courseName.contains(searchQuery, ignoreCase = true) ||
-                            it.content.contains(searchQuery, ignoreCase = true) ||
-                            it.author.contains(searchQuery, ignoreCase = true)
+                    } else {
+                        list
                     }
                 }
+                .let { list ->
+                    if (searchQuery.isEmpty()) {
+                        list
+                    } else {
+                        list.filter {
+                            it.courseName.contains(searchQuery, ignoreCase = true) ||
+                                it.content.contains(searchQuery, ignoreCase = true) ||
+                                it.author.contains(searchQuery, ignoreCase = true)
+                        }
+                    }
+                }
+                .let { it as? ImmutableList<Evaluation> ?: it.toPersistentList() }
+            return if (filteredCourseSummaries == summaries && filteredEvaluations == evals) {
+                this
+            } else {
+                copy(filteredCourseSummaries = summaries, filteredEvaluations = evals)
+            }
+        }
 
         /** 当前评价是否为本人提交（可删除 / 可编辑） */
         val canDeleteSelected: Boolean
@@ -94,15 +114,19 @@ class CourseEvaluationViewModel(
     private val _uiState = MutableStateFlow(EvaluationUiState())
     val uiState: StateFlow<EvaluationUiState> = _uiState
 
+    private fun updateState(transform: (EvaluationUiState) -> EvaluationUiState) {
+        _uiState.update { transform(it).recomputed() }
+    }
+
     init {
-        _uiState.update {
+        updateState {
             it.copy(
                 userNickname = settings.getUserNickname(),
             )
         }
         viewModelScope.launch {
             auth.observeProfile().collect { profile ->
-                _uiState.update {
+                updateState {
                     it.copy(
                         userNo = profile.userNo,
                         profileName = profile.name,
@@ -116,7 +140,7 @@ class CourseEvaluationViewModel(
         viewModelScope.launch {
             runCatching { courseRepository.getAllCoursesAcrossSemesters() }
                 .onSuccess { courses ->
-                    _uiState.update { it.copy(myCourses = courses.toPersistentList()) }
+                    updateState { it.copy(myCourses = courses.toPersistentList()) }
                 }
                 .onFailure {
                     if (it is CancellationException) throw it
@@ -127,14 +151,14 @@ class CourseEvaluationViewModel(
 
     fun loadEvaluations() {
         viewModelScope.launch {
-            _uiState.update { it.copy(loading = true, error = null) }
+            updateState { it.copy(loading = true, error = null) }
             runCatching {
                 port.listEvaluations(
                     course = _uiState.value.selectedCourse,
                     teacher = _uiState.value.selectedTeacher,
                 )
             }.onSuccess { page ->
-                _uiState.update {
+                updateState {
                     it.copy(
                         evaluations = page.items.toPersistentList(),
                         total = page.total,
@@ -144,24 +168,24 @@ class CourseEvaluationViewModel(
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Evaluation", "加载评价列表失败", e)
-                _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+                updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
         }
     }
 
     /** 按课程 + 教师加载评价列表（用于 EvaluationCourseScreen 第二层页面） */
     fun loadEvaluations(course: String, teacher: String?) {
-        _uiState.update { it.copy(selectedCourse = course, selectedTeacher = teacher) }
+        updateState { it.copy(selectedCourse = course, selectedTeacher = teacher) }
         loadEvaluations()
     }
 
     /** 加载课程聚合列表（评价列表页顶层视图） */
     fun loadCourseSummaries() {
         viewModelScope.launch {
-            _uiState.update { it.copy(loading = true, error = null) }
+            updateState { it.copy(loading = true, error = null) }
             runCatching { port.listCourseSummaries() }
                 .onSuccess { summaries ->
-                    _uiState.update {
+                    updateState {
                         it.copy(
                             courseSummaries = summaries.toPersistentList(),
                             loading = false,
@@ -171,22 +195,22 @@ class CourseEvaluationViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "加载课程聚合列表失败", e)
-                    _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+                    updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
         }
     }
 
     fun loadDetail(id: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(loading = true, error = null) }
+            updateState { it.copy(loading = true, error = null) }
             runCatching { port.getEvaluation(id) }
                 .onSuccess { evaluation ->
-                    _uiState.update { it.copy(selectedEvaluation = evaluation, loading = false) }
+                    updateState { it.copy(selectedEvaluation = evaluation, loading = false) }
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "加载评价详情失败", e)
-                    _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
+                    updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
         }
     }
@@ -194,18 +218,18 @@ class CourseEvaluationViewModel(
     fun submitEvaluation(req: EvaluationCreateRequest) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
-                _uiState.update { it.copy(error = "请先登录教务系统后再提交评价") }
+                updateState { it.copy(error = "请先登录教务系统后再提交评价") }
                 return@launch
             }
-            _uiState.update { it.copy(submitting = true, error = null) }
+            updateState { it.copy(submitting = true, error = null) }
             runCatching { port.createEvaluation(req) }
                 .onSuccess {
-                    _uiState.update { it.copy(submitting = false, successMessage = "提交成功") }
+                    updateState { it.copy(submitting = false, successMessage = "提交成功") }
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "提交评价失败", e)
-                    _uiState.update { it.copy(submitting = false, error = e.message ?: "提交失败") }
+                    updateState { it.copy(submitting = false, error = e.message ?: "提交失败") }
                 }
         }
     }
@@ -219,21 +243,21 @@ class CourseEvaluationViewModel(
     fun deleteEvaluation(id: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
-                _uiState.update { it.copy(error = "请先登录教务系统后再操作") }
+                updateState { it.copy(error = "请先登录教务系统后再操作") }
                 onResult(false)
                 return@launch
             }
-            _uiState.update { it.copy(loading = true, error = null) }
+            updateState { it.copy(loading = true, error = null) }
             runCatching { port.deleteEvaluation(id) }
                 .onSuccess {
-                    _uiState.update { it.copy(loading = false, successMessage = "已删除") }
+                    updateState { it.copy(loading = false, successMessage = "已删除") }
                     loadEvaluations()
                     onResult(true)
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "删除评价失败", e)
-                    _uiState.update { it.copy(loading = false, error = e.message ?: "删除失败") }
+                    updateState { it.copy(loading = false, error = e.message ?: "删除失败") }
                     onResult(false)
                 }
         }
@@ -242,12 +266,12 @@ class CourseEvaluationViewModel(
     fun toggleLike(id: String) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
-                _uiState.update { it.copy(error = "请先登录教务系统后再点赞") }
+                updateState { it.copy(error = "请先登录教务系统后再点赞") }
                 return@launch
             }
             runCatching { port.toggleLike(id) }
                 .onSuccess { result ->
-                    _uiState.update { state ->
+                    updateState { state ->
                         val evaluations = state.evaluations.map { ev ->
                             if (ev.id == id) ev.copy(likes = result.likes, liked = result.liked) else ev
                         }.toPersistentList()
@@ -262,13 +286,13 @@ class CourseEvaluationViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "点赞操作失败", e)
-                    _uiState.update { it.copy(error = e.message ?: "操作失败") }
+                    updateState { it.copy(error = e.message ?: "操作失败") }
                 }
         }
     }
 
     fun setOnlyMine(onlyMine: Boolean) {
-        _uiState.update { it.copy(onlyMine = onlyMine) }
+        updateState { it.copy(onlyMine = onlyMine) }
     }
 
     /**
@@ -278,13 +302,13 @@ class CourseEvaluationViewModel(
     fun updateEvaluation(id: String, req: EvaluationUpdateRequest) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
-                _uiState.update { it.copy(error = "请先登录教务系统后再编辑评价") }
+                updateState { it.copy(error = "请先登录教务系统后再编辑评价") }
                 return@launch
             }
-            _uiState.update { it.copy(submitting = true, error = null) }
+            updateState { it.copy(submitting = true, error = null) }
             runCatching { port.updateEvaluation(id, req) }
                 .onSuccess { updated ->
-                    _uiState.update { state ->
+                    updateState { state ->
                         val evaluations = state.evaluations.map { ev ->
                             if (ev.id == id) updated else ev
                         }.toPersistentList()
@@ -300,13 +324,13 @@ class CourseEvaluationViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Evaluation", "编辑评价失败", e)
-                    _uiState.update { it.copy(submitting = false, error = e.message ?: "编辑失败") }
+                    updateState { it.copy(submitting = false, error = e.message ?: "编辑失败") }
                 }
         }
     }
 
     fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        updateState { it.copy(searchQuery = query) }
     }
 
 }

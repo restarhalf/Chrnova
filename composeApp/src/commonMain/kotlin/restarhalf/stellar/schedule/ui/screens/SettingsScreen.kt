@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -109,7 +111,7 @@ fun SettingsScreen(
     onFoodRoulette: () -> Unit = {},
     onCourseSelection: () -> Unit = {},
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    courses: List<Course> = emptyList(),
+    courses: ImmutableList<Course> = persistentListOf(),
     showMessage: (String) -> Unit = {},
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current

@@ -63,6 +63,12 @@ composeCompiler {
     stabilityConfigurationFiles.add(
         project.layout.projectDirectory.file("compose_compiler_config.conf")
     )
+    // 需要重组分析时：./gradlew :composeApp:compileAndroidMain -PcomposeCompilerMetrics=true
+    // 产物：composeApp/build/compose_compiler/{metrics,reports}
+    if (providers.gradleProperty("composeCompilerMetrics").orNull == "true") {
+        metricsDestination = layout.buildDirectory.dir("compose_compiler/metrics")
+        reportsDestination = layout.buildDirectory.dir("compose_compiler/reports")
+    }
 }
 
 val localProps = Properties().apply {
@@ -142,10 +148,26 @@ tasks.matching { it.name.startsWith("compile") || it.name.startsWith("ksp") }.co
     dependsOn(generateLocalSecrets)
 }
 
+// Compose Compiler Metrics 在 Windows 上不能写含 ':' 的文件名；
+// KMP 默认 -module-name 为 "根项目:模块"（Chrnova:composeApp），会导致 report 变成 0 字节。
+// 仅在收集 metrics 时改成不含冒号的名字。
+if (providers.gradleProperty("composeCompilerMetrics").orNull == "true") {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile::class.java).configureEach {
+        compilerOptions.moduleName.set("composeApp")
+    }
+}
+
 kotlin {
     compilerOptions {
-
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        if (providers.gradleProperty("composeCompilerMetrics").orNull == "true") {
+            val metricsDir = layout.buildDirectory.dir("compose_compiler/metrics").get().asFile.absolutePath
+            val reportsDir = layout.buildDirectory.dir("compose_compiler/reports").get().asFile.absolutePath
+            freeCompilerArgs.addAll(
+                "-Pplugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$metricsDir",
+                "-Pplugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportsDir",
+            )
+        }
     }
 
     android {

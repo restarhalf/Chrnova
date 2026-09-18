@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
@@ -240,13 +241,14 @@ class ScheduleViewModel(
     /** 对外暴露的UI状态流 */
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
-    /** 观察所有课程变化 */
-    val allCourses: StateFlow<List<Course>> = courseRepository.observeAllCourses()
+    /** 观察所有课程变化（ImmutableList，便于 Compose skip） */
+    val allCourses: StateFlow<ImmutableList<Course>> = courseRepository.observeAllCourses()
+        .map { it.toPersistentList() }
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
+            initialValue = persistentListOf()
         )
 
     /**

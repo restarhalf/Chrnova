@@ -4,6 +4,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import restarhalf.stellar.schedule.core.course.filterNonOverlapping
 import restarhalf.stellar.schedule.core.course.findOverlappingCourses
 import restarhalf.stellar.schedule.core.course.hasOverlapWith
@@ -28,7 +31,7 @@ private data class CourseVisual(val cardColor: Color, val titleColor: Color, val
  * @param items 课程渲染项列表
  */
 @Stable
-data class DayRenderData(val items: List<CourseRenderItem>)
+data class DayRenderData(val items: ImmutableList<CourseRenderItem> = persistentListOf())
 
 /**
  * 课程渲染项
@@ -37,7 +40,10 @@ data class DayRenderData(val items: List<CourseRenderItem>)
  * @param overlaps 重叠的课程列表
  */
 @Stable
-data class CourseRenderItem(val model: CourseCardModel, val overlaps: List<Course>)
+data class CourseRenderItem(
+    val model: CourseCardModel,
+    val overlaps: ImmutableList<Course> = persistentListOf(),
+)
 
 /**
  * 课程卡片模型
@@ -158,6 +164,7 @@ fun buildDayRenderData(
                 }
             val overlapCount = overlappingCourses.size
             val badgeCount = if (overlapCount > 1) overlapCount else null
+            val overlapsImmutable = overlappingCourses.toPersistentList()
             splitCourseSections(course).map { (segStart, segEnd) ->
                 val segCount = (segEnd - segStart + 1).coerceAtLeast(0)
                 val topOffsetY = yForSection(segStart) + cellInset
@@ -175,8 +182,8 @@ fun buildDayRenderData(
                         subTextColor = visual.subColor,
                         cardAlpha = 1f
                     )
-                CourseRenderItem(model = model, overlaps = overlappingCourses)
+                CourseRenderItem(model = model, overlaps = overlapsImmutable)
             }
         }
-    return DayRenderData(items = items)
+    return DayRenderData(items = items.toPersistentList())
 }

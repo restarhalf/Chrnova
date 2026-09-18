@@ -676,7 +676,6 @@ private fun MainRouteContent(
     val syncUiState by vm.syncUiState.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val mainPagerState = LocalMainPagerState.current
-    val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
 
     // 切回首页 tab 时刷新公告（首次组合 currentPage=0 也会触发一次），
     // 保证新发布的公告红点在首页及时出现
@@ -754,6 +753,8 @@ private fun MainRouteContent(
 
             Screen.Settings -> {
                 val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
+                // 仅设置页需要全量课程（导出 CSV）；避免在主 Pager 父级收集导致课表变更牵连其它 Tab
+                val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
                 SettingsScreen(
                     vm = settingsVm,
                     syncUiState = syncUiState,
