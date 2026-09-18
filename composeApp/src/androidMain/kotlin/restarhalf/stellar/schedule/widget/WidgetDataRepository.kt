@@ -4,7 +4,8 @@ import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
-import com.russhwolf.settings.SharedPreferencesSettings
+import com.tencent.mmkv.kmp.MMKV
+import com.tencent.mmkv.kmp.initialize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -27,6 +28,7 @@ import restarhalf.stellar.schedule.data.local.TimetableSettings
 import restarhalf.stellar.schedule.data.local.TimetableSlot
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
 import restarhalf.stellar.schedule.data.local.getCampusTimetable
+import restarhalf.stellar.schedule.data.local.mmkv.MmkvSettingsFactory
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
@@ -118,15 +120,16 @@ internal object WidgetDataRepository {
                         }
                     }
             val courses = db.courseDao().getAllCoursesOnce().map { it.toDomain() }
-            val settings = SharedPreferencesSettings.Factory(context).create("timetable_prefs")
+            MMKV.initialize(context.applicationContext)
+            val settingsFactory = MmkvSettingsFactory()
+            val settings = settingsFactory.create("timetable_prefs")
             val prefs = TimetableSettings(settings)
             val timetable = getCampusTimetable(prefs.getCampus())
             val totalWeeks = prefs.getTotalWeeks()
             val termStartMs = prefs.getTermStartMs()
 
             // 读取当前激活的学期，按学期过滤课程
-            val appSettings =
-                SharedPreferencesSettings.Factory(context).create(SettingsKeys.PREFS_NAME)
+            val appSettings = settingsFactory.create(SettingsKeys.PREFS_NAME)
             val activeScheduleTerm = appSettings.getString(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
             val filteredCourses = if (activeScheduleTerm.isNotBlank()) {
                 db.courseDao().getCoursesBySemesterOnce(activeScheduleTerm).map { it.toDomain() }

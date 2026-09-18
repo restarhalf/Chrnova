@@ -12,6 +12,7 @@ miuix = "0.9.4-rc01"
 qrose = "1.2.1"
 room3 = "3.0.3"
 multiplatformSettings = "1.3.0"
+mmkvKmp = "2.4.2"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.10"
 koin = "4.2.2"
@@ -74,6 +75,8 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettings" }
 multiplatform-settings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
+# MMKV (experimental KMP)
+mmkv-kmp = { module = "com.tencent:mmkv-kmp", version.ref = "mmkvKmp" }
 # Kotlinx
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }

@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.di
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
@@ -142,9 +143,10 @@ import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 private const val USER_AGENT =
     "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-/** 为 HttpClient 安装公共模块：JSON 序列化 + 超时配置 */
+/** 为 HttpClient 安装公共模块：JSON 序列化 + 超时 + HTTP 缓存（尊重 Cache-Control/ETag） */
 private fun HttpClientConfig<*>.installCommonModules(json: Json) {
     install(ContentNegotiation) { json(json) }
+    install(HttpCache)
     install(HttpTimeout) {
         requestTimeoutMillis = 30_000
         connectTimeoutMillis = 10_000

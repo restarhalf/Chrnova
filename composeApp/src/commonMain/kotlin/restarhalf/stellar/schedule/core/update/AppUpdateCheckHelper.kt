@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.core.update
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.isSuccess
@@ -13,6 +14,7 @@ private val updateJson = Json { ignoreUnknownKeys = true }
 
 internal val updateHttpClient = HttpClient {
     install(ContentNegotiation) { json(updateJson) }
+    install(HttpCache)
     install(HttpTimeout) {
         requestTimeoutMillis = 15_000
         connectTimeoutMillis = 10_000

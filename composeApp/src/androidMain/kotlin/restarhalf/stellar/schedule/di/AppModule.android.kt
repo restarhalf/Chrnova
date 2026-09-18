@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.di
 
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -15,6 +14,7 @@ import restarhalf.stellar.schedule.data.local.dao.GradeDao
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
+import restarhalf.stellar.schedule.data.local.mmkv.MmkvSettingsFactory
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
@@ -47,20 +47,22 @@ private val androidPlatformModule = module {
     single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
     single { ExamReminderScheduler(androidContext()) }
 
+    single { MmkvSettingsFactory() }
+
     single<ObservableSettings>(named("reminder_codes")) {
-        SharedPreferencesSettings.Factory(androidContext()).create("reminder_codes")
+        get<MmkvSettingsFactory>().create("reminder_codes")
     }
     single<ObservableSettings>(named(SettingsKeys.PREFS_NAME)) {
-        SharedPreferencesSettings.Factory(androidContext()).create(SettingsKeys.PREFS_NAME)
+        get<MmkvSettingsFactory>().create(SettingsKeys.PREFS_NAME)
     }
     single<ObservableSettings>(named("jwxt_auth")) {
-        SharedPreferencesSettings.Factory(androidContext()).create("jwxt_auth")
+        get<MmkvSettingsFactory>().create("jwxt_auth")
     }
     single<ObservableSettings>(named("pe_auth")) {
-        SharedPreferencesSettings.Factory(androidContext()).create("pe_auth")
+        get<MmkvSettingsFactory>().create("pe_auth")
     }
     single<ObservableSettings>(named("timetable_prefs")) {
-        SharedPreferencesSettings.Factory(androidContext()).create("timetable_prefs")
+        get<MmkvSettingsFactory>().create("timetable_prefs")
     }
 
     single<CourseReminderPort> { CourseReminderPortImpl(scheduler = get()) }

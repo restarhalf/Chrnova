@@ -117,6 +117,7 @@ fun AppRoot(): UIViewController {
 
 private fun ensureKoinStarted() {
     if (KoinPlatform.getKoinOrNull() != null) return
+    restarhalf.stellar.schedule.data.local.mmkv.MmkvIosBootstrap.initializeAndMigrate()
     startKoin {
         modules(appModule)
     }

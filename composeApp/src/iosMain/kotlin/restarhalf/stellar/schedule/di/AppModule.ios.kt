@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.di
 
-import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.ObservableSettings
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -14,6 +13,7 @@ import restarhalf.stellar.schedule.data.local.dao.GradeDao
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
+import restarhalf.stellar.schedule.data.local.mmkv.MmkvSettingsFactory
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
@@ -30,23 +30,15 @@ import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 
 private val iosPlatformModule = module {
-    single { NSUserDefaultsSettings.Factory() }
+    single { MmkvSettingsFactory() }
 
     single<ObservableSettings>(named(SettingsKeys.PREFS_NAME)) {
-        get<NSUserDefaultsSettings.Factory>().create(
-            SettingsKeys.PREFS_NAME
-        )
+        get<MmkvSettingsFactory>().create(SettingsKeys.PREFS_NAME)
     }
-    single<ObservableSettings>(named("jwxt_auth")) { get<NSUserDefaultsSettings.Factory>().create("jwxt_auth") }
-    single<ObservableSettings>(named("pe_auth")) { get<NSUserDefaultsSettings.Factory>().create("pe_auth") }
-    single<ObservableSettings>(named("reminder_codes")) {
-        get<NSUserDefaultsSettings.Factory>().create("reminder_codes")
-    }
-    single<ObservableSettings>(named("timetable_prefs")) {
-        get<NSUserDefaultsSettings.Factory>().create(
-            "timetable_prefs"
-        )
-    }
+    single<ObservableSettings>(named("jwxt_auth")) { get<MmkvSettingsFactory>().create("jwxt_auth") }
+    single<ObservableSettings>(named("pe_auth")) { get<MmkvSettingsFactory>().create("pe_auth") }
+    single<ObservableSettings>(named("reminder_codes")) { get<MmkvSettingsFactory>().create("reminder_codes") }
+    single<ObservableSettings>(named("timetable_prefs")) { get<MmkvSettingsFactory>().create("timetable_prefs") }
 
     single<AppDatabase> { buildPlatformAppDatabase() }
     single<CourseDao> { get<AppDatabase>().courseDao() }
