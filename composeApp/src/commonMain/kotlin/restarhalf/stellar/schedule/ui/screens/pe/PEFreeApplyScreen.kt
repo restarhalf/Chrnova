@@ -1,14 +1,11 @@
 package restarhalf.stellar.schedule.ui.screens.pe
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,86 +31,74 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.data.remote.PEFreeApplyItem
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Appointment
-import restarhalf.stellar.schedule.ui.icons.Free
-import restarhalf.stellar.schedule.ui.icons.QrCode
+import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
-import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.freeApplyStatusText
+import restarhalf.stellar.schedule.ui.viewmodel.freeApplyTypeText
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
- * 体育成绩屏幕
+ * 免测/缓测申请记录
  *
- * 显示体测成绩列表，支持：
- * - 登录体育系统
- * - 查看年度体测成绩
- * - 点击查看详情
- * - 下拉刷新
- * - 登出功能
- *
- * @param onNavigateToDetail 导航到成绩详情页面的回调
- * @param onQRCode 导航到二维码页面的回调
+ * 列表卡片与体测成绩页一致；底栏「我要申请」。
  */
 @Composable
-fun PEScoreScreen(
-    vm: PEViewModel,
-    onNavigateToDetail: (String) -> Unit,
+fun PEFreeApplyScreen(
+    vm: PEFreeApplyViewModel,
     onLogin: () -> Unit,
-    onQRCode: () -> Unit = {},
-    onAppointment: () -> Unit = {},
-    onFreeApply: () -> Unit = {},
-    jwxtAuthProfile: JwxtAuthProfile? = null,
+    onApply: () -> Unit,
+    onBack: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val yearScores = uiState.yearScores
-    val loading = uiState.loading
     val loggedIn by vm.isLoggedIn.collectAsStateWithLifecycle()
-    val hasQRCodeInfo =
-        loggedIn || (jwxtAuthProfile?.userNo?.isNotBlank() == true && jwxtAuthProfile.name.isNotBlank())
+    val colors = MiuixTheme.colorScheme
+
     LaunchedEffect(loggedIn) {
         if (loggedIn) {
-            vm.loadScoreList()
-            vm.loadProfile()
+            vm.refresh()
         }
     }
-    val statusText = vm.buildStatusText()
-    val colors = MiuixTheme.colorScheme
+
+    val statusText = when {
+        uiState.error != null -> uiState.error
+        !loggedIn -> null
+        uiState.loaded && uiState.items.isEmpty() -> "暂无申请记录"
+        else -> null
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             Column {
                 AppPageTopBar(
-                    title = "体测",
+                    title = "免测申请",
                     scrollBehavior = topAppBarScrollBehavior,
-                    actions = {
-                        IconButton(onClick = onFreeApply){
-                            Icon(imageVector = Free, contentDescription = "免修")
-                        }
-                        IconButton(onClick = onAppointment){
-                            Icon(imageVector = Appointment, contentDescription = "预约")
-                        }
-                        if (hasQRCodeInfo) {
-                            IconButton(onClick = onQRCode) {
-                                Icon(imageVector = QrCode, contentDescription = "二维码")
-                            }
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Back,
+                                contentDescription = "返回",
+                            )
                         }
                     },
                 )
@@ -137,10 +122,21 @@ fun PEScoreScreen(
                 }
             }
         },
+        bottomBar = {
+            if (loggedIn) {
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    colors = ButtonDefaults.buttonColorsPrimary(),
+                    onClick = onApply,
+                ) {
+                    Text(text = "我要申请", color = colors.onPrimary)
+                }
+            }
+        },
     ) { paddingValues ->
         PullToRefresh(
-            isRefreshing = loading,
-            onRefresh = { vm.loadScoreList() },
+            isRefreshing = uiState.loading,
+            onRefresh = { vm.refresh() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
             modifier = Modifier.fillMaxSize().padding(
@@ -167,54 +163,80 @@ fun PEScoreScreen(
             ) {
                 if (!loggedIn) {
                     item {
-                        SmallTitle(text = "账号")
                         AppCard {
                             ArrowPreference(
                                 title = "登录",
-                                summary = "用于获取体测成绩",
+                                summary = "登录后可查看免测/缓测申请",
                                 onClick = onLogin
                             )
                         }
                     }
                 }
-                items(yearScores, key = { it.schoolYear }) { score ->
-                    Box(
-                        modifier = Modifier.animateItem(
-                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                        )
-                    ) {
-                        AppCard(
-                            modifier = Modifier.fillMaxWidth()
-                                .clickable { if (score.isFree == 0) onNavigateToDetail(score.schoolYear) }
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    val nextYear = score.schoolYear.toIntOrNull()?.plus(1)
-                                    Text(
-                                        text = if (nextYear != null) "${score.schoolYear}-${nextYear}学年" else "${score.schoolYear}学年",
-                                        style = MiuixTheme.textStyles.body1,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "已测 ${score.done}/${score.nums}",
-                                        style = MiuixTheme.textStyles.footnote1,
-                                        color = colors.onSurfaceVariantSummary
-                                    )
-                                }
-                                Text(
-                                    text = if (score.isFree == 0) "${score.total}分" else "免测",
-                                    style = MiuixTheme.textStyles.title4,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-                    }
+                items(
+                    uiState.items,
+                    key = { it.applyId.ifBlank { "${it.schoolYear}-${it.freeApplyType}" } }
+                ) { item ->
+                    FreeApplyRecordCard(
+                        item = item,
+                        typeLabel = freeApplyTypeText(item.freeApplyType, uiState.typeLabelMap),
+                        statusLabel = freeApplyStatusText(item.applyStatus, uiState.statusLabelMap),
+                    )
                 }
             }
+        }
+    }
+
+    val actionMessage = uiState.actionMessage
+    if (actionMessage != null) {
+        WindowDialog(
+            show = true,
+            title = "提示",
+            summary = actionMessage,
+            onDismissRequest = { vm.consumeActionMessage() }
+        ) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColorsPrimary(),
+                onClick = { vm.consumeActionMessage() }
+            ) {
+                Text(text = "知道了", color = colors.onPrimary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FreeApplyRecordCard(
+    item: PEFreeApplyItem,
+    typeLabel: String,
+    statusLabel: String,
+) {
+    val colors = MiuixTheme.colorScheme
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = item.schoolYear + "【" + typeLabel + "】",
+                    style = MiuixTheme.textStyles.body1,
+                    fontWeight = FontWeight.Bold
+                )
+                if (item.applyTime.isNotBlank()) {
+                    Text(
+                        text = item.applyTime,
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = colors.onSurfaceVariantSummary
+                    )
+                }
+            }
+            Text(
+                text = statusLabel,
+                style = MiuixTheme.textStyles.title4,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }

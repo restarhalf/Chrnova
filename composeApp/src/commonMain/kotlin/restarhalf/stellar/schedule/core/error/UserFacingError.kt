@@ -64,6 +64,11 @@ enum class UserFacingErrorKind(
     PEAppointmentAction(
         fallbackMessage = "预约操作失败，请稍后重试",
     ),
+    /** 免测申请加载失败 */
+    LoadPEFreeApply(
+        fallbackMessage = "加载免测申请失败，请稍后重试",
+        invalidDataMessage = "免测数据暂时无法解析，请稍后重试",
+    ),
     ;
 }
 

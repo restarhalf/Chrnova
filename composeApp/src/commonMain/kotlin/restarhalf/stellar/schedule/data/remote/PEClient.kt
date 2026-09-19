@@ -1,12 +1,16 @@
 package restarhalf.stellar.schedule.data.remote
 
 import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
@@ -87,6 +91,9 @@ class PEClient(
             is PEAppointmentDetailResponse -> parsed.status to parsed.message
             is PEAppointmentTimesResponse -> parsed.status to parsed.message
             is PEAppointmentActionResponse -> parsed.status to parsed.message
+            is PEFreeApplyListResponse -> parsed.status to parsed.message
+            is PEFreeSchoolYearResponse -> parsed.status to parsed.message
+            is PEFreeActionResponse -> parsed.status to parsed.message
             else -> "PASS" to ""
         }
         if (status != "PASS") {
@@ -352,6 +359,133 @@ class PEClient(
      */
     private fun parseActionOrThrow(body: String): PEAppointmentActionResponse {
         val parsed = json.decodeFromString(PEAppointmentActionResponse.serializer(), body)
+        if (parsed.status != "PASS") {
+            throw peFailException(parsed.message)
+        }
+        return parsed
+    }
+
+    override suspend fun getFreeApplyList(): PEFreeApplyListResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException("请先登录体测系统")
+        val sign = passwordEncryption.generatePESign(mapOf("userId" to userId))
+        val requestBody = buildJsonObject {
+            put("userId", userId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/gymFreeManager/selectList",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEFreeApplyListResponse.serializer())
+    }
+
+    override suspend fun getFreeSchoolYears(): PEFreeSchoolYearResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException("请先登录体测系统")
+        val sign = passwordEncryption.generatePESign(mapOf("userId" to userId))
+        val requestBody = buildJsonObject {
+            put("userId", userId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/gymFreeManager/selectFreeSchoolYear",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEFreeSchoolYearResponse.serializer())
+    }
+
+    /**
+     * 提交免测申请。
+     */
+    override suspend fun submitFreeApply(
+        stdNumber: String,
+        schoolYear: String,
+        freeApplyType: String,
+        attachments: List<String>,
+    ): PEFreeActionResponse {
+        val userId = authStore.getUserId() ?: throw PETokenExpiredException("请先登录体测系统")
+        val attIds = attachments.filter { it.isNotBlank() }
+        if (attIds.isEmpty()) throw IllegalStateException("请上传附件")
+        val attachmentsParam = attIds.joinToString(separator = ",", postfix = ",")
+        val params = mapOf(
+            "stdNumber" to stdNumber,
+            "userId" to userId,
+            "attachments" to attachmentsParam,
+            "schoolYear" to schoolYear,
+            "freeApplyType" to freeApplyType,
+        )
+        val sign = passwordEncryption.generatePESign(params)
+        val requestBody = buildJsonObject {
+            put("stdNumber", stdNumber)
+            put("userId", userId)
+            put("attachments", attachmentsParam)
+            put("schoolYear", schoolYear)
+            put("freeApplyType", freeApplyType)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/gymFreeManager/studentApply",
+            requestBody = requestBody,
+        )
+        return parseFreeActionOrThrow(body)
+    }
+
+    /** 上传附件。抓包确认 sign 为 generatePESign({fileTime})，与 JSON 接口同一 SHA1 规则。 */
+    override suspend fun uploadPeFile(
+        fileName: String,
+        mimeType: String,
+        bytes: ByteArray,
+    ): PEFreeActionResponse = withContext(AppIoDispatcher) {
+        if (bytes.isEmpty()) throw IllegalStateException("文件内容为空")
+        if (bytes.size > 5 * 1024 * 1024) throw IllegalStateException("每个文件上传大小不能超过5M")
+        val token = authStore.getToken() ?: throw PETokenExpiredException("请先登录体测系统")
+        // 原站 fileTime 为 JS Date.toString()；此处用稳定字符串，签名与表单字段保持一致即可
+        val fileTime = "file-${kotlin.time.Clock.System.now().toEpochMilliseconds()}"
+        val sign = passwordEncryption.generatePESign(mapOf("fileTime" to fileTime))
+
+        val response: HttpResponse = httpClient.post("$baseUrl/common/mobile/saveFile") {
+            header("Authorization", token)
+            header("Referer", "$baseUrl/mobile/")
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append(
+                            "file",
+                            bytes,
+                            Headers.build {
+                                append(HttpHeaders.ContentType, mimeType.ifBlank { "application/octet-stream" })
+                                append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                            },
+                        )
+                        append("fileTime", fileTime)
+                        append("sign", sign)
+                    },
+                ),
+            )
+        }
+
+        when (response.headers["abnormal"]?.uppercase()) {
+            "NOFUN" -> throw IllegalStateException("您没有操作权限")
+            "TIMEOUT" -> throw PETokenExpiredException("登录超时，请重新登录")
+        }
+        if (response.status.value == 401) throw PETokenExpiredException("登录已过期，请重新登录")
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException(
+                response.extractServerErrorMessage(json, listOf("message", "msg"))
+                    ?: "上传失败（HTTP ${response.status.value}）",
+            )
+        }
+        val parsed = json.decodeFromString(
+            PEFreeActionResponse.serializer(),
+            response.bodyAsText(),
+        )
+        if (parsed.status != "PASS" || parsed.attId.isNullOrBlank()) {
+            throw peFailException(parsed.message.ifBlank { "上传失败" })
+        }
+        parsed
+    }
+
+    private fun parseFreeActionOrThrow(body: String): PEFreeActionResponse {
+        val parsed = json.decodeFromString(PEFreeActionResponse.serializer(), body)
         if (parsed.status != "PASS") {
             throw peFailException(parsed.message)
         }

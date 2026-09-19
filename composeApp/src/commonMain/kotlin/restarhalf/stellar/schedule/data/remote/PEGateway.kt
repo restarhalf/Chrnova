@@ -108,4 +108,25 @@ interface PEGateway {
         timesId: String,
         enterDate: String,
     ): PEAppointmentActionResponse
+
+    /** 免测：我的申请列表 */
+    suspend fun getFreeApplyList(): PEFreeApplyListResponse
+
+    /** 免测：可申请学年 */
+    suspend fun getFreeSchoolYears(): PEFreeSchoolYearResponse
+
+    /** 免测：提交申请 */
+    suspend fun submitFreeApply(
+        stdNumber: String,
+        schoolYear: String,
+        freeApplyType: String,
+        attachments: List<String>,
+    ): PEFreeActionResponse
+
+    /** 免测：上传附件，返回 att_id */
+    suspend fun uploadPeFile(
+        fileName: String,
+        mimeType: String,
+        bytes: ByteArray,
+    ): PEFreeActionResponse
 }

@@ -140,6 +140,14 @@ sealed interface Screen : NavKey {
     @Serializable
     data object PEAppointment : Screen
 
+    /** 体测免测申请列表页 */
+    @Serializable
+    data object PEFreeApply : Screen
+
+    /** 体测免测/缓测申请填写页 */
+    @Serializable
+    data object PEFreeApplyEdit : Screen
+
     /** 个人资料页面 */
     @Serializable
     data object Profile : Screen

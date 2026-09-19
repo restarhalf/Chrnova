@@ -209,3 +209,68 @@ data class PEAppointmentActionResponse(
     @SerialName("status") val status: String = "",
     @SerialName("message") val message: String = "",
 )
+
+/** 免测申请列表响应 — data 直接是数组 */
+@Serializable
+data class PEFreeApplyListResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("data") val data: List<PEFreeApplyItem> = emptyList(),
+)
+
+/** 免测申请记录 */
+@Serializable
+data class PEFreeApplyItem(
+    @SerialName("applyId") val applyId: String = "",
+    @SerialName("schoolYear") val schoolYear: String = "",
+    @SerialName("freeApplyType") val freeApplyType: String = "",
+    @SerialName("applyStatus") val applyStatus: String = "",
+    @SerialName("stdNumber") val stdNumber: String = "",
+    @SerialName("attachments") val attachments: String = "",
+    @SerialName("applyTime") val applyTime: String = "",
+    @SerialName("remark") val remark: String = "",
+)
+
+/** 可申请学年响应 */
+@Serializable
+data class PEFreeSchoolYearResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("data") val data: PEFreeSchoolYearData? = null,
+)
+
+@Serializable
+data class PEFreeSchoolYearData(
+    @SerialName("nowSchoolYear") val nowSchoolYear: String = "",
+    @SerialName("dataList") val dataList: List<PECodeItem> = emptyList(),
+)
+
+@Serializable
+data class PECodeItem(
+    @SerialName("code") val code: String = "",
+    @SerialName("label") val label: String = "",
+)
+
+/** 通用操作响应（申请 / 上传） */
+@Serializable
+data class PEFreeActionResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("att_id") val attId: String? = null,
+)
+
+/** 字典响应（searchCodeList，结构可能多样，尽量兼容） */
+@Serializable
+data class PECodeListResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("data") val data: PECodeListData? = null,
+)
+
+@Serializable
+data class PECodeListData(
+    @SerialName("free_apply_type") val freeApplyType: List<PECodeItem> = emptyList(),
+    @SerialName("gym_free_apply_status") val gymFreeApplyStatus: List<PECodeItem> = emptyList(),
+    @SerialName("dataList") val dataList: List<PECodeItem> = emptyList(),
+    @SerialName("data_list") val dataListSnake: List<PECodeItem> = emptyList(),
+)

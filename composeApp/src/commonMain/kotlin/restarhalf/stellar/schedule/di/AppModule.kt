@@ -95,6 +95,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEAppointmentListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAppointmentDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PECancelAppointmentUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEEnterAppointmentUseCase
+import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
@@ -126,6 +127,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -418,6 +420,7 @@ val useCaseModule = module {
     factory { PEAppointmentDetailUseCase(gateway = get(), authWorkflow = get()) }
     factory { PECancelAppointmentUseCase(gateway = get(), authWorkflow = get()) }
     factory { PEEnterAppointmentUseCase(gateway = get(), authWorkflow = get()) }
+    factory { PEFreeApplyUseCase(gateway = get(), authWorkflow = get()) }
     factory { VerifyGitHubStarUseCase(papersPort = get(), settingsPort = get()) }
     factory {
         CheckAppUpdateUseCase(
@@ -556,6 +559,13 @@ val viewModelModule = module {
             cancelAppointmentUseCase = get(),
             enterAppointmentUseCase = get(),
             peAuth = get(),
+        )
+    }
+    viewModel {
+        PEFreeApplyViewModel(
+            useCase = get(),
+            peAuth = get(),
+            authStore = get(),
         )
     }
     viewModel {

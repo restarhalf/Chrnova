@@ -100,6 +100,12 @@ class PEAuthStore(private val settings: ObservableSettings) {
     }
 
     /**
+     * 获取学号（免测申请 stdNumber）
+     */
+    fun getStdNumber(): String? =
+        settings.getStringOrNull(KEY_STD_NUMBER)?.takeIf { it.isNotBlank() }
+
+    /**
      * 设置登录凭据
      *
      * @param username 用户名

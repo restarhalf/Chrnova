@@ -85,6 +85,8 @@ import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyEditScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -99,6 +101,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
@@ -450,6 +453,27 @@ fun AppContent(
                                     onBack = { navigator.pop() },
                                 )
                             }
+                            entry<Screen.PEFreeApply> {
+                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
+                                PEFreeApplyScreen(
+                                    vm = peFreeVm,
+                                    onLogin = { navigator.push(Screen.PELogin) },
+                                    onApply = {
+                                        peFreeVm.prepareApplyForm()
+                                        navigator.push(Screen.PEFreeApplyEdit)
+                                    },
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                            entry<Screen.PEFreeApplyEdit> {
+                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
+                                PEFreeApplyEditScreen(
+                                    vm = peFreeVm,
+                                    onBack = { navigator.pop() },
+                                    onSubmitted = { navigator.pop() },
+                                    pdfFilePickerHost = pdfFilePickerHost,
+                                )
+                            }
                             entry<Screen.Profile> {
                                 val settingsVm: SettingsViewModel = koinViewModel()
                                 val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
@@ -747,6 +771,7 @@ private fun MainRouteContent(
                     onQRCode = { navigator.push(Screen.PEQRCode) },
                     onLogin = { navigator.push(Screen.PELogin) },
                     onAppointment = { navigator.push(Screen.PEAppointment) },
+                    onFreeApply = { navigator.push(Screen.PEFreeApply) },
                     jwxtAuthProfile = settingsUiState.profile
                 )
             }
