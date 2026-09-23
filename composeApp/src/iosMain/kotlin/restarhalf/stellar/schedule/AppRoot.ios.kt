@@ -4,7 +4,6 @@ import androidx.compose.ui.window.ComposeUIViewController
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -43,9 +42,6 @@ import platform.UIKit.UIAlertController
 import platform.UIKit.UIAlertControllerStyleAlert
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
-import platform.UIKit.UIGraphicsBeginImageContextWithOptions
-import platform.UIKit.UIGraphicsEndImageContext
-import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
 import platform.UIKit.UIImage
 import platform.UIKit.UIViewController
 import platform.darwin.dispatch_async
@@ -384,20 +380,7 @@ private fun ByteArray.toUIImageForPhotoSave(): UIImage? {
             )
         }
     val image = UIImage(data = data)
-    return image.normalizeForPhotoSave() ?: image
+    // 生成的分享图无 EXIF 方向问题，跳过 normalize 重绘以加快保存
+    return image
 }
 
-@OptIn(ExperimentalForeignApi::class)
-private fun UIImage.normalizeForPhotoSave(): UIImage? {
-    val imageSize = size
-    val width = imageSize.useContents { width }
-    val height = imageSize.useContents { height }
-    if (width <= 0.0 || height <= 0.0) return null
-    UIGraphicsBeginImageContextWithOptions(imageSize, false, scale)
-    return try {
-        drawInRect(platform.CoreGraphics.CGRectMake(0.0, 0.0, width, height))
-        UIGraphicsGetImageFromCurrentImageContext()
-    } finally {
-        UIGraphicsEndImageContext()
-    }
-}

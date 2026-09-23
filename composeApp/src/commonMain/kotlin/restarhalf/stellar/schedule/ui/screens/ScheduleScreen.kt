@@ -65,7 +65,9 @@ import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialo
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekPickerSheet
 import restarhalf.stellar.schedule.ui.icons.Add
+import restarhalf.stellar.schedule.ui.icons.Share
 import restarhalf.stellar.schedule.ui.mapper.CourseRenderItem
+import restarhalf.stellar.schedule.ui.share.ShareTimetableDialog
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
@@ -121,7 +123,14 @@ fun ScheduleScreen(
     termStartMs: Long,
     totalWeeks: Int,
     onAddLabCourse: (dayOfWeek: Int, startSection: Int, selectedWeek: Int) -> Unit,
-    onEditLabCourse: (Long) -> Unit
+    onEditLabCourse: (Long) -> Unit,
+    canSaveImage: Boolean = false,
+    onSaveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
+    sharerNickname: String? = null,
+    sharerAvatarUri: String? = null,
+    backgroundImageUri: String? = null,
+    backgroundAlpha: Float = 1f,
+    backgroundBlur: Float = 0f,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -149,6 +158,7 @@ fun ScheduleScreen(
     val scheduleUiState by vm.uiState.collectAsStateWithLifecycle()
     var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var showWeekPicker by remember { mutableStateOf(false) }
+    var showShare by remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(pagerState.currentPage) {
@@ -157,9 +167,8 @@ fun ScheduleScreen(
 
     // 自动/手动同步失败时给出可见反馈，并向上确认消费，避免切页后重复弹出
     LaunchedEffect(syncUiState) {
-        val state = syncUiState
-        if (state is SyncUiState.Error) {
-            showMessage("课表同步失败：${state.message}")
+        if (syncUiState is SyncUiState.Error) {
+            showMessage("课表同步失败：${syncUiState.message}")
             onSyncErrorConsumed()
         }
     }
@@ -267,6 +276,9 @@ fun ScheduleScreen(
                                 )
                             }
                         }
+                        IconButton(onClick = {showShare=true}){
+                            Icon(imageVector = Share, contentDescription = "分享")
+                        }
                     },
                 )
                 // 点击顶栏标题区域弹出周次选择（matchParentSize 跟随顶栏高度，不参与测量）
@@ -287,6 +299,54 @@ fun ScheduleScreen(
             }
         },
         popupHost = {
+            if (showShare) {
+                val shareWeekHeaderUi =
+                    remember(currentWeek, uiState.detectedWeekInfo.diffDays, uiState.detectedWeekInfo.week, termStartMs, dayCount) {
+                        vm.buildWeekHeaderUi(
+                            currentWeek = currentWeek,
+                            detectedDiffDays = uiState.detectedWeekInfo.diffDays,
+                            detectedWeek = uiState.detectedWeekInfo.week,
+                            termStartMs = termStartMs,
+                            dayCount = dayCount,
+                        )
+                    }
+                val sharePageRenderUi =
+                    remember(currentWeek, courses, scheduleUiState.showNonCurrentWeek) {
+                        val geo = restarhalf.stellar.schedule.ui.share.ShareTimetableGeometry
+                        vm.buildPageRenderUi(
+                            courses = courses,
+                            page = vm.weekToPage(week = currentWeek, includeWeek0 = uiState.includeWeek0),
+                            includeWeek0 = uiState.includeWeek0,
+                            dayCount = dayCount,
+                            showNonCurrentWeek = scheduleUiState.showNonCurrentWeek,
+                            isDarkMode = isDarkMode,
+                            mutedCourseColor = mutedCourseColor,
+                            mutedTitleColor = mutedTitleColor,
+                            mutedSubColor = mutedSubColor,
+                            yForSection = geo::yForSection,
+                            heightForSections = geo::heightForSections,
+                            cellInset = geo.cellInset,
+                        )
+                    }
+                val weekLabel =
+                    if (currentWeek == 0) "假期中" else "第 $currentWeek 周 · 课表"
+                ShareTimetableDialog(
+                    show = true,
+                    nickname = sharerNickname,
+                    avatarUri = sharerAvatarUri,
+                    weekLabel = weekLabel,
+                    weekHeaderUi = shareWeekHeaderUi,
+                    dayRenderData = sharePageRenderUi.dayRenderData,
+                    timetable = timetable,
+                    canSaveImage = canSaveImage,
+                    onSaveImage = onSaveImage,
+                    showMessage = showMessage,
+                    onDismiss = { showShare = false },
+                    backgroundImageUri = backgroundImageUri,
+                    backgroundAlpha = backgroundAlpha,
+                    backgroundBlur = backgroundBlur,
+                )
+            }
             WeekPickerSheet(
                 show = showWeekPicker,
                 onDismiss = { showWeekPicker = false },

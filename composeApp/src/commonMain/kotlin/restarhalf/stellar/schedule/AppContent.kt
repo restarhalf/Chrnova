@@ -315,6 +315,8 @@ fun AppContent(
                                     ensureNotificationPermission = ensureNotificationPermissionState,
                                     saveCsv = saveCsv,
                                     showMessage = showMessage,
+                                    canSaveImage = canSaveImageState,
+                                    saveImage = saveImageState,
                                 )
                             }
                             entry<Screen.ChangeBackground> {
@@ -672,6 +674,10 @@ private fun MainRouteContent(
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     /** 显示消息的回调 */
     showMessage: (String) -> Unit = {},
+    /** 是否可保存图片到相册 */
+    canSaveImage: Boolean = false,
+    /** 保存图片字节到相册 */
+    saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val homeVm: HomeViewModel = koinViewModel()
     val scheduleVm: ScheduleViewModel = koinViewModel()
@@ -714,6 +720,9 @@ private fun MainRouteContent(
             }
 
             Screen.Schedule -> {
+                val personalInfoVm: PersonalInfoViewModel = koinViewModel()
+                val personalInfo by personalInfoVm.uiState.collectAsStateWithLifecycle()
+                val bgState by bgVm.uiState.collectAsStateWithLifecycle()
                 ScheduleScreen(
                     vm = scheduleVm,
                     onSync = runSync,
@@ -729,6 +738,13 @@ private fun MainRouteContent(
                     onEditLabCourse = { courseId ->
                         navigator.push(Screen.ClassEdit(courseId = courseId))
                     },
+                    canSaveImage = canSaveImage,
+                    onSaveImage = saveImage,
+                    sharerNickname = personalInfo.nickname,
+                    sharerAvatarUri = personalInfo.avatarUri,
+                    backgroundImageUri = bgState.backgroundImageUri,
+                    backgroundAlpha = bgState.backgroundAlpha,
+                    backgroundBlur = bgState.backgroundBlur,
                 )
             }
 
