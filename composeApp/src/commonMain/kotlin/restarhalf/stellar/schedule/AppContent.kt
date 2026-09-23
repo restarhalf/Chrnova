@@ -68,14 +68,12 @@ import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementImageViewerScreen
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
+import restarhalf.stellar.schedule.ui.screens.courseselection.CourseEnrollScreen
 import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
 import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
-import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodItem
-import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodQRCodeScreen
-import restarhalf.stellar.schedule.ui.screens.foodroulette.FoodRouletteScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
 import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
@@ -93,6 +91,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEnrollViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
@@ -592,26 +591,10 @@ fun AppContent(
                                     onBack = { navigator.pop() },
                                 )
                             }
-                            entry<Screen.FoodRoulette> {
-                                FoodRouletteScreen(
-                                    campus = appUiState.campus,
-                                    onBack = { navigator.pop() },
-                                    onFoodSelected = { food ->
-                                        navigator.push(
-                                            Screen.FoodQRCode(
-                                                foodName = food.name,
-                                                qrContent = food.qrContent,
-                                            )
-                                        )
-                                    },
-                                )
-                            }
-                            entry<Screen.FoodQRCode> { screen ->
-                                FoodQRCodeScreen(
-                                    food = FoodItem(
-                                        name = screen.foodName,
-                                        qrContent = screen.qrContent,
-                                    ),
+                            entry<Screen.CourseEnroll> {
+                                val courseEnrollVm: CourseEnrollViewModel = koinViewModel()
+                                CourseEnrollScreen(
+                                    vm = courseEnrollVm,
                                     onBack = { navigator.pop() },
                                 )
                             }
@@ -798,9 +781,9 @@ private fun MainRouteContent(
                     onPaper = { navigator.push(Screen.Papers) },
                     onEvaluation = { navigator.push(Screen.Evaluation) },
                     onCourseSelection = { navigator.push(Screen.CourseSelection) },
+                    onCourseEnroll = { navigator.push(Screen.CourseEnroll) },
                     onLogin = { navigator.push(Screen.JwxtLogin) },
                     onProfile = { navigator.push(Screen.Profile) },
-                    onFoodRoulette = { navigator.push(Screen.FoodRoulette) },
                     isPeLoggedIn = isPeLoggedIn,
                     onExportCsv = saveCsv,
                     courses = courses,

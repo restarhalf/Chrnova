@@ -23,6 +23,7 @@ import restarhalf.stellar.schedule.data.remote.PECodeItem
 import restarhalf.stellar.schedule.data.remote.PEFreeApplyItem
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
+import restarhalf.stellar.schedule.ui.image.isImageAttachment
 
 /**
  * 免测/缓测申请 ViewModel
@@ -40,6 +41,8 @@ class PEFreeApplyViewModel(
         val attId: String,
         val name: String,
         val mimeType: String,
+        /** 图片附件本地字节，供 Coil 缩略图；非图片为 null。 */
+        val previewBytes: ByteArray? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -171,9 +174,15 @@ class PEFreeApplyViewModel(
                 val resp = useCase.upload(fileName, mimeType, bytes)
                 val attId = resp.attId
                     ?: throw IllegalStateException(resp.message.ifBlank { "上传失败" })
+                val previewBytes = if (isImageAttachment(mimeType, fileName)) bytes else null
                 _uiState.update { s ->
                     val next = s.attachments.filterNot { it.attId == attId } +
-                        AttachmentUi(attId = attId, name = fileName, mimeType = mimeType)
+                        AttachmentUi(
+                            attId = attId,
+                            name = fileName,
+                            mimeType = mimeType,
+                            previewBytes = previewBytes,
+                        )
                     s.copy(uploading = false, attachments = next.toPersistentList())
                 }
             } catch (ex: Exception) {

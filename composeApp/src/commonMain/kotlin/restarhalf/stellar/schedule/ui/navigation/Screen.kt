@@ -156,21 +156,9 @@ sealed interface Screen : NavKey {
     @Serializable
     data object ElectiveCredit : Screen
 
-    /** 美食滚轮页面 */
+    /** 手动选课页面（浏览可选课程并选课/退课） */
     @Serializable
-    data object FoodRoulette : Screen
-
-    /**
-     * 美食二维码页面
-     *
-     * @param foodName 食物名称
-     * @param qrContent 二维码内容
-     */
-    @Serializable
-    data class FoodQRCode(
-        val foodName: String,
-        val qrContent: String = "",
-    ) : Screen
+    data object CourseEnroll : Screen
 
     /** 自动抢课页面 */
     @Serializable

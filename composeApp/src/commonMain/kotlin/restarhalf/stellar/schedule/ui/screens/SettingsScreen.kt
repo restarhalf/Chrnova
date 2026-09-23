@@ -108,7 +108,7 @@ fun SettingsScreen(
     onPaper: () -> Unit,
     onEvaluation: () -> Unit = {},
     onProfile: () -> Unit = {},
-    onFoodRoulette: () -> Unit = {},
+    onCourseEnroll: () -> Unit = {},
     onCourseSelection: () -> Unit = {},
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     courses: ImmutableList<Course> = persistentListOf(),
@@ -371,6 +371,14 @@ fun SettingsScreen(
 //                                onClick = onCourseSelection,
 //                            )
 //                        })
+                    add(CardItem("courseEnroll") {
+                        ArrowPreference(
+                            title = "选课",
+                            summary = "浏览可选课程并选课/退课",
+                            onClick = onCourseEnroll,
+                        )
+                    })
+
                     add(CardItem("exportCsv") {
                         ArrowPreference(
                             title = "导出课表CSV",
@@ -412,13 +420,6 @@ fun SettingsScreen(
                                 }
                             })
                     })
-//                    add(CardItem("foodRoulette") {
-//                        ArrowPreference(
-//                            title = "今天吃什么",
-//                            summary = "选择困难症？让滚轮帮你决定",
-//                            onClick = onFoodRoulette,
-//                        )
-//                    })
                 }
             )
 

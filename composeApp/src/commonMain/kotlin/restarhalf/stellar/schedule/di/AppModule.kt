@@ -117,6 +117,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.CourseEnrollViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
@@ -612,6 +613,11 @@ val viewModelModule = module {
         CourseSelectionViewModel(
             useCase = get(),
             servicePort = get(),
+        )
+    }
+    viewModel {
+        CourseEnrollViewModel(
+            useCase = get(),
         )
     }
     viewModel {

@@ -11,6 +11,7 @@ import platform.Foundation.dataWithContentsOfURL
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UniformTypeIdentifiers.UTTagClassFilenameExtension
 import platform.UniformTypeIdentifiers.UTType
+import platform.UniformTypeIdentifiers.UTTypeImage
 import platform.UniformTypeIdentifiers.UTTypePDF
 import platform.UniformTypeIdentifiers.typeWithTag
 import platform.darwin.NSObject
@@ -26,8 +27,9 @@ fun PdfFilePickerHost(
     LaunchedEffect(Unit) {
         val types = listOf(
             UTTypePDF,
+            UTTypeImage,
             docType,
-            docxType
+            docxType,
         )
         val controller = UIDocumentPickerViewController(
             forOpeningContentTypes = types,
@@ -71,5 +73,7 @@ private fun guessMimeFromName(name: String): String = when {
     name.endsWith(".pdf", ignoreCase = true) -> "application/pdf"
     name.endsWith(".doc", ignoreCase = true) -> "application/msword"
     name.endsWith(".docx", ignoreCase = true) -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    name.endsWith(".jpg", ignoreCase = true) || name.endsWith(".jpeg", ignoreCase = true) -> "image/jpeg"
+    name.endsWith(".png", ignoreCase = true) -> "image/png"
     else -> "application/octet-stream"
 }
