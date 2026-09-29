@@ -55,14 +55,17 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
- * 免测/缓测申请填写页
+ * 免测申请填写页
  */
 @Composable
 fun PEFreeApplyEditScreen(
     vm: PEFreeApplyViewModel,
     onBack: () -> Unit,
     onSubmitted: () -> Unit,
-    pdfFilePickerHost: @Composable (onPicked: (ByteArray, String, String) -> Unit) -> Unit = {},
+    pdfFilePickerHost: @Composable (
+        multiple: Boolean,
+        onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
+    ) -> Unit = { _, _ -> },
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
@@ -166,7 +169,7 @@ fun PEFreeApplyEditScreen(
                     OverlayDropdownPreference(
                         title = "申请类型",
                         summary = if (uiState.freeApplyTypeLabel.isBlank()) {
-                            "仅支持免测、缓测"
+                            "仅支持免测"
                         } else {
                             uiState.freeApplyTypeLabel
                         },
@@ -240,9 +243,15 @@ fun PEFreeApplyEditScreen(
     }
 
     if (showFilePicker) {
-        pdfFilePickerHost { bytes, name, mime ->
+        pdfFilePickerHost(true) { picked ->
             showFilePicker = false
-            vm.addAttachment(fileName = name, mimeType = mime, bytes = bytes)
+            picked.forEach { file ->
+                vm.addAttachment(
+                    fileName = file.name,
+                    mimeType = file.mime,
+                    bytes = file.bytes,
+                )
+            }
         }
     }
 

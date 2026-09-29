@@ -15,9 +15,16 @@ interface PEPasswordEncryptionPort {
     fun encryptPasswordForPELogin(password: String): String
     /**
      * 生成体育系统请求签名
-     * 
+     *
      * @param data 请求参数映射
      * @return 签名字符串
      */
     fun generatePESign(data: Map<String, Any?>): String
+
+    /**
+     * 加密附件 attId，得到 downloadFile?att_id= 所需的 token。
+     *
+     * 与移动端 SPA `$createImgUrl` 一致：AES-128-ECB + PKCS7，再 Base64。
+     */
+    fun encryptPeAttId(attId: String): String
 }

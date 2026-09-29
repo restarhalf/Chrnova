@@ -112,6 +112,9 @@ interface PEGateway {
     /** 免测：我的申请列表 */
     suspend fun getFreeApplyList(): PEFreeApplyListResponse
 
+    /** 免测：申请详情 */
+    suspend fun getFreeApplyDetail(applyId: String): PEFreeApplyDetailResponse
+
     /** 免测：可申请学年 */
     suspend fun getFreeSchoolYears(): PEFreeSchoolYearResponse
 
@@ -129,4 +132,10 @@ interface PEGateway {
         mimeType: String,
         bytes: ByteArray,
     ): PEFreeActionResponse
+
+    /** 免测：下载附件内容（attId → downloadFile?att_id=加密 token） */
+    suspend fun downloadPeFile(attId: String): ByteArray
+
+    /** 免测：附件下载 URL（Coil 可直接加载，与公告图片同一套预览） */
+    fun peFileDownloadUrl(attId: String): String
 }

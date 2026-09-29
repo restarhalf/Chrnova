@@ -218,7 +218,7 @@ data class PEFreeApplyListResponse(
     @SerialName("data") val data: List<PEFreeApplyItem> = emptyList(),
 )
 
-/** 免测申请记录 */
+/** 免测申请记录（列表 selectList / 详情 selectDetailData 共用） */
 @Serializable
 data class PEFreeApplyItem(
     @SerialName("applyId") val applyId: String = "",
@@ -229,6 +229,29 @@ data class PEFreeApplyItem(
     @SerialName("attachments") val attachments: String = "",
     @SerialName("applyTime") val applyTime: String = "",
     @SerialName("remark") val remark: String = "",
+    @SerialName("crtTime") val crtTime: String = "",
+    @SerialName("crtUsr") val crtUsr: String = "",
+    @SerialName("stuName") val stuName: String = "",
+    @SerialName("schoolGrade") val schoolGrade: String = "",
+    @SerialName("attList") val attList: List<PEFreeApplyAtt> = emptyList(),
+) {
+    /** 列表展示时间：兼容 applyTime / crtTime 字段名 */
+    val displayTime: String get() = applyTime.ifBlank { crtTime }
+}
+
+/** 免测申请附件 */
+@Serializable
+data class PEFreeApplyAtt(
+    @SerialName("attId") val attId: String = "",
+    @SerialName("fileName") val fileName: String = "",
+)
+
+/** 免测申请详情响应 */
+@Serializable
+data class PEFreeApplyDetailResponse(
+    @SerialName("status") val status: String = "",
+    @SerialName("message") val message: String = "",
+    @SerialName("data") val data: PEFreeApplyItem? = null,
 )
 
 /** 可申请学年响应 */

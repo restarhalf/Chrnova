@@ -2,30 +2,48 @@ package restarhalf.stellar.schedule.data.impl
 
 import dev.whyoleg.cryptography.CryptographyProvider
 import dev.whyoleg.cryptography.DelicateCryptographyApi
+import dev.whyoleg.cryptography.algorithms.AES
 import dev.whyoleg.cryptography.algorithms.MD5
 import dev.whyoleg.cryptography.algorithms.SHA1
 import restarhalf.stellar.schedule.config.LocalSecrets
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * 体育系统密码加密端口实现类
- * 
+ *
  * 实现PEPasswordEncryptionPort接口，负责体育系统相关的加密和签名。
  * - 密码加密使用MD5
  * - 请求签名使用SHA1
+ * - 附件下载 token 使用 AES-128-ECB（对齐移动端 SPA）
  */
-@OptIn(DelicateCryptographyApi::class)
+@OptIn(DelicateCryptographyApi::class, ExperimentalEncodingApi::class)
 class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
 
     /** 签名密钥 */
     private val SIGN_KEY = LocalSecrets.SIGN_KEY
 
+    /** 移动端 SPA `$createImgUrl` 使用的附件加密密钥（16 字节） */
+    private val ATT_AES_KEY = "5d44f502ad947ee7"
+
     /** SHA1哈希器 */
     private val hasher = CryptographyProvider.Default.get(SHA1).hasher()
 
+    /** 附件 attId 加密器（AES-ECB + PKCS7） */
+    private val attCipher by lazy {
+        val keyBytes = ATT_AES_KEY.encodeToByteArray()
+        require(keyBytes.size == 16) { "PE att AES key must be 16 bytes" }
+        CryptographyProvider.Default
+            .get(AES.ECB)
+            .keyDecoder()
+            .decodeFromByteArrayBlocking(AES.Key.Format.RAW, keyBytes)
+            .cipher(padding = true)
+    }
+
     /**
      * 加密密码用于体育系统登录
-     * 
+     *
      * @param password 原始密码
      * @return MD5哈希后的密码（小写十六进制）
      */
@@ -36,7 +54,7 @@ class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
 
     /**
      * 生成体育系统请求签名
-     * 
+     *
      * @param data 请求参数映射
      * @return SHA1签名（大写十六进制）
      */
@@ -44,6 +62,11 @@ class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
         val signString = buildSignString(data)
         val digest = hasher.hashBlocking(signString.encodeToByteArray())
         return digest.toHexString().uppercase()
+    }
+
+    override fun encryptPeAttId(attId: String): String {
+        if (attId.isBlank()) return ""
+        return Base64.encode(attCipher.encryptBlocking(attId.encodeToByteArray()))
     }
 
     /**

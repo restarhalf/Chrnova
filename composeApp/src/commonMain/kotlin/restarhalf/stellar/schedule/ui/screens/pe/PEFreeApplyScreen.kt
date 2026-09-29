@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
- * 免测/缓测申请记录
+ * 免测申请记录
  *
  * 列表卡片与体测成绩页一致；底栏「我要申请」。
  */
@@ -64,6 +65,7 @@ fun PEFreeApplyScreen(
     vm: PEFreeApplyViewModel,
     onLogin: () -> Unit,
     onApply: () -> Unit,
+    onDetail: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -166,7 +168,7 @@ fun PEFreeApplyScreen(
                         AppCard {
                             ArrowPreference(
                                 title = "登录",
-                                summary = "登录后可查看免测/缓测申请",
+                                summary = "登录后可查看免测申请",
                                 onClick = onLogin
                             )
                         }
@@ -180,6 +182,11 @@ fun PEFreeApplyScreen(
                         item = item,
                         typeLabel = freeApplyTypeText(item.freeApplyType, uiState.typeLabelMap),
                         statusLabel = freeApplyStatusText(item.applyStatus, uiState.statusLabelMap),
+                        onClick = {
+                            if (item.applyId.isNotBlank()) {
+                                onDetail(item.applyId)
+                            }
+                        },
                     )
                 }
             }
@@ -210,9 +217,12 @@ private fun FreeApplyRecordCard(
     item: PEFreeApplyItem,
     typeLabel: String,
     statusLabel: String,
+    onClick: () -> Unit,
 ) {
     val colors = MiuixTheme.colorScheme
-    AppCard(modifier = Modifier.fillMaxWidth()) {
+    AppCard(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,9 +234,9 @@ private fun FreeApplyRecordCard(
                     style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Bold
                 )
-                if (item.applyTime.isNotBlank()) {
+                if (item.displayTime.isNotBlank()) {
                     Text(
-                        text = item.applyTime,
+                        text = item.displayTime,
                         style = MiuixTheme.textStyles.footnote1,
                         color = colors.onSurfaceVariantSummary
                     )

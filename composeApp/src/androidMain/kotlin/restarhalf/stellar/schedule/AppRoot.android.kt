@@ -89,8 +89,8 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                     outputHeightPx = outputHeightPx,
                 )
             },
-            pdfFilePickerHost = { onPicked ->
-                PdfFilePickerHost(onPicked = onPicked)
+            pdfFilePickerHost = { multiple, onPicked ->
+                PdfFilePickerHost(multiple = multiple, onPicked = onPicked)
             },
             ensureNotificationPermission = { onGranted ->
                 // 课程/考试本地通知需要 POST_NOTIFICATIONS（Android 13+）；抢课前台服务同样依赖

@@ -1,8 +1,10 @@
 package restarhalf.stellar.schedule.data.remote
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -12,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -92,6 +95,7 @@ class PEClient(
             is PEAppointmentTimesResponse -> parsed.status to parsed.message
             is PEAppointmentActionResponse -> parsed.status to parsed.message
             is PEFreeApplyListResponse -> parsed.status to parsed.message
+            is PEFreeApplyDetailResponse -> parsed.status to parsed.message
             is PEFreeSchoolYearResponse -> parsed.status to parsed.message
             is PEFreeActionResponse -> parsed.status to parsed.message
             else -> "PASS" to ""
@@ -379,6 +383,19 @@ class PEClient(
         return parseAndVerify(body, PEFreeApplyListResponse.serializer())
     }
 
+    override suspend fun getFreeApplyDetail(applyId: String): PEFreeApplyDetailResponse {
+        val sign = passwordEncryption.generatePESign(mapOf("applyId" to applyId))
+        val requestBody = buildJsonObject {
+            put("applyId", applyId)
+            put("sign", sign)
+        }
+        val body = executeWithAuth(
+            url = "$baseUrl/mobile/gymFreeManager/selectDetailData",
+            requestBody = requestBody,
+        )
+        return parseAndVerify(body, PEFreeApplyDetailResponse.serializer())
+    }
+
     override suspend fun getFreeSchoolYears(): PEFreeSchoolYearResponse {
         val userId = authStore.getUserId() ?: throw PETokenExpiredException("请先登录体测系统")
         val sign = passwordEncryption.generatePESign(mapOf("userId" to userId))
@@ -482,6 +499,50 @@ class PEClient(
             throw peFailException(parsed.message.ifBlank { "上传失败" })
         }
         parsed
+    }
+
+    /**
+     * 下载附件。
+     *
+     * 原站 `$createImgUrl`：`downloadFile?att_id=` + encodeURIComponent(AES-ECB(attId))。
+     */
+    override suspend fun downloadPeFile(attId: String): ByteArray = withContext(AppIoDispatcher) {
+        if (attId.isBlank()) throw IllegalStateException("缺少附件标识")
+        val token = authStore.getToken() ?: throw PETokenExpiredException("请先登录体测系统")
+        val encAttId = passwordEncryption.encryptPeAttId(attId)
+        if (encAttId.isBlank()) throw IllegalStateException("附件标识加密失败")
+
+        val response: HttpResponse = httpClient.get(
+            "$baseUrl/common/mobile/downloadFile?att_id=${encAttId.encodeURLParameter()}",
+        ) {
+            header("Authorization", token)
+            header("Referer", "$baseUrl/mobile/")
+        }
+
+        when (response.headers["abnormal"]?.uppercase()) {
+            "NOFUN" -> throw IllegalStateException("您没有操作权限")
+            "TIMEOUT" -> throw PETokenExpiredException("登录超时，请重新登录")
+        }
+        if (response.status.value == 401) throw PETokenExpiredException("登录已过期，请重新登录")
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException(
+                response.extractServerErrorMessage(json, listOf("message", "msg"))
+                    ?: "下载失败（HTTP ${response.status.value}）",
+            )
+        }
+        val bytes = response.body<ByteArray>()
+        // 失败时服务端可能返回 200 + JSON
+        if (bytes.size < 8) throw IllegalStateException("附件内容为空")
+        val head = bytes.decodeToString(0, minOf(16, bytes.size))
+        if (head.startsWith("{") && head.contains("FAIL")) {
+            throw IllegalStateException("附件下载失败")
+        }
+        bytes
+    }
+
+    override fun peFileDownloadUrl(attId: String): String {
+        val encAttId = passwordEncryption.encryptPeAttId(attId)
+        return "$baseUrl/common/mobile/downloadFile?att_id=${encAttId.encodeURLParameter()}"
     }
 
     private fun parseFreeActionOrThrow(body: String): PEFreeActionResponse {

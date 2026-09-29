@@ -47,7 +47,10 @@ fun PapersUploadScreen(
     vm: PapersViewModel,
     onBack: () -> Unit,
     onResult: (String) -> Unit,
-    pdfFilePickerHost: @Composable (onPicked: (ByteArray, String, String) -> Unit) -> Unit = {},
+    pdfFilePickerHost: @Composable (
+        multiple: Boolean,
+        onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
+    ) -> Unit = { _, _ -> },
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -188,13 +191,16 @@ fun PapersUploadScreen(
     }
 
     if (showFilePicker) {
-        pdfFilePickerHost { bytes, name, mime ->
-            selectedFileBytes = bytes
-            selectedFileName = name
-            selectedFileMime = mime
-            selectedFilePath = name
+        pdfFilePickerHost(false) { picked ->
+            val file = picked.firstOrNull()
             showFilePicker = false
-            title = name.substringBeforeLast('.')
+            if (file != null) {
+                selectedFileBytes = file.bytes
+                selectedFileName = file.name
+                selectedFileMime = file.mime
+                selectedFilePath = file.name
+                title = file.name.substringBeforeLast('.')
+            }
         }
     }
 }

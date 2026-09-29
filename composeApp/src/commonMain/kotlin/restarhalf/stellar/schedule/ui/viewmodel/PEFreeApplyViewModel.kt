@@ -26,7 +26,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
 import restarhalf.stellar.schedule.ui.image.isImageAttachment
 
 /**
- * 免测/缓测申请 ViewModel
+ * 免测申请 ViewModel
  *
  * 列表页 + 独立申请页共用。
  */
@@ -71,6 +71,13 @@ class PEFreeApplyViewModel(
         val actionMessage: String? = null,
         val typeLabelMap: Map<String, String> = emptyMap(),
         val statusLabelMap: Map<String, String> = emptyMap(),
+        val detailLoading: Boolean = false,
+        val detail: PEFreeApplyItem? = null,
+        val detailError: String? = null,
+        /** 已按需下载的图片附件：attId -> 字节（仅点击后写入） */
+        val detailAttPreviews: Map<String, ByteArray> = emptyMap(),
+        /** 正在下载的附件 attId */
+        val detailAttLoading: Set<String> = emptySet(),
     )
 
     private val _uiState = MutableStateFlow(FreeApplyUiState())
@@ -122,6 +129,80 @@ class PEFreeApplyViewModel(
                         loaded = true,
                         error = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEFreeApply),
                     )
+                }
+            }
+        }
+    }
+
+    /** 加载免测申请详情 */
+    fun loadDetail(applyId: String) {
+        if (applyId.isBlank()) {
+            _uiState.update {
+                it.copy(detailLoading = false, detail = null, detailError = "缺少申请标识")
+            }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    detailLoading = true,
+                    detailError = null,
+                    detail = null,
+                    detailAttPreviews = emptyMap(),
+                    detailAttLoading = emptySet(),
+                )
+            }
+            try {
+                val resp = useCase.detail(applyId)
+                val data = resp.data
+                if (data == null) {
+                    _uiState.update {
+                        it.copy(detailLoading = false, detail = null, detailError = "未找到申请详情")
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(detailLoading = false, detail = data, detailError = null)
+                    }
+                }
+            } catch (ex: Exception) {
+                if (ex is CancellationException) throw ex
+                AppLogger.log("PEFree", "加载免测详情失败", ex)
+                _uiState.update {
+                    it.copy(
+                        detailLoading = false,
+                        detail = null,
+                        detailError = ex.toUserFacingMessage(UserFacingErrorKind.LoadPEFreeApply),
+                    )
+                }
+            }
+        }
+    }
+
+    /** 附件预览 URL，全屏看图用 */
+    fun attPreviewUrl(attId: String): String = useCase.attPreviewUrl(attId)
+
+    /**
+     * 点击后按需下载图片附件；成功后写入 [FreeApplyUiState.detailAttPreviews]，列表出缩略图。
+     */
+    fun loadAttPreview(attId: String) {
+        if (attId.isBlank()) return
+        val state = _uiState.value
+        if (state.detailAttPreviews.containsKey(attId) || attId in state.detailAttLoading) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(detailAttLoading = it.detailAttLoading + attId) }
+            try {
+                val bytes = useCase.downloadAtt(attId)
+                _uiState.update {
+                    it.copy(
+                        detailAttPreviews = it.detailAttPreviews + (attId to bytes),
+                        detailAttLoading = it.detailAttLoading - attId,
+                    )
+                }
+            } catch (ex: Exception) {
+                if (ex is CancellationException) throw ex
+                AppLogger.log("PEFree", "下载附件预览失败 $attId", ex)
+                _uiState.update {
+                    it.copy(detailAttLoading = it.detailAttLoading - attId)
                 }
             }
         }
@@ -260,26 +341,23 @@ class PEFreeApplyViewModel(
     }
 }
 
-/** 申请类型：仅免测 / 缓测 */
+/** 申请类型：仅免测（接口 freeApplyType=free） */
 val FreeApplyTypes: List<PECodeItem>
     get() = listOf(
-        PECodeItem(code = "1", label = "免测"),
-        PECodeItem(code = "2", label = "缓测"),
+        PECodeItem(code = "free", label = "免测"),
     )
 
 fun freeApplyStatusText(status: String, map: Map<String, String>): String =
     map[status] ?: when (status) {
-        "0" -> "待审核"
-        "1" -> "审核通过"
-        "2" -> "已驳回"
-        "3" -> "已撤销"
+        "1" -> "未处理"
+        "2" -> "通过"
+        "3" -> "驳回"
         else -> status.ifBlank { "未知" }
     }
 
 fun freeApplyTypeText(code: String, map: Map<String, String>): String =
     map[code] ?: FreeApplyTypes.firstOrNull { it.code == code }?.label
         ?: when (code) {
-            "1" -> "免测"
-            "2" -> "缓测"
+            "free" -> "免测"
             else -> code.ifBlank { "—" }
         }

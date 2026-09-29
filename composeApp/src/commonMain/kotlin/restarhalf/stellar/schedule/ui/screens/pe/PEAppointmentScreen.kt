@@ -81,6 +81,7 @@ import top.yukonga.miuix.kmp.window.WindowDialog
 fun PEAppointmentScreen(
     vm: PEAppointmentViewModel,
     onLogin: () -> Unit,
+    onOpenWeb: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
@@ -219,9 +220,11 @@ fun PEAppointmentScreen(
                             scrollBehavior = topAppBarScrollBehavior,
                             outerPadding = appScaffoldPadding,
                             onLoadMore = { vm.loadMoreMy() },
-                            onItemClick = { item ->
+                            onItemClick = { onOpenWeb() },
+                            onPrimaryAction = { item ->
                                 if (canCancelAppointment(item)) vm.requestCancel(item)
                             },
+                            onOpenWeb = onOpenWeb,
                         )
                         else -> AppointmentListPage(
                             items = uiState.availableItems,
@@ -234,6 +237,10 @@ fun PEAppointmentScreen(
                             onItemClick = { item ->
                                 if (canEnterAppointment(item)) vm.openBooking(item)
                             },
+                            onPrimaryAction = { item ->
+                                if (canEnterAppointment(item)) vm.openBooking(item)
+                            },
+                            onOpenWeb = onOpenWeb,
                         )
                     }
                 }
@@ -286,7 +293,7 @@ fun PEAppointmentScreen(
     if (actionMessage != null) {
         WindowDialog(
             show = true,
-            title = "提示",
+            title = if (uiState.actionMessageIsSuccess) "预约成功" else "提示",
             summary = actionMessage,
             onDismissRequest = { vm.consumeActionMessage() },
         ) {
@@ -294,12 +301,31 @@ fun PEAppointmentScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColorsPrimary(),
-                    onClick = { vm.consumeActionMessage() },
-                ) {
-                    Text(text = "知道了", color = colors.onPrimary)
+                if (uiState.actionMessageIsSuccess) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = { vm.consumeActionMessage() },
+                    ) {
+                        Text(text = "知道了")
+                    }
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                        onClick = {
+                            vm.consumeActionMessage()
+                            onOpenWeb()
+                        },
+                    ) {
+                        Text(text = "打开预约页", color = colors.onPrimary)
+                    }
+                } else {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColorsPrimary(),
+                        onClick = { vm.consumeActionMessage() },
+                    ) {
+                        Text(text = "知道了", color = colors.onPrimary)
+                    }
                 }
             }
         }
@@ -502,6 +528,8 @@ private fun AppointmentListPage(
     outerPadding: PaddingValues,
     onLoadMore: () -> Unit,
     onItemClick: (PEAppointmentItem) -> Unit,
+    onOpenWeb: () -> Unit = {},
+    onPrimaryAction: (PEAppointmentItem) -> Unit = onItemClick,
 ) {
     val colors = MiuixTheme.colorScheme
     LaunchedEffect(items.size, hasMore) {
@@ -530,8 +558,11 @@ private fun AppointmentListPage(
             },
         ) { item ->
             val canAct = if (isMy) canCancelAppointment(item) else canEnterAppointment(item)
+            val bookedClickable = isMy && item.appointmentStatus == "1"
             AppCard(
-                modifier = Modifier.fillMaxWidth().clickable(enabled = canAct) { onItemClick(item) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = canAct || bookedClickable) { onItemClick(item) },
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -578,13 +609,25 @@ private fun AppointmentListPage(
                             value = "${item.alreadyQuota}/${item.timeQuota}",
                         )
                     }
+                    if (isMy && item.appointmentStatus == "1") {
+                        Button(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            colors = ButtonDefaults.buttonColorsPrimary(),
+                            onClick = onOpenWeb,
+                        ) {
+                            Text(text = "打开预约页", color = colors.onPrimary)
+                        }
+                    }
                     if (canAct) {
                         Button(
                             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                             colors = ButtonDefaults.buttonColorsPrimary(),
-                            onClick = { onItemClick(item) },
+                            onClick = { onPrimaryAction(item) },
                         ) {
-                            Text(text = if (isMy) "取消预约" else "预约", color = colors.onPrimary)
+                            Text(
+                                text = if (isMy) "取消预约" else "预约",
+                                color = colors.onPrimary,
+                            )
                         }
                     }
                 }

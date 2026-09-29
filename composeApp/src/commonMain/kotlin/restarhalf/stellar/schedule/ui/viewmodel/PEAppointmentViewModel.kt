@@ -76,6 +76,8 @@ class PEAppointmentViewModel(
         val loadedAvailable: Boolean = false,
         val error: String? = null,
         val actionMessage: String? = null,
+        /** actionMessage 是否来自预约成功（用于展示「打开官方页」入口） */
+        val actionMessageIsSuccess: Boolean = false,
         val cancelTarget: PEAppointmentItem? = null,
         val booking: BookingSheetState? = null,
         val actionInFlight: Boolean = false,
@@ -366,7 +368,7 @@ class PEAppointmentViewModel(
     }
 
     fun consumeActionMessage() {
-        _uiState.update { it.copy(actionMessage = null) }
+        _uiState.update { it.copy(actionMessage = null, actionMessageIsSuccess = false) }
     }
 
     fun confirmCancel() {
@@ -441,6 +443,7 @@ class PEAppointmentViewModel(
                                 booking = null,
                                 actionInFlight = false,
                                 actionMessage = response.message.ifBlank { "预约成功" },
+                                actionMessageIsSuccess = true,
                             )
                         }
                         loadMyAppointments()

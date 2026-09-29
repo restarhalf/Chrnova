@@ -5,8 +5,8 @@ import androidx.compose.runtime.LaunchedEffect
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
-import platform.Foundation.NSCoder
 import platform.Foundation.NSData
+import platform.Foundation.NSURL
 import platform.Foundation.dataWithContentsOfURL
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UniformTypeIdentifiers.UTTagClassFilenameExtension
@@ -17,15 +17,22 @@ import platform.UniformTypeIdentifiers.typeWithTag
 import platform.darwin.NSObject
 import platform.posix.memcpy
 
+/**
+ * 文档/图片选择器宿主（iOS）。
+ *
+ * @param multiple 是否允许多选
+ * @param onPicked 选择完成后一次性回调全部文件
+ */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 fun PdfFilePickerHost(
-    onPicked: (ByteArray, String, String) -> Unit,
+    multiple: Boolean = false,
+    onPicked: (List<PickedAttachment>) -> Unit,
 ) {
     val docType = UTType.typeWithTag("doc", UTTagClassFilenameExtension, null)
     val docxType = UTType.typeWithTag("docx", UTTagClassFilenameExtension, null)
     LaunchedEffect(Unit) {
-        val types = listOf(
+        val types = listOfNotNull(
             UTTypePDF,
             UTTypeImage,
             docType,
@@ -35,6 +42,7 @@ fun PdfFilePickerHost(
             forOpeningContentTypes = types,
             asCopy = true,
         )
+        controller.allowsMultipleSelection = multiple
 
         val delegate = PdfPickerDelegate(onPicked)
         controller.delegate = delegate
@@ -45,7 +53,7 @@ fun PdfFilePickerHost(
 }
 
 private class PdfPickerDelegate(
-    private val onPicked: (ByteArray, String, String) -> Unit,
+    private val onPicked: (List<PickedAttachment>) -> Unit,
 ) : NSObject(), platform.UIKit.UIDocumentPickerDelegateProtocol {
 
     @OptIn(ExperimentalForeignApi::class)
@@ -53,16 +61,21 @@ private class PdfPickerDelegate(
         controller: UIDocumentPickerViewController,
         didPickDocumentsAtURLs: List<*>,
     ) {
-        val url = didPickDocumentsAtURLs.firstOrNull() as? platform.Foundation.NSURL ?: return
-        val data: NSData = NSData.dataWithContentsOfURL(url) ?: return
-        val length = data.length.toInt()
-        val bytes = ByteArray(length)
-        bytes.usePinned { pinned ->
-            memcpy(pinned.addressOf(0), data.bytes, data.length)
+        val picked = didPickDocumentsAtURLs.mapNotNull { item ->
+            val url = item as? NSURL ?: return@mapNotNull null
+            val data: NSData = NSData.dataWithContentsOfURL(url) ?: return@mapNotNull null
+            val length = data.length.toInt()
+            if (length <= 0) return@mapNotNull null
+            val bytes = ByteArray(length)
+            bytes.usePinned { pinned ->
+                memcpy(pinned.addressOf(0), data.bytes, data.length)
+            }
+            val fileName = url.lastPathComponent ?: "document.pdf"
+            PickedAttachment(bytes = bytes, name = fileName, mime = guessMimeFromName(fileName))
         }
-        val fileName = url.lastPathComponent ?: "document.pdf"
-        val mimeType = guessMimeFromName(fileName)
-        onPicked(bytes, fileName, mimeType)
+        if (picked.isNotEmpty()) {
+            onPicked(picked)
+        }
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {

@@ -46,8 +46,9 @@ fun AppRoot(
         outputHeightPx: Int?,
     ) -> Unit = { _, _, _, _, _ -> },
     pdfFilePickerHost: @Composable (
-        onPicked: (ByteArray, String, String) -> Unit,
-    ) -> Unit = {},
+        multiple: Boolean,
+        onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
+    ) -> Unit = { _, _ -> },
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     openUri: (String) -> Boolean = { false },
     showMessage: (String) -> Unit = {},

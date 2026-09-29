@@ -69,8 +69,8 @@ fun AppRoot(): UIViewController {
                     outputHeightPx = outputHeightPx,
                 )
             },
-            pdfFilePickerHost = { onPicked ->
-                PdfFilePickerHost(onPicked = onPicked)
+            pdfFilePickerHost = { multiple, onPicked ->
+                PdfFilePickerHost(multiple = multiple, onPicked = onPicked)
             },
             openUri = ::openUri,
             ensureNotificationPermission = { onGranted ->

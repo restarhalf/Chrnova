@@ -113,4 +113,15 @@ class PEPasswordEncryptionPortImplTest {
         val data = mapOf("username" to "u", "password" to "p", "sys_id" to "iscpMobile")
         assertEquals(impl.generatePESign(data), impl.generatePESign(data))
     }
+
+    // ---------- 附件 attId 加密（downloadFile?att_id=） ----------
+
+    @Test
+    fun encryptPeAttIdMatchesCapturedGolden() {
+        // 2026-09-29 免测附件抓包：downloadFile?att_id= 对应 attId 加密结果
+        assertEquals(
+            "vORIFhhGtU+sYdSsSu5G2nXeHzhazbNDOMQ2y6Jwv7ZmzsqVzayosDrZpSZqKYKI",
+            impl.encryptPeAttId("af9fcad571a84f56a718cfef46c837ea"),
+        )
+    }
 }

@@ -83,8 +83,10 @@ import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentWebScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyEditScreen
+import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyDetailScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -149,8 +151,9 @@ fun AppContent(
     ) -> Unit = { _, _, _, _, _ -> },
     /** PDF文件选择器宿主组件 */
     pdfFilePickerHost: @Composable (
-        onPicked: (ByteArray, String, String) -> Unit,
-    ) -> Unit = {},
+        multiple: Boolean,
+        onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
+    ) -> Unit = { _, _ -> },
     /** 通知权限请求回调 */
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     /** 打开URI的回调函数 */
@@ -451,6 +454,12 @@ fun AppContent(
                                 PEAppointmentScreen(
                                     vm = peAppointmentVm,
                                     onLogin = { navigator.push(Screen.PELogin) },
+                                    onOpenWeb = { navigator.push(Screen.PEAppointmentWeb) },
+                                    onBack = { navigator.pop() },
+                                )
+                            }
+                            entry<Screen.PEAppointmentWeb> {
+                                PEAppointmentWebScreen(
                                     onBack = { navigator.pop() },
                                 )
                             }
@@ -463,6 +472,9 @@ fun AppContent(
                                         peFreeVm.prepareApplyForm()
                                         navigator.push(Screen.PEFreeApplyEdit)
                                     },
+                                    onDetail = { applyId ->
+                                        navigator.push(Screen.PEFreeApplyDetail(applyId))
+                                    },
                                     onBack = { navigator.pop() },
                                 )
                             }
@@ -473,6 +485,17 @@ fun AppContent(
                                     onBack = { navigator.pop() },
                                     onSubmitted = { navigator.pop() },
                                     pdfFilePickerHost = pdfFilePickerHost,
+                                )
+                            }
+                            entry<Screen.PEFreeApplyDetail> { screen ->
+                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
+                                PEFreeApplyDetailScreen(
+                                    vm = peFreeVm,
+                                    applyId = screen.applyId,
+                                    onImageClick = { url ->
+                                        navigator.push(Screen.AnnouncementImageViewer(url))
+                                    },
+                                    onBack = { navigator.pop() },
                                 )
                             }
                             entry<Screen.Profile> {
