@@ -40,6 +40,8 @@ class PictureSelectorState(
     var cropTarget by mutableStateOf<MediaImage?>(null)
         private set
 
+    private var cachedAlbumBucketId: Long? = null
+
     var isRefreshing by mutableStateOf(false)
         private set
 
@@ -94,12 +96,18 @@ class PictureSelectorState(
     }
 
     suspend fun openAlbum(album: MediaAlbum) {
-        if (currentAlbum?.bucketId == album.bucketId && currentAlbumImages.isNotEmpty()) {
+        // 命中缓存：立刻进二级，不闪空白
+        if (cachedAlbumBucketId == album.bucketId && currentAlbumImages.isNotEmpty()) {
             selectedTab = PictureSelectorTab.Albums
+            currentAlbum = album
             return
         }
 
         selectedTab = PictureSelectorTab.Albums
+        if (cachedAlbumBucketId != album.bucketId) {
+            currentAlbumImages = emptyList()
+            cachedAlbumBucketId = album.bucketId
+        }
         currentAlbum = album
         isRefreshing = true
         try {
@@ -179,6 +187,7 @@ class PictureSelectorState(
         selectedTab = PictureSelectorTab.All
         currentAlbum = null
         currentAlbumImages = emptyList()
+        cachedAlbumBucketId = null
         cropTarget = null
     }
 }

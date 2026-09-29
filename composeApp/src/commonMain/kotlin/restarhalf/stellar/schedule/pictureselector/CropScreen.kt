@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
+import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Check
-import restarhalf.stellar.schedule.ui.icons.Close
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -82,8 +82,8 @@ fun CropScreen(
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(
-                            imageVector = Close,
-                            contentDescription = "关闭",
+                            imageVector = Back,
+                            contentDescription = "返回",
                             tint = colors.onBackground,
                         )
                     }
