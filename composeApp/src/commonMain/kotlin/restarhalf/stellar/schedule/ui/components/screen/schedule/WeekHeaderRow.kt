@@ -13,9 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -59,11 +59,14 @@ fun WeekHeaderRow(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                // 只用 background(shape) 画今日高亮，不用 clip：椭圆裁剪会吃掉日期两端
                 Box(
                     modifier =
                         Modifier
-                            .clip(CircleShape)
-                            .background(if (isToday) primary.copy(0.7f) else Color.Transparent)
+                            .background(
+                                color = if (isToday) primary.copy(0.7f) else Color.Transparent,
+                                shape = CircleShape,
+                            )
                             .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -72,7 +75,9 @@ fun WeekHeaderRow(
                         fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                         color = if (isToday) Color.White else textSecondary,
                         maxLines = 1,
-                        overflow = TextOverflow.Clip
+                        softWrap = false,
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Visible,
                     )
                 }
             }
