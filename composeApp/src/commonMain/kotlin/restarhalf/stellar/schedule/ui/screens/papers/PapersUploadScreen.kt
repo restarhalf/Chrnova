@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +64,7 @@ fun PapersUploadScreen(
     var selectedFileName by remember { mutableStateOf("") }
     var selectedFileMime by remember { mutableStateOf("") }
     var showFilePicker by remember { mutableStateOf(false) }
+    var pickerRequest by remember { mutableStateOf(0) }
     val colors = MiuixTheme.colorScheme
 
     val isFormValid = title.isNotBlank() &&
@@ -163,7 +165,10 @@ fun PapersUploadScreen(
                     BasicComponent(
                         title = if (selectedFilePath != null) "已选择文件" else "选择文件",
                         summary = selectedFilePath,
-                        onClick = { showFilePicker = true },
+                        onClick = {
+                            pickerRequest++
+                            showFilePicker = true
+                        },
                     )
                 }
             }
@@ -191,15 +196,17 @@ fun PapersUploadScreen(
     }
 
     if (showFilePicker) {
-        pdfFilePickerHost(false) { picked ->
-            val file = picked.firstOrNull()
-            showFilePicker = false
-            if (file != null) {
-                selectedFileBytes = file.bytes
-                selectedFileName = file.name
-                selectedFileMime = file.mime
-                selectedFilePath = file.name
-                title = file.name.substringBeforeLast('.')
+        key(pickerRequest) {
+            pdfFilePickerHost(false) { picked ->
+                val file = picked.firstOrNull()
+                showFilePicker = false
+                if (file != null) {
+                    selectedFileBytes = file.bytes
+                    selectedFileName = file.name
+                    selectedFileMime = file.mime
+                    selectedFilePath = file.name
+                    title = file.name.substringBeforeLast('.')
+                }
             }
         }
     }

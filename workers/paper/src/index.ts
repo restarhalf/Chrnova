@@ -114,6 +114,7 @@ app.use('/papers/*', cors({ origin: CORS_ORIGINS }));
 app.use('/courses', cors({ origin: CORS_ORIGINS }));
 app.use('/folders', cors({ origin: CORS_ORIGINS }));
 app.use('/download/*', cors({ origin: CORS_ORIGINS }));
+app.use('/file/*', cors({ origin: CORS_ORIGINS }));
 app.use('/verify-star', cors({ origin: CORS_ORIGINS }));
 
 // Get all papers with optional filters
@@ -173,8 +174,29 @@ app.get('/papers/:id', async (c) => {
   return c.json(publicPaper(result));
 });
 
-// Download paper (proxy download from GitHub)
+// Download paper link for App / API clients.
+// 兼容策略：
+// - GET /download/:id → JSON { url, title }（应用拿链接）
+// - GET /file/:id     → 文件流（浏览器/下载器打开 url 时用）
 app.get('/download/:id', async (c) => {
+  const id = c.req.param('id');
+  const result = await c.env.DB.prepare(
+    'SELECT * FROM papers WHERE id = ?'
+  ).bind(id).first<Paper>();
+
+  if (!result) {
+    return c.json({ error: 'Paper not found' }, 404);
+  }
+
+  const origin = new URL(c.req.url).origin;
+  return c.json({
+    url: `${origin}/file/${id}`,
+    title: result.title || '',
+  });
+});
+
+// Stream paper file (proxy download from GitHub)
+app.get('/file/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
     'SELECT * FROM papers WHERE id = ?'
@@ -200,10 +222,17 @@ app.get('/download/:id', async (c) => {
     return c.json({ error: 'Failed to fetch from GitHub' }, 500);
   }
 
+  const ext = (result.path.split('.').pop() || 'pdf').toLowerCase();
+  const contentType =
+    ext === 'pdf' ? 'application/pdf'
+    : ext === 'doc' ? 'application/msword'
+    : ext === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    : 'application/octet-stream';
+
   return new Response(ghResponse.body, {
     headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${safeFileName(result.title)}.pdf"`,
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${safeFileName(result.title)}.${ext}"`,
     },
   });
 });

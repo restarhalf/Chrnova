@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -62,6 +63,7 @@ fun PEFreeApplyEditScreen(
     vm: PEFreeApplyViewModel,
     onBack: () -> Unit,
     onSubmitted: () -> Unit,
+    onImageClick: (String) -> Unit = {},
     pdfFilePickerHost: @Composable (
         multiple: Boolean,
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
@@ -72,6 +74,7 @@ fun PEFreeApplyEditScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
     var showFilePicker by remember { mutableStateOf(false) }
+    var pickerRequest by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         vm.prepareApplyForm()
@@ -195,7 +198,10 @@ fun PEFreeApplyEditScreen(
                             uiState.attachments.isEmpty() -> "请选择证明材料（≤5M）"
                             else -> "已选 ${uiState.attachments.size} 个文件"
                         },
-                        onClick = { showFilePicker = true },
+                        onClick = {
+                            pickerRequest++
+                            showFilePicker = true
+                        },
                     )
                     if (uiState.attachments.isNotEmpty()) {
                         Column(
@@ -208,7 +214,14 @@ fun PEFreeApplyEditScreen(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    AttachmentThumb(att = att)
+                                    AttachmentThumb(
+                                        att = att,
+                                        onClick = {
+                                            if (att.previewBytes != null && att.attId.isNotBlank()) {
+                                                onImageClick(vm.attPreviewUrl(att.attId))
+                                            }
+                                        },
+                                    )
                                     Text(
                                         text = att.name,
                                         style = MiuixTheme.textStyles.footnote1,
@@ -243,14 +256,16 @@ fun PEFreeApplyEditScreen(
     }
 
     if (showFilePicker) {
-        pdfFilePickerHost(true) { picked ->
-            showFilePicker = false
-            picked.forEach { file ->
-                vm.addAttachment(
-                    fileName = file.name,
-                    mimeType = file.mime,
-                    bytes = file.bytes,
-                )
+        key(pickerRequest) {
+            pdfFilePickerHost(true) { picked ->
+                showFilePicker = false
+                picked.forEach { file ->
+                    vm.addAttachment(
+                        fileName = file.name,
+                        mimeType = file.mime,
+                        bytes = file.bytes,
+                    )
+                }
             }
         }
     }
@@ -283,6 +298,7 @@ fun PEFreeApplyEditScreen(
 @Composable
 private fun AttachmentThumb(
     att: PEFreeApplyViewModel.AttachmentUi,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = MiuixTheme.colorScheme
@@ -291,7 +307,8 @@ private fun AttachmentThumb(
         modifier = modifier
             .size(44.dp)
             .clip(shape)
-            .background(colors.surfaceContainerHigh),
+            .background(colors.surfaceContainerHigh)
+            .clickable(enabled = att.previewBytes != null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         val previewBytes = att.previewBytes

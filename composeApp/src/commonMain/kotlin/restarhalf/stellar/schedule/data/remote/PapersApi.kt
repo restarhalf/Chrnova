@@ -64,17 +64,42 @@ class PapersApi(
             json.decodeFromString(Paper.serializer(), body)
         }
 
+    /**
+     * 获取试卷下载地址。
+     *
+     * 期望服务端返回 JSON `{url, title}`；若旧部署仍直接回文件流，则降级为 `/file/:id` 链接。
+     */
     override suspend fun downloadPaper(id: String): String =
         withContext(AppIoDispatcher) {
+            if (id.isBlank()) throw IllegalStateException("缺少试卷标识")
             val response: HttpResponse = httpClient.get("$baseUrl/download/$id") {
                 deviceHeader(this)
             }
             if (!response.status.isSuccess()) {
                 throw IllegalStateException("下载失败（HTTP ${response.status.value}）")
             }
-            val body = json.decodeFromString<DownloadResponse>(response.bodyAsText())
-            body.url
+            val contentType = response.headers[HttpHeaders.ContentType].orEmpty()
+            val looksLikeJson = contentType.contains("json", ignoreCase = true) ||
+                contentType.isBlank()
+            if (!looksLikeJson && !contentType.contains("text", ignoreCase = true)) {
+                // 文件流：改走显式文件端点链接
+                return@withContext "$baseUrl/file/$id"
+            }
+            val text = response.bodyAsText().trim()
+            if (text.startsWith("{")) {
+                val parsed = json.decodeFromString<DownloadResponse>(text)
+                resolveDownloadUrl(parsed.url.ifBlank { "$baseUrl/file/$id" })
+            } else {
+                "$baseUrl/file/$id"
+            }
         }
+
+    /** 相对路径补全 / 已是 http(s) 则原样返回 */
+    private fun resolveDownloadUrl(url: String): String = when {
+        url.startsWith("http://") || url.startsWith("https://") -> url
+        url.startsWith("/") -> baseUrl.trimEnd('/') + url
+        else -> "$baseUrl/$url"
+    }
 
     override suspend fun uploadPaper(
         fileBytes: ByteArray,

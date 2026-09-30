@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.papers
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
@@ -20,8 +21,10 @@ import platform.posix.memcpy
 /**
  * 文档/图片选择器宿主（iOS）。
  *
+ * 选择结束（含取消）必定回调 [onPicked]；delegate 需强持有，避免系统回收导致只弹一次。
+ *
  * @param multiple 是否允许多选
- * @param onPicked 选择完成后一次性回调全部文件
+ * @param onPicked 选择完成后一次性回调全部文件（取消为空列表）
  */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -29,9 +32,12 @@ fun PdfFilePickerHost(
     multiple: Boolean = false,
     onPicked: (List<PickedAttachment>) -> Unit,
 ) {
-    val docType = UTType.typeWithTag("doc", UTTagClassFilenameExtension, null)
-    val docxType = UTType.typeWithTag("docx", UTTagClassFilenameExtension, null)
+    // 强持有 delegate：UIDocumentPickerViewController.delegate 不会 retain
+    val delegateHolder = remember { arrayOfNulls<PdfPickerDelegate>(1) }
+
     LaunchedEffect(Unit) {
+        val docType = UTType.typeWithTag("doc", UTTagClassFilenameExtension, null)
+        val docxType = UTType.typeWithTag("docx", UTTagClassFilenameExtension, null)
         val types = listOfNotNull(
             UTTypePDF,
             UTTypeImage,
@@ -45,6 +51,7 @@ fun PdfFilePickerHost(
         controller.allowsMultipleSelection = multiple
 
         val delegate = PdfPickerDelegate(onPicked)
+        delegateHolder[0] = delegate
         controller.delegate = delegate
 
         val rootController = platform.UIKit.UIApplication.sharedApplication.keyWindow?.rootViewController
@@ -73,12 +80,11 @@ private class PdfPickerDelegate(
             val fileName = url.lastPathComponent ?: "document.pdf"
             PickedAttachment(bytes = bytes, name = fileName, mime = guessMimeFromName(fileName))
         }
-        if (picked.isNotEmpty()) {
-            onPicked(picked)
-        }
+        onPicked(picked)
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+        onPicked(emptyList())
     }
 }
 

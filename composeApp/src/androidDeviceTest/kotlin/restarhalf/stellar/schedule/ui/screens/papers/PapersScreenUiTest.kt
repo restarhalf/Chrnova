@@ -152,7 +152,7 @@ class PapersScreenUiTest {
     @Test
     fun 详情页渲染试卷信息并透传代理下载链接() = runUltronUiTest {
         everySuspend { papersPort.getPaper("p1") } returns Paper(id = "p1", title = "高数期末.pdf", folder = "高等数学")
-        everySuspend { papersPort.downloadPaper("p1") } returns "https://raw.example.com/file.pdf"
+        everySuspend { papersPort.downloadPaper("p1") } returns "https://chrnova.paper.example/file/p1"
         val downloads = mutableListOf<Pair<String, String>>()
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
@@ -174,7 +174,7 @@ class PapersScreenUiTest {
         // 同时绕开 edge-to-edge 下导航栏吸收底部点击的问题
         onNodeWithText("下载").performSemanticsAction(SemanticsActions.OnClick)
         waitUntil(timeoutMillis = 3_000) { downloads.isNotEmpty() }
-        assertEquals("https://v4.gh-proxy.org/https://raw.example.com/file.pdf", downloads[0].first)
+        assertEquals("https://chrnova.paper.example/file/p1", downloads[0].first)
         assertEquals("高数期末.pdf", downloads[0].second)
     }
 

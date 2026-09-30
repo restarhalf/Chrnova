@@ -482,8 +482,31 @@ fun appointmentStatusText(status: String): String = when (status) {
     "1" -> "已预约"
     "2" -> "已取消"
     "3" -> "可预约"
-    "4" -> "已截止"
+    "4" -> "已结束"
     else -> status.ifBlank { "未知" }
+}
+
+/**
+ * 列表状态文案：已预约且报名窗口已过时显示「已结束」。
+ */
+fun appointmentStatusText(
+    item: PEAppointmentItem,
+    nowMillis: Long = currentTimeMillisCompat(),
+): String {
+    if (item.appointmentStatus == "1" && isRegistrationWindowEnded(item, nowMillis)) {
+        return "已结束"
+    }
+    return appointmentStatusText(item.appointmentStatus)
+}
+
+/** 报名/取消窗口是否已结束 */
+fun isRegistrationWindowEnded(
+    item: PEAppointmentItem,
+    nowMillis: Long = currentTimeMillisCompat(),
+): Boolean {
+    if (item.appointmentStatus != "1") return false
+    val end = parseDateTimeMillis(item.enterEndTime) ?: return false
+    return nowMillis > end
 }
 
 /** 是否处于可取消窗口（对齐原页面 nowBtn） */

@@ -106,7 +106,8 @@ class PapersViewModel(
             runCatching {
                 papersPort.downloadPaper(id)
             }.onSuccess { url ->
-                _uiState.update { it.copy(loading = false, downloadUrl = "https://v4.gh-proxy.org/$url") }
+                // 服务端返回可直接打开的下载链接，原样使用，不再套 gh-proxy
+                _uiState.update { it.copy(loading = false, downloadUrl = url) }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Papers", "下载课件失败", e)

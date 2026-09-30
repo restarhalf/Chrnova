@@ -484,6 +484,9 @@ fun AppContent(
                                     vm = peFreeVm,
                                     onBack = { navigator.pop() },
                                     onSubmitted = { navigator.pop() },
+                                    onImageClick = { url ->
+                                        navigator.push(Screen.AnnouncementImageViewer(url))
+                                    },
                                     pdfFilePickerHost = pdfFilePickerHost,
                                 )
                             }

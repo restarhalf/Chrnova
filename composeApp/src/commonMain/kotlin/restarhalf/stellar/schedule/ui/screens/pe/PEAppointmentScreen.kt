@@ -558,11 +558,12 @@ private fun AppointmentListPage(
             },
         ) { item ->
             val canAct = if (isMy) canCancelAppointment(item) else canEnterAppointment(item)
-            val bookedClickable = isMy && item.appointmentStatus == "1"
+            // 报名结束后与「取消预约」一同收起「打开预约页」入口
+            val canOpenWeb = isMy && canCancelAppointment(item)
             AppCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(enabled = canAct || bookedClickable) { onItemClick(item) },
+                    .clickable(enabled = canAct || canOpenWeb) { onItemClick(item) },
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -579,7 +580,7 @@ private fun AppointmentListPage(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f, fill = false),
                         )
-                        StatusChip(status = item.appointmentStatus)
+                        StatusChip(item = item)
                     }
                     if (item.appointmentContent.isNotBlank()) {
                         Text(
@@ -609,7 +610,7 @@ private fun AppointmentListPage(
                             value = "${item.alreadyQuota}/${item.timeQuota}",
                         )
                     }
-                    if (isMy && item.appointmentStatus == "1") {
+                    if (canOpenWeb) {
                         Button(
                             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                             colors = ButtonDefaults.buttonColorsPrimary(),
@@ -667,9 +668,9 @@ private fun MetaRow(label: String, value: String) {
 }
 
 @Composable
-private fun StatusChip(status: String) {
+private fun StatusChip(item: PEAppointmentItem) {
     val colors = MiuixTheme.colorScheme
-    val label = appointmentStatusText(status)
+    val label = appointmentStatusText(item)
     Box(
         modifier = Modifier.clip(CircleShape)
             .background(colors.surfaceContainerHigh)

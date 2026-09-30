@@ -124,12 +124,12 @@ class PapersViewModelTest {
     @Test
     fun `loadPaperDetail清空上一次的downloadUrl`() = runTest {
         everySuspend { papersPort.getPaper("p1") } returns paper("p1", "试卷A")
-        everySuspend { papersPort.downloadPaper("p0") } returns "/old/file.pdf"
+        everySuspend { papersPort.downloadPaper("p0") } returns "https://example.com/old/file.pdf"
 
         val vm = makeViewModel()
         vm.downloadPaper("p0")
         advanceMain()
-        assertEquals("https://v4.gh-proxy.org//old/file.pdf", vm.uiState.value.downloadUrl)
+        assertEquals("https://example.com/old/file.pdf", vm.uiState.value.downloadUrl)
 
         vm.loadPaperDetail("p1")
         advanceMain()
@@ -138,7 +138,22 @@ class PapersViewModelTest {
     }
 
     @Test
-    fun `downloadPaper成功包装gh-proxy前缀`() = runTest {
+    fun `downloadPaper绝对地址原样返回`() = runTest {
+        everySuspend { papersPort.downloadPaper("p1") } returns "https://chrnova.paper.restarhalf.dpdns.org/file/p1"
+
+        val vm = makeViewModel()
+        vm.downloadPaper("p1")
+        advanceMain()
+
+        assertFalse(vm.uiState.value.loading)
+        assertEquals(
+            "https://chrnova.paper.restarhalf.dpdns.org/file/p1",
+            vm.uiState.value.downloadUrl,
+        )
+    }
+
+    @Test
+    fun `downloadPaper原样返回不再套gh-proxy`() = runTest {
         everySuspend { papersPort.downloadPaper("p1") } returns "/repo/file.pdf"
 
         val vm = makeViewModel()
@@ -146,12 +161,12 @@ class PapersViewModelTest {
         advanceMain()
 
         assertFalse(vm.uiState.value.loading)
-        assertEquals("https://v4.gh-proxy.org//repo/file.pdf", vm.uiState.value.downloadUrl)
+        assertEquals("/repo/file.pdf", vm.uiState.value.downloadUrl)
     }
 
     @Test
     fun `consumeDownloadUrl置空下载链接`() = runTest {
-        everySuspend { papersPort.downloadPaper("p1") } returns "/repo/file.pdf"
+        everySuspend { papersPort.downloadPaper("p1") } returns "https://example.com/repo/file.pdf"
 
         val vm = makeViewModel()
         vm.downloadPaper("p1")
