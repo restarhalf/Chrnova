@@ -4,22 +4,10 @@ import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.data.remote.PESubjectHistoryItem
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-/**
- * 单科成绩历史用例
- *
- * 查询某一学年中某个体测科目的全部历史成绩记录（自动翻页聚合）。
- */
 class PESubjectScoreHistoryUseCase(
     private val gateway: PEGateway,
     private val authWorkflow: PEAuthWorkflowPort,
 ) {
-    /**
-     * 获取单科成绩历史记录
-     *
-     * @param schoolYear 学年
-     * @param subjectId 科目ID
-     * @return 按测试时间倒序的历史记录列表
-     */
     suspend operator fun invoke(schoolYear: String, subjectId: String): List<PESubjectHistoryItem> {
         val items = mutableListOf<PESubjectHistoryItem>()
         var pageNum = 1

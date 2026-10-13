@@ -71,15 +71,7 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 手动选课屏幕
- *
- * 两个 Tab：
- * - 可选：轮次 → 分类 → 搜索 → 课程列表（点击「选课」提交一次）
- * - 已选：已选课程列表（可退课）
- *
- * 不包含自动抢课的目标队列与循环提交。
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CourseEnrollScreen(
@@ -201,7 +193,7 @@ private fun buildEnrollStatusText(uiState: CourseEnrollViewModel.UiState): Strin
     }
 }
 
-// ---------------- 可选课程 ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -311,7 +303,7 @@ private fun AvailableTab(
     }
 }
 
-// ---------------- 已选课程 ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -410,7 +402,7 @@ private fun EnrolledTab(
     }
 }
 
-// ---------------- 小组件 ----------------
+
 
 @Composable
 private fun EmptyHint(text: String) {

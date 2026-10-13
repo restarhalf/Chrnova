@@ -6,11 +6,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
-/**
- * 课程表格子高度选择弹窗
- *
- * 与 [WeekPickerBottomSheet] 同构：滚轮选择一个 Int 值，确定后才提交。
- */
 @Composable
 fun RowHeightPickerBottomSheet(
     show: Boolean,

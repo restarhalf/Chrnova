@@ -16,21 +16,12 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 
-/**
- * 教务系统登录ViewModel
- *
- * 管理教务系统登录页面的UI状态：
- * - 用户名/密码输入
- * - 登录loading状态
- * - 错误提示
- */
+
 class JwxtLoginViewModel(
     private val jwxtLoginUseCase: JwxtLoginUseCase,
 ) : ViewModel() {
 
-    /**
-     * JW登录UI状态
-     */
+    
     @Immutable
     data class JwxtLoginUiState(
         val userNo: String = "",
@@ -44,21 +35,17 @@ class JwxtLoginViewModel(
 
     private val loginMutex = Mutex()
 
-    /** 学号输入变更 */
+    
     fun onUserNoChange(value: String) {
         _uiState.update { it.copy(userNo = value, error = "") }
     }
 
-    /** 密码输入变更 */
+    
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, error = "") }
     }
 
-    /**
-     * 提交登录
-     *
-     * @param onSuccess 登录成功回调
-     */
+    
     fun submitLogin(onSuccess: () -> Unit) {
         viewModelScope.launch {
             loginMutex.withLock {

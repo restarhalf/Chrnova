@@ -28,12 +28,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 考试编辑页 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试（courseRepository/examinationRepository/auth/settings/academic）。
- * 新建模式仅渲染表单分组；日期/时间选择器与删除确认均为弹层/独立窗口，只断言门禁字段。
- */
 class ExamEditScreenUiTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -62,7 +56,7 @@ class ExamEditScreenUiTest {
 
     private fun makeViewModel(): ExamEditViewModel {
         every { courseRepository.observeAllCourses() } returns coursesFlow
-        // 屏幕经 observeEditingExamination 收集该流，autofill 对未知 Flow 返回 null 会 NPE
+
         every { examinationRepository.observeExaminationById(any()) } returns
             MutableStateFlow<Examination?>(null)
         every { settings.observeSelectedTerm() } returns selectedTermFlow

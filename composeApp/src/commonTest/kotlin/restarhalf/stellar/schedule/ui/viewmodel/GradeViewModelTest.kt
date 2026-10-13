@@ -30,23 +30,12 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * GradeViewModel 单元测试。
- *
- * ObserveAllGradesUseCase 是 final class，用真实实例 + mock GradeRepository/JwxtAuthPort。
- * auth.observeProfile 返回空学号 → UseCase 走 observeAllGrades() 全量分支。
- *
- * 关键点（stateIn(WhileSubscribed) 型 ViewModel）：
- * 1. uiState 必须先订阅才能驱动 combine 上游（subscribeUi）；
- * 2. Main dispatcher 类级安装（@BeforeTest setMain），advanceMain 主动 drain。
- */
 class GradeViewModelTest {
 
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
@@ -75,14 +64,12 @@ class GradeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** 驱动 stateIn(WhileSubscribed)：订阅 uiState，combine 上游才开始运行 */
     private fun TestScope.subscribeUi(vm: GradeViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 轮询等待 uiState 满足谓词，每轮主动 drain Main 队列 */
     private suspend fun awaitState(
         vm: GradeViewModel,
         timeoutMs: Long = 5000,

@@ -41,7 +41,7 @@ class RoomCourseRepositoryTest {
     )
 
     private val dao = mock<CourseDao>(MockMode.autofill) {
-        // 四条观察路径各给一个可区分的标记课程
+
         every { getAllCourses() } returns MutableStateFlow(listOf(entity("all")))
         every { getCoursesByUserNo(any()) } returns MutableStateFlow(listOf(entity("byUser")))
         every { getCoursesBySemester(any()) } returns MutableStateFlow(listOf(entity("bySemester")))
@@ -59,7 +59,7 @@ class RoomCourseRepositoryTest {
 
     private val repo = RoomCourseRepository(dao, settings, auth)
 
-    // ---------- observeAllCourses 的四条过滤路径 ----------
+
 
     @Test
     fun observeAllBothBlankUsesAllCourses() = runTest {
@@ -96,7 +96,7 @@ class RoomCourseRepositoryTest {
         assertTrue(course is Course)
     }
 
-    // ---------- observeCourseById ----------
+
 
     @Test
     fun observeCourseByIdFilteredByActiveSemester() = runTest {
@@ -107,17 +107,17 @@ class RoomCourseRepositoryTest {
         )
         every { dao.getCourseById(5L) } returns MutableStateFlow(fixed)
 
-        // 激活学期为空 → 不过滤
+
         assertEquals("定课", repo.observeCourseById(5L).first()?.name)
-        // 激活学期匹配 → 保留
+
         termFlow.value = "S1"
         assertEquals("定课", repo.observeCourseById(5L).first()?.name)
-        // 激活学期不匹配 → 过滤为 null
+
         termFlow.value = "S2"
         assertEquals(null, repo.observeCourseById(5L).first())
     }
 
-    // ---------- 写路径 ----------
+
 
     @Test
     fun insertCourseMapsToEntityAndReturnsId() = runTest {
@@ -157,7 +157,7 @@ class RoomCourseRepositoryTest {
             capturedSemesters.add(sem)
             Unit
         }
-        // settings 为 strict mock：写路径会调用 setActiveScheduleTerm，需显式 stub
+
         every { settings.setActiveScheduleTerm(any()) } returns Unit
         repo.replaceSyncedCourses(listOf(entity("x").toDomain()), "S1")
         verifySuspend { dao.replaceSyncedCourses(any(), any()) }

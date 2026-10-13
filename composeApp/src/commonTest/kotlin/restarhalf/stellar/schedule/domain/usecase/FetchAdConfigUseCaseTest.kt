@@ -12,9 +12,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * 广告位配置用例：无缓存策略，直接透传端口结果（后端未配置时为 null）。
- */
 class FetchAdConfigUseCaseTest {
 
     private val port = mock<AnnouncementPort>()

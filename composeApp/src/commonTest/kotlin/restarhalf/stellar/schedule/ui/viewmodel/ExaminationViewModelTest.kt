@@ -40,18 +40,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
-/**
- * ExaminationViewModel 单元测试。
- *
- * IsExamNotEndedUseCase 无参纯逻辑类直接构造；ObserveAllExaminationsUseCase 与
- * RescheduleNextExamReminderIfEnabledUseCase 是 final class，用真实实例 + mock 端口
- * （ExaminationRepository/JwxtAuthPort/SettingsPort/ExamReminderPort）。
- *
- * 关键点：
- * 1. uiState 是 stateIn(WhileSubscribed) —— 必须先 subscribeUi 驱动 combine；
- * 2. refreshExamReminder 内 withContext(AppIoDispatcher=Dispatchers.IO) 真实跨线程，
- *    等待用 delay + advanceMain drain。
- */
 class ExaminationViewModelTest {
 
     private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
@@ -61,7 +49,6 @@ class ExaminationViewModelTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
@@ -109,14 +96,12 @@ class ExaminationViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** 驱动 stateIn(WhileSubscribed)：订阅 uiState，combine 上游才开始运行 */
     private fun TestScope.subscribeUi(vm: ExaminationViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 轮询等待 uiState 满足谓词，每轮主动 drain Main 队列 */
     private suspend fun awaitState(
         vm: ExaminationViewModel,
         timeoutMs: Long = 5000,
@@ -264,7 +249,7 @@ class ExaminationViewModelTest {
         )
 
         vm.refreshExamReminder()
-        // withContext(Dispatchers.IO) 真实跨线程，等待恢复后再 drain Main 队列
+
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 

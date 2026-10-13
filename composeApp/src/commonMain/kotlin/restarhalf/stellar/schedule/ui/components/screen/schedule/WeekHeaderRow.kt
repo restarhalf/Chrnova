@@ -22,15 +22,7 @@ import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 周次头部行组件
- * 
- * 显示课程表顶部的星期和日期信息，今日会高亮显示。
- * 
- * @param ui 周次头部UI数据
- * @param primary 主题色
- * @param textSecondary 次要文本颜色
- */
+
 @Composable
 fun WeekHeaderRow(
     ui: ScheduleViewModel.WeekHeaderUi,
@@ -59,7 +51,7 @@ fun WeekHeaderRow(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 只用 background(shape) 画今日高亮，不用 clip：椭圆裁剪会吃掉日期两端
+
                 Box(
                     modifier =
                         Modifier

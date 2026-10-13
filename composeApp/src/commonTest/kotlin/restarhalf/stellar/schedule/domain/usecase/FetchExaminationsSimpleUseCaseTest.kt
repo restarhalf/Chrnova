@@ -28,7 +28,7 @@ class FetchExaminationsSimpleUseCaseTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
 
-    // FetchExaminationsUseCase 是 final class 无法 mock，用真实实例走完整委托链
+
     private val simple = FetchExaminationsSimpleUseCase(
         FetchExaminationsUseCase(authWorkflow, academic, repository, auth, settings)
     )

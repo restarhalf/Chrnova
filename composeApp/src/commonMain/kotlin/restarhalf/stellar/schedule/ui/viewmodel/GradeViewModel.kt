@@ -25,27 +25,13 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import kotlin.math.roundToInt
 
-/**
- * 成绩查询ViewModel
- * 
- * 管理成绩查询页面的UI状态，包括：
- * - 成绩数据加载和显示
- * - 学期筛选
- * - 成绩卡片UI构建
- * - 成绩详情展示
- */
+
 class GradeViewModel(
     observeAllGrades: ObserveAllGradesUseCase,
     private val settings: SettingsPort,
 ) : ViewModel() {
 
-    /**
-     * 成绩UI状态
-     * 
-     * @param loading 是否正在加载
-     * @param error 错误消息
-     * @param report 学期成绩报告
-     */
+    
     @Immutable
     data class GradeUiState(
         val loading: Boolean,
@@ -53,13 +39,7 @@ class GradeViewModel(
         val report: TermGradeReport,
     )
 
-    /**
-     * 成绩汇总信息
-     *
-     * @param earnedCredits 已获得学分
-     * @param totalGradePoints 总绩点
-     * @param averageCreditGradePoint 平均学分绩点
-     */
+    
     @Immutable
     data class GradeSummary(
         val earnedCredits: String = "",
@@ -67,13 +47,7 @@ class GradeViewModel(
         val averageCreditGradePoint: String = "",
     )
 
-    /**
-     * 成绩页面UI
-     * 
-     * @param cards 成绩卡片列表
-     * @param summary 成绩汇总信息
-     * @param statusText 状态文本（如"暂无成绩数据"）
-     */
+    
     @Stable
     data class GradeScreenUi(
         val cards: ImmutableList<GradeCardUi>,
@@ -81,18 +55,7 @@ class GradeViewModel(
         val statusText: String?,
     )
 
-    /**
-     * 成绩卡片UI数据
-     *
-     * @param idKey 唯一标识
-     * @param grade 课程成绩数据
-     * @param title 课程名称
-     * @param subtitle 副标题（课程代码、学分等）
-     * @param scoreText 成绩文本
-     * @param jdText 课程绩点
-     * @param isRetakeExam 是否为补考
-     * @param isFailed 是否挂科（成绩<60）
-     */
+    
     @Immutable
     data class GradeCardUi(
         val idKey: String,
@@ -111,7 +74,7 @@ class GradeViewModel(
 
     private val _summary = MutableStateFlow(TermGradeReport())
 
-    // 缓存排序后的学期列表，避免每次 combine 都重新排序
+
     private var cachedGradesRef: List<GradeCourse>? = null
     private var cachedSortedSemesters: List<String>? = null
 
@@ -138,21 +101,21 @@ class GradeViewModel(
         ) { loading, error, term, summary, allGrades ->
             val itemsForTerm = allGrades.filter { it.semester == term }
             val finalReport = when {
-                // 优先显示当前选择学期的本地数据
+
                 itemsForTerm.isNotEmpty() -> {
                     summary.copy(achievements = itemsForTerm)
                 }
-                // 如果当前学期本地没数据，但 summary 有数据（说明刚从网络/Fallback 拿到）
+
                 summary.achievements.isNotEmpty() -> {
                     summary
                 }
-                // 断网状态且本地没当前学期数据，尝试寻找本地最新的其他学期数据作为回退
+
                 allGrades.isNotEmpty() -> {
                     val latestSemester = sortedSemesters(allGrades).lastOrNull()
                     val fallbackItems = allGrades.filter { it.semester == latestSemester }
                     summary.copy(achievements = fallbackItems)
                 }
-                // 彻底没数据
+
                 else -> summary
             }
             GradeUiState(loading = loading, error = error, report = finalReport)
@@ -168,35 +131,24 @@ class GradeViewModel(
                     ),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<GradeUiState> = _uiState
 
     private var loader: (suspend () -> TermGradeReport)? = null
 
-    /**
-     * 绑定数据加载器
-     * 
-     * @param loader 加载成绩数据的挂起函数
-     */
+    
     fun bindLoader(loader: suspend () -> TermGradeReport) {
         this.loader = loader
     }
 
-    /**
-     * 构建成绩页面UI
-     * 
-     * @param report 学期成绩报告
-     * @param loading 是否正在加载
-     * @param error 错误消息
-     * @return 成绩页面UI
-     */
+    
     fun buildScreenUi(
         report: TermGradeReport,
         loading: Boolean,
         error: String,
     ): GradeScreenUi {
         val courses = report.achievements
-        // 兜底去重：gradeId 缺失时 fallback key 可能重复（如同名课程多学期重修），撞 key 会让 LazyColumn 崩溃
+
         val seenKeys = HashSet<String>()
         val cards = courses.map { grade ->
             val card = buildGradeCardUi(grade)
@@ -220,20 +172,10 @@ class GradeViewModel(
         return GradeScreenUi(cards = cards.toPersistentList(), summary = summary, statusText = statusText)
     }
 
-    /**
-     * 构建成绩标题
-     * 
-     * @param grade 成绩数据
-     * @return 课程名称
-     */
+    
     fun buildGradeTitle(grade: GradeCourse): String = grade.courseName.ifBlank { "未命名课程" }
 
-    /**
-     * 构建成绩副标题
-     * 
-     * @param grade 成绩数据
-     * @return 包含课程代码和学分的副标题
-     */
+    
     private fun buildGradeSubtitle(grade: GradeCourse): String {
         return listOf(
             grade.courseCode.takeIf { it.isNotBlank() },
@@ -243,12 +185,7 @@ class GradeViewModel(
             .ifBlank { grade.passStatus.ifBlank { "暂无补充信息" } }
     }
 
-    /**
-     * 构建成绩详情摘要
-     * 
-     * @param grade 成绩数据
-     * @return 格式化的成绩详情文本
-     */
+    
     fun buildGradeDetailsSummary(grade: GradeCourse): String {
         return buildString {
             appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")
@@ -268,31 +205,16 @@ class GradeViewModel(
             .trim()
     }
 
-    /**
-     * 构建成绩分数文本
-     * 
-     * @param grade 成绩数据
-     * @return 分数、等级或通过状态
-     */
+    
     private fun buildGradeScoreText(grade: GradeCourse): String {
         return grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } }
     }
 
-    /**
-     * 构建绩点文本
-     *
-     * @param grade 成绩数据
-     * @retrun 绩点信息
-     */
+    
     private fun buildGradeJdText(grade: GradeCourse): String {
         return "绩点：${DecimalFormatter.format(grade.gradePoint, 1)}"
     }
-    /**
-     * 构建成绩卡片UI
-     * 
-     * @param grade 成绩数据
-     * @return 成绩卡片UI
-     */
+    
     private fun buildGradeCardUi(grade: GradeCourse): GradeCardUi {
         return GradeCardUi(
             idKey = grade.gradeId.ifBlank { grade.courseCode + grade.courseName },
@@ -306,7 +228,7 @@ class GradeViewModel(
         )
     }
 
-    /** 加载成绩数据 */
+    
     fun load() {
         val loader = this.loader ?: return
         if (_loading.value) return
@@ -320,18 +242,14 @@ class GradeViewModel(
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Grades", "加载成绩数据失败", e)
-                    // 刷新失败时保留已展示的汇总，避免用户正在看的数据被清空
+
                     _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }
             _loading.value = false
         }
     }
 
-    /**
-     * Double扩展函数，用于格式化显示
-     * 
-     * @return 格式化后的字符串
-     */
+    
     private fun Double.displayOrDash(): String {
         return if (this <= 0.0) "0" else formatDouble(this)
     }

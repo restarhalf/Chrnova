@@ -380,7 +380,7 @@ private fun ByteArray.toUIImageForPhotoSave(): UIImage? {
             )
         }
     val image = UIImage(data = data)
-    // 生成的分享图无 EXIF 方向问题，跳过 normalize 重绘以加快保存
+
     return image
 }
 

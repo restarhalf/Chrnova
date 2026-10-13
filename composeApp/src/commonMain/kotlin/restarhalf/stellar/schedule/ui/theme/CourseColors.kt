@@ -3,16 +3,10 @@ package restarhalf.stellar.schedule.ui.theme
 import androidx.compose.ui.graphics.Color
 import kotlin.math.absoluteValue
 
-/**
- * 课程颜色三元组类型
- * 
- * 第一个颜色：卡片背景色
- * 第二个颜色：标题颜色
- * 第三个颜色：副标题颜色
- */
+
 typealias CourseColor = Triple<Color, Color, Color>
 
-/** 浅色模式课程颜色调色板 */
+
 val courseColorPaletteLight: List<CourseColor> =
     listOf(
         Triple(Color(0xFFF0F4FF), Color(0xFF5B89D3), Color(0xFF8BAAE0)),  // 蓝色
@@ -47,7 +41,7 @@ val courseColorPaletteLight: List<CourseColor> =
         Triple(Color(0xFFEFEBE9), Color(0xFFAD1457), Color(0xFFC2185B)),  // 酒红
     )
 
-/** 深色模式课程颜色调色板 */
+
 val courseColorPaletteDark: List<CourseColor> =
     listOf(
         Triple(Color(0xFF2A3A5A), Color(0xFFA9C7FF), Color(0xFF88A8D9)),  // 蓝色

@@ -23,12 +23,6 @@ import restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import kotlin.time.Duration.Companion.milliseconds
 
-/**
- * 手动选课 ViewModel
- *
- * 流程：选轮次 → 选分类 → 浏览/搜索课程 → 提交选课或退课。
- * 不包含抢课循环、目标优先级与后台服务。
- */
 class CourseEnrollViewModel(
     private val useCase: CourseSelectionUseCase,
 ) : ViewModel() {
@@ -38,7 +32,6 @@ class CourseEnrollViewModel(
         val loading: Boolean = false,
         val loadingSelected: Boolean = false,
         val submitting: Boolean = false,
-        /** 非致命提示（成功/失败结果），展示在状态条 */
         val notice: String = "",
         val error: String = "",
         val rotations: ImmutableList<JwxtSelectionRotation> = persistentListOf(),
@@ -164,7 +157,6 @@ class CourseEnrollViewModel(
         }
     }
 
-    /** 提交一次选课（成功后刷新已选列表） */
     fun selectCourse(course: JwxtSelectionCourse) {
         val classificationCode = _uiState.value.selectedClassificationCode
         if (classificationCode.isBlank()) {
@@ -243,7 +235,6 @@ class CourseEnrollViewModel(
         }
     }
 
-    /** 退课（成功后刷新已选列表） */
     fun dropCourse(course: JwxtSelectedCourse) {
         val ctx = session ?: return
         if (_uiState.value.submitting) return

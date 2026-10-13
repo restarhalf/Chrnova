@@ -4,7 +4,7 @@ import { cors } from 'hono/cors';
 interface Env {
   VERSION_KV: KVNamespace;
   AUTH_TOKEN: string;
-  /** 日活统计 D1，未配置时 /ping 静默忽略（见 wrangler.toml 中 DAU_DB 说明） */
+  
   DAU_DB?: D1Database;
 }
 
@@ -15,7 +15,7 @@ interface VersionInfo {
   updatedAt: string;
 }
 
-/** 灰度发布配置，存于 KV `gray` 键；uids 为命中学号的 SHA-256 hex 列表，空列表表示关闭 */
+
 interface GrayConfig {
   version: string;
   url: string;
@@ -26,41 +26,34 @@ interface GrayConfig {
 
 const DEFAULT_URL = 'https://pan.quark.cn/s/2326de687ab1?pwd=E97u';
 
-/**
- * 更新包下载地址的域名白名单。
- * 更新地址会被下发给全体客户端，若不加限制，一旦 AUTH_TOKEN 泄漏，
- * 攻击者即可向所有用户推送任意（恶意）安装包 —— 属供应链攻击。
- * 新增分发渠道时在此登记，仅允许 HTTPS。
- */
+
 const ALLOWED_URL_HOSTS = [
   'pan.quark.cn',
   'github.com'
 ];
 
-/** 版本号格式：1~4 段数字，可带 -beta.1 之类的后缀 */
+
 const VERSION_PATTERN = /^\d+(\.\d+){0,3}(-[0-9A-Za-z.-]+)?$/;
 
 const MAX_CHANGELOG_LENGTH = 5000;
 
-/** 写接口限流：同一 IP 60 秒内最多 20 次 */
+
 const WRITE_RATE_LIMIT = 20;
 const WRITE_RATE_WINDOW_SEC = 60;
 
-/** 日活心跳限流：同一 IP 60 秒内最多 30 次 */
+
 const PING_RATE_LIMIT = 30;
 const PING_RATE_WINDOW_SEC = 60;
 
-/** 设备标识格式：客户端本地随机生成的 16~64 位字母数字串，仅用于按日去重 */
+
 const AID_PATTERN = /^[0-9A-Za-z]{16,64}$/;
 
-/** 日活数据保留天数，超期数据由心跳写入时概率性清理 */
+
 const DAU_RETENTION_DAYS = 730;
 
 const app = new Hono<{ Bindings: Env }>();
 
-/**
- * 恒定时间字符串比较，避免通过响应耗时逐字节爆破令牌。
- */
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -70,12 +63,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/**
- * 校验管理令牌。
- * 注意 `!expected`：若 AUTH_TOKEN 未通过 `wrangler secret put` 配置，
- * env 值为 undefined，而未带 Authorization 头时 token 同样是 undefined，
- * 直接用 `!==` 比较会让两者相等从而放行 —— 必须显式拒绝未配置的情况。
- */
+
 function isAuthorized(c: any): boolean {
   const expected = c.env.AUTH_TOKEN;
   if (!expected) return false;
@@ -88,10 +76,7 @@ function clientIp(c: any): string {
   return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
 }
 
-/**
- * 基于 KV 的滑动窗口限流。KV 最终一致，用于防滥用足够，不适合强一致场景。
- * 返回 true 表示放行。
- */
+
 async function allowRequest(kv: KVNamespace, bucket: string, limit: number, windowSec: number): Promise<boolean> {
   const key = `rl:${bucket}:${Math.floor(Date.now() / 1000 / windowSec)}`;
   const current = parseInt((await kv.get(key)) || '0', 10) || 0;
@@ -100,7 +85,7 @@ async function allowRequest(kv: KVNamespace, bucket: string, limit: number, wind
   return true;
 }
 
-/** 校验下载地址：必须是 HTTPS 且落在白名单域名内 */
+
 function isAllowedUrl(raw: string): boolean {
   let parsed: URL;
   try {
@@ -113,16 +98,13 @@ function isAllowedUrl(raw: string): boolean {
   return ALLOWED_URL_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
 }
 
-/** SHA-256 hex（小写），与客户端 CourseEvaluationPort.hashUserNo 算法一致 */
+
 async function sha256Hex(input: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * 解析管理页提交的学号名单：兼容数组或以逗号/空白分隔的字符串，
- * 去空、去重、上限 1000，返回学号 SHA-256 列表。明文学号不落盘。
- */
+
 async function parseGrayTargets(raw: unknown): Promise<string[]> {
   const items = Array.isArray(raw)
     ? raw
@@ -140,8 +122,8 @@ async function parseGrayTargets(raw: unknown): Promise<string[]> {
   return [...hashes];
 }
 
-// 仅公开接口开放跨域，且限定为自有前端域，杜绝第三方站点驱动本 API；
-// /api/* 由同源的管理页调用，无需放开 CORS。
+
+
 const CORS_ORIGINS = [
   'https://chrnova.restarhalf.dpdns.org',
   'http://localhost:5173',
@@ -149,9 +131,9 @@ const CORS_ORIGINS = [
 ];
 app.use('/version.json', cors({ origin: CORS_ORIGINS }));
 
-// Public: Get version.json
-// 客户端携带稳定标识（学号 SHA-256 的 uid 查询参数）；命中灰度名单则下发灰度版本，
-// 否则下发正式版，未带 uid 的一律走正式版。
+
+
+
 app.get('/version.json', async (c) => {
   const data = await c.env.VERSION_KV.get('latest', 'json');
   const uid = (c.req.query('uid') || '').trim().toLowerCase();
@@ -172,9 +154,9 @@ app.get('/version.json', async (c) => {
   return c.json(data);
 });
 
-// Public: Daily active ping
-// 匿名心跳：客户端每日冷启动上报一次本地随机设备标识，按 (UTC 日期, aid) 去重，
-// 仅用于统计日活；不携带任何学号、课表等个人信息。未配置 D1 时静默忽略。
+
+
+
 app.post('/ping', async (c) => {
   const db = c.env.DAU_DB;
   if (!db) return c.body(null, 204);
@@ -197,7 +179,7 @@ app.post('/ping', async (c) => {
   const day = new Date().toISOString().slice(0, 10);
   await db.prepare('INSERT INTO dau (day, aid) VALUES (?1, ?2) ON CONFLICT DO NOTHING').bind(day, aid).run();
 
-  // 概率性清理超期数据（约 1% 心跳触发），避免表无限增长
+
   if (Math.random() < 0.01) {
     const cutoff = new Date(Date.now() - DAU_RETENTION_DAYS * 86_400_000).toISOString().slice(0, 10);
     await db.prepare('DELETE FROM dau WHERE day < ?1').bind(cutoff).run();
@@ -205,7 +187,7 @@ app.post('/ping', async (c) => {
   return c.body(null, 204);
 });
 
-// Protected: DAU statistics (for web UI)
+
 app.get('/api/stats/dau', async (c) => {
   if (!isAuthorized(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -222,7 +204,7 @@ app.get('/api/stats/dau', async (c) => {
   return c.json({ ok: true, data: result.results ?? [] });
 });
 
-// Protected: Update version
+
 app.post('/api/version', async (c) => {
   if (!(await allowRequest(c.env.VERSION_KV, `w:${clientIp(c)}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW_SEC))) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
@@ -264,7 +246,7 @@ app.post('/api/version', async (c) => {
   return c.json({ ok: true, data: info });
 });
 
-// Protected: Get version (for web UI)
+
 app.get('/api/version', async (c) => {
   if (!isAuthorized(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -274,7 +256,7 @@ app.get('/api/version', async (c) => {
   return c.json(data || { version: '', url: DEFAULT_URL, changelog: '', updatedAt: '' });
 });
 
-// Protected: Get gray config (for web UI)
+
 app.get('/api/gray', async (c) => {
   if (!isAuthorized(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -289,7 +271,7 @@ app.get('/api/gray', async (c) => {
   });
 });
 
-// Protected: Set gray config（userNos 为学号明文列表，仅用于本次哈希，不落盘）
+
 app.post('/api/gray', async (c) => {
   if (!(await allowRequest(c.env.VERSION_KV, `w:${clientIp(c)}`, WRITE_RATE_LIMIT, WRITE_RATE_WINDOW_SEC))) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
@@ -333,7 +315,7 @@ app.post('/api/gray', async (c) => {
   return c.json({ ok: true, data: { ...info, count: uids.length } });
 });
 
-// Protected: Clear gray config
+
 app.delete('/api/gray', async (c) => {
   if (!isAuthorized(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -342,7 +324,7 @@ app.delete('/api/gray', async (c) => {
   return c.json({ ok: true });
 });
 
-// Web UI
+
 app.get('/', (c) => {
   return c.html(getWebUI());
 });
@@ -631,7 +613,7 @@ function getWebUI(): string {
         document.getElementById('grayChangelogInput').value = data.changelog || '';
         document.getElementById('grayUserNosInput').value = '';
         updateGrayState(data);
-      } catch (e) { /* 忽略：灰度配置加载失败不影响主表单 */ }
+      } catch (e) { }
     }
 
     async function saveGray() {

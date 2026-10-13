@@ -42,23 +42,14 @@ import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import java.io.File
 import java.io.FileOutputStream
 
-/**
- * 公告详情页 UI 测试（Ultron KMP 入口 + 标准 ComposeUiTest API）。
- *
- * 详情页与列表页共享 ViewModel：进入时 load() → selectAnnouncement(id) → markRead。
- * 数据层 mock [AnnouncementPort] 与 [ObservableSettings]，ViewModel/UseCase/Store 真实实现。
- */
+
 @RunWith(AndroidJUnit4::class)
 class AnnouncementDetailScreenUiTest {
 
-    /** 本地测试图片路径（@Before 生成 800x600 PNG） */
+    
     private lateinit var imagePath: String
 
-    /**
-     * 本地 800x600 PNG（@Before 生成），供 markdown 图片真实加载成功。
-     * markdown-renderer 0.45.0 只把「已加载且高度 > 行高*1.5」的图片从 inline
-     * 提升为块级 components.image —— 尺寸太小（如 1x1）永远不会走自定义图片组件。
-     */
+    
     @Before
     fun setUpImage() {
         val dir = InstrumentationRegistry.getInstrumentation().targetContext.filesDir
@@ -70,10 +61,7 @@ class AnnouncementDetailScreenUiTest {
         imagePath = file.absolutePath
     }
 
-    /**
-     * map-backed settings：读写闭环（putString/putLong 写入、getStringOrNull/getLong 读回）。
-     * 不能用 returns Unit 丢弃写入——详情页 markRead 后 unreadCount 依赖读回 lastReadAtMs。
-     */
+    
     private val storage = mutableMapOf<String, Any>()
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
         every { putString(any(), any()) } calls { (key: String, value: String) -> storage[key] = value }
@@ -194,14 +182,14 @@ class AnnouncementDetailScreenUiTest {
         setContentFor(vm, "d-5") { clicked.add(it) }
 
         waitText("带图公告")
-        // markdown 图片需加载成功且高度超过行高*1.5 才会提升为块级组件
-        // （contentDescription = alt），此处等待其出现在语义树
+
+
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithContentDescription("示例图").fetchSemanticsNodes().isNotEmpty()
         }
         onNodeWithContentDescription("示例图").performClick()
         assertEquals(listOf("file://$imagePath"), clicked)
-        // 选中成功后 markAnnouncementRead 推进已读，未读数归零
+
         waitUntil(timeoutMillis = 5_000) { vm.uiState.value.unreadCount == 0 }
         assertEquals(0, vm.uiState.value.unreadCount)
     }

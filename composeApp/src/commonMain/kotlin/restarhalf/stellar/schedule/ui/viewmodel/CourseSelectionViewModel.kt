@@ -32,24 +32,13 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-/**
- * 自动抢课 ViewModel
- *
- * 管理抢课全流程状态：选轮次 → 选分类 → 浏览课程 → 加入抢课目标 → 启动循环抢课。
- *
- * 抢课循环策略：
- * - 按目标列表顺序依次尝试选课
- * - 选课失败时等待 [SnatchConfig.intervalMs] 后重试
- * - 选课成功后该目标标记为已完成，不再重试
- * - 所有目标完成或被用户停止时结束循环
- * - token 过期会自动刷新会话
- */
+
 class CourseSelectionViewModel(
     private val useCase: CourseSelectionUseCase,
     private val servicePort: CourseSelectionServicePort,
 ) : ViewModel() {
 
-    /** 抢课目标，按优先级排序（列表前面的优先） */
+    
     @Stable
     data class SelectionTarget(
         val course: JwxtSelectionCourse,
@@ -61,7 +50,7 @@ class CourseSelectionViewModel(
         val key: String get() = "${course.courseId}|${course.noticeId}|${course.kxh}"
     }
 
-    /** 抢课日志条目 */
+    
     @Stable
     data class SelectionLog(
         val time: String,
@@ -71,7 +60,7 @@ class CourseSelectionViewModel(
         enum class LogLevel { INFO, SUCCESS, WARN, ERROR }
     }
 
-    /** 抢课配置 */
+    
     @Stable
     data class SnatchConfig(
         val intervalMs: Long = 800L,
@@ -94,17 +83,17 @@ class CourseSelectionViewModel(
         val snatching: Boolean = false,
         val snatchConfig: SnatchConfig = SnatchConfig(),
         val sessionReady: Boolean = false,
-        /** 课程名称搜索关键词（防抖后用于实际请求） */
+        
         val courseSearchQuery: String = "",
-        /** 当前平台是否支持后台抢课 */
+        
         val backgroundSupported: Boolean = false,
-        /** 后台抢课是否运行中 */
+        
         val backgroundRunning: Boolean = false,
-        /** 已选课程列表（用于退课，加载 wxgetYxkcList） */
+        
         val selectedCourses: ImmutableList<JwxtSelectedCourse> = persistentListOf(),
-        /** 已选课程是否正在加载 */
+        
         val loadingSelected: Boolean = false,
-        /** 点击「加入」时正在试探选课请求 */
+        
         val checkingTarget: Boolean = false,
     )
 
@@ -114,13 +103,13 @@ class CourseSelectionViewModel(
     val uiState: StateFlow<CourseSelectionUiState> = _uiState.asStateFlow()
 
     init {
-        // 收集后台服务运行状态
+
         viewModelScope.launch {
             servicePort.running.collect { running ->
                 _uiState.update { it.copy(backgroundRunning = running, snatching = running) }
             }
         }
-        // 收集后台服务日志，追加到 UI 日志列表
+
         viewModelScope.launch {
             servicePort.latestLog.collect { entry ->
                 if (entry.message.isBlank()) return@collect
@@ -135,16 +124,16 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 当前会话上下文，不属于 UI 状态（不参与 recomposition） */
+    
     private var session: CourseSelectionUseCase.SessionContext? = null
 
-    /** 抢课循环 Job，可取消 */
+    
     private var snatchJob: Job? = null
 
-    /** 搜索防抖 Job，可取消 */
+    
     private var searchJob: Job? = null
 
-    /** 加载选课轮次列表 */
+    
     fun loadRotations() {
         if (_uiState.value.loading) return
         _uiState.update { it.copy(loading = true, loadingMessage = "正在加载选课轮次...", error = "") }
@@ -171,7 +160,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 选择选课轮次，自动初始化会话 */
+    
     fun selectRotation(rotationId: String) {
         if (_uiState.value.loading) return
         _uiState.update {
@@ -197,7 +186,7 @@ class CourseSelectionViewModel(
                 if (ctx.classifications.isNotEmpty() && _uiState.value.selectedClassificationCode.isBlank()) {
                     selectClassification(ctx.classifications.first().classificationCode)
                 }
-                // 会话就绪后自动加载已选课程列表
+
                 loadSelectedCourses()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -207,7 +196,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 选择分类，自动加载课程列表（带当前搜索关键词） */
+    
     fun selectClassification(code: String) {
         val ctx = session ?: return
         if (_uiState.value.loading) return
@@ -217,10 +206,7 @@ class CourseSelectionViewModel(
         launchCourseLoad(ctx, code)
     }
 
-    /**
-     * 更新课程名称搜索关键词，防抖后重新加载课程列表。
-     * 传空串表示清除筛选。
-     */
+    
     fun onCourseSearchQueryChange(query: String) {
         val ctx = session ?: return
         val code = _uiState.value.selectedClassificationCode.ifBlank { return }
@@ -232,7 +218,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 清空搜索条件并重新加载 */
+    
     fun clearSearch() {
         val ctx = session ?: return
         val code = _uiState.value.selectedClassificationCode.ifBlank { return }
@@ -240,7 +226,7 @@ class CourseSelectionViewModel(
         launchCourseLoad(ctx, code)
     }
 
-    /** 实际发起课程列表请求，带上当前搜索关键词 */
+    
     private fun launchCourseLoad(ctx: CourseSelectionUseCase.SessionContext, code: String) {
         val courseInfo = _uiState.value.courseSearchQuery.trim()
         _uiState.update { it.copy(loading = true, loadingMessage = "正在加载课程列表...", error = "") }
@@ -264,12 +250,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /**
-     * 点击「加入」时先请求一次选课接口试探：
-     * - 成功：直接加入目标并标记为已成功（实际已选上）
-     * - 失败但属于「容量已满」类：加入目标继续抢
-     * - 失败且为其他原因：不加入，error 字段返回原因
-     */
+    
     fun addTargetWithCheck(course: JwxtSelectionCourse) {
         val classificationCode = _uiState.value.selectedClassificationCode
         if (classificationCode.isBlank()) {
@@ -304,7 +285,7 @@ class CourseSelectionViewModel(
                     }
 
                     is JwxtSelectionOperResult.NeedConfirm -> {
-                        // 关联班未自动选上，按失败处理
+
                         handleAddCheckFailure(course, classificationCode, result.message.ifBlank { "需要确认关联教学班" })
                     }
 
@@ -324,7 +305,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 试探失败后判断是否可加入目标：容量满则加入，其他原因不加入 */
+    
     private fun handleAddCheckFailure(
         course: JwxtSelectionCourse,
         classificationCode: String,
@@ -352,7 +333,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 判断是否为「课程容量已满」类错误，此类错误允许加入抢课目标 */
+    
     private fun isCapacityFullMessage(message: String): Boolean {
         val lower = message.lowercase()
         return message.contains("满") ||
@@ -362,14 +343,14 @@ class CourseSelectionViewModel(
             lower.contains("capacity")
     }
 
-    /** 移除抢课目标 */
+    
     fun removeTarget(target: SelectionTarget) {
         _uiState.update { state ->
             state.copy(targets = state.targets.filterNot { it.key == target.key }.toPersistentList())
         }
     }
 
-    /** 上移目标（提升优先级） */
+    
     fun moveTargetUp(index: Int) {
         if (index <= 0) return
         _uiState.update { state ->
@@ -382,7 +363,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 下移目标（降低优先级） */
+    
     fun moveTargetDown(index: Int) {
         _uiState.update { state ->
             val list = state.targets.toMutableList()
@@ -394,17 +375,17 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 清空日志 */
+    
     fun clearLogs() {
         _uiState.update { it.copy(logs = persistentListOf()) }
     }
 
-    /** 更新抢课配置 */
+    
     fun updateSnatchConfig(config: SnatchConfig) {
         _uiState.update { it.copy(snatchConfig = config) }
     }
 
-    /** 启动抢课循环 */
+    
     fun startSnatch() {
         if (_uiState.value.snatching) return
         val targets = _uiState.value.targets
@@ -423,10 +404,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /**
-     * 启动后台抢课（仅 Android 支持）。
-     * @return true 启动成功；false 平台不支持或参数无效
-     */
+    
     fun startBackgroundSnatch(): Boolean {
         if (!servicePort.isSupported) {
             _uiState.update { it.copy(error = "当前平台不支持后台抢课") }
@@ -458,15 +436,15 @@ class CourseSelectionViewModel(
         return ok
     }
 
-    /** 停止后台抢课 */
+    
     fun stopBackgroundSnatch() {
         if (!servicePort.isSupported) return
         servicePort.stop()
     }
 
-    /** 停止抢课循环 */
+    
     fun stopSnatch() {
-        // 后台模式下走后台停止
+
         if (_uiState.value.backgroundRunning) {
             stopBackgroundSnatch()
             return
@@ -477,7 +455,7 @@ class CourseSelectionViewModel(
         appendLog(SelectionLog(now(), "已停止抢课", SelectionLog.LogLevel.WARN))
     }
 
-    /** 加载已选课程列表（用于退课区域展示） */
+    
     fun loadSelectedCourses() {
         val ctx = session ?: return
         if (_uiState.value.loadingSelected) return
@@ -496,7 +474,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 退已选课程列表中的某门课，退课后刷新列表 */
+    
     fun dropSelectedCourse(course: JwxtSelectedCourse) {
         val ctx = session ?: return
         viewModelScope.launch {
@@ -504,7 +482,7 @@ class CourseSelectionViewModel(
                 val resp = useCase.drop(ctx, course.noticeId)
                 if (resp.isSuccess()) {
                     appendLog(SelectionLog(now(), "退课成功：${course.courseName}", SelectionLog.LogLevel.SUCCESS))
-                    // 从已选列表移除
+
                     _uiState.update {
                         it.copy(
                             selectedCourses = it.selectedCourses
@@ -523,7 +501,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 抢课主循环 */
+    
     private suspend fun runSnatchLoop(initialCtx: CourseSelectionUseCase.SessionContext) {
         var ctx = initialCtx
         val config = _uiState.value.snatchConfig
@@ -536,7 +514,7 @@ class CourseSelectionViewModel(
                 break
             }
 
-            // 检查是否所有目标都已成功
+
             val pending = _uiState.value.targets.filterNot { it.succeeded }
             if (pending.isEmpty()) {
                 appendLog(SelectionLog(now(), "所有目标已选课成功", SelectionLog.LogLevel.SUCCESS))
@@ -548,11 +526,11 @@ class CourseSelectionViewModel(
                 try {
                     val result = useCase.submitOnce(ctx, target.classificationCode, target.course)
                     handleSnatchResult(target, result, attempt)
-                    // 成功后更新目标状态
+
                     if (result is JwxtSelectionOperResult.Success) {
                         markTargetSucceeded(target.key)
                     } else if (result is JwxtSelectionOperResult.NeedConfirm) {
-                        // needcf 后续若仍不是 success，也标记一次消息
+
                     }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
@@ -561,7 +539,7 @@ class CourseSelectionViewModel(
                     updateTargetMessage(target.key, msg)
                     appendLog(SelectionLog(now(), "${target.course.courseName}：$msg", SelectionLog.LogLevel.ERROR))
 
-                    // 认证失败时刷新会话
+
                     if (config.refreshSessionOnAuthError && isAuthError(e)) {
                         appendLog(SelectionLog(now(), "检测到认证失效，刷新会话...", SelectionLog.LogLevel.WARN))
                         ctx = try {
@@ -578,7 +556,7 @@ class CourseSelectionViewModel(
                     }
                 }
             }
-            // 等待间隔（可被取消）
+
             try {
                 delay(config.intervalMs.milliseconds)
             } catch (e: CancellationException) {
@@ -590,7 +568,7 @@ class CourseSelectionViewModel(
         appendLog(SelectionLog(now(), "抢课循环结束（共 $attempt 次）", SelectionLog.LogLevel.INFO))
     }
 
-    /** 处理单次选课结果，记录日志 */
+    
     private fun handleSnatchResult(
         target: SelectionTarget,
         result: JwxtSelectionOperResult,
@@ -670,7 +648,7 @@ class CourseSelectionViewModel(
         }
     }
 
-    /** 简单判断是否为认证类错误（token 过期等） */
+    
     private fun isAuthError(e: Throwable): Boolean {
         val msg = e.message.orEmpty()
         return msg.contains("token", ignoreCase = true) ||
@@ -680,7 +658,7 @@ class CourseSelectionViewModel(
             msg.contains("HTTP 401", ignoreCase = true)
     }
 
-    /** 当前时间字符串（HH:mm:ss） */
+    
     private fun now(): String {
         val nowMs = Clock.System.now().toEpochMilliseconds()
         val instant = Instant.fromEpochMilliseconds(nowMs)
@@ -698,7 +676,7 @@ class CourseSelectionViewModel(
 
     private companion object {
         const val MAX_LOG_SIZE = 200
-        /** 搜索关键词输入防抖时长（毫秒） */
+        
         const val SEARCH_DEBOUNCE_MS = 400L
     }
 }

@@ -63,17 +63,7 @@ import org.intellij.markdown.ast.findChildOfType
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 公告正文 Markdown 渲染（纯 core 库 + miuix 风格定制）。
- *
- * 不引入 -m3 模块：colors/typography 从 MiuixTheme 提取，所有组件经
- * [markdownComponents] 逐一映射为 miuix 观感：
- * - h1/h2 左侧 primary 竖条装饰，h3-h6 纯加粗分级
- * - 引用块圆角浅色底 + primary 竖线
- * - 代码块圆角高对比底色 + 语言标签 + 复制按钮（库自带）
- * - 图片圆角、点击全屏预览
- * - 任务列表 checkbox 换成 miuix 风格小方块
- */
+
 @Composable
 fun AnnouncementMarkdown(
     content: String,
@@ -170,9 +160,7 @@ fun AnnouncementMarkdown(
     )
 }
 
-/**
- * 标题：h1/h2 带 primary 竖条装饰，h3-h6 纯加粗分级。
- */
+
 @Composable
 private fun AnnouncementHeading(
     model: MarkdownComponentModel,
@@ -206,9 +194,7 @@ private fun AnnouncementHeading(
     }
 }
 
-/**
- * 引用块：圆角浅色底，左侧 primary 竖线（由库 drawBehind 绘制，颜色随 style）。
- */
+
 @Composable
 private fun AnnouncementBlockQuote(
     content: String,
@@ -231,11 +217,7 @@ private fun AnnouncementBlockQuote(
     }
 }
 
-/**
- * 代码块：圆角高对比底色 + 顶栏（语言标签 + 复制按钮，库自带）。
- *
- * 复制走 Compose 的 LocalClipboardManager（Android/iOS 均可用），无需平台定制。
- */
+
 @Composable
 private fun AnnouncementCodeBlock(
     code: String,
@@ -260,13 +242,7 @@ private fun AnnouncementCodeBlock(
     }
 }
 
-/**
- * 块级图片：圆角 + 点击跳转全屏看图器。
- *
- * 加载为异步：加载中显示固定比例占位块（避免未返回时高度塌缩导致正文跳动），
- * 失败显示"点击重试"（给 URL 追加 fragment 触发重新执行），成功后 crossfade 淡入。
- * 错误态的点击只重试，不冒泡到外层的看图器跳转。
- */
+
 @Composable
 private fun AnnouncementMarkdownImage(
     content: String,
@@ -280,8 +256,8 @@ private fun AnnouncementMarkdownImage(
     var attempt by remember(link) { mutableIntStateOf(0) }
     val platformContext = LocalPlatformContext.current
     val model = remember(link, attempt) {
-        // Coil 3 无请求参数机制；重试时给 URL 追加 fragment 使请求实例变化以重新执行，
-        // 首次加载仍用原始链接，保证缓存键稳定
+
+
         ImageRequest.Builder(platformContext)
             .data(if (attempt > 0) "$link#retry-$attempt" else link)
             .crossfade(true)
@@ -331,7 +307,7 @@ private fun AnnouncementMarkdownImage(
     }
 }
 
-/** 图片加载中/失败的固定比例占位块 */
+
 @Composable
 private fun PlaceholderBox(
     modifier: Modifier = Modifier,
@@ -349,9 +325,7 @@ private fun PlaceholderBox(
     }
 }
 
-/**
- * 任务列表 checkbox：miuix 风格小方块（选中 primary 实底 + 对勾）。
- */
+
 @Composable
 private fun AnnouncementCheckBox(
     content: String,
@@ -391,15 +365,9 @@ private fun AnnouncementCheckBox(
     )
 }
 
-/*
- * ── 图片解析（私有实现） ──────────────────────────────────────────────
- * 库内 `resolveImageLink` / `resolveImageAlt` / `findChildOfTypeRecursive`
- * 均为 internal，跨模块不可见。以下为行为等价的自写版本，仅依赖 public API：
- * `org.intellij.markdown.ast.findChildOfType` + 库的 public
- * `getUnescapedTextInNode`（内部用 public 的 EntityConverter 处理转义）。
- */
 
-/** 先序递归查找第一个指定类型的后代节点（库 internal 版本的等价实现）。 */
+
+
 private fun ASTNode.findChildOfTypeRecursiveAnnouncement(type: IElementType): ASTNode? {
     children.forEach {
         if (it.type == type) {
@@ -414,12 +382,7 @@ private fun ASTNode.findChildOfTypeRecursiveAnnouncement(type: IElementType): AS
     return null
 }
 
-/**
- * 解析 IMAGE 节点的目标 URL。
- * 优先取内联 `LINK_DESTINATION`；否则按 `FULL_REFERENCE_LINK` /
- * `SHORT_REFERENCE_LINK` 引用形式，用 `LINK_LABEL` 经 [referenceLinkHandler]
- * 查引用定义（即 `![alt][id]` 引用式图片）。
- */
+
 private fun ASTNode.resolveAnnouncementImageLink(
     content: String,
     referenceLinkHandler: ReferenceLinkHandler?,
@@ -436,7 +399,7 @@ private fun ASTNode.resolveAnnouncementImageLink(
     return referenceLinkHandler?.find(label)?.takeIf { it.isNotEmpty() }
 }
 
-/** 解析 IMAGE 节点的 alt 文本，依次回退 LINK_TEXT / LINK_LABEL。 */
+
 private fun ASTNode.resolveAnnouncementImageAlt(content: String): String? {
     findChildOfTypeRecursiveAnnouncement(MarkdownElementTypes.LINK_TEXT)?.let {
         val text = it.getUnescapedTextInNode(content).trim('[', ']').trim()

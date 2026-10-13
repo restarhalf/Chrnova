@@ -35,14 +35,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import kotlin.time.Clock
 
-/**
- * 课程表大屏 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试：BuildScheduleUiState/TransCourseWithConflicts/
- * RefreshCourseRemindersIfEnabled 全真实实例，只 mock 端口。
- * 学期开始时间取"本周周一 00:00"——真实时钟下 detectedWeek = 1，
- * 顶栏标题应为"第1周"，网格渲染周一表头与课程卡片。
- */
 class ScheduleScreenUiTest {
 
     private val settings = mock<SettingsPort>(MockMode.autofill)
@@ -57,7 +49,6 @@ class ScheduleScreenUiTest {
 
     private val tz = TimeZone.currentSystemDefault()
 
-    /** 本周周一 00:00（本地时区），真实时钟下当前周 = 1 */
     private val termStartMs: Long = run {
         val today = Clock.System.now().toLocalDateTime(tz).date
         val monday = LocalDate.fromEpochDays(
@@ -66,7 +57,6 @@ class ScheduleScreenUiTest {
         monday.atStartOfDayIn(tz).toEpochMilliseconds()
     }
 
-    /** 10 节时间槽（与真实金石滩配置前 10 节一致） */
     private val timetableSlots = listOf(
         TimetableSlot(1, "8:00", "8:45"),
         TimetableSlot(2, "8:55", "9:40"),
@@ -81,7 +71,7 @@ class ScheduleScreenUiTest {
     )
 
     private fun makeViewModel(): ScheduleViewModel {
-        // 全部 stub 先于构造
+
         every { settings.observeShowNonCurrentWeek() } returns showNonCurrentWeekFlow
         every { settings.observeScheduleRowHeight() } returns rowHeightFlow
         every { settings.observeCourseReminderEnabled() } returns reminderFlow
@@ -110,7 +100,7 @@ class ScheduleScreenUiTest {
 
     @Test
     fun 渲染周次标题表头与课程卡片() = runUltronUiTest {
-        // 当前周（第1周）课程：weeks 覆盖 1-25，周一 1-2 节
+
         coursesFlow.value = listOf(
             Course(
                 name = "高等数学",
@@ -137,12 +127,12 @@ class ScheduleScreenUiTest {
                 )
             }
         }
-        // 顶栏周次标题（currentWeek=1）
+
         waitText("第1周")
-        // 网格周表头
+
         onNodeWithText("周一").assertExists()
         onNodeWithText("周日").assertExists()
-        // 课程卡片渲染课程名
+
         waitText("高等数学")
     }
 

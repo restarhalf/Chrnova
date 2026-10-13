@@ -45,14 +45,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 公告列表页
- *
- * 展示全部已发布公告（置顶优先、时间倒序）。进入本页时强制刷新拉取最新公告
- * （忽略 10 分钟缓存，保证新发布的公告立即可见）。未读公告（发布时间晚于
- * 最后阅读时间）在条目右上角显示红点，点开某条详情后该条才变为已读；
- * 首页红点随之更新（首页/列表/详情共享同一个 ViewModel）。
- */
+
 @Composable
 fun AnnouncementListScreen(
     vm: AnnouncementViewModel,
@@ -65,7 +58,7 @@ fun AnnouncementListScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
-    // 进入列表页：强制刷新公告与广告位配置，忽略缓存拿到最新内容（广告后端改动实时生效）
+
     LaunchedEffect(Unit) {
         vm.refresh()
     }
@@ -127,8 +120,8 @@ fun AnnouncementListScreen(
                         ),
                     ),
         ) {
-            // 广告位（顶栏下方、列表上方，固定不随列表滚动）
-            // 配置由公告 Worker 的 /ad 接口下发；后端未配置时 uiState.adConfig 为 null，整条隐藏
+
+
             AdBanner(
                 config = uiState.adConfig?.let {
                     AdBannerConfig(

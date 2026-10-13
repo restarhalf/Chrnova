@@ -18,13 +18,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * PersonalInfoViewModel 单元测试。
- *
- * SettingsPort 是接口可直接 mock；用 calls 块维护可变存储状态，
- * 让 getter 读到 setter 写入的最新值，验证"写入 + reload"的完整闭环。
- * uiState 是裸 MutableStateFlow，无需订阅即可读 value。
- */
+
 class PersonalInfoViewModelTest {
 
     private var avatarState: String? = null
@@ -32,7 +26,7 @@ class PersonalInfoViewModelTest {
 
     private val settingsPort = mock<SettingsPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
+    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun advanceMain() = mainDispatcher.scheduler.advanceUntilIdle()
@@ -47,7 +41,7 @@ class PersonalInfoViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** stub 四个存储方法并构造 VM（init 块即触发 load，stub 必须先于构造） */
+    
     private fun makeViewModel(): PersonalInfoViewModel {
         every { settingsPort.getUserAvatarUri() } calls { avatarState }
         every { settingsPort.getUserNickname() } calls { nicknameState }

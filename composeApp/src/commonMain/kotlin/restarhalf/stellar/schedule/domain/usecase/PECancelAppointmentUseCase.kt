@@ -4,9 +4,6 @@ import restarhalf.stellar.schedule.data.remote.PEAppointmentActionResponse
 import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-/**
- * 取消体测预约用例
- */
 class PECancelAppointmentUseCase(
     private val gateway: PEGateway,
     private val authWorkflow: PEAuthWorkflowPort,

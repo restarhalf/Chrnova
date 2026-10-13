@@ -23,12 +23,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * StarVerificationHolder 单元测试。
- *
- * 真实 VerifyGitHubStarUseCase 桥接 mock PapersPort/SettingsPort（final class 不可 mock）。
- * scope 用类级 UnconfinedTestDispatcher，verify() 内 launch 立即执行。
- */
+
 class StarVerificationHolderTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)

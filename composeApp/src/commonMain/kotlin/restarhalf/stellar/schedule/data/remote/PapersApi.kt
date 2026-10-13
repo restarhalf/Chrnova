@@ -64,11 +64,7 @@ class PapersApi(
             json.decodeFromString(Paper.serializer(), body)
         }
 
-    /**
-     * 获取试卷下载地址。
-     *
-     * 期望服务端返回 JSON `{url, title}`；若旧部署仍直接回文件流，则降级为 `/file/:id` 链接。
-     */
+    
     override suspend fun downloadPaper(id: String): String =
         withContext(AppIoDispatcher) {
             if (id.isBlank()) throw IllegalStateException("缺少试卷标识")
@@ -82,7 +78,7 @@ class PapersApi(
             val looksLikeJson = contentType.contains("json", ignoreCase = true) ||
                 contentType.isBlank()
             if (!looksLikeJson && !contentType.contains("text", ignoreCase = true)) {
-                // 文件流：改走显式文件端点链接
+
                 return@withContext "$baseUrl/file/$id"
             }
             val text = response.bodyAsText().trim()
@@ -94,7 +90,7 @@ class PapersApi(
             }
         }
 
-    /** 相对路径补全 / 已是 http(s) 则原样返回 */
+    
     private fun resolveDownloadUrl(url: String): String = when {
         url.startsWith("http://") || url.startsWith("https://") -> url
         url.startsWith("/") -> baseUrl.trimEnd('/') + url

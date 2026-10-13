@@ -59,17 +59,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val MAX_CONTENT_LENGTH = 500
 
-/**
- * 写评价 / 编辑评价页。
- *
- * 设计要点（参考 EMS 视觉语言 + 写评价特有的表单体验优化）：
- * - 顶栏返回 + 标题
- * - 顶部错误状态药丸（与列表页一致）
- * - 三个分组（课程 / 评分 / 署名），每组用 SmallTitle + AppCard
- * - 评分输入区域：星 + 实时分值 + 文案提示（点击星星时 StarRatingInput 自带放大回弹）
- * - 评价内容字数统计
- * - 提交按钮：底部全宽 primary，loading 时显示进度文案
- */
+
 @Composable
 fun EvaluationSubmitScreen(
     vm: CourseEvaluationViewModel,
@@ -95,7 +85,7 @@ fun EvaluationSubmitScreen(
     var anonymous by remember { mutableStateOf(false) }
     var author by remember { mutableStateOf("") }
 
-    // 编辑模式：进入页面后加载评价详情，并在首次拿到数据时预填表单
+
     LaunchedEffect(evaluationId) {
         if (evaluationId != null) {
             vm.loadDetail(evaluationId)
@@ -113,14 +103,14 @@ fun EvaluationSubmitScreen(
         }
     }
 
-    // 新建模式：默认署名优先使用用户自定义昵称，其次档案姓名
+
     LaunchedEffect(uiState.userNickname, uiState.profileName) {
         if (!isEditMode && author.isEmpty()) {
             author = uiState.userNickname ?: uiState.profileName
         }
     }
 
-    // 提交/编辑成功后返回上一页
+
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) {
             onSubmitted()
@@ -154,7 +144,7 @@ fun EvaluationSubmitScreen(
                         }
                     },
                 )
-                // 错误状态药丸
+
                 AnimatedVisibility(
                     visible = uiState.error != null,
                     enter = fadeIn() + expandVertically(),
@@ -245,7 +235,7 @@ fun EvaluationSubmitScreen(
                     SmallTitle(text = "课程")
                     AppCard {
                         if (isEditMode) {
-                            // 编辑模式：course_name 不可改，仅展示
+
                             BasicComponent(
                                 title = "课程",
                                 summary = selectedCourseName ?: "—",
@@ -259,7 +249,7 @@ fun EvaluationSubmitScreen(
                                 onSelectedIndexChange = { index ->
                                     val name = courseOptions.getOrNull(index)
                                     selectedCourseName = name
-                                    // 预填教师：取已选课程中同名课程的教师
+
                                     teacher = uiState.myCourses
                                         .firstOrNull { it.name == name }?.teacher
                                         .orEmpty()
@@ -283,7 +273,7 @@ fun EvaluationSubmitScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             HorizontalDivider()
-                            // 评分区
+
                             Column(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -385,7 +375,7 @@ fun EvaluationSubmitScreen(
     }
 }
 
-/** 根据当前评分给出语义化提示 */
+
 private fun ratingHint(rating: Int): String = when (rating) {
     0 -> "点击星星为这门课打分"
     1 -> "很不推荐，慎选"

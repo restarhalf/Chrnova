@@ -48,25 +48,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 课程编辑页面屏幕
- * 
- * 用于添加或编辑实验课，包括：
- * - 选择课程名称
- * - 设置教室
- * - 选择星期几
- * - 选择节次范围
- * - 选择上课周次
- * - 保存/删除操作
- * 
- * @param onBack 返回回调
- * @param isEdit 是否为编辑模式
- * @param courseId 课程ID（编辑时使用）
- * @param initialDayOfWeek 预选星期几（1-7），用于新建时预填
- * @param initialStartSection 预选开始节次（1-12），用于新建时预填
- * @param initialSelectedWeek 预选周次（1-n），用于新建时预填
- * @param showMessage 轻提示回调（Toast）
- */
+
 @Composable
 fun CourseEditScreen(
     vm: CourseEditViewModel,
@@ -125,7 +107,7 @@ fun CourseEditScreen(
         selectedWeeks = formState.selectedWeeks
     }
 
-    // 新建模式下，切换课名时自动填充同步课程的教师
+
     LaunchedEffect(selectedIndex, inputCourseName.value, changeToSelect.value, courseNames.size) {
         if (courseId != null) return@LaunchedEffect
         val selectedName = if (changeToSelect.value) {

@@ -21,12 +21,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 教务登录页 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 构造同 JVM 测试配方：JwxtLoginUseCase 真实实例 + mock JwxtAuthWorkflowPort
- * （login 5 参 suspend，成功返回 Unit）。空凭据按钮禁用 → 点击无回调。
- */
 class JwxtLoginScreenUiTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
@@ -59,11 +53,11 @@ class JwxtLoginScreenUiTest {
         waitText("登录教务系统账号")
         onNodeWithText("账号").assertExists()
         onNodeWithText("密码").assertExists()
-        // 空凭据 → 登录按钮禁用，点击无回调
+
         onNodeWithText("登录").performClick()
         Thread.sleep(500)
         assertEquals(0, successCalls)
-        // 填写凭据后点击登录 → 成功回调触发
+
         everySuspend { authWorkflow.login(any(), any(), any(), any(), any()) } returns Unit
         vm.onUserNoChange("2023001")
         vm.onPasswordChange("pwd")

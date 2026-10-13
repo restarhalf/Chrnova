@@ -37,12 +37,7 @@ import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import kotlin.time.Clock
 
-/**
- * 课表分享预览与导出。
- *
- * 卡片按 [ShareCardWidth] 固定尺寸离屏合成（GraphicsLayer，等价 ImageComposeScene），
- * 预览只做等比缩放，导出 PNG 始终是完整尺寸。
- */
+
 @Composable
 fun ShareTimetableDialog(
     show: Boolean,
@@ -163,10 +158,7 @@ fun ShareTimetableDialog(
     )
 }
 
-/**
- * 子内容按 [contentWidth]×[contentHeight] 绘制，在 [maxWidth]×[maxHeight] 内等比缩小到一屏可放下。
- * 预览变小，但 [GraphicsLayer] 记录的仍是完整卡片像素。
- */
+
 @Composable
 private fun ScaleToFitBox(
     contentWidth: Dp,

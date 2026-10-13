@@ -22,18 +22,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * JwxtLoginViewModel 单元测试。
- *
- * JwxtLoginUseCase 是 final class 无法 mock，用真实实例 + mock JwxtAuthWorkflowPort。
- * uiState 是裸 MutableStateFlow(asStateFlow)，无需订阅即可读 value；
- * viewModelScope 内挂起流程用类级 UnconfinedTestDispatcher 的 scheduler drain。
- */
 class JwxtLoginViewModelTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun makeViewModel() = JwxtLoginViewModel(

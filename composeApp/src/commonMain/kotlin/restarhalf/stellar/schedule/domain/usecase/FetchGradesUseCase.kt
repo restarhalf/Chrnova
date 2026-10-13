@@ -11,12 +11,7 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-/**
- * 获取成绩用例
- *
- * 从教务系统获取成绩报告，并保存到本地数据库。
- * 支持学期回退：如果当前学期没有成绩，会尝试获取上一学期的成绩。
- */
+
 class FetchGradesUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
@@ -24,24 +19,15 @@ class FetchGradesUseCase(
     private val repository: GradeRepository,
     private val auth: JwxtAuthPort,
 ) {
-    /**
-     * 获取成绩报告
-     * 
-     * @param semester 学期，为空时使用当前选中学期
-     * @return 学期成绩报告
-     */
+    
     suspend operator fun invoke(semester: String = ""): TermGradeReport {
-        /**
-         * 解析要查询的学期
-         */
+        
         suspend fun resolveSemester(): String {
             val selectedTerm = semester.ifBlank { settings.observeSelectedTerm().first() }
             return selectedTerm.ifBlank { academic.fetchCurrentTermId() }
         }
 
-        /**
-         * 解析上一学期（用于回退）
-         */
+        
         suspend fun resolvePreviousSemesterOrNull(current: String): String? {
             val all = academic.fetchSemesterIds().filter { it.isNotBlank() }.distinct()
             if (all.isEmpty()) return null
@@ -52,9 +38,7 @@ class FetchGradesUseCase(
             return sorted.getOrNull(idx + 1)?.takeIf { it != current }
         }
 
-        /**
-         * 带回退的成绩获取
-         */
+        
         suspend fun fetchWithFallback(resolvedSemester: String): TermGradeReport {
             val current = academic.fetchGradeReport(semester = resolvedSemester)
             if (current.achievements.isNotEmpty()) return current
@@ -65,7 +49,7 @@ class FetchGradesUseCase(
 
         authWorkflow.ensureLoggedIn()
 
-        // 获取成绩，如果失败则刷新会话后重试
+
         val report = try {
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
@@ -78,7 +62,7 @@ class FetchGradesUseCase(
             fetchWithFallback(resolvedSemester)
         }
 
-        // 保存到本地数据库
+
         if (report.achievements.isNotEmpty()) {
             val userNo = try {
                 auth.observeProfile().first().userNo

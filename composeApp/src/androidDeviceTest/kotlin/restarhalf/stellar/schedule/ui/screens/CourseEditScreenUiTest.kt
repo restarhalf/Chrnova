@@ -26,13 +26,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 课程编辑页（实验课）Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试：courseRepository.observeAllCourses + auth.observeProfile。
- * 新建模式（courseId=null, initialSelectedWeek=1）表单预选第 1 周，
- * 点击"确定"经 buildLabCourseToSave → saveLabCourse(insertCourse) → onBack。
- */
 class CourseEditScreenUiTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -56,7 +49,7 @@ class CourseEditScreenUiTest {
 
     private fun makeViewModel(): CourseEditViewModel {
         every { courseRepository.observeAllCourses() } returns coursesFlow
-        // 屏幕经 observeEditingCourse 收集该流，autofill 对未知 Flow 返回 null 会 NPE
+
         every { courseRepository.observeCourseById(any()) } returns MutableStateFlow<Course?>(null)
         every { auth.observeProfile() } returns profileFlow
         return CourseEditViewModel(courseRepository, auth)
@@ -105,7 +98,7 @@ class CourseEditScreenUiTest {
         }
         waitText("课程名")
         runOnIdle { }
-        // 顶栏"确定"保存按钮（新建模式默认预选第 1 周，表单可保存）
+
         onNode(hasContentDescription("确定")).performSemanticsAction(SemanticsActions.OnClick)
         waitUntil(timeoutMillis = 5_000) { backed }
         assertEquals(true, backed)

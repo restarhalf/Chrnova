@@ -111,7 +111,6 @@ class ExamReminderScheduler(private val context: Context) {
             .getOrNull()
     }
 
-    /** 取消已调度的考试提醒 */
     fun cancelAll() {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val intent = Intent(context, ExamReminderReceiver::class.java)
@@ -137,11 +136,6 @@ class ExamReminderScheduler(private val context: Context) {
         const val EXTRA_EXAM_TIME = "exam_time"
     }
 
-    /**
-     * 尝试调度闹钟
-     *
-     * @return true 表示成功设置闹钟，false 表示失败
-     */
     @RequiresApi(Build.VERSION_CODES.S)
     private fun scheduleAlarmBestEffort(
         alarmManager: AlarmManager,
@@ -186,7 +180,6 @@ class ExamReminderScheduler(private val context: Context) {
         }
     }
 
-    /** 检查当前是否有有效的闹钟已调度 */
     fun hasScheduledAlarm(): Boolean {
         val pendingIntent =
             PendingIntent.getBroadcast(
@@ -198,15 +191,11 @@ class ExamReminderScheduler(private val context: Context) {
         return pendingIntent != null
     }
 
-    /** 调度结果 */
     sealed class ScheduleResult {
-        /** 成功调度，包含触发时间 */
         data class Scheduled(val triggerAtMs: Long) : ScheduleResult()
 
-        /** 没有即将到来的考试 */
         object NoUpcoming : ScheduleResult()
 
-        /** 调度失败 */
         object Failed : ScheduleResult()
     }
 }

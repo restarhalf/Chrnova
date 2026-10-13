@@ -16,12 +16,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * 公告图片全屏看图器 UI 测试（无 ViewModel 依赖，直接传参）。
- *
- * 覆盖：保存入口显隐、保存成功/失败消息回调、保存中状态、关闭回调。
- * ZoomableAsyncImage 的网络加载与手势缩放依赖真实图片与手势时序，不在本层覆盖。
- */
 @RunWith(AndroidJUnit4::class)
 class AnnouncementImageViewerScreenUiTest {
 
@@ -63,7 +57,7 @@ class AnnouncementImageViewerScreenUiTest {
     fun `禁止保存时不显示保存按钮`() = runUltronUiTest {
         setContentFor(canSaveImage = false)
 
-        // 等 chrome（关闭按钮）渲染完成，再断言保存按钮不存在
+
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithContentDescription("关闭").fetchSemanticsNodes().isNotEmpty()
         }

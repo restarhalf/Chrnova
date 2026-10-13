@@ -56,7 +56,7 @@ class TimetablePortImplTest {
 
     @Test
     fun campusEnumMirror() {
-        // data 层与 domain 层 Campus 枚举一一对应
+
         assertEquals(Campus.entries.size, DataCampus.entries.size)
     }
 }

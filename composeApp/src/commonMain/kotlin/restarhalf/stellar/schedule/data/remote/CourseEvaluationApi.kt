@@ -25,14 +25,7 @@ import restarhalf.stellar.schedule.domain.model.LikeResult
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 课程评价 API 实现（Cloudflare Worker REST 接口）
- *
- * 镜像 PapersApi 的写法：持有 Ktor HttpClient，拼接 URL，手动编解码 JSON。
- *
- * 鉴权：登录态通过 [getUserHash] 返回的学号 SHA-256 hex 注入 `X-User-Hash` 请求头；
- * 设备标识通过 [getDeviceId] 注入 `X-Device-Id`（仅用于评价归属回显）。
- */
+
 class CourseEvaluationApi(
     private val httpClient: HttpClient,
     private val baseUrl: String,
@@ -134,7 +127,7 @@ class CourseEvaluationApi(
     private suspend fun executeGet(url: String): String {
         val response: HttpResponse = httpClient.get(url) {
             deviceHeader(this)
-            // GET 也需要带 X-User-Hash，后端 withLiked 据此返回每条评价的 liked 状态
+
             userHashHeader(this)
         }
         if (!response.status.isSuccess()) {
@@ -144,7 +137,7 @@ class CourseEvaluationApi(
     }
 }
 
-/** GET /courses 返回的包装体 */
+
 @kotlinx.serialization.Serializable
 private data class CourseSummariesResponse(
     val items: List<CourseEvaluationSummary> = emptyList(),

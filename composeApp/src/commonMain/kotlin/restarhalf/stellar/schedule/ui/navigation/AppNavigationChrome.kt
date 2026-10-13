@@ -41,20 +41,14 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.shader.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 标签页规格数据类
- * 
- * @param screen 对应的Screen
- * @param icon 图标
- * @param label 标签文本
- */
+
 private data class TabSpec(
     val screen: Screen,
     val icon: ImageVector,
     val label: String,
 )
 
-/** 底部导航栏标签页配置 */
+
 private val appTabSpecs =
     listOf(
         TabSpec(screen = Screen.Home, icon = Home, label = "首页"),
@@ -64,28 +58,19 @@ private val appTabSpecs =
         TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
     )
 
-/**
- * 应用底部导航栏
- * 
- * 根据barMode显示不同样式的导航栏：
- * - 0: 固定导航栏
- * - 1: 悬浮导航栏
- * - 2: 液态玻璃导航栏
- * 
- * @param backdrop 模糊背景层，用于液态玻璃效果
- */
+
 @Composable
 fun AppBottomBar(
     backdrop: LayerBackdrop?,
 ) {
     val chromeState = LocalAppChromeState.current
     val mainPagerState = LocalMainPagerState.current
-    // 暗色模式用主题背景亮度判断，避免直接 isSystemInDarkTheme()
+
     val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
-    // blur 可用性：运行时 shader 支持 + backdrop 非空（与液态玻璃模式一致）
+
     val blurActive = isRuntimeShaderSupported() && backdrop != null
 
-    // 带动画的显示/隐藏
+
     AnimatedVisibility(
         visible = chromeState.showNavigationChrome,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(animationSpec = tween(200)),
@@ -94,7 +79,7 @@ fun AppBottomBar(
                 fadeOut(animationSpec = tween(200)),
     ) {
         when (chromeState.barMode) {
-            // 固定导航栏模式：blur 激活时用 textureBlur 模糊背景，导航栏自身透明
+
             0 -> {
                 val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
                 Box(
@@ -137,7 +122,7 @@ fun AppBottomBar(
                 }
             }
 
-            // 悬浮导航栏模式：textureBlur + 玻璃描边高光，对齐 example
+
             1 -> {
                 val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
                 val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
@@ -175,7 +160,7 @@ fun AppBottomBar(
                 }
             }
 
-            // 液态玻璃导航栏模式
+
             else -> {
                 GlassNavigationBar(
                     items = appTabSpecs.map { tab ->
@@ -194,15 +179,7 @@ fun AppBottomBar(
     }
 }
 
-/**
- * 应用Scaffold内容区域
- * 
- * 提供组件透明度和Scaffold内边距的CompositionLocal。
- * 
- * @param innerPadding Scaffold内边距
- * @param componentsAlpha 组件透明度
- * @param content 内容Composable
- */
+
 @Composable
 fun AppScaffoldBody(
     innerPadding: PaddingValues,

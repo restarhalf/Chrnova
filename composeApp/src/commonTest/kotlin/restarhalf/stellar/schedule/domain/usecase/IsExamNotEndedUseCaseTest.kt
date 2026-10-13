@@ -7,12 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * 考试未结束判断测试。
- *
- * 真实考试时间格式为 "2026-01-15 14:00-16:00"（日期 空格 起止时间）；
- * 解析失败（无法提取日期/结束时间）时容错返回 true（视为未结束）。
- */
 class IsExamNotEndedUseCaseTest {
 
     private val useCase = IsExamNotEndedUseCase()

@@ -44,15 +44,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 设置大屏 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试（SettingsViewModelTest）：全部 observe 流用类级
- * MutableStateFlow stub，final UseCase 走真实实例 + mock reminder 端口。
- * TimetablePort 经 koinInject 获取：测试内 startKoin / loadKoinModules 补注册。
- * LazyColumn 只组可见项，只断言顶部账号分区；弹层（日期/周数选择器）为
- * 独立窗口，只断言触发入口。
- */
+
 class SettingsScreenUiTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
@@ -155,7 +147,7 @@ class SettingsScreenUiTest {
                 )
             }
         }
-        // 顶栏与账号分区（未登录态）
+
         waitText("课程表设置")
         waitText("账号")
         waitText("登录教务系统")
@@ -186,7 +178,7 @@ class SettingsScreenUiTest {
             }
         }
         waitText("登录教务系统")
-        // ArrowPreference 的点击经语义 OnClick 直调，避免触碰注入竞态
+
         onAllNodesWithText("登录教务系统")[0]
             .performSemanticsAction(SemanticsActions.OnClick)
         waitUntil(timeoutMillis = 5_000) { loginClicked }

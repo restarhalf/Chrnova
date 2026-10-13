@@ -52,16 +52,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 评价详情页。
- *
- * 设计要点：
- * - 顶栏：返回 + 标题 + 右上角"编辑"/"删除"操作（仅本机提交者可见）
- * - 顶部错误状态药丸
- * - Hero 卡片：左侧彩色强调条 + 课程名 + 教师 + 大数字评分 + 半星
- * - 内容卡片：评价正文 + 作者 + 发布时间
- * - 底部点赞按钮：primary 样式
- */
+
 @Composable
 fun EvaluationDetailScreen(
     vm: CourseEvaluationViewModel,
@@ -116,7 +107,7 @@ fun EvaluationDetailScreen(
                         }
                     },
                 )
-                // 错误状态药丸
+
                 AnimatedVisibility(
                     visible = uiState.error != null,
                     enter = fadeIn() + expandVertically(),
@@ -149,7 +140,7 @@ fun EvaluationDetailScreen(
                             colors = ButtonDefaults.buttonColorsPrimary(),
                             onClick = {
                                 showDeleteConfirm = false
-                                // 等删除结果：成功才返回，失败留在本页由错误药丸提示
+
                                 vm.deleteEvaluation(evaluation.id) { deleted ->
                                     if (deleted) onBack()
                                 }
@@ -253,7 +244,7 @@ fun EvaluationDetailScreen(
     }
 }
 
-/** 把 Unix 秒时间戳格式化成 YYYY-MM-DD HH:mm */
+
 private fun formatDate(epochSeconds: Long): String {
     if (epochSeconds <= 0) return "—"
     return runCatching {

@@ -8,33 +8,18 @@ import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 
-/**
- * 体育系统认证端口实现类
- *
- * 实现PEAuthPort接口，负责体育系统认证信息的存储和读取。
- * 使用PEAuthStore进行体育系统认证数据的持久化。
- *
- * @param authStore 体育系统认证存储
- */
+
 @OptIn(ExperimentalSettingsApi::class)
 class PEAuthPortImpl(
     private val authStore: PEAuthStore,
 ) : PEAuthPort {
 
-    /**
-     * 观察认证令牌变化
-     *
-     * @return 令牌Flow
-     */
+    
     override fun observeToken(): Flow<String> {
         return authStore.getSettings().getStringFlow(PEAuthStore.KEY_TOKEN, "")
     }
 
-    /**
-     * 观察用户档案变化
-     *
-     * @return 用户档案Flow
-     */
+    
     override fun observeProfile(): Flow<PEAuthProfile> {
         val settings = authStore.getSettings()
         return combine(
@@ -48,11 +33,7 @@ class PEAuthPortImpl(
         }
     }
 
-    /**
-     * 设置用户档案
-     *
-     * @param profile 用户档案
-     */
+    
     override fun setProfile(profile: PEAuthProfile) {
         authStore.setProfile(
             stuName = profile.stuName,
@@ -61,17 +42,12 @@ class PEAuthPortImpl(
         )
     }
 
-    /**
-     * 设置用户凭据
-     *
-     * @param username 用户名
-     * @param password 密码
-     */
+    
     override fun setCredentials(username: String, password: String) {
         authStore.setCredentials(username, password)
     }
 
-    /** 清除所有认证数据 */
+    
     override fun clear() {
         authStore.clear()
     }

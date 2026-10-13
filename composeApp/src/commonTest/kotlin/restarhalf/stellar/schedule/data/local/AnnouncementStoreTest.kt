@@ -15,12 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * 公告本地缓存 Store：只负责读写（命中策略在 UseCase 层）。
- *
- * settings 用 map-backed stub（Mokkery calls）模拟真实键值存储，
- * 覆盖序列化往返、坏 JSON 容错、时间戳与已读推进。
- */
+
 class AnnouncementStoreTest {
 
     private val storage = mutableMapOf<String, Any?>()

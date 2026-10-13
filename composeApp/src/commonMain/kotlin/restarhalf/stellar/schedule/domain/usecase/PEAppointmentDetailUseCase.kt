@@ -5,9 +5,6 @@ import restarhalf.stellar.schedule.data.remote.PEAppointmentTimesResponse
 import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-/**
- * 预约详情 / 某日时段查询用例
- */
 class PEAppointmentDetailUseCase(
     private val gateway: PEGateway,
     private val authWorkflow: PEAuthWorkflowPort,

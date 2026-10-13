@@ -134,19 +134,11 @@ import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 
-/**
- * 端口实现模块
- * 
- * 注册所有端口接口的实现类，包括：
- * - HTTP客户端配置
- * - 教务系统网关
- * - 数据存储仓库
- * - 端口实现（认证、设置、同步等）
- */
+
 private const val USER_AGENT =
     "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-/** 为 HttpClient 安装公共模块：JSON 序列化 + 超时 + HTTP 缓存（尊重 Cache-Control/ETag） */
+
 private fun HttpClientConfig<*>.installCommonModules(json: Json) {
     install(ContentNegotiation) { json(json) }
     install(HttpCache)
@@ -158,15 +150,15 @@ private fun HttpClientConfig<*>.installCommonModules(json: Json) {
 }
 
 val portModule = module {
-    // JSON序列化配置，忽略未知键
+
     single { Json { ignoreUnknownKeys = true } }
 
-    // 教务系统认证存储
+
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
-    // 体育系统认证存储
+
     single { PEAuthStore(get(named("pe_auth"))) }
 
-    // 教务系统HTTP客户端，配置JSON序列化和认证插件
+
     single(named("jwxt")) {
         HttpClient {
             installCommonModules(get())
@@ -180,7 +172,7 @@ val portModule = module {
         }
     }
 
-    // 体育系统HTTP客户端
+
     single(named("pe")) {
         HttpClient {
             installCommonModules(get())
@@ -190,7 +182,7 @@ val portModule = module {
         }
     }
 
-    // 教务系统网关客户端
+
     single<JwxtGateway> {
         JwxtClient(
             httpClient = get(named("jwxt")),
@@ -200,7 +192,7 @@ val portModule = module {
         )
     }
 
-    // 体育系统客户端
+
     single<PEGateway> {
         PEClient(
             httpClient = get(named("pe")),
@@ -210,33 +202,33 @@ val portModule = module {
         )
     }
 
-    // 教务系统同步服务
+
     single { JwxtSync(get()) }
 
-    // 课表时间配置
+
     single { TimetableSettings(get(named("timetable_prefs"))) }
 
-    // 数据仓库
+
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
     single { RoomPERepository(peYearScoreDao = get(), peDetailDao = get()) }
 
-    // 课件系统HTTP客户端
+
     single(named("papers")) {
         HttpClient {
             installCommonModules(get())
         }
     }
 
-    // 课程评价系统HTTP客户端
+
     single(named("evaluate")) {
         HttpClient {
             installCommonModules(get())
         }
     }
 
-    // 端口实现
+
     single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<JwxtPasswordEncryptionPort> { JwxtPasswordEncryptionPortImpl() }
     single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
@@ -283,14 +275,14 @@ val portModule = module {
         )
     }
 
-    // 公告系统HTTP客户端
+
     single(named("announcement")) {
         HttpClient {
             installCommonModules(get())
         }
     }
 
-    // 公告系统端口：面向全体用户，无需登录态或设备标识
+
     single<AnnouncementPort> {
         AnnouncementApi(
             httpClient = get(named("announcement")),
@@ -301,14 +293,9 @@ val portModule = module {
     single { AnnouncementStore(get(named(SettingsKeys.PREFS_NAME))) }
 }
 
-/**
- * 用例模块
- * 
- * 注册所有业务用例，每个用例封装一个具体的业务操作。
- * 用例层位于UI层和数据层之间，负责协调多个端口完成业务逻辑。
- */
+
 val useCaseModule = module {
-    // 同步用例
+
     factory {
         RunSyncUseCase(
             authWorkflow = get(),
@@ -449,12 +436,7 @@ val useCaseModule = module {
     factory { MarkAnnouncementsReadUseCase(store = get()) }
 }
 
-/**
- * ViewModel模块
- * 
- * 注册所有ViewModel，每个ViewModel对应一个页面或功能模块。
- * ViewModel负责管理UI状态和处理用户交互。
- */
+
 val viewModelModule = module {
     viewModel {
         AppViewModel(
@@ -630,11 +612,7 @@ val viewModelModule = module {
     }
 }
 
-/**
- * 通用应用模块
- * 
- * 组合所有子模块，作为应用的主要依赖注入配置。
- */
+
 val commonAppModule = module {
     includes(portModule, useCaseModule, viewModelModule)
 }

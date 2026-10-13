@@ -51,14 +51,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * AppViewModel 单元测试。
- *
- * 所有 UseCase 都是 final class，用真实实例 + mock 端口组装完整依赖链；
- * 换来的收益是 runSync 走真实 RunSyncUseCase 主流程而非桩。
- * uiState 是 stateIn(WhileSubscribed)：initialValue 在构造期用 timetable
- * 同步方法求值（无需订阅），observe 流变化需 subscribeUi + awaitState。
- */
 class AppViewModelTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
@@ -72,7 +64,6 @@ class AppViewModelTest {
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
     private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
 
-    /** observe 流类级持有，测试中可变更触发 uiState 更新 */
     private val campusFlow = MutableStateFlow(Campus.Jinshitan)
     private val termStartFlow = MutableStateFlow(1000L)
     private val totalWeeksFlow = MutableStateFlow(20)
@@ -80,7 +71,6 @@ class AppViewModelTest {
     private val selectedTermFlow = MutableStateFlow("2026-1")
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun advanceMain() = mainDispatcher.scheduler.advanceUntilIdle()
@@ -106,7 +96,6 @@ class AppViewModelTest {
         week = "all",
     )
 
-    /** RunSyncUseCase 主流程 stub（照抄 RunSyncUseCaseTest） */
     private fun stubHappyPath() {
         every { settings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
@@ -116,7 +105,6 @@ class AppViewModelTest {
         everySuspend { academic.fetchTeachingWeekTotal() } returns 20
     }
 
-    /** 全部 stub 先于构造：initialValue 在构造期同步求值，init 块即收 observe 流 */
     private fun makeViewModel(): AppViewModel {
         every { timetable.observeCampus() } returns campusFlow
         every { timetable.observeTermStartMs() } returns termStartFlow
@@ -150,14 +138,12 @@ class AppViewModelTest {
         )
     }
 
-    /** uiState 是 stateIn(WhileSubscribed)，须先订阅才有 observe 流更新 */
     private fun TestScope.subscribeUi(vm: AppViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 轮询等待 uiState 满足谓词，每轮主动 drain Main 队列 */
     private suspend fun awaitState(
         vm: AppViewModel,
         timeoutMs: Long = 5000,
@@ -173,27 +159,27 @@ class AppViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-    // region init
+
 
     @Test
     fun `init未登录时bindUnboundData静默完成`() = runTest {
         val vm = makeViewModel()
         advanceMain()
 
-        // 不崩溃且未触发绑定
+
         verifySuspend(VerifyMode.not) { courseRepository.bindUnboundCourses(any()) }
         verifySuspend(VerifyMode.not) { examRepository.bindUnboundExaminations(any()) }
     }
 
-    // endregion
 
-    // region uiState
+
+
 
     @Test
     fun `uiState初值来自timetable同步方法`() = runTest {
         val vm = makeViewModel()
 
-        // initialValue 在构造期求值，无需订阅即可读
+
         val state = vm.uiState.value
         assertEquals(Campus.Jinshitan, state.campus)
         assertEquals(1000L, state.termStartMs)
@@ -223,9 +209,9 @@ class AppViewModelTest {
         assertEquals(16, state.totalWeeks)
     }
 
-    // endregion
 
-    // region runSync
+
+
 
     @Test
     fun `runSync成功携带插入数与校区名`() = runTest {
@@ -282,9 +268,9 @@ class AppViewModelTest {
         assertEquals(SyncUiState.Success(5, "金石滩校区"), vm.syncUiState.value)
     }
 
-    // endregion
 
-    // region 回调与登出
+
+
 
     @Test
     fun `logout清除认证信息`() = runTest {
@@ -324,9 +310,9 @@ class AppViewModelTest {
         verify(VerifyMode.exactly(1)) { timetable.setTotalWeeks(18) }
     }
 
-    // endregion
 
-    // region login
+
+
 
     @Test
     fun `login透传参数到authWorkflow`() = runTest {
@@ -363,5 +349,5 @@ class AppViewModelTest {
         }
     }
 
-    // endregion
+
 }

@@ -37,13 +37,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 考务页（考试+成绩双 Tab）Compose UI 测试（Ultron KMP 入口）。
- *
- * 双 VM 手动构造（同 JVM 测试配方），数据经 bindLoader 注入：
- * 页面 LaunchedEffect 自动 load()，考试用未来时间保证"未结束"过滤通过。
- * HorizontalPager 真实挂载，Tab 点击翻页后成绩页内容组合出现。
- */
 class EMSScreenUiTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
@@ -108,8 +101,8 @@ class EMSScreenUiTest {
                 EMSScreen(
                     examVm = makeExamViewModel(),
                     gradeVm = makeGradeViewModel(),
-                    // ExaminationViewModel.load() 丢弃 loader 返回值（拉取-持久化-观察模式），
-                    // loader 必须自行写入 repository observe 流
+
+
                     onLoadExaminations = {
                         val list = listOf(
                             Examination(
@@ -137,7 +130,7 @@ class EMSScreenUiTest {
         waitText("考务")
         onNodeWithText("成绩").assertExists()
         onNode(hasContentDescription("选修学分")).assertExists()
-        // 未来时间考试通过"未结束"过滤后渲染
+
         waitText("大学物理", timeoutMs = 10_000)
         onNodeWithText("地点：A101").assertExists()
     }
@@ -168,7 +161,7 @@ class EMSScreenUiTest {
             }
         }
         waitText("大学物理")
-        // 翻页后成绩页组合出现（高等数学仅存在于成绩页，与考试页课程名区分）
+
         onNodeWithText("成绩").performClick()
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithText("高等数学").fetchSemanticsNodes().isNotEmpty()

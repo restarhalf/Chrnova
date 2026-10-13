@@ -5,15 +5,7 @@ import androidx.compose.ui.Modifier
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 成绩详情对话框组件
- * 
- * 显示课程成绩的详细信息，以对话框形式展示。
- * 
- * @param show 是否显示
- * @param title 对话框标题（课程名称）
- * @param summary 成绩详情摘要文本
- */
+
 @Composable
 fun GradeDetailsDialog(show: Boolean, onDismissRequest: () -> Unit, title: String, summary: String) {
     WindowDialog(

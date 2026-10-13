@@ -25,7 +25,7 @@ actual fun PEWebView(
     authScript: String,
     modifier: Modifier,
 ) {
-    // 每条 WebView 实例自己的重试计数，避免第一次落在登录页后卡住
+
     val navRetryHolder = remember { intArrayOf(0) }
 
     val navigationDelegate = remember(targetUrl, authScript) {
@@ -49,7 +49,7 @@ actual fun PEWebView(
                 }
                 if (current.startsWith("http://39.100.89.70") && navRetryHolder[0] < 3) {
                     navRetryHolder[0] += 1
-                    // DocumentStart 脚本已写入会话；此处整页进预约页
+
                     NSURL.URLWithString(targetUrl)?.let { target ->
                         webView.loadRequest(NSURLRequest(uRL = target))
                     }

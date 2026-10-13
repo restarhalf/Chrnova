@@ -15,10 +15,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * 单条公告详情用例：纯透传 port.getAnnouncement(id)。
- * 文档语义：公开详情接口对 status='published' 与 'ad' 均可见，草稿 404。
- */
 class FetchAnnouncementUseCaseTest {
 
     private val port = mock<AnnouncementPort>()

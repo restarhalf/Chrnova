@@ -33,9 +33,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 应用根组件，负责初始化应用状态和管理全局UI逻辑
- */
+
 @Composable
 fun AppRoot(
     pictureSelectorHost: @Composable (
@@ -61,8 +59,8 @@ fun AppRoot(
     exitApp: () -> Unit = {},
     onThemeModeChange: (Int) -> Unit = {},
 ) {
-    // Coil 网络 fetcher 需显式注册：Android 经 ServiceLoader 自动注册，
-    // iOS/native 无该机制，不配置则单例 ImageLoader 无网络能力，所有网络图加载失败。
+
+
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
             .components { add(coil3.network.ktor3.KtorNetworkFetcherFactory()) }
@@ -77,7 +75,7 @@ fun AppRoot(
     val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
     val settingsPort: SettingsPort = koinInject()
 
-    // 全局 UI 偏好（对齐 miuix example：AppState 只放界面开关，业务数据走 ViewModel）
+
     var appState by remember {
         mutableStateOf(
             AppState(
@@ -108,7 +106,7 @@ fun AppRoot(
         }
     }
 
-    // 主题模式外推给宿主（Android 用于 edge-to-edge 系统栏），含初始值同步
+
     val currentOnThemeModeChange by rememberUpdatedState(onThemeModeChange)
     LaunchedEffect(Unit) {
         snapshotFlow { appState.themeMode }.collect { currentOnThemeModeChange(it) }
@@ -118,7 +116,7 @@ fun AppRoot(
         suspend { vm.runSync() }
     }
 
-    // 更新弹窗与隐私引导属于根级一次性流程状态，仅 AppRoot 自用，无需下发
+
     var pendingUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     val showWelcome = remember { mutableStateOf(false) }
@@ -131,7 +129,7 @@ fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        // 经用例层检查，自动携带灰度 uid（学号哈希），与关于页手动检查行为一致
+
         runCatching { checkAppUpdate(currentVersionName = appInfo.versionName) }
             .onSuccess { latest ->
                 if (latest != null) {
@@ -145,7 +143,7 @@ fun AppRoot(
     }
 
     LaunchedEffect(Unit) {
-        // 每日匿名日活上报：仅发送本地随机设备标识，不含任何个人信息；失败静默不影响使用
+
         runCatching { DauReporter.pingTodayIfDue(settings = settings, deviceId = settingsPort.getDeviceId()) }
             .onFailure {
                 AppLogger.log("Dau", "日活上报失败", it)

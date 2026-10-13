@@ -25,11 +25,7 @@ import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCas
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 
-/**
- * 选修课学分统计ViewModel
- *
- * 统计X1-X5类别的选修课学分，支持Z到X的转换映射。
- */
+
 class ElectiveCreditViewModel(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,

@@ -25,11 +25,7 @@ import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
 import restarhalf.stellar.schedule.ui.image.isImageAttachment
 
-/**
- * 免测申请 ViewModel
- *
- * 列表页 + 独立申请页共用。
- */
+
 class PEFreeApplyViewModel(
     private val useCase: PEFreeApplyUseCase,
     private val peAuth: PEAuthPort,
@@ -41,7 +37,7 @@ class PEFreeApplyViewModel(
         val attId: String,
         val name: String,
         val mimeType: String,
-        /** 图片附件本地字节，供 Coil 缩略图；非图片为 null。 */
+        
         val previewBytes: ByteArray? = null,
     ) {
         override fun equals(other: Any?): Boolean {
@@ -74,9 +70,9 @@ class PEFreeApplyViewModel(
         val detailLoading: Boolean = false,
         val detail: PEFreeApplyItem? = null,
         val detailError: String? = null,
-        /** 已按需下载的图片附件：attId -> 字节（仅点击后写入） */
+        
         val detailAttPreviews: Map<String, ByteArray> = emptyMap(),
-        /** 正在下载的附件 attId */
+        
         val detailAttLoading: Set<String> = emptySet(),
     )
 
@@ -134,7 +130,7 @@ class PEFreeApplyViewModel(
         }
     }
 
-    /** 加载免测申请详情 */
+    
     fun loadDetail(applyId: String) {
         if (applyId.isBlank()) {
             _uiState.update {
@@ -178,12 +174,10 @@ class PEFreeApplyViewModel(
         }
     }
 
-    /** 附件预览 URL，全屏看图用 */
+    
     fun attPreviewUrl(attId: String): String = useCase.attPreviewUrl(attId)
 
-    /**
-     * 点击后按需下载图片附件；成功后写入 [FreeApplyUiState.detailAttPreviews]，列表出缩略图。
-     */
+    
     fun loadAttPreview(attId: String) {
         if (attId.isBlank()) return
         val state = _uiState.value
@@ -208,7 +202,7 @@ class PEFreeApplyViewModel(
         }
     }
 
-    /** 进入申请页前重置表单并确保学年已加载 */
+    
     fun prepareApplyForm() {
         val year = _uiState.value.let { s ->
             s.schoolYears.firstOrNull { it.code == s.nowSchoolYear }
@@ -341,7 +335,7 @@ class PEFreeApplyViewModel(
     }
 }
 
-/** 申请类型：仅免测（接口 freeApplyType=free） */
+
 val FreeApplyTypes: List<PECodeItem>
     get() = listOf(
         PECodeItem(code = "free", label = "免测"),

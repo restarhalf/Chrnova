@@ -7,29 +7,14 @@ import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.data.repository.RoomPERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-/**
- * 体育系统认证工作流端口实现类
- *
- * 实现PEAuthWorkflowPort接口，负责体育系统认证流程的完整处理。
- * 包括登录、登出、会话刷新等操作。
- *
- * @param gateway 体育网关
- * @param authStore 体育系统认证存储
- * @param repository 体育本地缓存仓库
- */
+
 class PEAuthWorkflowPortImpl(
     private val gateway: PEGateway,
     private val authStore: PEAuthStore,
     private val repository: RoomPERepository,
 ) : PEAuthWorkflowPort {
 
-    /**
-     * 确保用户已登录
-     *
-     * 如果已有有效令牌，直接返回；否则使用保存的凭据登录。
-     *
-     * @throws IllegalStateException 未保存凭据时抛出
-     */
+    
     override suspend fun ensureLoggedIn() {
         val token = authStore.getToken().orEmpty()
         if (token.isNotBlank()) return
@@ -39,15 +24,7 @@ class PEAuthWorkflowPortImpl(
         login(username = username, password = password)
     }
 
-    /**
-     * 用户登录
-     *
-     * 如果登录用户与之前不同，会清除本地体育缓存数据。
-     *
-     * @param username 用户名
-     * @param password 密码
-     * @throws IllegalStateException 登录失败时抛出
-     */
+    
     override suspend fun login(
         username: String,
         password: String,
@@ -67,7 +44,7 @@ class PEAuthWorkflowPortImpl(
             throw IllegalStateException("登录成功但未获取到 Token")
         }
 
-        // 如果用户切换，清除旧用户的体育缓存数据
+
         val newUsername = username.trim()
         if (oldUsername.isNotBlank() && newUsername.isNotBlank() && oldUsername != newUsername) {
             repository.clearAll()
@@ -77,12 +54,12 @@ class PEAuthWorkflowPortImpl(
         authStore.setCredentials(username, password)
     }
 
-    /** 用户登出，清除会话 */
+    
     override fun logout() {
         authStore.clearSession()
     }
 
-    /** 刷新会话，重新登录 */
+    
     override suspend fun refreshSession() {
         val (username, password) = authStore.getCredentials() ?: return
         val oldToken = authStore.getToken()

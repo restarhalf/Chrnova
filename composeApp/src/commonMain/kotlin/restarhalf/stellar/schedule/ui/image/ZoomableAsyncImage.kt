@@ -28,15 +28,7 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 
-/**
- * 可缩放/平移的网络图片组件（QQ 看图器核心）。
- *
- * 复用 pictureselector 模块 [CropScreen] 的缩放/平移手势算法
- * （[detectTransformGestures] + 边界 clamp），区别在于此处没有裁剪框，
- * 而是以"容器居中 fit"为基准，缩放在 1x–[MaxZoom] 之间，平移时保证图片
- * 边缘不回缩进可视区（小于容器时强制居中）。单指点按切状态栏，双击在
- * 1x / 2.5x 间切换。
- */
+
 @Composable
 fun ZoomableAsyncImage(
     url: String,
@@ -59,7 +51,7 @@ fun ZoomableAsyncImage(
             if (size == null || size.width <= 0 || size.height <= 0) {
                 return z to Offset.Zero
             }
-            // 以"居中 fit"为基准的显示尺寸
+
             val fitScale = min(containerW / size.width, containerH / size.height)
                 .coerceAtLeast(1e-3f)
             val dispW = size.width * fitScale * z

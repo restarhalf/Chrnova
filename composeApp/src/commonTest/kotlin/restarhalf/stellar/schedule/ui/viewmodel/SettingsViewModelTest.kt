@@ -45,22 +45,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * SettingsViewModel 单元测试。
- *
- * 全部依赖为接口（可直接 mock）+ final class UseCase 走真实实例：
- * - CancelAllCourseRemindersUseCase(courseReminder)
- * - CancelAllExamRemindersUseCase(examReminder)
- * - ScheduleNextCourseReminderUseCase(courseRepository, courseReminder)
- * - ScheduleNextExamReminderUseCase(FetchExaminationsUseCase(...), examReminder)
- * - FetchSemesterIdsUseCase(authWorkflow, academic, settings)
- * - VerifyGitHubStarUseCase(papersPort, settings)
- *
- * 关键点：
- * 1. uiState 是 stateIn(WhileSubscribed) —— 先 subscribeUi 驱动多层 combine；
- * 2. 设置 observe 流用类级 MutableStateFlow stub，测试中改值驱动 uiState；
- * 3. 取消提醒走 withContext(Dispatchers.IO) 真实跨线程 —— delay + advanceMain 后再 verify。
- */
+
 class SettingsViewModelTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
@@ -73,10 +58,10 @@ class SettingsViewModelTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
+    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
-    // 设置 observe 流（类级可变，测试中改值驱动 uiState）
+
     private val showFlow = MutableStateFlow(true)
     private val reminderFlow = MutableStateFlow(false)
     private val examReminderFlow = MutableStateFlow(false)
@@ -133,14 +118,14 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** 驱动 stateIn(WhileSubscribed)：订阅 uiState，combine 上游才开始运行 */
+    
     private fun TestScope.subscribeUi(vm: SettingsViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 轮询等待 uiState 满足谓词，每轮主动 drain Main 队列 */
+    
     private suspend fun awaitState(
         vm: SettingsViewModel,
         timeoutMs: Long = 5000,
@@ -247,7 +232,7 @@ class SettingsViewModelTest {
         val vm = makeViewModel()
 
         vm.onReminderEnabledChanged(false)
-        // withContext(Dispatchers.IO) 真实跨线程，等待完成后再 drain
+
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 

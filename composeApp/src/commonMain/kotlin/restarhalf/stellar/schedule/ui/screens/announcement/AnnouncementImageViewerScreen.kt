@@ -27,13 +27,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 
-/**
- * 公告图片全屏看图器（QQ 风格）。
- *
- * 黑底铺满全屏，[ZoomableAsyncImage] 提供捏合/双击缩放与平移；点按图片切换
- * 顶部状态栏（关闭 + 保存）显隐；保存按钮经 [saveImage] 把网络图存到相册，
- * 结果经 [showMessage] 提示。仅当 [canSaveImage] 为真时展示保存入口。
- */
+
 @Composable
 fun AnnouncementImageViewerScreen(
     url: String,

@@ -5,18 +5,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * JwxtCurriculumResponse 解析测试。
- *
- * fixture 为 2026-09-07 教务真实响应快照（GET njwhd/student/curriculum,
- * xnxq01id=2026-2027-1, week=1）：选课轮次尚未产生课表格子，item 为空，
- * 属于真实边界样本；教师/课程名为公开教学安排信息，无个人敏感数据。
- */
 class JwxtCurriculumResponseTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** 真实快照：week=1，item 空 + nkbList 两门固定课 */
     private val realSnapshotWeek1 = """
         {"Msg":"当前周次未查询到课表！","code":"1","data":[{"date":[
         {"xqmc":"一","mxrq":"2026-08-24","zc":"all","xqid":1},
@@ -44,7 +36,7 @@ class JwxtCurriculumResponseTest {
         assertEquals("当前周次未查询到课表！", r.msg)
         assertEquals("1", r.nowWeek)
 
-        // 单日块：7 天日期表 + 空 item + Int 型 week 强转为 String
+
         assertEquals(1, r.data.size)
         val block = r.data.first()
         assertEquals(7, block.date.size)
@@ -56,13 +48,13 @@ class JwxtCurriculumResponseTest {
         assertEquals("3", block.week)
         assertEquals("一", block.weekday)
 
-        // 节次元数据：6 个大节
+
         assertEquals(6, r.jcDataList.size)
         assertEquals("01,02", r.jcDataList.first().xjmc)
         assertEquals("第一大节", r.jcDataList.first().djmc)
         assertEquals("11,12", r.jcDataList.last().xjmc)
 
-        // 内班课表：两门固定课
+
         assertEquals(2, r.nkbList.size)
         assertEquals("Y0003-5", r.nkbList[0].kch)
         assertEquals("劳动教育与训练5", r.nkbList[0].kcmc)
@@ -81,10 +73,6 @@ class JwxtCurriculumResponseTest {
         assertEquals("3", json.decodeFromString(JwxtCurriculumResponse.serializer(), strWeek).data.first().week)
     }
 
-    /**
-     * 真实 item（2026-09-07 金石滩校区 week=4 快照节选，字段未改动）。
-     * 覆盖：classWeekDetails 前后带逗号、maxClassTime 用大节名、khfs 考试/考查两种。
-     */
     @Test
     fun `真实非空item课程项解析`() {
         val body = """

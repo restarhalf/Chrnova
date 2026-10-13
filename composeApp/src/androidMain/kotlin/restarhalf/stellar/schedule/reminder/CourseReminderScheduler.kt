@@ -162,7 +162,6 @@ class CourseReminderScheduler(
         return best
     }
 
-    /** 取消所有已调度的提醒 */
     fun cancelAll() {
         val codes = decodeCodes(settings.getString(KEY_CODES, ""))
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -220,23 +219,14 @@ class CourseReminderScheduler(
         private const val EXTRA_COURSE_END_TIME = "course_end_time"
     }
 
-    /** 调度结果 */
     sealed class ScheduleResult {
-        /** 成功调度，包含触发时间 */
         data class Scheduled(val triggerAtMs: Long) : ScheduleResult()
 
-        /** 没有即将到来的课程 */
         object NoUpcoming : ScheduleResult()
 
-        /** 调度失败 */
         object Failed : ScheduleResult()
     }
 
-    /**
-     * 尝试调度闹钟
-     *
-     * @return true 表示成功设置闹钟，false 表示失败
-     */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleAlarmBestEffort(
@@ -283,7 +273,6 @@ class CourseReminderScheduler(
         }
     }
 
-    /** 检查当前是否有有效的闹钟已调度 */
     fun hasScheduledAlarm(): Boolean {
         val pendingIntent =
             PendingIntent.getBroadcast(
@@ -295,11 +284,6 @@ class CourseReminderScheduler(
         return pendingIntent != null
     }
 
-    /**
-     * 获取下次提醒的触发时间
-     *
-     * @return 触发时间戳，如果没有则返回 null
-     */
     fun getNextTriggerTime(): Long? {
         return if (settings.hasKey(KEY_NEXT_TRIGGER)) settings.getLong(
             KEY_NEXT_TRIGGER,

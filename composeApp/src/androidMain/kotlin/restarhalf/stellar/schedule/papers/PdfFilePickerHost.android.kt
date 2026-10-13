@@ -10,22 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
-/**
- * 文档/图片选择器宿主（Android）。
- *
- * 每次进入组合都会拉起选择器；选择结束（含取消）必定回调 [onPicked]，
- * 取消时列表为空，便于调用方收起宿主、下次再点重新唤起。
- *
- * @param multiple 是否允许多选
- * @param onPicked 选择完成后一次性回调全部文件（取消为空列表）
- */
 @Composable
 fun PdfFilePickerHost(
     multiple: Boolean = false,
     onPicked: (List<PickedAttachment>) -> Unit,
 ) {
     val context = LocalContext.current
-    // null=尚未返回；空列表=取消；非空=已选
+
     val pendingUris = remember { mutableStateOf<List<Uri>?>(null) }
 
     val singleLauncher = rememberLauncherForActivityResult(

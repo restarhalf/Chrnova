@@ -15,7 +15,7 @@ import kotlin.test.assertNull
 
 class MappersTest {
 
-    // ---------- Campus ----------
+
 
     @Test
     fun campusRoundTrip() {
@@ -26,7 +26,7 @@ class MappersTest {
         assertEquals(DataCampus.Jinshitan, DomainCampus.Jinshitan.toData())
     }
 
-    // ---------- Course ----------
+
 
     private val courseEntity = CourseEntity(
         id = 7L,
@@ -71,7 +71,7 @@ class MappersTest {
         assertEquals(courseEntity, courseEntity.toDomain().toEntity())
     }
 
-    // ---------- Examination ----------
+
 
     private val examinationEntity = ExaminationEntity(
         id = 11L,
@@ -98,7 +98,7 @@ class MappersTest {
         assertEquals(examinationEntity.courseName, entity.courseName)
     }
 
-    // ---------- Grade ----------
+
 
     private val gradeEntity = GradeEntity(
         courseCode = "CS102",
@@ -131,7 +131,7 @@ class MappersTest {
         assertEquals("操作系统", entity.courseName)
     }
 
-    // ---------- PE YearScore ----------
+
 
     @Test
     fun peYearScoreRoundTrip() {
@@ -145,7 +145,7 @@ class MappersTest {
         assertEquals(entity, entity.toDomain().toEntity())
     }
 
-    // ---------- PE Detail ----------
+
 
     @Test
     fun peSubjectScoreRoundTripKeepsNullableFields() {
@@ -183,7 +183,7 @@ class MappersTest {
         assertEquals("良好", summaries[0].totalGrade)
         assertEquals("2025-2026", summaries[0].schoolYear)
         assertEquals(2, scores.size)
-        // 反向映射还原
+
         val restored = summaries[0].toDomain(scores.map { it.toDomain() })
         assertEquals(detail, restored)
     }

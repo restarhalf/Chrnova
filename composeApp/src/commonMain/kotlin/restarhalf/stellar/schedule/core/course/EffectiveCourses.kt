@@ -11,7 +11,7 @@ fun isCourseActiveInWeek(course: Course, week: Int): Boolean {
     }
 }
 
-/** 提取去重的普通课程名称列表（type=0） */
+
 fun buildCourseNames(courses: List<Course>): List<String> {
     return courses.filter { it.type == 0 }.map { it.name }.distinct()
 }

@@ -100,7 +100,7 @@ fun ProfileScreen(
             )
         },
         popupHost = {
-            // 教务系统退出确认
+
             if (showLogoutJwxtConfirm) {
                 WindowDialog(
                     show = showLogoutJwxtConfirm,
@@ -131,7 +131,7 @@ fun ProfileScreen(
                     }
                 }
             }
-            // 体测系统退出确认
+
             if (showLogoutPEConfirm) {
                 WindowDialog(
                     show = showLogoutPEConfirm,
@@ -162,7 +162,7 @@ fun ProfileScreen(
                     }
                 }
             }
-            // 图片选择器（头像使用 1:1 裁剪）
+
             pictureSelectorHost(
                 showPictureSelector,
                 { showPictureSelector = false },
@@ -189,7 +189,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 个人信息编辑卡片
+
             item {
                 SmallTitle(text = "个人信息")
                 PersonalInfoEditCard(
@@ -203,7 +203,7 @@ fun ProfileScreen(
                 )
             }
 
-            // 教务系统信息
+
             item {
                 if (isLoggedIn) {
                     SmallTitle(text = "教务系统")
@@ -252,7 +252,7 @@ fun ProfileScreen(
                 }
             }
 
-            // 体测系统信息
+
             item {
                 if (isPeLoggedIn) {
                     SmallTitle(text = "体测平台")

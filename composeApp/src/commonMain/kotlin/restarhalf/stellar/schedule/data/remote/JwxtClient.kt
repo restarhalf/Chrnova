@@ -23,11 +23,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 教务系统HTTP客户端
- *
- * 注意：本类中所有URL均为第三方教务系统地址（jwyd.dlnu.edu.cn），该服务器仅支持HTTP，无法升级为HTTPS。
- */
+
 class JwxtClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },
@@ -241,11 +237,11 @@ class JwxtClient(
         return null
     }
 
-    // ==================== 选课系统接口实现 ====================
-    // 对应 http://jwyd.dlnu.edu.cn/jsxsd/qzapp/* 系列接口。
-    // 这些接口均为 POST + query 参数（无 body），退课接口除外（multipart）。
 
-    /** 通用选课 POST 请求：无 body，仅 query 参数，返回原始响应文本 */
+
+
+
+    
     private suspend fun postSelectionRaw(
         endpoint: String,
         params: Map<String, String>,
@@ -390,12 +386,7 @@ class JwxtClient(
         return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
     }
 
-    /**
-     * 解析 wxxkOper 响应的 data 字段为统一结果：
-     * - success：data 可能为空字符串、关联课程对象或关联课程数组
-     * - success_needcf：data 为对象，含 yxcfbs/cfbs/xkkcid/yxjx0404id
-     * - fail：data 为空字符串
-     */
+    
     private fun parseSelectionOperResult(resp: JwxtSelectionResponse): JwxtSelectionOperResult {
         val msg = resp.resolvedMessage()
         val data = resp.data
@@ -426,7 +417,7 @@ class JwxtClient(
         }
     }
 
-    /** 成功响应中 data 若为数组，则尝试解析为关联课程列表；对象视为单个课程；其它返回空 */
+    
     private fun parseRelatedCourses(data: JsonElement?): List<JwxtSelectionCourse> {
         if (data == null) return emptyList()
         return when (data) {

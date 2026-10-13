@@ -26,13 +26,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 关于页 Compose UI 测试（Ultron KMP 入口）。
- *
- * AppInfoPort 经 koinInject 获取：测试内 startKoin（已有 Koin 时 loadKoinModules 补注册，
- * 与 ExclusionScreenUiTest 的 Koin 共存）。
- * 应用版本 5 连击彩蛋用语义 OnClick 直调，避免触碰注入与布局同步的竞态。
- */
 class AboutScreenUiTest {
 
     private val appUpdate = mock<AppUpdatePort>(MockMode.autofill)
@@ -70,7 +63,7 @@ class AboutScreenUiTest {
         val vm = AboutViewModel(checkAppUpdate = CheckAppUpdateUseCase(appUpdate))
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
-                // 关闭动态背景效果（RuntimeShader 无限动画会让 idle 永不满足）
+
                 CompositionLocalProvider(LocalBlurEnabled provides false) {
                     AboutScreen(vm = vm, onBack = {})
                 }

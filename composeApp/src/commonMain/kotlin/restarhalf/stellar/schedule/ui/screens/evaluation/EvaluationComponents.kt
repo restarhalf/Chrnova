@@ -45,18 +45,13 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 评分星星的主色（暖琥珀，亮暗模式均可读） */
+
 private val StarFilledColor = Color(0xFFFFB300)
 
-/** 顶部状态药丸的高度，参考 EMS 的 statusText */
+
 private val StatusPillHeight = 28.dp
 
-/**
- * 只读星级展示：5 颗星，已得分为琥珀色，未得为浅灰。
- *
- * @param rating 0-5
- * @param starSize 单颗星尺寸
- */
+
 @Composable
 fun StarRatingDisplay(
     rating: Int,
@@ -78,14 +73,7 @@ fun StarRatingDisplay(
     }
 }
 
-/**
- * 半星评分展示：用于显示带小数的平均分（如 4.6）。
- *
- * 渲染策略：用 clip 把每颗星裁成两半，左半填充表示 floor，右半按小数比例填充。
- *
- * @param rating 0.0-5.0
- * @param starSize 单颗星尺寸
- */
+
 @Composable
 fun HalfStarRatingDisplay(
     rating: Double,
@@ -98,14 +86,14 @@ fun HalfStarRatingDisplay(
         for (i in 1..5) {
             val fillRatio = (safe - (i - 1)).coerceIn(0.0, 1.0).toFloat()
             Box(modifier = Modifier.size(starSize.dp)) {
-                // 底色：空星
+
                 Icon(
                     imageVector = Star,
                     contentDescription = null,
                     tint = summary.copy(alpha = 0.35f),
                     modifier = Modifier.size(starSize.dp),
                 )
-                // 填充层：按比例裁剪
+
                 if (fillRatio > 0f) {
                     Box(
                         modifier = Modifier
@@ -126,9 +114,7 @@ fun HalfStarRatingDisplay(
     }
 }
 
-/**
- * 可点击星级输入：大触控区，点击即评分（1-5），带放大回弹反馈。
- */
+
 @Composable
 fun StarRatingInput(
     rating: Int,
@@ -143,7 +129,7 @@ fun StarRatingInput(
     ) {
         for (i in 1..5) {
             val filled = i <= safe
-            // 每颗星独立的 scale 状态，点击瞬间放大回弹
+
             val scale = remember { Animatable(1f) }
             LaunchedEffect(safe) {
                 if (i == safe && safe > 0) {
@@ -177,11 +163,7 @@ fun StarRatingInput(
     }
 }
 
-/**
- * 紧凑点赞按钮：心形图标 + 数量，已赞时填充主色。
- *
- * 点击时心形弹跳 + 数字 pop 反馈。
- */
+
 @Composable
 fun LikeButton(
     liked: Boolean,
@@ -192,7 +174,7 @@ fun LikeButton(
     val colors = MiuixTheme.colorScheme
     val heartScale = remember { Animatable(1f) }
     LaunchedEffect(likes) {
-        // 点赞数变化时弹一下
+
         heartScale.animateTo(1.3f, tween(120))
         heartScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
     }
@@ -223,11 +205,7 @@ fun LikeButton(
     }
 }
 
-/**
- * 顶部状态药丸：参考 EMS 顶栏下方的状态条（圆形圆角 28dp 高）。
- *
- * 用于显示"加载中 / 错误 / 提示"等短文本，自动隐藏 null。
- */
+
 @Composable
 fun EvaluationStatusPill(
     text: String?,
@@ -256,15 +234,7 @@ fun EvaluationStatusPill(
     }
 }
 
-/**
- * 圆角小徽标：参考 EMS GradeItemCard 的"挂科/补考"标签样式。
- *
- * 用于评价列表项上的"匿名""我的""热门"等标识。
- *
- * @param text 标签文本
- * @param background 背景色（默认 warning 中性灰）
- * @param contentColor 文本色（默认 onSurface）
- */
+
 @Composable
 fun EvaluationTag(
     text: String,
@@ -287,17 +257,7 @@ fun EvaluationTag(
     }
 }
 
-/**
- * 评价列表项卡片：左侧彩色强调条 + 课程/教师/评分 + 内容预览 + 作者/点赞。
- *
- * 视觉风格参考 EMS 的 ExamItemCard / GradeItemCard。
- *
- * @param onClick 点击卡片（进入详情）
- * @param onLike 点击点赞
- * @param showCourseName 是否在顶部展示课程名（"我的评价"模式需要）
- * @param isMine 是否本人提交（用于显示"我的"徽标）
- * @param accentColor 左侧强调条颜色（按课程名取色保持一致）
- */
+
 @Composable
 fun EvaluationListItem(
     evaluation: Evaluation,
@@ -330,7 +290,7 @@ fun EvaluationListItem(
                 .padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 左侧彩色强调条
+
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
@@ -344,7 +304,7 @@ fun EvaluationListItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                // 课程名（仅在"我的评价"模式展示）
+
                 if (showCourseName) {
                     Text(
                         text = evaluation.courseName.ifEmpty { "未命名课程" },
@@ -356,12 +316,12 @@ fun EvaluationListItem(
                     )
                 }
 
-                // 教师 + 评分 + 状态徽标
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    // "我的"徽标（仅本人提交时显示）
+
                     if (isMine) {
                         EvaluationTag(
                             text = "我的",
@@ -380,7 +340,7 @@ fun EvaluationListItem(
                     StarRatingDisplay(rating = evaluation.rating, starSize = 13)
                 }
 
-                // 内容预览
+
                 if (evaluation.content.isNotBlank()) {
                     Text(
                         text = evaluation.content,
@@ -393,7 +353,7 @@ fun EvaluationListItem(
 
                 HorizontalDivider()
 
-                // 底部元信息：作者 + 点赞
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -417,15 +377,7 @@ fun EvaluationListItem(
     }
 }
 
-/**
- * 课程聚合摘要卡片：参考 EMS GradeSummaryCard 三段式布局。
- *
- * 顶部展示课程名 + 教师，下面三段式：[平均分 | 评价数 | 最新时间]，
- * 配以半星展示 + 大数字。
- *
- * @param summary 课程聚合数据
- * @param onClick 点击进入该课程的评价列表
- */
+
 @Composable
 fun CourseSummaryCard(
     summary: CourseEvaluationSummary,
@@ -454,7 +406,7 @@ fun CourseSummaryCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 顶部：课程名 + 教师
+
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = summary.courseName.ifEmpty { "未命名课程" },
@@ -471,13 +423,13 @@ fun CourseSummaryCard(
                 }
             }
 
-            // 三段式摘要：平均分 | 评价数 | 最新时间
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 平均分（大数字 + 半星）
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -501,7 +453,7 @@ fun CourseSummaryCard(
                         .height(40.dp)
                         .background(colors.outline.copy(alpha = 0.4f)),
                 )
-                // 评价数
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -524,7 +476,7 @@ fun CourseSummaryCard(
                         .height(40.dp)
                         .background(colors.outline.copy(alpha = 0.4f)),
                 )
-                // 最新时间（相对时间）
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -546,11 +498,7 @@ fun CourseSummaryCard(
     }
 }
 
-/**
- * 评分大数字 + 半星卡片：用于 EvaluationCourseScreen 顶部"这门课"的强烈视觉锚点。
- *
- * 设计上比 CourseSummaryCard 更突出，因为这是某个具体课程的二级页面。
- */
+
 @Composable
 fun CourseHeroCard(
     courseName: String,
@@ -630,9 +578,7 @@ fun CourseHeroCard(
     }
 }
 
-/**
- * 评价详情页 Hero 卡片：单条评价的视觉锚点。
- */
+
 @Composable
 fun EvaluationDetailHero(
     evaluation: Evaluation,
@@ -683,7 +629,7 @@ fun EvaluationDetailHero(
                 if (evaluation.teacher.isNotBlank()) {
                     EvaluationTag(text = evaluation.teacher)
                 }
-                // 评分行：大数字 + 半星 + 5分制
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -708,7 +654,7 @@ fun EvaluationDetailHero(
     }
 }
 
-/** 把 Unix 秒时间戳格式化成相对友好的简短日期（"刚刚"/"X 天前"/"YYYY-MM-DD"） */
+
 private fun formatLatestTime(epochSeconds: Long): String {
     if (epochSeconds <= 0) return "—"
     return runCatching {

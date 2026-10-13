@@ -33,7 +33,6 @@ class SyncPortImplTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** 单条可解析课表项：周三第3-4节，周次1/3/5 */
     private val curriculumJson = """
         {"code":"1","Msg":"",
          "data":[{"date":[{"xqmc":"一","mxrq":"2026-03-02","zc":"all","xqid":1}],
@@ -74,12 +73,12 @@ class SyncPortImplTest {
     fun syncStampsSemesterAndUserNo() = runTest {
         val result = impl.sync(semesterId = "2026-2027-1", campusId = "CAMPUS-1", week = "all")
 
-        // 网关参数透传
+
         assertEquals(
             mapOf("xnxq01id" to "2026-2027-1", "kbjcmsid" to "CAMPUS-1", "week" to "all"),
             capturedFields.single(),
         )
-        // 解析结果盖章：semesterId + userNo
+
         val courses = capturedCourses.single()
         assertEquals(1, courses.size)
         val course = courses.single()
@@ -93,7 +92,7 @@ class SyncPortImplTest {
         assertEquals("MA101|30304", course.remoteKey)
         assertEquals("2026-2027-1", course.semesterId)
         assertEquals("U1", course.userNo)
-        // 同步结果
+
         assertEquals(
             SyncResult(inserted = 1, semesterId = "2026-2027-1", campusId = "CAMPUS-1", campusName = "", week = "all"),
             result,
@@ -119,7 +118,7 @@ class SyncPortImplTest {
     @Test
     fun fetchTermStartDateReturnsMondayMinusSevenDays() = runTest {
         val ms = impl.fetchTermStartDate("S", "C")
-        // mxrq=2026-03-02（周一），减 7 天 = 2026-02-23 当地零点
+
         val monday = kotlinx.datetime.LocalDate.parse("2026-03-02")
         val expected = monday.minus(7, DateTimeUnit.DAY)
             .atStartOfDayIn(TimeZone.currentSystemDefault())

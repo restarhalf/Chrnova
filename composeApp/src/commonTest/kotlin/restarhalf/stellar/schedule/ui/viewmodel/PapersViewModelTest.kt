@@ -22,20 +22,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
-/**
- * PapersViewModel 单元测试。
- *
- * PapersPort/SettingsPort 均为接口可直接 mock；VerifyGitHubStarUseCase 是
- * final class，用真实实例 + 同一批 mock 端口构造。
- * StarVerificationHolder 在 VM 构造 init 中读取 getStarVerified()，setUp 里 stub 为 false。
- * uiState 是裸 MutableStateFlow，无需订阅即可读 value。
- */
+
 class PapersViewModelTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
+    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun makeViewModel() = PapersViewModel(

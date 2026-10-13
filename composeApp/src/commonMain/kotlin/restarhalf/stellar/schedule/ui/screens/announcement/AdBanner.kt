@@ -17,22 +17,12 @@ import coil3.compose.SubcomposeAsyncImage
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 广告位配置（UI 层），字段与后端 /ad 下发及 domain.model.AdConfig 一一对应。
- */
 data class AdBannerConfig(
     val imageUrl: String? = null,
     val targetUrl: String? = null,
     val announcementId: String? = null,
 )
 
-/**
- * 公告列表页顶部的广告位横幅。
- *
- * 视觉：圆角横幅 + 右上角"广告"字样（文字标签，无图标，对齐极简规范）。
- * 点击：有单链接直接跳转；有公告 id 则复用公告详情；皆无则无操作。
- * [config] 为 null 时整条不渲染（后端未下发广告时隐藏）。
- */
 @Composable
 fun AdBanner(
     config: AdBannerConfig?,
@@ -69,11 +59,11 @@ fun AdBanner(
                 error = { AdSurface() },
             )
         } else {
-            // 无横幅图时（仅配置了跳转目标）：渲染可点击的占位面，由右上角"广告"标签提示
+
             AdSurface()
         }
 
-        // 右上角"广告"字样
+
         Box(
             modifier =
                 Modifier
@@ -92,7 +82,6 @@ fun AdBanner(
     }
 }
 
-/** 横幅底版：浅色表面占位（加载中 / 加载失败 / 无图时展示），不含任何文案 */
 @Composable
 private fun AdSurface() {
     val colors = MiuixTheme.colorScheme

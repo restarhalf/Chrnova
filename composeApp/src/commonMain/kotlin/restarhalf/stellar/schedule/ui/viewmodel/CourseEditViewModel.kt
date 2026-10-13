@@ -24,49 +24,26 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 课程编辑ViewModel
- * 
- * 管理实验课编辑页面的UI状态，包括：
- * - 课程列表和名称
- * - 编辑表单状态
- * - 冲突检测
- * - 保存和删除操作
- */
+
 class CourseEditViewModel(
     private val courseRepository: CourseRepository,
     private val auth: JwxtAuthPort,
 ) : ViewModel() {
 
-    /** 保存进行中标志，用于防连点重复提交 */
+    
     private val _saving = MutableStateFlow(false)
 
-    /** 保存进行中状态，UI 据此禁用保存按钮 */
+    
     val isSaving: StateFlow<Boolean> = _saving.asStateFlow()
 
-    /**
-     * 课程编辑UI状态
-     *
-     * @param courses 所有课程列表
-     * @param courseNames 课程名称列表（用于下拉选择）
-     */
+    
     @Stable
     data class CourseEditUiState(
         val courses: ImmutableList<Course>,
         val courseNames: ImmutableList<String>,
     )
 
-    /**
-     * 编辑表单状态
-     *
-     * @param isEdit 是否为编辑模式（false表示新建）
-     * @param selectedIndex 选中的课程名称索引
-     * @param classRoom 教室
-     * @param dayOfWeek 星期几
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     * @param selectedWeeks 选中的周次集合
-     */
+    
     @Stable
     data class EditingFormState(
         val isEdit: Boolean,
@@ -90,10 +67,10 @@ class CourseEditViewModel(
                 initialValue = CourseEditUiState(courses = persistentListOf(), courseNames = persistentListOf()),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<CourseEditUiState> = _uiState
 
-    /** 当前登录用户的学号 */
+    
     private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
@@ -102,27 +79,10 @@ class CourseEditViewModel(
             initialValue = "",
         )
 
-    /**
-     * 将星期数转换为中文文本
-     *
-     * @param dayOfWeek 星期数（1-7）
-     * @return 中文星期文本
-     */
+    
     fun weekdayText(dayOfWeek: Int): String = ClockTime.weekdayText(dayOfWeek)
 
-    /**
-     * 构建禁用的周次集合
-     * 
-     * 检测在同一时间段有冲突的周次，这些周次不能选择。
-     * 
-     * @param courses 所有课程列表
-     * @param dayOfWeek 星期几
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     * @param courseId 当前课程ID（编辑时）
-     * @param editingCourseId 正在编辑的课程ID
-     * @return 禁用的周次集合
-     */
+    
     fun buildDisabledWeeks(
         courses: List<Course>,
         dayOfWeek: Int,
@@ -141,19 +101,7 @@ class CourseEditViewModel(
         return result
     }
 
-    /**
-     * 构建要保存的实验课
-     * 
-     * @param selectedName 课程名称
-     * @param selectedWeeks 选中的周次
-     * @param classRoom 教室
-     * @param dayOfWeek 星期几
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     * @param existing 已存在的课程（编辑时）
-     * @param courses 所有课程列表
-     * @return 构建的课程对象，如果参数无效返回null
-     */
+    
     fun buildLabCourseToSave(
         selectedName: String,
         selectedWeeks: Set<Int>,
@@ -170,7 +118,7 @@ class CourseEditViewModel(
         if (weeks.isEmpty()) return null
 
         val sectionCount = (endSection - startSection + 1).coerceAtLeast(1)
-        // 优先使用用户输入的教师，其次从同步课程中获取
+
         val teacherFromSyncedCourse =
             courses
                 .firstOrNull { it.type == 0 && it.name == selectedName && it.teacher.isNotBlank() }
@@ -199,27 +147,12 @@ class CourseEditViewModel(
         )
     }
 
-    /**
-     * 观察正在编辑的课程
-     * 
-     * @param courseId 课程ID
-     * @return 课程Flow
-     */
+    
     fun observeEditingCourse(courseId: Long?): Flow<Course?> {
         return courseRepository.observeCourseById(courseId ?: -1)
     }
 
-    /**
-     * 构建编辑表单状态
-     * 
-     * @param courseId 课程ID
-     * @param editingCourse 正在编辑的课程
-     * @param courseNames 课程名称列表
-     * @param initialDayOfWeek 预选星期几（1-7），用于新建时预填
-     * @param initialStartSection 预选开始节次（1-12），用于新建时预填
-     * @param initialSelectedWeek 预选周次（1-n），用于新建时预填
-     * @return 编辑表单状态
-     */
+    
     fun buildEditingFormState(
         courseId: Long?,
         editingCourse: Course?,
@@ -229,7 +162,7 @@ class CourseEditViewModel(
         initialSelectedWeek: Int = 1,
     ): EditingFormState {
         if (courseId == null || editingCourse == null) {
-            // 新建模式，使用预选值
+
             return EditingFormState(
                 isEdit = false,
                 selectedIndex = 0,
@@ -242,7 +175,7 @@ class CourseEditViewModel(
             )
         }
 
-        // 编辑模式，填充已有数据
+
         val selectedIndex = courseNames.indexOf(editingCourse.name).takeIf { it >= 0 } ?: 0
         return EditingFormState(
             isEdit = true,
@@ -258,36 +191,17 @@ class CourseEditViewModel(
         )
     }
 
-    /**
-     * 切换周次选中状态
-     * 
-     * @param selectedWeeks 当前选中的周次集合
-     * @param week 要切换的周次
-     * @return 更新后的选中周次集合
-     */
+    
     fun toggleWeek(selectedWeeks: Set<Int>, week: Int): Set<Int> {
         return if (selectedWeeks.contains(week)) selectedWeeks - week else selectedWeeks + week
     }
 
-    /**
-     * 构建节次摘要文本
-     * 
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     * @return 格式化的节次文本
-     */
+    
     fun sectionSummary(startSection: Int, endSection: Int): String {
         return "第${startSection}-${endSection}节"
     }
 
-    /**
-     * 保存实验课
-     *
-     * 进行中会忽略重复调用（防连点重复插入），结果通过回调返回。
-     *
-     * @param course 课程数据
-     * @param onResult 保存结果回调（true=成功）
-     */
+    
     fun saveLabCourse(course: Course, onResult: (Boolean) -> Unit) {
         if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
@@ -305,12 +219,7 @@ class CourseEditViewModel(
         }
     }
 
-    /**
-     * 删除课程
-     *
-     * @param course 课程数据
-     * @param onResult 删除结果回调（true=成功）
-     */
+    
     fun deleteCourse(course: Course, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val deleted = runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
@@ -323,15 +232,7 @@ class CourseEditViewModel(
         }
     }
 
-    /**
-     * 检查课程是否在同一时间段重叠
-     * 
-     * @param other 另一门课程
-     * @param dayOfWeek 星期几
-     * @param startSection 开始节次
-     * @param endSection 结束节次
-     * @return 是否重叠
-     */
+    
     private fun overlapsInDayAndSection(
         other: Course,
         dayOfWeek: Int,

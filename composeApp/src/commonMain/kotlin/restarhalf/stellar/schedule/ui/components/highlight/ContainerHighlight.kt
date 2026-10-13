@@ -1,5 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
+
+
 
 package restarhalf.stellar.schedule.ui.components.highlight
 
@@ -9,15 +9,7 @@ import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.highlight.rememberTiltLight
 
-/**
- * Resolves a [Highlight] for the given [container] and theme, optionally driving its two
- * light sources from the device tilt sensor.
- *
- * Returns `null` when [container] is [HighlightConfig.Container.Disabled]. The tilt sensors
- * are always wired (composables cannot be conditionally invoked) — when the container is
- * disabled, a placeholder style feeds the sensors and the resulting highlight is gated to
- * null before reaching the caller.
- */
+
 @Composable
 internal fun rememberContainerHighlight(
     container: HighlightConfig.Container,

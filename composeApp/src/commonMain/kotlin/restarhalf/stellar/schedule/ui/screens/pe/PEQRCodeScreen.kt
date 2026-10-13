@@ -62,7 +62,7 @@ fun PEQRCodeScreen(
     val name = peAuthProfile?.stuName ?: jwxtAuthProfile?.name
     val colors = MiuixTheme.colorScheme
 
-    // 扫码场景：屏幕常亮 + 临时拉满亮度，离开页面时恢复
+
     val screenTuner: ScreenTunerPort = koinInject()
     DisposableEffect(Unit) {
         screenTuner.enterScanPresentation()

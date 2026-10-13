@@ -1,9 +1,9 @@
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
+
+
 
 package restarhalf.stellar.schedule.ui.modifier
 
-// Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable

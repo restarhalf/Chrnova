@@ -125,7 +125,7 @@ fun ExamEditScreen(
         }
         if (formState.timePart.isNotBlank()) {
             try {
-                // 兼容手动保存的 "HH:mm~HH:mm" 与教务同步的 "HH:mm-HH:mm"
+
                 val parts = formState.timePart.split(Regex("[~-]"))
                 if (parts.size == 2) {
                     val startParts = parts[0].trim().split(":")

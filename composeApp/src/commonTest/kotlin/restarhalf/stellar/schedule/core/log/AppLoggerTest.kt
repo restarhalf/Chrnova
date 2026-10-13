@@ -4,10 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * AppLogger 内存路径测试（不触碰文件存储，不调用 init）。
- * AppLogger 是进程级单例，每个用例先 clear() 保证隔离。
- */
 class AppLoggerTest {
 
     private fun reset() {
@@ -33,7 +29,7 @@ class AppLoggerTest {
         assertEquals("Network", entry.tag)
         assertEquals(AppLogger.Level.DEBUG, entry.level)
         assertEquals("token refreshed", entry.message)
-        // 时间戳格式 yyyy-MM-dd HH:mm:ss.SSS
+
         assertTrue(Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}""").matches(entry.timestamp))
     }
 
@@ -82,7 +78,7 @@ class AppLoggerTest {
         AppLogger.setEnabled(true)
         AppLogger.log("Multi", "line1\nline2\\path")
         val text = AppLogger.toPlainText()
-        // 消息中的换行被转义为 \n 字面量，反斜杠被转义为 \\，单行输出
+
         assertEquals(1, text.split("\n").size)
         assertTrue("""line1\nline2\\path""" in text)
     }

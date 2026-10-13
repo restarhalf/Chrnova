@@ -48,13 +48,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 体育模块 Compose UI 测试（Ultron KMP 入口），覆盖 5 个屏幕。
- *
- * VM 构造同 JVM 测试配方：4 个 UseCase 真实实例 + mock PEGateway/PEAuthPort/PEAuthWorkflowPort。
- * isLoggedIn 响应 peAuth.observeToken()——token 非空才触发页面 LaunchedEffect 加载数据。
- * PEQRCodeScreen 经 koinInject 获取 ScreenTunerPort，测试需先 ensureKoin 注册 mock。
- */
 class PEScreenUiTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)
@@ -71,9 +64,6 @@ class PEScreenUiTest {
         private var koinReady = false
     }
 
-    /** PEQRCodeScreen 用 koinInject 获取 ScreenTunerPort。
-     *  全量回归时 ExclusionScreenUiTest 可能已 startKoin（无 ScreenTunerPort 定义），
-     *  故已有 Koin 时用 loadKoinModules 补注册；标志防止重复加载覆盖异常。 */
     private fun ensureKoin() {
         if (koinReady) return
         val peModule = module { single<ScreenTunerPort> { screenTuner } }
@@ -108,7 +98,7 @@ class PEScreenUiTest {
         }
     }
 
-    // region PEScoreScreen
+
 
     @Test
     fun 未登录显示登录入口() = runUltronUiTest {
@@ -143,13 +133,13 @@ class PEScreenUiTest {
         onNodeWithText("已测 8/10").assertIsDisplayed()
         onNodeWithText("95.0分").assertIsDisplayed()
         onNodeWithText("免测").assertIsDisplayed()
-        // 已登录 → 顶栏出现二维码入口（Icon 的语义是 ContentDescription）
+
         onNode(hasContentDescription("二维码")).assertIsDisplayed()
     }
 
-    // endregion
 
-    // region PELoginScreen
+
+
 
     @Test
     fun 登录页渲染与空凭据门禁() = runUltronUiTest {
@@ -170,11 +160,11 @@ class PEScreenUiTest {
         onNodeWithText("学号").assertIsDisplayed()
         onNodeWithText("密码").assertIsDisplayed()
         onNodeWithText("此为体测平台账号登录").assertIsDisplayed()
-        // 空凭据 → 登录按钮禁用，点击无回调
+
         onNodeWithText("登录").performClick()
         Thread.sleep(500)
         assertEquals(0, successCalls)
-        // 填写凭据后点击登录 → 成功回调触发
+
         everySuspend { peAuthWorkflow.login(any(), any()) } returns Unit
         vm.onUsernameChange("2023001")
         vm.onPasswordChange("pwd")
@@ -183,9 +173,9 @@ class PEScreenUiTest {
         waitUntil(timeoutMillis = 3_000) { successCalls == 1 }
     }
 
-    // endregion
 
-    // region PEQRCodeScreen
+
+
 
     @Test
     fun 二维码页渲染学生信息() = runUltronUiTest {
@@ -200,16 +190,16 @@ class PEScreenUiTest {
             }
         }
         waitText("请将此二维码展示给体测老师扫描")
-        // 顶栏标题与卡片标题重复 → 取首个节点
+
         onAllNodesWithText("体测二维码")[0].assertIsDisplayed()
         onNodeWithContentDescription("体测二维码").assertIsDisplayed()
         onNodeWithText("2023001").assertIsDisplayed()
         onNodeWithText("张三").assertIsDisplayed()
     }
 
-    // endregion
 
-    // region PEDetailScreen / PESubjectHistoryScreen
+
+
 
     @Test
     fun 详情页渲染总分与科目并回调点击() = runUltronUiTest {
@@ -287,12 +277,12 @@ class PEScreenUiTest {
         waitText("50米跑成绩记录")
         waitText("共1条记录 · 按时间倒序")
         onNodeWithText("7.5s").assertIsDisplayed()
-        // currentResult 与记录 result 一致 → 显示"当前成绩"标记
+
         onNodeWithText("当前成绩").assertIsDisplayed()
         onNodeWithText("考核场次").assertIsDisplayed()
         onNodeWithText("第一场").assertIsDisplayed()
         onNodeWithText("2025-10-01").assertIsDisplayed()
     }
 
-    // endregion
+
 }

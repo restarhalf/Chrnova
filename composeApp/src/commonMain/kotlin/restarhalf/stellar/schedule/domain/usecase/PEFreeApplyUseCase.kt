@@ -7,9 +7,6 @@ import restarhalf.stellar.schedule.data.remote.PEFreeSchoolYearResponse
 import restarhalf.stellar.schedule.data.remote.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-/**
- * 学生免测申请（gymFreeManager）用例
- */
 class PEFreeApplyUseCase(
     private val gateway: PEGateway,
     private val authWorkflow: PEAuthWorkflowPort,
@@ -52,6 +49,5 @@ class PEFreeApplyUseCase(
         gateway.downloadPeFile(attId)
     }
 
-    /** 附件预览/看图 URL，走 Coil，与公告图片同一套缓存 */
     fun attPreviewUrl(attId: String): String = gateway.peFileDownloadUrl(attId)
 }

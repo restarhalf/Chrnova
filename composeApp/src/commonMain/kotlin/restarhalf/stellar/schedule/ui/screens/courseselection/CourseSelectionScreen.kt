@@ -82,22 +82,7 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 自动抢课屏幕
- *
- * 采用 Tab 分区布局，每个区域职责单一：
- * - 选课：轮次 → 分类 → 搜索 → 课程列表（加入目标）
- * - 目标：抢课目标列表 + 优先级调整 + 抢课配置
- * - 已选：已选课程列表（退课）
- * - 日志：实时抢课日志
- *
- * 底部固定操作栏让开始/停止按钮永远可达，顶部状态条显示会话与抢课状态。
- *
- * 视觉语言与 EMS / 课程评价一致：
- * - 卡片左侧彩色强调条（按课程名取色，同课程同色）
- * - 列表项入场动画（透明度 + 上浮）
- * - 成功 / 失败 / 警告使用 StatusColors 语义色
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CourseSelectionScreen(
@@ -148,7 +133,7 @@ fun CourseSelectionScreen(
                         },
                     )
                 }
-                // 顶部状态条
+
                 val statusText = buildStatusText(uiState)
                 AnimatedVisibility(
                     visible = statusText != null,
@@ -271,7 +256,7 @@ fun CourseSelectionScreen(
     }
 }
 
-/** 顶部状态条文案 */
+
 private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiState): String? {
     return when {
         uiState.backgroundRunning -> "后台抢课运行中，可关闭应用或锁屏"
@@ -283,7 +268,7 @@ private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiS
     }
 }
 
-/** 列表项入场动画：透明度 0→1 + 50dp 上浮，300ms 缓入 */
+
 @Composable
 private fun rememberItemEnterAnimation(): Animatable<Float, *> {
     val anim = remember { Animatable(0f) }
@@ -293,7 +278,7 @@ private fun rememberItemEnterAnimation(): Animatable<Float, *> {
     return anim
 }
 
-/** 卡片左侧彩色强调条（参考 EMS / 评价列表项），调用方需在 RowScope 内传入 align 修饰符 */
+
 @Composable
 private fun AccentBar(
     color: Color,
@@ -308,7 +293,7 @@ private fun AccentBar(
     )
 }
 
-// ---------------- Tab 1: 选课 ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -341,7 +326,7 @@ private fun SelectTab(
             ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-        // 1. 选课轮次
+
         item {
             SmallTitle(text = "选课轮次")
             AppCard {
@@ -356,7 +341,7 @@ private fun SelectTab(
             }
         }
 
-        // 2. 选课分类
+
         if (uiState.classifications.isNotEmpty()) {
             item {
                 SmallTitle(text = "选课分类")
@@ -374,7 +359,7 @@ private fun SelectTab(
             }
         }
 
-        // 3. 搜索栏
+
         if (uiState.selectedClassificationCode.isNotBlank()) {
             item {
                 SmallTitle(text = "搜索课程")
@@ -389,7 +374,7 @@ private fun SelectTab(
             }
         }
 
-        // 4. 课程列表
+
         if (uiState.courses.isNotEmpty()) {
             item {
                 SmallTitle(text = "可选课程（点击卡片看详情，点击「加入」进目标，共 ${uiState.courses.size} 条）")
@@ -414,7 +399,7 @@ private fun SelectTab(
     }
 }
 
-// ---------------- Tab 2: 目标 ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -468,7 +453,7 @@ private fun TargetTab(
             }
         }
 
-        // 抢课配置
+
         item {
             SmallTitle(text = "抢课配置")
             AppCard {
@@ -485,7 +470,7 @@ private fun TargetTab(
     }
 }
 
-// ---------------- Tab 3: 已选课程（退课） ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -498,7 +483,7 @@ private fun SelectedTab(
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
 ) {
-    // 退课是不可逆操作，先记录待退课程，经确认弹窗后再执行
+
     var pendingDropCourse by remember { mutableStateOf<JwxtSelectedCourse?>(null) }
 
     PullToRefresh(
@@ -573,7 +558,7 @@ private fun SelectedTab(
     }
 }
 
-// ---------------- Tab 4: 日志 ----------------
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -640,7 +625,7 @@ private fun LogTab(
     }
 }
 
-// ---------------- 通用小组件 ----------------
+
 
 @Composable
 private fun EmptyHint(text: String) {
@@ -658,13 +643,7 @@ private fun EmptyHint(text: String) {
     }
 }
 
-/**
- * 可选课程卡片。
- *
- * 视觉参考 EMS / 评价列表项：左侧彩色强调条 + 入场动画。
- * 交互与旧版不同：整卡点击 = 展开详情；右侧「加入」pill = 加入抢课目标，
- * 避免误触整卡直接发起试探请求。
- */
+
 @Composable
 private fun CourseCard(
     course: JwxtSelectionCourse,
@@ -700,7 +679,7 @@ private fun CourseCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                // 课程名 + 加入按钮
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -720,7 +699,7 @@ private fun CourseCard(
                         onClick = onAdd,
                     )
                 }
-                // 班次 · 教师
+
                 Text(
                     text = "班次 ${course.kxh}" +
                         (if (course.classTeacher.isNotBlank()) " · ${course.classTeacher}" else ""),
@@ -729,7 +708,7 @@ private fun CourseCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // 学分 + 详情切换（点击整行展开）
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -763,7 +742,7 @@ private fun CourseCard(
     }
 }
 
-/** 「加入」pill：未加入可点，已加入 / 检查中只读展示 */
+
 @Composable
 private fun AddTargetChip(
     added: Boolean,
@@ -800,12 +779,7 @@ private fun AddTargetChip(
     }
 }
 
-/**
- * 抢课目标卡片。
- *
- * 成功的目标：强调条与序号徽标转绿（StatusColors.healthy），整卡正向反馈。
- * 序号徽标强调优先级，操作 chips 置于底部。
- */
+
 @Composable
 private fun TargetCard(
     target: SelectionTarget,
@@ -845,13 +819,13 @@ private fun TargetCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // 序号徽标 + 课程信息 + 成功标识
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // 优先级序号徽标
+
                     Box(
                         modifier = Modifier
                             .size(24.dp)
@@ -903,7 +877,7 @@ private fun TargetCard(
                     }
                 }
 
-                // 尝试次数 + 最近状态
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -929,7 +903,7 @@ private fun TargetCard(
                     }
                 }
 
-                // 操作按钮
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -943,7 +917,7 @@ private fun TargetCard(
     }
 }
 
-/** 已选课程卡片（用于退课），视觉与 CourseCard 一致 */
+
 @Composable
 private fun SelectedCourseCard(
     course: JwxtSelectedCourse,
@@ -1041,7 +1015,7 @@ private fun SelectedCourseCard(
     }
 }
 
-/** 小操作按钮 */
+
 @Composable
 private fun ActionChip(
     text: String,
@@ -1071,7 +1045,7 @@ private fun ActionChip(
     }
 }
 
-/** 搜索栏：课程名称，带清空按钮 */
+
 @Composable
 private fun SearchSection(
     courseQuery: String,
@@ -1120,12 +1094,7 @@ private fun SearchSection(
     }
 }
 
-/**
- * 抢课配置区。
- *
- * 两组输入之间用分隔线隔开，每组带辅助说明文字；单位直接标在标签上，
- * 避免用户猜「毫秒」「次数」的含义。
- */
+
 @Composable
 private fun SnatchConfigSection(
     config: CourseSelectionViewModel.SnatchConfig,
@@ -1145,7 +1114,7 @@ private fun SnatchConfigSection(
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 组 1：请求间隔
+
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "请求间隔",
@@ -1174,7 +1143,7 @@ private fun SnatchConfigSection(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-        // 组 2：最大尝试次数
+
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "最大尝试次数",
@@ -1203,7 +1172,7 @@ private fun SnatchConfigSection(
     }
 }
 
-/** 日志条目：级别彩色圆点 + 时间戳 + 等宽消息 */
+
 @Composable
 private fun LogItem(log: SelectionLog) {
     val colors = MiuixTheme.colorScheme
@@ -1249,10 +1218,10 @@ private fun LogItem(log: SelectionLog) {
     }
 }
 
-/** 学分文案：空值显示占位符 */
+
 private fun JwxtSelectionCourse.creditText(): String =
     if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"
 
-/** 学分文案：空值显示占位符 */
+
 private fun JwxtSelectedCourse.creditText(): String =
     if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"

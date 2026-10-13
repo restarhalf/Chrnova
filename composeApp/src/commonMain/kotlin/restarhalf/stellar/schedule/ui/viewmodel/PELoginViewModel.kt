@@ -14,19 +14,10 @@ import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 
-/**
- * PE登录UI状态
- */
 
 
-/**
- * 体育系统登录ViewModel
- *
- * 管理体育系统登录页面的UI状态：
- * - 用户名/密码输入
- * - 登录loading状态
- * - 错误提示
- */
+
+
 class PELoginViewModel(
     private val peLoginUseCase: PELoginUseCase,
 ) : ViewModel() {
@@ -42,21 +33,17 @@ class PELoginViewModel(
 
     private val loginMutex = Mutex()
 
-    /** 用户名输入变更 */
+    
     fun onUsernameChange(value: String) {
         _uiState.update { it.copy(username = value, error = null) }
     }
 
-    /** 密码输入变更 */
+    
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, error = null) }
     }
 
-    /**
-     * 提交登录
-     *
-     * @param onSuccess 登录成功回调
-     */
+    
     fun submitLogin(onSuccess: () -> Unit) {
         viewModelScope.launch {
             loginMutex.withLock {

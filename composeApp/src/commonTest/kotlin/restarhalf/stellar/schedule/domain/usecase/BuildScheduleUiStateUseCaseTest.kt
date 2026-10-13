@@ -23,7 +23,6 @@ class BuildScheduleUiStateUseCaseTest {
     private val timetable = mock<TimetablePort>(MockMode.autofill)
     private val useCase = BuildScheduleUiStateUseCase(timetable)
 
-    /** 2026-03-02（周一）00:00 本地时区 */
     private val termStartMs = LocalDateTime.parse("2026-03-02T00:00")
         .toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     private val dayMs = 24 * 60 * 60 * 1000L
@@ -83,11 +82,11 @@ class BuildScheduleUiStateUseCaseTest {
 
     @Test
     fun `pageToWeek与weekToPage往返一致`() {
-        // 含第0周
+
         assertEquals(0, useCase.pageToWeek(0, includeWeek0 = true))
         assertEquals(5, useCase.pageToWeek(5, includeWeek0 = true))
         assertEquals(0, useCase.weekToPage(0, includeWeek0 = true))
-        // 不含第0周
+
         assertEquals(1, useCase.pageToWeek(0, includeWeek0 = false))
         assertEquals(0, useCase.weekToPage(1, includeWeek0 = false))
         assertEquals(7, useCase.weekToPage(8, includeWeek0 = false))

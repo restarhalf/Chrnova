@@ -32,14 +32,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 引导页（exclusion）Compose UI 测试（Ultron KMP 入口）
- *
- * PrivacyScreen / GitHubStarScreen 无外部依赖直接渲染；
- * WelcomeEnterScreen / EnterScreen 依赖 koinInject(AppInfoPort / ObservableSettings)，
- * 测试内 startKoin 注入 fake 端口（与真实 Koin 图解耦）。
- * WelcomeScreen 本体因 koinViewModel 耦合全套登录 VM，不在本文件范围。
- */
+
 class ExclusionScreenUiTest {
 
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
@@ -73,7 +66,7 @@ class ExclusionScreenUiTest {
         }
     }
 
-    // region PrivacyScreen
+
 
     @Test
     fun 隐私政策页渲染标题与按钮() = runUltronUiTest {
@@ -100,7 +93,7 @@ class ExclusionScreenUiTest {
 
     @Test
     fun 同意按钮翻页到登录页() = runUltronUiTest {
-        // 挂载真实 HorizontalPager（与生产一致），翻页成功以第2页内容组合出现为准
+
         setContent(miuix {
             val state = rememberPagerState(initialPage = 1) { 6 }
             androidx.compose.foundation.pager.HorizontalPager(state = state, modifier = Modifier.fillMaxSize()) { page ->
@@ -117,21 +110,21 @@ class ExclusionScreenUiTest {
             }
         })
         waitText("同意")
-        // App 是 edge-to-edge：三键导航设备上按钮下半部被系统导航栏遮挡吸收点击，
-        // 点按钮顶部暴露区（顶部 8dp 处）保证跨设备可达
+
+
         onNodeWithText("同意").performTouchInput {
             down(androidx.compose.ui.geometry.Offset(centerX, top + 8.dp.toPx()))
             up()
         }
-        // 点击触发 animateScrollToPage(2)：翻页完成后第 2 页内容被组合出来
+
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithText("PAGE_2").fetchSemanticsNodes().isNotEmpty()
         }
     }
 
-    // endregion
 
-    // region GitHubStarScreen
+
+
 
     @Test
     fun 星标页渲染文案() = runUltronUiTest {
@@ -174,9 +167,9 @@ class ExclusionScreenUiTest {
         waitUntil(timeoutMillis = 2_000) { nextClicked }
     }
 
-    // endregion
 
-    // region WelcomeEnterScreen / EnterScreen（需 Koin）
+
+
 
     @Test
     fun 欢迎页渲染应用名并前进到隐私页() = runUltronUiTest {
@@ -202,9 +195,9 @@ class ExclusionScreenUiTest {
         onNodeWithText("进入软件").performClick()
         waitUntil(timeoutMillis = 2_000) { dismissed }
         assertEquals(true, dismissed)
-        // 进入软件前写入隐私确认标记
+
         verify { settings.putBoolean(SettingsKeys.CONFIRM_PRIVACY, true) }
     }
 
-    // endregion
+
 }

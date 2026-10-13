@@ -16,7 +16,7 @@ class SettingsPortImplTest {
 
     private val impl = SettingsPortImpl(MapSettings())
 
-    // ---------- 开关类 ----------
+
 
     @Test
     fun showNonCurrentWeekDefaultTrueAndRoundTrip() = runTest {
@@ -40,7 +40,7 @@ class SettingsPortImplTest {
         assertTrue(impl.observeLogEnabled().first())
     }
 
-    // ---------- 带钳制的整数设置 ----------
+
 
     @Test
     fun rowHeightClampedToRange() = runTest {
@@ -70,7 +70,7 @@ class SettingsPortImplTest {
         assertEquals(1, impl.observeFloatingBar().first())
     }
 
-    // ---------- 学期 ----------
+
 
     @Test
     fun selectedTermRoundTrip() = runTest {
@@ -82,10 +82,10 @@ class SettingsPortImplTest {
     @Test
     fun activeScheduleTermFallsBackToCurrentTermId() = runTest {
         impl.setCurrentTermId("2026-2027-1")
-        // 传空串时回退到 CURRENT_TERM_ID
+
         impl.setActiveScheduleTerm("")
         assertEquals("2026-2027-1", impl.observeActiveScheduleTerm().first())
-        // 传非空串直接生效
+
         impl.setActiveScheduleTerm("2025-2026-1")
         assertEquals("2025-2026-1", impl.observeActiveScheduleTerm().first())
     }
@@ -96,30 +96,30 @@ class SettingsPortImplTest {
         assertEquals("2025-2026-2", impl.observeCurrentTermId().first())
     }
 
-    // ---------- 自动同步 ----------
+
 
     @Test
     fun shouldAutoSyncTrueWhenCooldownPassedAndMarks() = runTest {
         val now = 1_000_000_000L
         assertTrue(impl.shouldAutoSyncAndMark(now))
-        // 刚标记过，24h 内不再同步
+
         assertFalse(impl.shouldAutoSyncAndMark(now + 1L))
         assertTrue(impl.shouldAutoSyncAndMark(now + 24L * 60 * 60 * 1000))
     }
 
-    // ---------- 设备标识 ----------
+
 
     @Test
     fun deviceIdGeneratedOnceAndStable() {
         val first = impl.getDeviceId()
         assertEquals(32, first.length)
         assertEquals(first, impl.getDeviceId())
-        // 不同存储生成不同标识
+
         val other = SettingsPortImpl(MapSettings()).getDeviceId()
         assertNotEquals(first, other)
     }
 
-    // ---------- 星标验证 ----------
+
 
     @Test
     fun starVerifiedRoundTrip() {
@@ -128,7 +128,7 @@ class SettingsPortImplTest {
         assertTrue(impl.getStarVerified())
     }
 
-    // ---------- 缓存学期列表 ----------
+
 
     @Test
     fun cachedSemesterIdsRoundTrip() = runTest {
@@ -146,7 +146,7 @@ class SettingsPortImplTest {
         assertEquals(emptyList(), impl.observeCachedSemesterIds().first())
     }
 
-    // ---------- 头像与昵称 ----------
+
 
     @Test
     fun avatarUriNullAndBlankNormalized() {

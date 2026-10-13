@@ -13,16 +13,7 @@ import restarhalf.stellar.schedule.domain.port.SettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 
-/**
- * 同步课程用例
- *
- * 执行教务系统课程同步的完整流程：
- * 1. 确保用户已登录
- * 2. 获取当前学期
- * 3. 匹配校区
- * 4. 执行同步
- * 5. 刷新本地通知提醒
- */
+
 class RunSyncUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
@@ -32,17 +23,7 @@ class RunSyncUseCase(
     private val reminderScheduler: ReminderSchedulerPort,
 ) {
 
-    /**
-     * 执行同步操作
-     *
-     * 流程：
-     * 1. 确保已登录
-     * 2. 同步当前校区的课程
-     * 3. 如果当前校区课程数为 0，自动切换到另一个校区重试
-     *
-     * @return 同步结果
-     * @throws IllegalStateException 同步失败时抛出
-     */
+    
     suspend operator fun invoke(): SyncResult {
         authWorkflow.ensureLoggedIn()
 
@@ -85,9 +66,7 @@ class RunSyncUseCase(
         return result
     }
 
-    /**
-     * 执行同步，当前校区课程数为 0 时自动切换到另一个校区重试
-     */
+    
     private suspend fun syncWithRetry(
         semesterId: String,
         campus: RemoteCampus,
@@ -118,9 +97,7 @@ class RunSyncUseCase(
         return result.copy(campusName = campus.name)
     }
 
-    /**
-     * 执行单次同步，失败时刷新会话重试
-     */
+    
     private suspend fun doSync(
         semesterId: String,
         campus: RemoteCampus,
@@ -143,9 +120,7 @@ class RunSyncUseCase(
         }
     }
 
-    /**
-     * 根据远程校区名称反推本地 Campus 枚举
-     */
+    
     private fun matchLocalCampus(remoteName: String): Campus? {
         val name = remoteName.trim()
         return when {
@@ -155,13 +130,7 @@ class RunSyncUseCase(
         }
     }
 
-    /**
-     * 检查校区名称是否匹配
-     * 
-     * @param local 本地校区
-     * @param remoteName 远程校区名称
-     * @return 是否匹配
-     */
+    
     private fun isCampusNameMatch(local: Campus, remoteName: String): Boolean {
         val name = remoteName.trim()
         return when (local) {

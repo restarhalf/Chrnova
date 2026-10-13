@@ -58,16 +58,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 选修课学分统计屏幕
- *
- * 显示X1-X5类别的选修课学分统计，支持：
- * - 学分统计概览
- * - 各类别学分详情
- * - 课程列表展开/收起
- * - 成绩详情弹窗
- * - 下拉刷新
- */
+
 @Composable
 fun ElectiveCreditScreen(
     vm: ElectiveCreditViewModel,
@@ -170,7 +161,7 @@ fun ElectiveCreditScreen(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // 各类别学分卡片
+
                 items(uiState.categories, key = { it.code }) { category ->
                     CategoryCard(
                         category = category,
@@ -185,9 +176,7 @@ fun ElectiveCreditScreen(
     }
 }
 
-/**
- * 类别学分卡片
- */
+
 @Composable
 private fun CategoryCard(
     category: CalculateElectiveCreditsUseCase.CreditCategory,
@@ -203,7 +192,7 @@ private fun CategoryCard(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // 类别头部
+
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .clickable { expanded = !expanded }
@@ -240,7 +229,7 @@ private fun CategoryCard(
                 }
             }
 
-            // 课程列表（展开时显示）
+
             AnimatedVisibility(
                 visible = expanded && category.courses.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
@@ -263,9 +252,7 @@ private fun CategoryCard(
     }
 }
 
-/**
- * 构建成绩卡片UI
- */
+
 private fun buildGradeCardUi(grade: GradeCourse): GradeViewModel.GradeCardUi {
     return GradeViewModel.GradeCardUi(
         idKey = grade.gradeId.ifBlank { grade.courseCode + grade.courseName },
@@ -282,9 +269,7 @@ private fun buildGradeCardUi(grade: GradeCourse): GradeViewModel.GradeCardUi {
     )
 }
 
-/**
- * 格式化学分显示
- */
+
 private fun formatCredits(credits: Double): String {
     return if (credits % 1.0 == 0.0) {
         credits.toInt().toString()
@@ -293,9 +278,7 @@ private fun formatCredits(credits: Double): String {
     }
 }
 
-/**
- * 构建成绩详情摘要
- */
+
 private fun buildGradeDetailsSummary(grade: GradeCourse): String {
     return buildString {
         appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")

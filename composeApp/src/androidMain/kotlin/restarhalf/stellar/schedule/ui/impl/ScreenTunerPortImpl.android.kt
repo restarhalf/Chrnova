@@ -6,12 +6,6 @@ import android.view.WindowManager
 import android.content.ContextWrapper
 import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 
-/**
- * Android 实现：通过当前 Activity 的窗口属性控制。
- *
- * - 常亮：FLAG_KEEP_SCREEN_ON（仅在展示页期间生效，离开即清除）
- * - 亮度：screenBrightness = 1f 覆盖系统亮度，退出时恢复原值
- */
 class ScreenTunerPortImpl(
     private val context: Context,
 ) : ScreenTunerPort {

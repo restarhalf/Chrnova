@@ -31,12 +31,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 课程评价模块 Compose UI 测试（Ultron KMP 入口）
- *
- * CourseEvaluationViewModel 手动构造（不依赖 Koin），四个依赖全部 mokkery mock：
- * init 三路 stub（昵称/档案流/已选课程）必须先于 VM 构造（同 JVM 测试配方）。
- */
+
 class EvaluationScreenUiTest {
 
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
@@ -65,7 +60,7 @@ class EvaluationScreenUiTest {
         likes = 3,
     )
 
-    /** init 三路 stub（昵称/档案流/已选课程）必须先于 VM 构造；courses 由用例注入（默认空） */
+    
     private fun createVm(courses: List<Course> = emptyList()): CourseEvaluationViewModel {
         every { settings.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
@@ -85,7 +80,7 @@ class EvaluationScreenUiTest {
         }
     }
 
-    // region EvaluationListScreen
+
 
     @Test
     fun 列表渲染课程卡片与统计() = runUltronUiTest {
@@ -167,15 +162,15 @@ class EvaluationScreenUiTest {
         }
         waitText("全部评价")
         onNodeWithText("我的评价").performClick()
-        // Tab 点击触发 animateScrollToPage(1)：翻页后"我的评价"页搜索栏组合出现
+
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithText("搜索课程 / 内容").fetchSemanticsNodes().isNotEmpty()
         }
     }
 
-    // endregion
 
-    // region EvaluationDetailScreen / EvaluationSubmitScreen
+
+
 
     @Test
     fun 详情页渲染评价信息() = runUltronUiTest {
@@ -195,8 +190,8 @@ class EvaluationScreenUiTest {
 
     @Test
     fun 写评价页渲染表单分组() = runUltronUiTest {
-        // 已选课程为空时页面走空状态分支，注入一门课程让表单完整渲染
-        // （注意：必须在 createVm 参数中注入——事后 stub 会被 createVm 内部覆盖）
+
+
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
                 EvaluationSubmitScreen(
@@ -220,11 +215,11 @@ class EvaluationScreenUiTest {
             }
         }
         waitText("课程")
-        // SmallTitle 标签与输入框占位文本重复 → 取首个节点断言
+
         onAllNodesWithText("评价内容")[0].assertIsDisplayed()
         onAllNodesWithText("署名")[0].assertIsDisplayed()
         onAllNodesWithText("选择课程")[0].assertIsDisplayed()
     }
 
-    // endregion
+
 }

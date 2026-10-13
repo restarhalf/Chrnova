@@ -30,14 +30,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEAppointmentListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PECancelAppointmentUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEEnterAppointmentUseCase
 
-/**
- * 学生体测预约 ViewModel
- *
- * 对齐真实接口：
- * - 列表：selectUserAppointmentList（type "1"/"2"）
- * - 预约：详情 → 选日期 → 选时段 → appointmentEnter(appointment_id, times_id, enter_date)
- * - 取消：cancelRegistration(temporary_id)
- */
+
 class PEAppointmentViewModel(
     private val appointmentListUseCase: PEAppointmentListUseCase,
     private val appointmentDetailUseCase: PEAppointmentDetailUseCase,
@@ -76,7 +69,7 @@ class PEAppointmentViewModel(
         val loadedAvailable: Boolean = false,
         val error: String? = null,
         val actionMessage: String? = null,
-        /** actionMessage 是否来自预约成功（用于展示「打开官方页」入口） */
+        
         val actionMessageIsSuccess: Boolean = false,
         val cancelTarget: PEAppointmentItem? = null,
         val booking: BookingSheetState? = null,
@@ -244,7 +237,7 @@ class PEAppointmentViewModel(
         _uiState.update { it.copy(cancelTarget = null) }
     }
 
-    /** 打开预约面板：拉详情，并自动选中第一个可约日期 */
+    
     fun openBooking(item: PEAppointmentItem) {
         if (item.appointmentId.isBlank()) {
             _uiState.update { it.copy(actionMessage = "缺少场次标识，无法预约") }
@@ -476,7 +469,7 @@ class PEAppointmentViewModel(
     }
 }
 
-/** 状态文案 */
+
 fun appointmentStatusText(status: String): String = when (status) {
     "0" -> "已失败"
     "1" -> "已预约"
@@ -486,9 +479,7 @@ fun appointmentStatusText(status: String): String = when (status) {
     else -> status.ifBlank { "未知" }
 }
 
-/**
- * 列表状态文案：已预约且报名窗口已过时显示「已结束」。
- */
+
 fun appointmentStatusText(
     item: PEAppointmentItem,
     nowMillis: Long = currentTimeMillisCompat(),
@@ -499,7 +490,7 @@ fun appointmentStatusText(
     return appointmentStatusText(item.appointmentStatus)
 }
 
-/** 报名/取消窗口是否已结束 */
+
 fun isRegistrationWindowEnded(
     item: PEAppointmentItem,
     nowMillis: Long = currentTimeMillisCompat(),
@@ -509,7 +500,7 @@ fun isRegistrationWindowEnded(
     return nowMillis > end
 }
 
-/** 是否处于可取消窗口（对齐原页面 nowBtn） */
+
 fun canCancelAppointment(item: PEAppointmentItem, nowMillis: Long = currentTimeMillisCompat()): Boolean {
     if (item.appointmentStatus != "1") return false
     if (item.temporaryId.isBlank()) return false
@@ -518,7 +509,7 @@ fun canCancelAppointment(item: PEAppointmentItem, nowMillis: Long = currentTimeM
     return nowMillis in start..end
 }
 
-/** 是否可预约（对齐原页面 status==3 才显示预约按钮） */
+
 fun canEnterAppointment(item: PEAppointmentItem): Boolean =
     item.appointmentStatus == "3" && item.appointmentId.isNotBlank()
 

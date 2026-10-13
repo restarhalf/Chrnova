@@ -29,14 +29,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 选修课学分统计页 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试：FetchSemesterIdsUseCase / CalculateElectiveCreditsUseCase
- * 为 final class，用真实实现 + mock 端口（AcademicPort / SettingsPort / GradeRepository）。
- * 成绩详情弹窗 GradeDetailsDialog 为 WindowDialog 独立窗口，主窗口语义树不可见，
- * 只断言展开入口与课程列表渲染。
- */
 class ElectiveCreditScreenUiTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
@@ -93,7 +85,7 @@ class ElectiveCreditScreenUiTest {
         }
         waitText("选修课学分统计")
         waitText("X2")
-        // 类别名称、课程数与学分汇总（90 分及格课程计入 X2，1.5 学分）
+
         onNodeWithText("X2艺术鉴赏与审美体验").assertExists()
         onNodeWithText("1门课程").assertExists()
         onNodeWithText("1.5").assertExists()
@@ -111,9 +103,9 @@ class ElectiveCreditScreenUiTest {
             }
         }
         waitText("X2艺术鉴赏与审美体验")
-        // 点击类别头部展开课程列表
+
         onNodeWithText("X2艺术鉴赏与审美体验").performSemanticsAction(SemanticsActions.OnClick)
-        // 展开后 GradeItemCard 渲染课程名与成绩分数
+
         waitText("影视鉴赏")
         onNodeWithText("90").assertExists()
     }

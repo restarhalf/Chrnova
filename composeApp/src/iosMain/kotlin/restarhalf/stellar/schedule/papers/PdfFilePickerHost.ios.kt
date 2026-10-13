@@ -18,21 +18,13 @@ import platform.UniformTypeIdentifiers.typeWithTag
 import platform.darwin.NSObject
 import platform.posix.memcpy
 
-/**
- * 文档/图片选择器宿主（iOS）。
- *
- * 选择结束（含取消）必定回调 [onPicked]；delegate 需强持有，避免系统回收导致只弹一次。
- *
- * @param multiple 是否允许多选
- * @param onPicked 选择完成后一次性回调全部文件（取消为空列表）
- */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 fun PdfFilePickerHost(
     multiple: Boolean = false,
     onPicked: (List<PickedAttachment>) -> Unit,
 ) {
-    // 强持有 delegate：UIDocumentPickerViewController.delegate 不会 retain
+
     val delegateHolder = remember { arrayOfNulls<PdfPickerDelegate>(1) }
 
     LaunchedEffect(Unit) {

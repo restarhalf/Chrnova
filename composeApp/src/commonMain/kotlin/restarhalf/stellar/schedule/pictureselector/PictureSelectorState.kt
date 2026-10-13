@@ -96,7 +96,7 @@ class PictureSelectorState(
     }
 
     suspend fun openAlbum(album: MediaAlbum) {
-        // 命中缓存：立刻进二级，不闪空白
+
         if (cachedAlbumBucketId == album.bucketId && currentAlbumImages.isNotEmpty()) {
             selectedTab = PictureSelectorTab.Albums
             currentAlbum = album

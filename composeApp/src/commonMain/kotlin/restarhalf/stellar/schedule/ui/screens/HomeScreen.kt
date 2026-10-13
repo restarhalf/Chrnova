@@ -39,15 +39,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 首页屏幕
- * 
- * 显示今日课程、问候语、当前时间等信息。
- * 
- * @param campus 当前校区
- * @param termStartMs 学期开始时间戳
- * @param totalWeeks 学期总周数
- */
+
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
@@ -184,7 +176,7 @@ fun HomeScreen(
                 }
             }
 
-            // 右上角公告入口：通知图标 + 未读红点（置于 z 最顶层，避免被内容区拦截点击）
+
             Box(
                 modifier =
                     Modifier
@@ -201,18 +193,7 @@ fun HomeScreen(
     }
 }
 
-/**
- * 首页右上角公告入口：通知图标 + 未读数徽标。
- *
- * 徽标用 miuix [BadgedBox] + [Badge] 实现：带 content 时 Badge 自动扩展为
- * 数字超过 99 显示 "99+"。
- *
- * 红点在用户**点开公告详情页**后才清除（详见 AnnouncementDetailScreen），
- * 列表页期间红点保持，提示用户仍有未读。
- *
- * @param unreadCount 未读数量；大于 0 时显示带数字徽标
- * @param onClick 点击回调（进入公告列表页）
- */
+
 @Composable
 private fun HomeNotificationButton(
     unreadCount: Int,

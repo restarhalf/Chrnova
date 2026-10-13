@@ -37,7 +37,7 @@ class WeeksFormatterTest {
 
     @Test
     fun twoItemEvenRunHasNoTag() {
-        // 步长2但不足3个，不加单双周标记
+
         assertEquals("2周、4周", WeeksFormatter.format(listOf(2, 4)))
     }
 
@@ -48,7 +48,7 @@ class WeeksFormatterTest {
 
     @Test
     fun duplicatesCollapseIntoRun() {
-        // 排序后 [2,2,4,4,6,6]：2→2 步长0，落到单周分支，之后 4→4 同理
+
         val result = WeeksFormatter.format(listOf(2, 2, 4, 4, 6, 6))
         assertEquals("2周、2周、4周、4周、6周、6周", result)
     }

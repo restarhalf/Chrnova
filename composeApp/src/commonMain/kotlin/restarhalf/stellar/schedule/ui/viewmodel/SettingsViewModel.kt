@@ -35,16 +35,7 @@ import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-/**
- * 设置页面ViewModel
- * 
- * 管理设置页面的UI状态，包括：
- * - 用户认证状态
- * - 主题模式设置
- * - 提醒设置
- * - 校区和学期选择
- * - 浮动导航栏样式
- */
+
 class SettingsViewModel(
     private val auth: JwxtAuthPort,
     private val authWorkflow: JwxtAuthWorkflowPort,
@@ -62,7 +53,7 @@ class SettingsViewModel(
         settings = settings,
         scope = viewModelScope,
     )
-    /** 设置偏好状态 */
+    
     @Immutable
     private data class SettingsPrefsState(
         val showNonCurrentWeek: Boolean,
@@ -75,23 +66,14 @@ class SettingsViewModel(
         val logEnabled: Boolean,
     )
 
-    /** 认证状态 */
+    
     @Immutable
     private data class SettingsAuthState(
         val authToken: String,
         val profile: JwxtAuthProfile,
     )
 
-    /**
-     * 设置页面UI
-     * 
-     * @param campusOptions 校区选项列表
-     * @param campusSelectedIndex 选中的校区索引
-     * @param themeOptions 主题选项列表
-     * @param floatingBarOptions 浮动导航栏选项列表
-     * @param termStartSummary 学期开始日期摘要
-     * @param syncSummary 同步状态摘要
-     */
+    
     @Stable
     data class SettingsScreenUi(
         val campusOptions: ImmutableList<String>,
@@ -102,25 +84,14 @@ class SettingsViewModel(
         val syncSummary: String,
     )
 
-    /**
-     * 学期选择UI
-     * 
-     * @param items 学期选项列表
-     * @param selectedIndex 选中的索引
-     */
+    
     @Stable
     data class TermSelectionUi(
         val items: ImmutableList<String>,
         val selectedIndex: Int,
     )
 
-    /**
-     * 账户UI
-     * 
-     * @param loggedIn 是否已登录
-     * @param title 标题（用户名或"已登录"）
-     * @param summary 摘要（学号、班级等）
-     */
+    
     @Immutable
     data class AccountUi(
         val loggedIn: Boolean,
@@ -128,11 +99,7 @@ class SettingsViewModel(
         val summary: String,
     )
 
-    /**
-     * 设置页面完整UI状态
-     * 
-     * 包含所有设置项的状态和UI数据。
-     */
+    
     @Stable
     data class SettingsUiState(
         val showNonCurrentWeek: Boolean,
@@ -239,10 +206,10 @@ class SettingsViewModel(
                     ),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<SettingsUiState> = _uiState
 
-    /** 刷新认证状态 */
+    
     fun refreshAuth() {
         if (uiState.value.authToken.isBlank()) return
 
@@ -257,7 +224,7 @@ class SettingsViewModel(
         }
     }
 
-    /** 刷新远程学期列表 */
+    
     fun refreshRemoteTerms() {
         if (uiState.value.authToken.isBlank()) {
             _remoteTermItems.value = persistentListOf()
@@ -278,14 +245,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 构建学期选择UI
-     * 
-     * @param authToken 认证令牌
-     * @param remoteTermItems 远程学期列表
-     * @param selectedTerm 当前选中的学期
-     * @return 学期选择UI
-     */
+    
     fun buildTermSelectionUi(
         authToken: String,
         remoteTermItems: List<String>,
@@ -301,13 +261,7 @@ class SettingsViewModel(
         return TermSelectionUi(items = items, selectedIndex = index)
     }
 
-    /**
-     * 构建账户UI
-     * 
-     * @param authToken 认证令牌
-     * @param profile 用户档案
-     * @return 账户UI
-     */
+    
     fun buildAccountUi(authToken: String, profile: JwxtAuthProfile): AccountUi {
         val loggedIn =
             authToken.isNotBlank() && (profile.name.isNotBlank() || profile.userNo.isNotBlank())
@@ -328,14 +282,7 @@ class SettingsViewModel(
         )
     }
 
-    /**
-     * 构建设置页面UI
-     * 
-     * @param syncUiState 同步状态
-     * @param campus 当前校区
-     * @param termStartMs 学期开始时间戳
-     * @return 设置页面UI
-     */
+    
     fun buildScreenUi(
         syncUiState: SyncUiState,
         campus: Campus,
@@ -364,38 +311,23 @@ class SettingsViewModel(
         )
     }
 
-    /**
-     * 根据索引获取学期值
-     * 
-     * @param items 学期选项列表
-     * @param index 索引
-     * @return 学期值，"当前学期"返回空字符串
-     */
+    
     fun selectedTermValueFromIndex(items: List<String>, index: Int): String {
         val value = items.getOrNull(index).orEmpty()
         return if (value == "当前学期") "" else value
     }
 
-    /**
-     * 根据索引获取校区
-     * 
-     * @param index 索引
-     * @return 校区枚举
-     */
+    
     fun campusFromIndex(index: Int): Campus {
         return if (index == 0) Campus.Development else Campus.Jinshitan
     }
 
-    /**
-     * 选中的学期变更回调
-     *
-     * @param value 学期值
-     */
+    
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
             settings.setSelectedTerm(value)
             settings.setActiveScheduleTerm(value)
-            // 切换学期后重新调度考试提醒（若已开启）
+
             runCatching { scheduleNextExamReminder(selectedTerm = value) }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
@@ -404,47 +336,27 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 主题模式变更回调
-     * 
-     * @param mode 主题模式（0=跟随系统，1=浅色，2=深色）
-     */
+    
     fun onThemeModeChanged(mode: Int) {
         settings.setThemeMode(mode)
     }
 
-    /**
-     * 浮动导航栏模式变更回调
-     * 
-     * @param mode 模式（0=固定，1=悬浮，2=液态玻璃）
-     */
+    
     fun onFloatingBarChanged(mode: Int) {
         settings.setFloatingBar(mode)
     }
 
-    /**
-     * 是否显示非本周课程变更回调
-     *
-     * @param show 是否显示
-     */
+    
     fun onShowNonCurrentWeekChanged(show: Boolean) {
         settings.setShowNonCurrentWeek(show)
     }
 
-    /**
-     * 课程表格子高度变更回调
-     *
-     * @param heightDp 格子高度（dp）
-     */
+    
     fun onScheduleRowHeightChanged(heightDp: Int) {
         settings.setScheduleRowHeight(heightDp)
     }
 
-    /**
-     * 课程提醒开关变更回调
-     *
-     * @param enabled 是否启用
-     */
+    
     fun onReminderEnabledChanged(enabled: Boolean) {
         settings.setCourseReminderEnabled(enabled)
         if (!enabled) {
@@ -456,11 +368,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 考试提醒开关变更回调
-     *
-     * @param enabled 是否启用
-     */
+    
     fun onExamReminderEnabledChanged(enabled: Boolean) {
         settings.setExamReminderEnabled(enabled)
         if (!enabled) {
@@ -476,11 +384,7 @@ class SettingsViewModel(
         settings.setLogEnabled(enabled)
     }
 
-    /**
-     * 触发同步
-     *
-     * @param block 同步操作
-     */
+    
     fun triggerSync(block: suspend () -> Unit) {
         viewModelScope.launch {
             runCatching { block() }
@@ -491,13 +395,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 调度课程本地通知提醒
-     *
-     * @param campus 当前校区
-     * @param termStartMs 学期开始时间戳
-     * @param totalWeeks 学期总周数
-     */
+    
     fun scheduleCourseReminder(campus: Campus, termStartMs: Long, totalWeeks: Int) {
         viewModelScope.launch {
             val result =
@@ -519,11 +417,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 调度考试本地通知提醒
-     *
-     * @param selectedTerm 选中的学期
-     */
+    
     fun scheduleExamReminder(selectedTerm: String) {
         viewModelScope.launch {
             val result =
@@ -540,12 +434,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * 格式化日期为YYYY/MM/DD
-     *
-     * @param ms 时间戳（毫秒）
-     * @return 格式化的日期字符串
-     */
+    
     @OptIn(ExperimentalTime::class)
     private fun formatDateYmd(ms: Long): String {
         val date =
@@ -555,7 +444,7 @@ class SettingsViewModel(
         return "${date.year}/$month/$day"
     }
 
-    /** 个人信息UI状态 */
+    
     @Immutable
     data class PersonalInfoUiState(
         val avatarUri: String? = null,
@@ -566,7 +455,7 @@ class SettingsViewModel(
     private val _personalInfoUiState = MutableStateFlow(PersonalInfoUiState())
     val personalInfoUiState: StateFlow<PersonalInfoUiState> = _personalInfoUiState
 
-    /** 加载个人信息 */
+    
     fun loadPersonalInfo() {
         viewModelScope.launch {
             val avatarUri = settings.getUserAvatarUri()

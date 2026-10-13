@@ -54,14 +54,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import kotlin.time.Clock
 
-/**
- * 首页 Compose UI 测试（Ultron KMP 入口）。
- *
- * VM 配方同 JVM 测试：全真实 UseCase 链，只 mock 端口。
- * 学期开始时间取"本周周一 00:00"，课程 weeks 覆盖 1-25，保证真实时钟下
- * 今日课程必然落入当前周渲染。AnnouncementStore 依赖 ObservableSettings
- * （multiplatform-settings），用 autofill mock 补 put* 写入。
- */
+
 class HomeScreenUiTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -80,7 +73,7 @@ class HomeScreenUiTest {
 
     private val tz = TimeZone.currentSystemDefault()
 
-    /** 本周周一 00:00（本地时区），保证真实时钟下当前周 = 1 */
+    
     private val termStartMs: Long = run {
         val today = Clock.System.now().toLocalDateTime(tz).date
         val monday = LocalDate.fromEpochDays(
@@ -89,7 +82,7 @@ class HomeScreenUiTest {
         monday.atStartOfDayIn(tz).toEpochMilliseconds()
     }
 
-    /** 今日星期（ISO 1-7） */
+    
     private val todayDow: Int =
         Clock.System.now().toLocalDateTime(tz).dayOfWeek.isoDayNumber
 
@@ -149,7 +142,7 @@ class HomeScreenUiTest {
 
     @Test
     fun 渲染今日课程与公告入口() = runUltronUiTest {
-        // 今日课程：落在当前周（weeks 1-25），星期取设备真实"今天"
+
         coursesFlow.value = listOf(
             Course(
                 name = "高等数学",
@@ -176,9 +169,9 @@ class HomeScreenUiTest {
                 )
             }
         }
-        // 今日课程行渲染课程名
+
         waitText("高等数学")
-        // 右上角公告入口
+
         onNode(hasContentDescription("公告")).assertExists()
     }
 

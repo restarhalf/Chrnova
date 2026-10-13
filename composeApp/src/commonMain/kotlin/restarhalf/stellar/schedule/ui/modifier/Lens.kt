@@ -1,9 +1,9 @@
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
+
+
 
 package restarhalf.stellar.schedule.ui.modifier
 
-// Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.LayoutDirection
@@ -12,14 +12,7 @@ import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.runtimeShaderEffect
 
-/**
- * Rounded-rect refraction lens with optional chromatic dispersion.
- *
- * @param chromaticAberration Strength of the rim chromatic dispersion. `0` disables the
- *  effect (cheaper non-dispersion shader is used). Typical values: `0.1` for subtle,
- *  `0.2` for Apple-pill-like, `0.3+` for pronounced rainbow halo. The dispersion offset
- *  scales with the refraction depth so it concentrates at the rim band's outer edge.
- */
+
 fun BackdropEffectScope.lens(
     refractionHeight: Float,
     refractionAmount: Float,

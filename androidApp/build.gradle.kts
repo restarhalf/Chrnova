@@ -131,11 +131,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         create("nonMinifiedRelease") {
-            // 与 release 行为一致但不做 R8 混淆/资源压缩，便于调试线上问题
+
             isMinifyEnabled = false
             isShrinkResources = false
             signingConfig = signingConfigs.getByName("debug")
-            // composeApp 等依赖库只有 release/debug 变体，缺少时回退到 release
+
             matchingFallbacks += "release"
         }
     }

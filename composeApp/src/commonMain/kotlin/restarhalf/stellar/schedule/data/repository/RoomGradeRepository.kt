@@ -8,13 +8,7 @@ import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-/**
- * Room成绩仓库实现类
- * 
- * 实现GradeRepository接口，负责成绩数据的本地存储和查询。
- * 
- * @param gradeDao 成绩DAO
- */
+
 class RoomGradeRepository(
     private val gradeDao: GradeDao
 ) : GradeRepository {

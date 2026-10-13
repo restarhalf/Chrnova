@@ -30,14 +30,7 @@ import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 考试编辑ViewModel
- * 
- * 管理考试编辑页面的UI状态，包括：
- * - 考试列表和课程名称
- * - 编辑表单状态
- * - 保存和删除操作
- */
+
 class ExamEditViewModel(
     private val courseRepository: CourseRepository,
     private val examinationRepository: ExaminationRepository,
@@ -48,37 +41,20 @@ class ExamEditViewModel(
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
 ) : ViewModel() {
 
-    /** 保存进行中标志，用于防连点重复提交 */
+    
     private val _saving = MutableStateFlow(false)
 
-    /** 保存进行中状态，UI 据此禁用保存按钮 */
+    
     val isSaving: StateFlow<Boolean> = _saving.asStateFlow()
 
-    /**
-     * 考试编辑UI状态
-     * 
-     * @param courseNames 课程名称列表（用于下拉选择，已排除有考试的课程）
-     * @param courses 所有课程列表（用于根据名称查找课程编号）
-     */
+    
     @Stable
     data class ExamEditUiState(
         val courseNames: ImmutableList<String>,
         val courses: ImmutableList<Course>,
     )
 
-    /**
-     * 编辑表单状态
-     * 
-     * @param isEdit 是否为编辑模式（false表示新建）
-     * @param selectedIndex 选中的课程名称索引
-     * @param courseNumber 课程编号
-     * @param courseName 课程名称
-     * @param datePart 考试日期
-     * @param timePart 考试时间
-     * @param examinationPlace 考试地点
-     * @param zwh 座位号
-     * @param ksbz 备注
-     */
+    
     @Immutable
     data class EditingFormState(
         val isEdit: Boolean,
@@ -106,10 +82,10 @@ class ExamEditViewModel(
                 initialValue = ExamEditUiState(courseNames = persistentListOf(), courses = persistentListOf()),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<ExamEditUiState> = _uiState
 
-    /** 当前选中的学期ID */
+    
     val selectedTerm: StateFlow<String> = settings.observeSelectedTerm()
         .stateIn(
             scope = viewModelScope,
@@ -117,7 +93,7 @@ class ExamEditViewModel(
             initialValue = "",
         )
 
-    /** 当前学期ID */
+    
     val currentTerm: StateFlow<String> = settings.observeCurrentTermId()
         .stateIn(
             scope = viewModelScope,
@@ -125,7 +101,7 @@ class ExamEditViewModel(
             initialValue = ""
         )
 
-    /** 当前登录用户的学号 */
+    
     private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
@@ -134,37 +110,19 @@ class ExamEditViewModel(
             initialValue = "",
         )
 
-    /**
-     * 根据课程名称查找课程编号
-     * 
-     * @param courses 所有课程列表
-     * @param courseName 课程名称
-     * @return 课程编号，如果没有找到则返回自动生成的编号
-     */
+    
     private fun findCourseNumber(courses: List<Course>, courseName: String): String {
         val course = courses.firstOrNull { it.name == courseName && it.type == 0 }
         return course?.remoteKey?.ifBlank { null }
             ?: "EXAM_${courseName.hashCode().toUInt()}"
     }
 
-    /**
-     * 观察正在编辑的考试
-     * 
-     * @param examinationId 考试ID
-     * @return 考试Flow
-     */
+    
     fun observeEditingExamination(examinationId: Long?): Flow<Examination?> {
         return examinationRepository.observeExaminationById(examinationId ?: -1)
     }
 
-    /**
-     * 构建编辑表单状态
-     * 
-     * @param examinationId 考试ID
-     * @param editingExamination 正在编辑的考试
-     * @param courseNames 课程名称列表
-     * @return 编辑表单状态
-     */
+    
     fun buildEditingFormState(
         examinationId: Long?,
         editingExamination: Examination?,
@@ -201,19 +159,7 @@ class ExamEditViewModel(
         )
     }
 
-    /**
-     * 构建要保存的考试
-     * 
-     * @param courseName 课程名称
-     * @param datePart 考试日期
-     * @param timePart 考试时间
-     * @param examinationPlace 考试地点
-     * @param zwh 座位号
-     * @param ksbz 备注
-     * @param courses 所有课程列表
-     * @param existing 已存在的考试（编辑时）
-     * @return 构建的考试对象，如果参数无效返回null
-     */
+    
     fun buildExaminationToSave(
         courseName: String,
         datePart: String,
@@ -250,14 +196,7 @@ class ExamEditViewModel(
         )
     }
 
-    /**
-     * 保存考试
-     *
-     * 进行中会忽略重复调用（防连点重复插入），结果通过回调返回。
-     *
-     * @param examination 考试数据
-     * @param onResult 保存结果回调（true=成功）
-     */
+    
     fun saveExamination(examination: Examination, onResult: (Boolean) -> Unit) {
         if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
@@ -276,11 +215,7 @@ class ExamEditViewModel(
         }
     }
 
-    /**
-     * 解析学期ID
-     *
-     * 优先级：选中学期 > 当前学期
-     */
+    
     private suspend fun resolveSemesterId(): String {
         val selected = selectedTerm.value
         if (selected.isNotBlank()) return selected
@@ -294,12 +229,7 @@ class ExamEditViewModel(
         }
     }
 
-    /**
-     * 删除考试
-     *
-     * @param id 考试ID
-     * @param onResult 删除结果回调（true=成功）
-     */
+    
     fun deleteExamination(id: Long, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val deleted = runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }

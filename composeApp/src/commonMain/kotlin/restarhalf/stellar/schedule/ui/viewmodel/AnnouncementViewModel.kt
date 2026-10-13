@@ -30,16 +30,16 @@ class AnnouncementViewModel(
     data class AnnouncementUiState(
         val loading: Boolean = false,
         val error: String? = null,
-        /** 首次加载是否完成（未完成时首页卡片不展示，避免闪烁） */
+        
         val loaded: Boolean = false,
         val announcements: ImmutableList<Announcement> = persistentListOf(),
-        /** 未读公告数量（发布时间晚于最后阅读时间） */
+        
         val unreadCount: Int = 0,
-        /** 最后阅读时间（毫秒），列表页据此在每条公告右上角显示未读红点 */
+        
         val lastReadAtMs: Long = 0L,
-        /** 当前查看的公告详情 */
+        
         val selectedAnnouncement: Announcement? = null,
-        /** 公告列表页顶部广告位配置；后端未下发时为 null（广告位隐藏） */
+        
         val adConfig: AdConfig? = null,
     )
 
@@ -51,7 +51,7 @@ class AnnouncementViewModel(
         loadAdConfig()
     }
 
-    /** 拉取广告位配置；失败不影响主流程，广告位保持隐藏（adConfig 默认 null） */
+    
     private fun loadAdConfig() {
         viewModelScope.launch {
             runCatching { fetchAdConfig() }
@@ -65,7 +65,7 @@ class AnnouncementViewModel(
 
     fun load(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            // 非强制刷新时若已加载过（缓存命中），不重复打网络
+
             if (!forceRefresh && _uiState.value.loaded) return@launch
             _uiState.update { it.copy(loading = true, error = null) }
             runCatching {
@@ -88,13 +88,13 @@ class AnnouncementViewModel(
         }
     }
 
-    /** 下拉刷新 / App 回到前台：公告列表与广告位配置都重拉，保证后端改动实时生效 */
+    
     fun refresh() {
         load(forceRefresh = true)
         loadAdConfig()
     }
 
-    /** 把最后阅读时间推进到该条公告的内容最后变化时间（单调递增），并同步重算未读数量 */
+    
     fun markAnnouncementRead(announcement: Announcement) {
         val targetMs = announcement.lastChangeAtMs
         markAnnouncementsRead(announcement)
@@ -107,14 +107,14 @@ class AnnouncementViewModel(
         }
     }
 
-    /** 选中详情：优先从已加载的公开列表命中（缓存）；命中不到（如 status='ad' 隐藏公告）则单独拉取 */
+    
     fun selectAnnouncement(id: String) {
         val local = _uiState.value.announcements.firstOrNull { a -> a.id == id }
         if (local != null) {
             _uiState.update { it.copy(selectedAnnouncement = local) }
             return
         }
-        // 不在列表缓存中：走公开详情接口单拉（后端对 ad 状态已放行）
+
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null, selectedAnnouncement = null) }
             runCatching { fetchAnnouncement(id) }

@@ -147,7 +147,7 @@ class CourseSelectionUseCaseTest {
     @Test
     fun `submitOnce需要确认时自动选关联教学班`() = runTest {
         var submitCalls = 0
-        // CallArgs 解构最多支持 7 个参数，submitSelection 有 9 个参数，此处不解构
+
         everySuspend {
             gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
         } calls {
@@ -171,7 +171,7 @@ class CourseSelectionUseCaseTest {
 
         assertTrue(result is JwxtSelectionOperResult.Success)
         assertEquals(2, submitCalls)
-        // 第二次提交携带关联教学班 n2，并把第一次的 n1 作为已选教学班回传
+
         verifySuspend(VerifyMode.exactly(1)) {
             gateway.submitSelection("r1", "c2", "n2", "st-123", "01", any(), "n1", any(), any())
         }

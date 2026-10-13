@@ -9,11 +9,7 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-/**
- * 观察所有成绩用例
- *
- * 按当前用户学号过滤成绩的响应式数据流。
- */
+
 class ObserveAllGradesUseCase(
     private val repository: GradeRepository,
     private val auth: JwxtAuthPort,

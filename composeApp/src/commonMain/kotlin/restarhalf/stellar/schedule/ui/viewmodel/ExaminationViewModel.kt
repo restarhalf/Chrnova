@@ -31,14 +31,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 考试安排ViewModel
- * 
- * 管理考试安排页面的UI状态，包括：
- * - 考试列表加载和显示
- * - 过滤已结束的考试
- * - 构建考试卡片UI
- */
+
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
@@ -47,18 +40,7 @@ class ExaminationViewModel(
     private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
 
-    /**
-     * 考试卡片UI
-     * 
-     * @param idKey 唯一标识符
-     * @param exam 考试数据
-     * @param title 课程名称
-     * @param dateText 考试日期文本
-     * @param timeText 考试时间文本
-     * @param locationText 考试地点文本
-     * @param seatText 座位号文本
-     * @param remarkText 备注文本
-     */
+    
     @Immutable
     data class ExamCardUi(
         val idKey: String,
@@ -72,25 +54,14 @@ class ExaminationViewModel(
         val isEnded: Boolean = false,
     )
 
-    /**
-     * 考试安排页面UI
-     * 
-     * @param cards 考试卡片列表
-     * @param statusText 状态文本（如"暂无考试安排"）
-     */
+    
     @Stable
     data class ExaminationScreenUi(
         val cards: ImmutableList<ExamCardUi>,
         val statusText: String?,
     )
 
-    /**
-     * 考试安排UI状态
-     * 
-     * @param loading 是否正在加载
-     * @param error 错误消息
-     * @param items 考试列表
-     */
+    
     @Stable
     data class ExaminationUiState(
         val loading: Boolean,
@@ -142,29 +113,17 @@ class ExaminationViewModel(
                     ),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<ExaminationUiState> = _uiState
 
     private var loader: (suspend () -> List<Examination>)? = null
 
-    /**
-     * 绑定数据加载器
-     * 
-     * @param loader 加载考试数据的挂起函数
-     */
+    
     fun bindLoader(loader: suspend () -> List<Examination>) {
         this.loader = loader
     }
 
-    /**
-     * 构建考试安排页面UI
-     * 
-     * @param items 考试列表
-     * @param loading 是否正在加载
-     * @param error 错误消息
-     * @param nowMs 当前时间戳
-     * @return 考试安排页面UI
-     */
+    
     fun buildScreenUi(
         items: List<Examination>,
         loading: Boolean,
@@ -182,7 +141,7 @@ class ExaminationViewModel(
         return ExaminationScreenUi(cards = cards.toPersistentList(), statusText = statusText)
     }
 
-    /** 加载考试数据 */
+    
     fun load() {
         val loader = this.loader ?: return
         if (_loading.value) return
@@ -201,12 +160,7 @@ class ExaminationViewModel(
         }
     }
 
-    /**
-     * 刷新考试本地通知
-     *
-     * 进入考试页或考试数据变化后调用，重新调度下一门考试提醒。
-     * 仅在已开启「考试提醒」时实际调度。
-     */
+    
     fun refreshExamReminder() {
         viewModelScope.launch {
             runCatching {
@@ -220,12 +174,7 @@ class ExaminationViewModel(
         }
     }
 
-    /**
-     * 构建考试卡片UI
-     * 
-     * @param exam 考试数据
-     * @return 考试卡片UI
-     */
+    
     private fun buildExamCardUi(exam: Examination, isEnded: Boolean = false): ExamCardUi {
         val title = exam.courseName.ifBlank { "未命名课程" }
         val datePart = exam.time.substringBefore(" ").ifBlank { "待定" }
@@ -245,7 +194,7 @@ class ExaminationViewModel(
             "考试时间:$timePart"
         }
         return ExamCardUi(
-            // 拼上数据库 id 保证唯一：手动添加的考试字段可完全相同，仅靠业务字段会撞 key
+
             idKey = "${exam.id}-${exam.courseNumber}-${exam.zwh}-${exam.time}",
             exam = exam,
             title = title,

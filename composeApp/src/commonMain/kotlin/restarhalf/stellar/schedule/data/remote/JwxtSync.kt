@@ -8,24 +8,10 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 教务系统同步服务
- * 
- * 负责从教务系统获取课程数据并解析为领域模型。
- * 
- * @param gateway 教务系统网关
- */
+
 class JwxtSync(private val gateway: JwxtGateway) {
 
-    /**
-     * 获取课程列表
-     * 
-     * @param semesterId 学期ID
-     * @param campusId 校区ID
-     * @param week 周次筛选，默认"all"表示所有周次
-     * @return 解析后的课程列表
-     * @throws IllegalStateException 获取失败时抛出
-     */
+    
     suspend fun fetchCourses(
         semesterId: String,
         campusId: String,
@@ -50,15 +36,7 @@ class JwxtSync(private val gateway: JwxtGateway) {
             }
         }
 
-    /**
-     * 获取学期开始日期（第一周周一的日期）
-     *
-     * 通过请求 week=1 获取第一周的日期数据，提取周一（xqid=1）的 mxrq 作为学期开始日期。
-     *
-     * @param semesterId 学期ID
-     * @param campusId 校区ID
-     * @return 学期开始时间戳（毫秒），获取失败时返回 null
-     */
+    
     suspend fun fetchTermStartDate(
         semesterId: String,
         campusId: String,

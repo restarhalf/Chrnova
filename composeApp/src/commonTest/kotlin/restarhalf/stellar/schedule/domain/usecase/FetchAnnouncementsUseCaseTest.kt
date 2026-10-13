@@ -21,16 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.Clock
 
-/**
- * FetchAnnouncementsUseCase 单元测试（Mokkery）
- *
- * 策略：mock 接口层 [AnnouncementPort] 与 [ObservableSettings]（Mokkery 仅支持
- * 接口 / open 类 / 函数类型），[AnnouncementStore] 与被测用例均使用真实实现，
- * 保证缓存策略与真实序列化路径都被覆盖。
- *
- * settings mock 使用 autofill 模式：未 stub 的 getStringOrNull 返回 null（无缓存）、
- * getLong 返回 0（从未缓存/从未阅读），与真实 store 的默认语义一致。
- */
+
 class FetchAnnouncementsUseCaseTest {
 
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
@@ -63,7 +54,7 @@ class FetchAnnouncementsUseCaseTest {
         val cached = listOf(Announcement(id = "1", title = "旧缓存", createdAt = 1000L))
         val fresh = listOf(Announcement(id = "2", title = "新公告", createdAt = 2000L))
         every { settings.getStringOrNull(any()) } returns cachedJson(cached)
-        // 缓存时间戳为 0 → 距今远超 10 分钟 TTL → 过期
+
         every { settings.getLong(any(), any()) } returns 0L
         everySuspend { port.listAnnouncements() } returns fresh
 
@@ -71,7 +62,7 @@ class FetchAnnouncementsUseCaseTest {
 
         assertEquals(listOf("新公告"), result.announcements.map { it.title })
         verifySuspend { port.listAnnouncements() }
-        // 缓存回写：JSON 列表 + 时间戳都应写入 settings
+
         verify { settings.putString(any(), any()) }
         verify { settings.putLong(any(), any()) }
     }
@@ -102,7 +93,7 @@ class FetchAnnouncementsUseCaseTest {
 
     @Test
     fun `网络失败且无缓存时向上抛错`() = runTest {
-        // autofill：getStringOrNull → null（无缓存）
+
         everySuspend { port.listAnnouncements() } throws IllegalStateException("后端不可用")
 
         assertFailsWith<IllegalStateException> { useCase() }
@@ -114,7 +105,7 @@ class FetchAnnouncementsUseCaseTest {
         val readAnnouncement = Announcement(id = "1", title = "已读", createdAt = nowSec - 3600)
         val unreadAnnouncement = Announcement(id = "2", title = "未读", createdAt = nowSec + 10)
         everySuspend { port.listAnnouncements() } returns listOf(readAnnouncement, unreadAnnouncement)
-        // 无缓存、从未阅读 → lastReadAtMs = 0 → 未读公告全部计入
+
 
         val result = useCase()
 

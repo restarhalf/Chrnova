@@ -124,7 +124,7 @@ class FetchGradesUseCaseTest {
         stubProfile("2023001")
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
         everySuspend { academic.fetchGradeReport(any()) } returns report(grade())
-        // FetchGradesUseCase 是 final class 无法 mock，用真实实例走完整委托链
+
         val simple = FetchGradesSimpleUseCase(
             FetchGradesUseCase(authWorkflow, academic, settings, repository, auth)
         )

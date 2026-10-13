@@ -39,16 +39,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 某课程的评价列表页（两层结构的第二层）。
- *
- * 设计要点（参考 EMS）：
- * - 顶栏：返回 + 课程名标题
- * - 顶部错误状态药丸
- * - Hero 卡片：左侧彩色强调条 + 课程名 + 教师 + 大数字平均分 + 半星 + 评价数
- * - 列表项：复用 EvaluationListItem（带入场动画 + 强调条）
- * - PullToRefresh
- */
+
 @Composable
 fun EvaluationCourseScreen(
     vm: CourseEvaluationViewModel,
@@ -65,7 +56,7 @@ fun EvaluationCourseScreen(
 
     LaunchedEffect(courseName, teacher) {
         vm.loadEvaluations(course = courseName, teacher = teacher.ifBlank { null })
-        // 兜底：若聚合列表为空（如深链接直接进入），加载一次用于顶部摘要
+
         if (uiState.courseSummaries.isEmpty()) {
             vm.loadCourseSummaries()
         }
@@ -124,7 +115,7 @@ fun EvaluationCourseScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // 顶部 Hero 卡片
+
                 item(key = "hero") {
                     val summary = uiState.courseSummaries.firstOrNull {
                         it.courseName == courseName && it.teacher == teacher

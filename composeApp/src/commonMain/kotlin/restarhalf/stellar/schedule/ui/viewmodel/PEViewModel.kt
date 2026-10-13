@@ -31,15 +31,7 @@ import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 
-/**
- * 体育成绩ViewModel
- *
- * 管理体育成绩查询页面的UI状态，包括：
- * - 体育成绩列表加载和显示
- * - 体测详情加载
- * - 用户登录和登出
- * - 本地缓存读取
- */
+
 class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
@@ -49,18 +41,7 @@ class PEViewModel(
     private val peAuthWorkflow: PEAuthWorkflowPort,
 ) : ViewModel() {
 
-    /**
-     * 体育成绩UI状态
-     *
-     * @param yearScores 年度成绩列表
-     * @param detailData 体测详情数据
-     * @param subjectHistory 当前查看的单科成绩历史，null 表示未打开
-     * @param authProfile 学生信息
-     * @param loading 是否正在加载
-     * @param error 错误消息
-     * @param loadedScoreList 是否已加载成绩列表
-     * @param loadedDetail 是否已加载详情数据
-     */
+    
     @Stable
     data class PeUiState(
         val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
@@ -73,17 +54,7 @@ class PEViewModel(
         val loadedDetail: Boolean = false,
     )
 
-    /**
-     * 单科成绩历史UI状态
-     *
-     * @param subjectId 科目ID
-     * @param subjectName 科目名称
-     * @param unit 成绩单位
-     * @param currentResult 详情页当前采用的成绩，用于标记历史记录
-     * @param records 历史记录（按时间倒序）
-     * @param loading 是否正在加载
-     * @param loaded 是否已完成一次加载（含失败）
-     */
+    
     @Stable
     data class SubjectHistoryUiState(
         val subjectId: String = "",
@@ -97,10 +68,10 @@ class PEViewModel(
 
     private val _uiState = MutableStateFlow(PeUiState())
 
-    /** 统一的UI状态流 */
+    
     val uiState: StateFlow<PeUiState> = _uiState
 
-    /** 是否已登录（响应式，由token变化驱动） */
+    
     val isLoggedIn: StateFlow<Boolean> = peAuth.observeToken()
         .map { token -> token.isNotBlank() }
         .catch { e ->
@@ -163,11 +134,7 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 观察本地缓存的详情数据
-     *
-     * @param schoolYear 学年
-     */
+    
     fun observeCachedDetailData(schoolYear: String) {
         viewModelScope.launch {
             try {
@@ -191,12 +158,7 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 构建状态文本
-     *
-     * @param isDetail 是否为详情页面
-     * @return 状态文本，无需显示时返回null
-     */
+    
     fun buildStatusText(isDetail: Boolean = false): String? {
         val state = uiState.value
         return when {
@@ -225,7 +187,7 @@ class PEViewModel(
         }
     }
 
-    /** 加载成绩列表 */
+    
     fun loadScoreList() {
         viewModelScope.launch {
             loadMutex.withLock {
@@ -247,11 +209,7 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 加载成绩详情
-     *
-     * @param schoolYear 学年
-     */
+    
     fun loadScoreDetail(schoolYear: String) {
         viewModelScope.launch {
             loadMutex.withLock {
@@ -268,11 +226,7 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 构建单科成绩历史页面的状态文本
-     *
-     * @return 状态文本，无需显示时返回null
-     */
+    
     fun buildSubjectHistoryStatusText(): String? {
         val state = uiState.value
         val history = state.subjectHistory ?: return null
@@ -283,15 +237,7 @@ class PEViewModel(
         }
     }
 
-    /**
-     * 加载单科成绩历史记录
-     *
-     * @param schoolYear 学年
-     * @param subjectId 科目ID
-     * @param subjectName 科目名称
-     * @param unit 成绩单位
-     * @param currentResult 详情页当前采用的成绩，用于标记历史记录
-     */
+    
     fun loadSubjectHistory(
         schoolYear: String,
         subjectId: String,
@@ -333,7 +279,7 @@ class PEViewModel(
                     },
                     errorKind = UserFacingErrorKind.LoadPESubjectHistory,
                 )
-                // 失败路径兜底：清除加载标记（成功路径已在 onSuccess 中处理）
+
                 _uiState.update { s ->
                     val history = s.subjectHistory
                     if (history != null && history.subjectId == subjectId && history.loading) {
@@ -344,7 +290,7 @@ class PEViewModel(
         }
     }
 
-    /** 加载学生信息（结果通过 observeProfile 响应式更新） */
+    
     fun loadProfile() {
         viewModelScope.launch {
             withAuthRetry(
@@ -355,7 +301,7 @@ class PEViewModel(
         }
     }
 
-    /** 用户登出，清除会话并重置状态 */
+    
     fun logout() {
         peAuthWorkflow.logout()
         _uiState.value = PeUiState()

@@ -34,13 +34,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * CourseEditViewModel 单元测试。
- *
- * uiState 是 stateIn(WhileSubscribed) 型：subscribeUi + awaitState 模板。
- * saveLabCourse/deleteCourse 走 withContext(AppIoDispatcher) 真实跨线程，
- * 断言前 delay + advanceMain。
- */
 class CourseEditViewModelTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -63,7 +56,6 @@ class CourseEditViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** 同步课程（type=0） */
     private fun syncedCourse(
         name: String,
         teacher: String = "张老师",
@@ -87,7 +79,6 @@ class CourseEditViewModelTest {
         type = 0,
     )
 
-    /** 实验课（type=1） */
     private fun labCourse(
         id: Long = 0,
         name: String = "物理实验",
@@ -137,13 +128,13 @@ class CourseEditViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-    // region uiState
+
 
     @Test
     fun `uiState初值为空列表`() = runTest {
         val vm = makeViewModel()
 
-        // initialValue 在构造期求值，无需订阅
+
         assertTrue(vm.uiState.value.courses.isEmpty())
         assertTrue(vm.uiState.value.courseNames.isEmpty())
     }
@@ -178,9 +169,9 @@ class CourseEditViewModelTest {
         assertEquals(listOf("高等数学"), state.courseNames)
     }
 
-    // endregion
 
-    // region 纯函数
+
+
 
     @Test
     fun `weekdayText转换中文`() {
@@ -202,11 +193,11 @@ class CourseEditViewModelTest {
     fun `buildDisabledWeeks聚合时间重叠课程的周次`() {
         val vm = makeViewModel()
 
-        // 同为周一 5-6 节的冲突课：第 3、4 周
+
         val conflicting = labCourse(id = 9, dayOfWeek = 1, startSection = 5, weeks = listOf(3, 4))
-        // 不同星期，不冲突
+
         val otherDay = labCourse(id = 10, dayOfWeek = 2, startSection = 5, weeks = listOf(5))
-        // 同星期但节次不重叠（1-2 节 vs 5-6 节）
+
         val noOverlap = labCourse(id = 11, dayOfWeek = 1, startSection = 1, weeks = listOf(6))
 
         val disabled = vm.buildDisabledWeeks(
@@ -284,14 +275,14 @@ class CourseEditViewModelTest {
 
         assertEquals("物理实验", saved?.name)
         assertEquals("2026-1", saved?.semesterId)
-        // 教师输入为空白 → 回退同步课教师
+
         assertEquals("张老师", saved?.teacher)
         assertEquals(5, saved?.startSection)
         assertEquals(2, saved?.sectionCount) // end - start + 1
         assertEquals(listOf(3, 5), saved?.weeks) // 排序
         assertEquals(1, saved?.type)
         assertEquals(0, saved?.id)
-        // userNo 取当前登录档案
+
         assertEquals("20230001", saved?.userNo)
     }
 
@@ -325,7 +316,7 @@ class CourseEditViewModelTest {
         assertEquals("#ABCDEF", saved?.color)
         assertEquals("20230001", saved?.userNo) // 保留 existing 的 userNo
         assertEquals("2026-1", saved?.semesterId) // 保留 existing 的学期
-        // 教师输入空白、无同步课 → 回退 existing.teacher
+
         assertEquals("李实验", saved?.teacher)
     }
 
@@ -334,7 +325,7 @@ class CourseEditViewModelTest {
         val vm = makeViewModel()
         val otherCourse = syncedCourse(name = "高等数学", semesterId = "2025-2")
 
-        // 选课名称不在同步课列表中 → 回退到首个 semesterId 非空的同步课
+
         val saved = vm.buildLabCourseToSave(
             selectedName = "陌生课程", selectedWeeks = setOf(1),
             classRoom = "一教", teacher = "",
@@ -351,7 +342,7 @@ class CourseEditViewModelTest {
         val noSemester = syncedCourse(name = "陌生课程", semesterId = "")
         val withSemester = syncedCourse(name = "高等数学", semesterId = "2025-2")
 
-        // 同名命中（即使学期为空）即返回，不再向后回退
+
         val saved = vm.buildLabCourseToSave(
             selectedName = "陌生课程", selectedWeeks = setOf(1),
             classRoom = "一教", teacher = "",
@@ -399,7 +390,7 @@ class CourseEditViewModelTest {
         assertEquals(5, form.endSection)
         assertEquals(setOf(2), form.selectedWeeks)
 
-        // 预选值超界被收敛：星期收敛到 7，节次收敛到 1
+
         val bounded = vm.buildEditingFormState(
             courseId = null, editingCourse = null, courseNames = emptyList(),
             initialDayOfWeek = 99, initialStartSection = 0, initialSelectedWeek = -1,
@@ -461,9 +452,9 @@ class CourseEditViewModelTest {
         assertEquals("第3-4节", vm.sectionSummary(3, 4))
     }
 
-    // endregion
 
-    // region saveLabCourse / deleteCourse
+
+
 
     @Test
     fun `saveLabCourse成功回调true`() = runTest {
@@ -472,7 +463,7 @@ class CourseEditViewModelTest {
 
         var callback: Boolean? = null
         vm.saveLabCourse(labCourse()) { callback = it }
-        // withContext(AppIoDispatcher) 真实跨线程
+
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
@@ -496,7 +487,7 @@ class CourseEditViewModelTest {
     @Test
     fun `saveLabCourse保存中忽略重复调用`() = runTest {
         val vm = makeViewModel()
-        // 用 calls 块人为拖慢 insertCourse，制造 _saving=true 的窗口
+
         everySuspend { courseRepository.insertCourse(any()) } calls { (c: Course) ->
             withContext(Dispatchers.Default) { delay(200) }
             1L
@@ -504,7 +495,7 @@ class CourseEditViewModelTest {
 
         var callbacks = 0
         vm.saveLabCourse(labCourse()) { callbacks++ }
-        // 保存进行中，第二次调用应被同步忽略（无回调）
+
         vm.saveLabCourse(labCourse()) { callbacks++ }
 
         withContext(Dispatchers.Default) { delay(400) }
@@ -541,5 +532,5 @@ class CourseEditViewModelTest {
         assertEquals(false, callback)
     }
 
-    // endregion
+
 }

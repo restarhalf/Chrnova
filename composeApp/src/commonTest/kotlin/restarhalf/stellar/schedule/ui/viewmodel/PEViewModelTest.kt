@@ -44,23 +44,14 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * PEViewModel 单元测试。
- *
- * 4 个 UseCase 均为 final class，用 2 参构造（无 repository）真实实例 + mock PEGateway：
- * observeScoreList/observeDetailData 在 repository 未配置时抛 IllegalStateException，
- * init 的 try-catch 会吞掉——恰好覆盖了"缓存源不可用时 VM 不崩"的健壮性路径。
- *
- * uiState 是裸 MutableStateFlow，无需订阅即可读 value；
- * viewModelScope 内挂起流程用类级 UnconfinedTestDispatcher 的 scheduler drain。
- */
+
 class PEViewModelTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)
     private val peAuth = mock<PEAuthPort>(MockMode.autofill)
     private val peAuthWorkflow = mock<PEAuthWorkflowPort>(MockMode.autofill)
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
+    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private val tokenFlow = MutableStateFlow("")

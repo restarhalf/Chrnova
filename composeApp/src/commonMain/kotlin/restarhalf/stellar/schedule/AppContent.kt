@@ -120,28 +120,17 @@ import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Clock
 
-/**
- * 应用主内容组件
- *
- * 负责渲染应用的主要UI结构，包括：
- * - 底部导航栏
- * - 页面导航和转场动画
- * - 背景图片显示
- * - 各功能页面的路由
- *
- * 使用 miuix-nav 实现页面导航：连续栈深度驱动（animatedTop），内置滑动转场、
- * 预测返回与边缘滑动返回。
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppContent(
-    /** 应用ViewModel，管理业务逻辑和状态 */
+    
     vm: AppViewModel,
-    /** 背景ViewModel，管理背景图片相关状态 */
+    
     bgVm: BackgroundViewModel,
-    /** 应用更新端口，处理版本检查和下载 */
+    
     appUpdate: AppUpdatePort,
-    /** 图片选择器宿主组件，用于处理图片选择回调 */
+    
     pictureSelectorHost: @Composable (
         show: Boolean,
         onDismissRequest: () -> Unit,
@@ -149,30 +138,30 @@ fun AppContent(
         outputWidthPx: Int?,
         outputHeightPx: Int?,
     ) -> Unit = { _, _, _, _, _ -> },
-    /** PDF文件选择器宿主组件 */
+    
     pdfFilePickerHost: @Composable (
         multiple: Boolean,
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
     ) -> Unit = { _, _ -> },
-    /** 通知权限请求回调 */
+    
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
-    /** 打开URI的回调函数 */
+    
     openUri: (String) -> Boolean = { false },
-    /** 显示消息的回调函数（如Toast） */
+    
     showMessage: (String) -> Unit = {},
-    /** 是否可以保存奖励图片 */
+    
     canSaveAwardPicture: Boolean = false,
-    /** 保存奖励图片的挂起函数 */
+    
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
-    /** 同步教务系统的挂起函数 */
+    
     runSync: suspend () -> Unit,
-    /** 保存日志文件的回调，返回保存路径或null */
+    
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    /** 保存CSV文件的回调，返回保存路径或null */
+    
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    /** 是否允许把图片（如公告配图）保存到相册 */
+    
     canSaveImage: Boolean = false,
-    /** 保存图片字节到相册（fileName 为保存名），返回是否成功 */
+    
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val appState = LocalAppState.current
@@ -302,10 +291,10 @@ fun AppContent(
                         NavDisplay(
                             backStack = backStack,
                             onBack = { navigator.pop() },
-                            // 透明页面 + 宿主背景图方案不能直接用 MiuixDefault：
-                            // 其 covered 处理保持下层可见（静止时 alpha 0.9 + parallax），
-                            // 一级页会从透明二级页里透出；TransparentStackTransition
-                            // 让被覆盖层淡出到透明，scrim 转场中途峰值、静止归零。
+
+
+
+
                             transition = TransparentStackTransition,
                             effects = navEffects,
                         ) {
@@ -672,37 +661,27 @@ fun AppContent(
     }
 }
 
-/**
- * 主路由内容组件
- * 
- * 使用HorizontalPager实现底部导航栏的页面切换，支持左右滑动。
- * 包含以下页面：
- * - Home：首页，显示今日课程
- * - Schedule：课程表，按周查看完整课表
- * - EMS：考试与成绩
- * - PEScore：体育成绩
- * - Settings：设置
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainRouteContent(
-    /** 背景ViewModel */
+    
     bgVm: BackgroundViewModel,
-    /** 应用ViewModel */
+    
     vm: AppViewModel,
-    /** 公告ViewModel（全局共享，首页红点与列表/详情页状态一致） */
+    
     announcementVm: AnnouncementViewModel,
-    /** 同步教务系统的挂起函数 */
+    
     runSync: suspend () -> Unit,
-    /** 通知权限请求回调 */
+    
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
-    /** 保存CSV文件的回调 */
+    
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    /** 显示消息的回调 */
+    
     showMessage: (String) -> Unit = {},
-    /** 是否可保存图片到相册 */
+    
     canSaveImage: Boolean = false,
-    /** 保存图片字节到相册 */
+    
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val homeVm: HomeViewModel = koinViewModel()
@@ -716,8 +695,8 @@ private fun MainRouteContent(
     val navigator = LocalNavigator.current
     val mainPagerState = LocalMainPagerState.current
 
-    // 切回首页 tab 时刷新公告（首次组合 currentPage=0 也会触发一次），
-    // 保证新发布的公告红点在首页及时出现
+
+
     LaunchedEffect(mainPagerState.pagerState.currentPage) {
         if (rootTabAt(mainPagerState.pagerState.currentPage) == Screen.Home) {
             announcementVm.refresh()
@@ -803,7 +782,7 @@ private fun MainRouteContent(
 
             Screen.Settings -> {
                 val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
-                // 仅设置页需要全量课程（导出 CSV）；避免在主 Pager 父级收集导致课表变更牵连其它 Tab
+
                 val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
                 SettingsScreen(
                     vm = settingsVm,
@@ -862,7 +841,7 @@ private fun MainScreenBackHandler(
     )
 }
 
-/** 从图片 URL 推导保存文件名，无合适末段时回退到带时间戳的默认名。 */
+
 private fun deriveImageFileName(url: String): String {
     val tail = url.substringAfterLast('/', "")
         .substringBefore('?')

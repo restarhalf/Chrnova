@@ -36,13 +36,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * CourseEvaluationViewModel 单元测试。
- *
- * uiState 是裸 MutableStateFlow，无需订阅即可读 value。
- * userHash 用 CourseEvaluationPort.hashUserNo 真实计算（JVM 有 optimal provider），
- * 断言时对同一学号重新计算比对，不硬编码 hash 值。
- */
+
 class CourseEvaluationViewModelTest {
 
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
@@ -50,7 +44,7 @@ class CourseEvaluationViewModelTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<SettingsPort>(MockMode.autofill)
 
-    /** init 即 collect 档案流，类级持有以便测试中切换登录态 */
+    
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
     private val mainDispatcher = UnconfinedTestDispatcher()
@@ -89,7 +83,7 @@ class CourseEvaluationViewModelTest {
         liked = liked,
     )
 
-    /** init 三路 stub（昵称/档案流/已选课程）必须先于 VM 构造 */
+    
     private fun makeViewModel(): CourseEvaluationViewModel {
         every { settings.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
@@ -97,11 +91,11 @@ class CourseEvaluationViewModelTest {
         return CourseEvaluationViewModel(port, courseRepository, auth, settings)
     }
 
-    /** 已登录档案（学号 20230001） */
+    
     private fun loggedInProfile() =
         JwxtAuthProfile(name = "小明", userNo = "20230001")
 
-    // region init
+
 
     @Test
     fun `init读取昵称与档案并计算userHash`() = runTest {
@@ -169,9 +163,9 @@ class CourseEvaluationViewModelTest {
         assertNull(vm.uiState.value.error)
     }
 
-    // endregion
 
-    // region loadEvaluations
+
+
 
     @Test
     fun `loadEvaluations成功填充列表与total`() = runTest {
@@ -234,9 +228,9 @@ class CourseEvaluationViewModelTest {
         }
     }
 
-    // endregion
 
-    // region loadCourseSummaries / loadDetail
+
+
 
     @Test
     fun `loadCourseSummaries成功填充聚合列表`() = runTest {
@@ -290,9 +284,9 @@ class CourseEvaluationViewModelTest {
         assertNull(vm.uiState.value.selectedEvaluation)
     }
 
-    // endregion
 
-    // region submitEvaluation
+
+
 
     @Test
     fun `submit未登录守卫不调port`() = runTest {
@@ -339,9 +333,9 @@ class CourseEvaluationViewModelTest {
         assertFalse(vm.uiState.value.submitting)
     }
 
-    // endregion
 
-    // region deleteEvaluation
+
+
 
     @Test
     fun `delete未登录守卫回调false不调port`() = runTest {
@@ -374,7 +368,7 @@ class CourseEvaluationViewModelTest {
         assertEquals("已删除", vm.uiState.value.successMessage)
         assertEquals(true, callbackResult)
         verifySuspend(VerifyMode.exactly(1)) { port.deleteEvaluation("e1") }
-        // 成功路径会触发 loadEvaluations() 重新拉列表
+
         verifySuspend(VerifyMode.exactly(1)) {
             port.listEvaluations(any(), any(), any(), any())
         }
@@ -395,9 +389,9 @@ class CourseEvaluationViewModelTest {
         assertEquals("无权限", vm.uiState.value.error)
     }
 
-    // endregion
 
-    // region toggleLike
+
+
 
     @Test
     fun `toggleLike未登录守卫不调port`() = runTest {
@@ -431,9 +425,9 @@ class CourseEvaluationViewModelTest {
 
         assertEquals(6, vm.uiState.value.evaluations[0].likes)
         assertTrue(vm.uiState.value.evaluations[0].liked)
-        // e2 不受影响
+
         assertEquals(0, vm.uiState.value.evaluations[1].likes)
-        // 选中项同步更新
+
         assertEquals(6, vm.uiState.value.selectedEvaluation?.likes)
         assertTrue(vm.uiState.value.selectedEvaluation?.liked == true)
     }
@@ -451,9 +445,9 @@ class CourseEvaluationViewModelTest {
         assertEquals("点赞失败", vm.uiState.value.error)
     }
 
-    // endregion
 
-    // region updateEvaluation
+
+
 
     @Test
     fun `update未登录守卫不调port`() = runTest {
@@ -490,9 +484,9 @@ class CourseEvaluationViewModelTest {
         assertFalse(vm.uiState.value.submitting)
         assertEquals("改后的内容", vm.uiState.value.evaluations[0].content)
         assertEquals(2, vm.uiState.value.evaluations[0].rating)
-        // e2 不受影响
+
         assertEquals("讲得不错", vm.uiState.value.evaluations[1].content)
-        // 选中项替换为更新后的评价
+
         assertEquals("改后的内容", vm.uiState.value.selectedEvaluation?.content)
     }
 
@@ -510,9 +504,9 @@ class CourseEvaluationViewModelTest {
         assertFalse(vm.uiState.value.submitting)
     }
 
-    // endregion
 
-    // region 筛选与计算属性
+
+
 
     @Test
     fun `setOnlyMine与onSearchQueryChange更新状态`() = runTest {
@@ -603,16 +597,16 @@ class CourseEvaluationViewModelTest {
         val vm = makeViewModel()
         advanceMain()
 
-        // 未选中
+
         assertFalse(vm.uiState.value.canDeleteSelected)
 
         everySuspend { port.getEvaluation("e1") } returns evaluation("e1", userHash = "someone-else")
         vm.loadDetail("e1")
         advanceMain()
 
-        // 非本人
+
         assertFalse(vm.uiState.value.canDeleteSelected)
     }
 
-    // endregion
+
 }

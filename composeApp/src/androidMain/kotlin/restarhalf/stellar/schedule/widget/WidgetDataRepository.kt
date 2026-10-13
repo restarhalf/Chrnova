@@ -128,7 +128,7 @@ internal object WidgetDataRepository {
             val totalWeeks = prefs.getTotalWeeks()
             val termStartMs = prefs.getTermStartMs()
 
-            // 读取当前激活的学期，按学期过滤课程
+
             val appSettings = settingsFactory.create(SettingsKeys.PREFS_NAME)
             val activeScheduleTerm = appSettings.getString(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
             val filteredCourses = if (activeScheduleTerm.isNotBlank()) {

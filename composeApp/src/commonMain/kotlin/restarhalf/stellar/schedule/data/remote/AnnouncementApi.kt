@@ -13,12 +13,7 @@ import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 公告 API 实现（Cloudflare Worker REST 接口）
- *
- * 镜像 PapersApi / CourseEvaluationApi 的写法：持有 Ktor HttpClient，拼接 URL，手动编解码 JSON。
- * 公告为全局数据，请求不携带登录态或设备标识。
- */
+
 class AnnouncementApi(
     private val httpClient: HttpClient,
     private val baseUrl: String,
@@ -42,7 +37,7 @@ class AnnouncementApi(
             val response: HttpResponse = httpClient.get("$baseUrl/ad")
             if (!response.status.isSuccess()) return@withContext null
             val raw = response.body<String>()
-            // 后端未配置/未启用时返回 JSON 字面量 null，需显式判定为空配置
+
             if (raw.isBlank() || raw.trim() == "null") return@withContext null
             json.decodeFromString<AdConfig>(raw)
         }

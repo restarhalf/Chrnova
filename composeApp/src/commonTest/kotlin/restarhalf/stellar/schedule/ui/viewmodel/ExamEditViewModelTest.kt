@@ -40,12 +40,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * ExamEditViewModel 单元测试。
- *
- * Save/DeleteExaminationUseCase 是 final class，用真实实例 + mock repository 走完整委托链。
- * selectedTerm/currentTerm 是 Eagerly stateIn，构造后直接读 value 即可。
- */
 class ExamEditViewModelTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -144,7 +138,7 @@ class ExamEditViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-    // region uiState 与学期流
+
 
     @Test
     fun `uiState初值为空列表`() = runTest {
@@ -190,9 +184,9 @@ class ExamEditViewModelTest {
         assertEquals("2026-2", vm.currentTerm.value)
     }
 
-    // endregion
 
-    // region 纯函数
+
+
 
     @Test
     fun `buildEditingFormState新建返回空白表单`() {
@@ -373,9 +367,9 @@ class ExamEditViewModelTest {
         verify(VerifyMode.exactly(1)) { examinationRepository.observeExaminationById(-1) }
     }
 
-    // endregion
 
-    // region saveExamination / deleteExamination
+
+
 
     @Test
     fun `saveExamination成功且学期取选中学期`() = runTest {
@@ -400,7 +394,7 @@ class ExamEditViewModelTest {
     fun `saveExamination无选中学期回退fetchCurrentTermId`() = runTest {
         val vm = makeViewModel()
         advanceMain()
-        // selectedTerm=""，currentTerm 即使有值也应优先 fetchCurrentTermId 结果
+
         everySuspend { academic.fetchCurrentTermId() } returns "2027-1"
         everySuspend { examinationRepository.saveExamination(any(), any()) } returns 1L
 
@@ -494,5 +488,5 @@ class ExamEditViewModelTest {
         assertEquals(false, callback)
     }
 
-    // endregion
+
 }

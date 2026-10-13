@@ -63,7 +63,7 @@ class FetchSemesterIdsUseCaseTest {
         everySuspend { academic.fetchSemesterIds() } throws RuntimeException("no session")
         every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
 
-        // fetchFromNetwork 内部吞掉异常（刷新重试后仍失败返回空列表），最终返回空列表而非抛出
+
         assertEquals(emptyList(), useCase())
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
     }
@@ -74,7 +74,7 @@ class FetchSemesterIdsUseCaseTest {
         everySuspend { authWorkflow.refreshSession() } throws RuntimeException("refresh failed")
         every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
 
-        // refreshSession 未被 fetchFromNetwork 捕获，向上传播后因缓存为空重新抛出
+
         assertFailsWith<RuntimeException> { useCase() }
     }
 }

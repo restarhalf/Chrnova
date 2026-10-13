@@ -48,14 +48,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * ScheduleViewModel 单元测试。
- *
- * uiState 是 combine 5 流 + stateIn(WhileSubscribed)：subscribeUi + awaitState 模板。
- * 三个 UseCase 全部用真实实例（BuildScheduleUiState/TransCourseWithConflicts/RefreshCourseRemindersIfEnabled），
- * 只 mock 端口（settings/courseRepository/timetable/courseReminder）。
- * shouldAutoSync/insertCourse/deleteCourse/refreshCourseRemindersIfEnabled 走 withContext(AppIoDispatcher) 真实跨线程。
- */
 class ScheduleViewModelTest {
 
     private val settings = mock<SettingsPort>(MockMode.autofill)
@@ -82,12 +74,10 @@ class ScheduleViewModelTest {
         Dispatchers.resetMain()
     }
 
-    /** 2026-03-02（周一）00:00 本地时区 */
     private val termStartMs = LocalDateTime.parse("2026-03-02T00:00")
         .toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     private val dayMs = 24 * 60 * 60 * 1000L
 
-    /** 10 节时间槽（与真实金石滩配置前 10 节一致） */
     private val timetableSlots = listOf(
         TimetableSlot(1, "8:00", "8:45"),
         TimetableSlot(2, "8:55", "9:40"),
@@ -127,7 +117,7 @@ class ScheduleViewModelTest {
     )
 
     private fun makeViewModel(): ScheduleViewModel {
-        // 全部 stub 先于构造
+
         every { settings.observeShowNonCurrentWeek() } returns showNonCurrentWeekFlow
         every { settings.observeScheduleRowHeight() } returns rowHeightFlow
         every { settings.observeCourseReminderEnabled() } returns reminderFlow
@@ -148,14 +138,12 @@ class ScheduleViewModelTest {
         )
     }
 
-    /** uiState 是 stateIn(WhileSubscribed)，须先订阅才有 combine 流更新 */
     private fun TestScope.subscribeUi(vm: ScheduleViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 轮询等待 uiState 满足谓词，每轮主动 drain Main 队列 */
     private suspend fun awaitState(
         vm: ScheduleViewModel,
         timeoutMs: Long = 5000,
@@ -171,7 +159,7 @@ class ScheduleViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-    // region uiState / allCourses / detailSheet
+
 
     @Test
     fun `uiState初值为默认配置`() = runTest {
@@ -202,7 +190,7 @@ class ScheduleViewModelTest {
     fun `allCourses响应课程流更新`() = runTest {
         val vm = makeViewModel()
         subscribeUi(vm)
-        // allCourses 也是 stateIn(WhileSubscribed)，须同样订阅才会收集上游
+
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.allCourses.collect {}
         }
@@ -269,9 +257,9 @@ class ScheduleViewModelTest {
         assertTrue(state.detailSheetUiState.show)
     }
 
-    // endregion
 
-    // region transDialog
+
+
 
     @Test
     fun `openTransDialog填充字段`() = runTest {
@@ -312,7 +300,7 @@ class ScheduleViewModelTest {
         subscribeUi(vm)
         awaitState(vm) { true }
 
-        // dayOfWeek=99 越界、start=11 + count=3 → end=13 越界
+
         val c1 = course(dayOfWeek = 99, startSection = 11, sectionCount = 3)
         vm.openTransDialog(c1, currentWeek = 2)
         val dialog = awaitState(vm) { it.transDialogUiState.show }.transDialogUiState
@@ -332,7 +320,7 @@ class ScheduleViewModelTest {
         awaitState(vm) { it.transDialogUiState.show }
         vm.dismissTransDialog()
         val state = awaitState(vm) { !it.transDialogUiState.show }
-        // 数据保留：course 与周次不清除
+
         assertEquals(c1, state.transDialogUiState.course)
         assertEquals(2, state.transDialogUiState.originWeek)
     }
@@ -439,9 +427,9 @@ class ScheduleViewModelTest {
         assertEquals(4, input.endSection)
     }
 
-    // endregion
 
-    // region transConflict
+
+
 
     @Test
     fun `showTransConflict显示冲突与待覆盖课程`() = runTest {
@@ -468,7 +456,7 @@ class ScheduleViewModelTest {
         vm.dismissTransConflict(reopenTransDialog = false)
         val state = awaitState(vm) { !it.transConflictUiState.show }
         assertFalse(state.transDialogUiState.show)
-        // 冲突数据保留
+
         assertEquals(1, state.transConflictUiState.conflicts.size)
     }
 
@@ -487,7 +475,7 @@ class ScheduleViewModelTest {
         awaitState(vm) { it.transConflictUiState.show }
         vm.dismissTransConflict(reopenTransDialog = true)
         val state = awaitState(vm) { it.transDialogUiState.show }
-        // 冲突隐藏 + 对话框重开且数据保留
+
         assertFalse(state.transConflictUiState.show)
         assertEquals(c1, state.transDialogUiState.course)
     }
@@ -530,37 +518,37 @@ class ScheduleViewModelTest {
         awaitState(vm) { it.transConflictUiState.show }
 
         assertEquals(pending, vm.consumePendingOverride())
-        // 消费后整体复位
+
         val state = awaitState(vm) { !it.transConflictUiState.show }
         assertTrue(state.transConflictUiState.conflicts.isEmpty())
         assertNull(state.transConflictUiState.pendingOverride)
-        // 再次消费返回 null
+
         assertNull(vm.consumePendingOverride())
     }
 
-    // endregion
 
-    // region page/week 转换
+
+
 
     @Test
     fun `pageToWeek与weekToPage双向转换`() = runTest {
         val vm = makeViewModel()
-        // 含第 0 周：page 与 week 一致
+
         assertEquals(3, vm.pageToWeek(page = 3, includeWeek0 = true))
         assertEquals(3, vm.weekToPage(week = 3, includeWeek0 = true))
-        // 不含第 0 周：偏移 1
+
         assertEquals(3, vm.pageToWeek(page = 2, includeWeek0 = false))
         assertEquals(2, vm.weekToPage(week = 3, includeWeek0 = false))
     }
 
-    // endregion
 
-    // region buildScheduleUiState（真实 UseCase）
+
+
 
     @Test
     fun `buildScheduleUiState学期中第3周`() = runTest {
         val vm = makeViewModel()
-        // termStart + 14 天 = 2026-03-16（第 3 周周一）
+
         val state = vm.buildScheduleUiState(
             campus = Campus.Jinshitan,
             totalWeeks = 20,
@@ -596,7 +584,7 @@ class ScheduleViewModelTest {
     @Test
     fun `buildScheduleUiState超过总周数为假期`() = runTest {
         val vm = makeViewModel()
-        // totalWeeks=2，termStart + 21 天 → week=4 > 2
+
         val state = vm.buildScheduleUiState(
             campus = Campus.Jinshitan,
             totalWeeks = 2,
@@ -609,9 +597,9 @@ class ScheduleViewModelTest {
         assertEquals(3, state.pagerPageCount)
     }
 
-    // endregion
 
-    // region buildWeekHeaderUi
+
+
 
     @Test
     fun `buildWeekHeaderUi正常周`() = runTest {
@@ -624,11 +612,11 @@ class ScheduleViewModelTest {
             dayCount = 7,
         )
         assertEquals(listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日"), header.days)
-        // 第 3 周从 2026-03-16（周一）开始
+
         assertEquals(AcademicCalendar.getWeekDates(3, termStartMs).take(7), header.dates)
-        // day 用 Padding.ZERO 补零，month 不补 → "03/16"
+
         assertEquals("03/16", header.dates.first())
-        // 今日（2026-09 之后）不在第 3 周 → null（动态计算避免运行日期耦合）
+
         assertEquals(
             AcademicCalendar.getTodayIndexInWeek(3, termStartMs),
             header.todayIndex,
@@ -645,7 +633,7 @@ class ScheduleViewModelTest {
             termStartMs = termStartMs,
             dayCount = 7,
         )
-        // headerWeek=-1 → 使用当前真实周的日期与今日索引
+
         assertEquals(AcademicCalendar.getCurrentWeekDates(dayCount = 7), header.dates)
         assertEquals(AcademicCalendar.getTodayIndexInCurrentWeek(), header.todayIndex)
     }
@@ -660,21 +648,21 @@ class ScheduleViewModelTest {
             termStartMs = termStartMs,
             dayCount = 5,
         )
-        // headerWeek=2 → 第 2 周日期，取前 5 天
+
         assertEquals(AcademicCalendar.getWeekDates(2, termStartMs).take(5), header.dates)
         assertEquals(5, header.dates.size)
     }
 
-    // endregion
 
-    // region buildPageRenderUi
+
+
 
     @Test
     fun `buildPageRenderUi按天分组并区分当前与非当前周`() = runTest {
         val vm = makeViewModel()
         val current = course(name = "高等数学", dayOfWeek = 1, weeks = listOf(2))
         val otherDay = course(name = "大学物理", dayOfWeek = 2, weeks = listOf(2))
-        // 非当前周课程需与当前周课程不同节次，否则会被重叠过滤隐藏
+
         val nonCurrent = course(name = "有机化学", dayOfWeek = 1, startSection = 5, weeks = listOf(5))
         val muted = Color.Red
 
@@ -696,17 +684,17 @@ class ScheduleViewModelTest {
         assertEquals((1..5).toSet(), render.dayRenderData.keys)
 
         val day1 = render.dayRenderData.getValue(1).items
-        // 第 1 天：当前周课程 + 无重叠的非当前周课程
+
         assertEquals(2, day1.size)
         val currentModel = day1.first { it.model.name == "高等数学" }.model
         assertEquals(12.dp, currentModel.topOffsetY) // yForSection(1)=10 + inset 2
         assertEquals(124.dp, currentModel.height) // heightForSections(2)=128 - inset*2 4
-        // 非当前周课程使用 muted 颜色
+
         val mutedModel = day1.first { it.model.name == "有机化学" }.model
         assertEquals(muted, mutedModel.color)
-        // 第 2 天只有当前周课程
+
         assertEquals(listOf("大学物理"), render.dayRenderData.getValue(2).items.map { it.model.name })
-        // 第 5 天无课程
+
         assertTrue(render.dayRenderData.getValue(5).items.isEmpty())
     }
 
@@ -714,7 +702,7 @@ class ScheduleViewModelTest {
     fun `buildPageRenderUi传入effectiveCourses时优先使用`() = runTest {
         val vm = makeViewModel()
         val all = listOf(course(name = "高等数学", dayOfWeek = 1, weeks = listOf(2)))
-        // 传入空 effectiveCourses → 即使 all 有课程也不渲染
+
         val render = vm.buildPageRenderUi(
             courses = all,
             page = 1,
@@ -733,9 +721,9 @@ class ScheduleViewModelTest {
         assertTrue(render.dayRenderData.values.all { it.items.isEmpty() })
     }
 
-    // endregion
 
-    // region buildCourseDetailUi
+
+
 
     @Test
     fun `buildCourseDetailUi普通课无标签`() = runTest {
@@ -766,7 +754,7 @@ class ScheduleViewModelTest {
     @Test
     fun `buildCourseDetailUi调课标签与周次改写`() = runTest {
         val vm = makeViewModel()
-        // type=2, targetWeek=2 == currentWeek，原 weeks=[1] 非空
+
         val detail = vm.buildCourseDetailUi(
             course = course(weeks = listOf(1), type = 2, targetWeek = 2),
             currentWeek = 2,
@@ -774,7 +762,7 @@ class ScheduleViewModelTest {
         )
         assertEquals("调课", detail.tagText)
         assertEquals(ScheduleViewModel.CourseDetailTagStyle.TRANS, detail.tagStyle)
-        // 周次文本改写为 "第2周（原1周）"
+
         assertTrue(detail.weekLine.startsWith("第2周（原1周）   |   "))
     }
 
@@ -804,7 +792,7 @@ class ScheduleViewModelTest {
     @Test
     fun `buildCourseDetailUi第0周不显示任何标签`() = runTest {
         val vm = makeViewModel()
-        // currentWeek=0：weeks 不含 0 → 实验/调课分支不命中；isCourseActiveInWeek(week<=0)=true → 也不标"非本周"
+
         val lab = vm.buildCourseDetailUi(
             course = course(weeks = listOf(1), type = 1),
             currentWeek = 0,
@@ -817,7 +805,7 @@ class ScheduleViewModelTest {
     @Test
     fun `buildCourseDetailUi节次越界时间占位`() = runTest {
         val vm = makeViewModel()
-        // start=10, count=2 → end=11 超出 10 节
+
         val detail = vm.buildCourseDetailUi(
             course = course(weeks = listOf(2), startSection = 10, sectionCount = 2),
             currentWeek = 2,
@@ -837,9 +825,9 @@ class ScheduleViewModelTest {
         assertEquals("2周   |   第1-2 节(-----)", detail.weekLine)
     }
 
-    // endregion
 
-    // region buildTransCourseAndConflicts（真实 UseCase 链）
+
+
 
     @Test
     fun `buildTransCourseAndConflicts无冲突`() = runTest {
@@ -865,7 +853,7 @@ class ScheduleViewModelTest {
         assertEquals("rk-1#override#1#3", override.remoteKey)
         assertEquals(3, override.targetWeek)
         assertEquals(listOf(1), override.weeks)
-        // 新教室空白 → 回退原地点
+
         assertEquals("一教101", override.location)
     }
 
@@ -892,9 +880,9 @@ class ScheduleViewModelTest {
         assertEquals("五教505", result.overrideCourse.location)
     }
 
-    // endregion
 
-    // region insertCourse / deleteCourse / saveTransCourse
+
+
 
     @Test
     fun `insertCourse成功返回true`() = runTest {
@@ -948,9 +936,9 @@ class ScheduleViewModelTest {
         verifySuspend(VerifyMode.exactly(1)) { courseRepository.insertCourse(any()) }
     }
 
-    // endregion
 
-    // region shouldAutoSync / refreshCourseRemindersIfEnabled
+
+
 
     @Test
     fun `shouldAutoSync透传端口结果`() = runTest {
@@ -990,5 +978,5 @@ class ScheduleViewModelTest {
         }
     }
 
-    // endregion
+
 }

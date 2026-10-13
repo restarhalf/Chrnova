@@ -20,15 +20,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * BackgroundViewModel 单元测试。
- *
- * uiState 为 stateIn(WhileSubscribed)，测试中用 backgroundScope + UnconfinedTestDispatcher
- * 订阅驱动 combine；observe 流用 MutableStateFlow 模拟，可验证响应式更新。
- *
- * Main dispatcher 类级持有并绑定独立 scheduler：某些非可取消协程恢复会进入其内部
- * 任务队列而非内联执行，用 [advanceMain] 主动 drain，避免状态停滞。
- */
+
 class BackgroundViewModelTest {
 
     private val port = mock<BackgroundSettingsPort>(MockMode.autofill)
@@ -52,7 +44,7 @@ class BackgroundViewModelTest {
         return BackgroundViewModel(port)
     }
 
-    /** 订阅 uiState 驱动 stateIn(WhileSubscribed)，并 drain Main 队列使 combine 完成首轮发射 */
+    
     private fun TestScope.subscribeUi(vm: BackgroundViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher()) { vm.uiState.collect {} }
         advanceMain()

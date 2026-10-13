@@ -59,33 +59,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-/**
- * 设置页面屏幕
- *
- * 显示应用设置，包括：
- * - 账号登录/登出
- * - 校区选择
- * - 学期设置
- * - 提醒设置
- * - 主题设置
- * - 背景设置
- * - 关于页面
- *
- * @param syncUiState 同步状态
- * @param campus 当前校区
- * @param termStartMs 学期开始时间戳
- * @param totalWeeks 学期总周数
- * @param onSync 同步回调
- * @param onLogout 登出回调
- * @param onLogin 登录回调
- * @param ensureCourseReminderPermission 课程提醒权限请求回调
- * @param ensureExamReminderPermission 考试提醒权限请求回调
- * @param onCampusChange 校区变更回调
- * @param onTermStartChange 学期开始时间变更回调
- * @param onTotalWeeksChange 总周数变更回调
- * @param onChangeBackground 更换背景回调
- * @param onAbout 关于页面回调
- */
+
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SettingsScreen(
@@ -248,7 +222,7 @@ fun SettingsScreen(
             item {
                 SmallTitle(text = "账号")
                 AppCard {
-                    // 个人信息卡（头像/昵称）仅用于展示与编辑，不应影响登录入口的可用性
+
                     if (personalInfoUiState.hasPersonalInfo) {
                         PersonalInfoCard(
                             avatarUri = personalInfoUiState.avatarUri,
@@ -263,7 +237,7 @@ fun SettingsScreen(
                             onClick = onProfile,
                         )
                     }
-                    // 登录入口：只要未登录教务就始终显示，与是否设置头像/昵称无关
+
                     if (!accountUi.loggedIn) {
                         if (personalInfoUiState.hasPersonalInfo) {
                             HorizontalDivider()
@@ -364,13 +338,13 @@ fun SettingsScreen(
                             onClick = onEvaluation,
                         )
                     })
-//                        add(CardItem("courseSelection") {
-//                            ArrowPreference(
-//                                title = "自动抢课",
-//                                summary = "自动监控并提交选课请求",
-//                                onClick = onCourseSelection,
-//                            )
-//                        })
+
+
+
+
+
+
+
                     add(CardItem("courseEnroll") {
                         ArrowPreference(
                             title = "选课",

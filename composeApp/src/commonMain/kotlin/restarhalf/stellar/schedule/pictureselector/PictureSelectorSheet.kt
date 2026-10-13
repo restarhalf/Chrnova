@@ -72,7 +72,7 @@ import androidx.compose.foundation.lazy.items as lazyItems
 private val PhotoShape = RoundedCornerShape(10.dp)
 private val AlbumCoverShape = RoundedCornerShape(12.dp)
 
-/** 页面状态：Tab + 是否已进入相册二级页。 */
+
 private data class SelectorPage(
     val tab: PictureSelectorTab,
     val album: MediaAlbum?,
@@ -116,7 +116,7 @@ fun PictureSelectorSheet(
         }
     }
 
-    // 逐级退出：裁剪 → 相册二级 → 关闭选择器
+
     val goBackOrDismiss: () -> Unit = {
         when {
             state.cropTarget != null -> state.closeCropper()
@@ -180,11 +180,11 @@ fun PictureSelectorSheet(
         insideMargin = DpSize.Zero,
         defaultWindowInsetsPadding = true,
         dragHandleColor = colors.surface,
-        // 系统返回自己接管，避免 Sheet 整层被 dismiss
+
         allowDismiss = false,
         enableNestedScroll = true,
     ) {
-        // 必须写在 Sheet 内容里，才能挂到 Sheet 所在窗口的返回栈
+
         val sheetBackState = rememberNavigationEventState(NavigationEventInfo.None)
         NavigationBackHandler(
             state = sheetBackState,
@@ -206,14 +206,14 @@ fun PictureSelectorSheet(
                 )
             }
         } else {
-            // 二级页覆盖整块 body（含 TabRow）
+
             Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                    // 一级：Tab + 全部/相册列表
+
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -275,7 +275,7 @@ fun PictureSelectorSheet(
                         }
                     }
 
-                    // 二级：整页上推，直接盖住 TabRow 与一级内容
+
                     AnimatedVisibility(
                         visible = inAlbumDetail,
                         modifier = Modifier.fillMaxSize(),

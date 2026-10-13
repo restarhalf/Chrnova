@@ -4,10 +4,6 @@ import android.content.Context
 import com.tencent.mmkv.kmp.MMKV
 import restarhalf.stellar.schedule.core.log.AppLogger
 
-/**
- * 首次启动时把 SharedPreferences 原数据拷入对应 MMKV mmapID。
- * 迁移标记写入 MMKV；SP 文件暂保留作为回退备份。
- */
 object MmkvLegacyMigrator {
     private const val TAG = "MmkvMigration"
 
@@ -33,7 +29,7 @@ object MmkvLegacyMigrator {
                 is Set<*> -> {
                     @Suppress("UNCHECKED_CAST")
                     val strings = value as? Set<String>
-                    // MMKV KMP 无 StringSet；转 JSON 数组字符串对本项目无现有消费者，跳过
+
                     if (strings != null) {
                         AppLogger.log(TAG, "skip string-set key=$key in $name size=${strings.size}")
                     }

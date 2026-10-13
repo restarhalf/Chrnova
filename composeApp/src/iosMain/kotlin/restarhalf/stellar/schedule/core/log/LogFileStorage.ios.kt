@@ -47,9 +47,9 @@ actual object LogFileStorage {
         val nsData = bytes.usePinned { pinned ->
             NSData.create(bytes = pinned.addressOf(0), length = bytes.size.toULong())
         }
-        // NSFileHandle 追加：O(1) 不读取整个文件
+
         val handle = NSFileHandle.fileHandleForUpdatingAtPath(path) ?: run {
-            // 文件不存在，创建后写入
+
             nsData.writeToURL(NSURL.fileURLWithPath(path), atomically = true)
             return
         }
@@ -77,7 +77,7 @@ actual object LogFileStorage {
         val nsData = bytes.usePinned { pinned ->
             NSData.create(bytes = pinned.addressOf(0), length = bytes.size.toULong())
         }
-        // 截断 + 写入
+
         val handle = NSFileHandle.fileHandleForUpdatingAtPath(path)
         handle?.truncateFileAtOffset(0u)
         handle?.writeData(nsData)

@@ -12,12 +12,7 @@ import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.domain.model.Announcement
 import kotlin.test.Test
 
-/**
- * MarkAnnouncementsReadUseCase 单元测试（Mokkery）
- *
- * 已读推进语义：最后阅读时间只前进、不后退；内容变化时间（毫秒）早于
- * 已记录阅读时间的公告不应触发写入。
- */
+
 class MarkAnnouncementsReadUseCaseTest {
 
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
@@ -33,7 +28,7 @@ class MarkAnnouncementsReadUseCaseTest {
 
         useCase(announcement)
 
-        // lastChangeAtMs = max(500, 700) * 1000
+
         verify { settings.putLong(any(), 700_000L) }
     }
 

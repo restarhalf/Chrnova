@@ -35,13 +35,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-/**
- * 自动抢课 Foreground Service。
- *
- * - 通过 [pendingConfig] 静态字段接收启动参数（避免 Intent 大小限制）
- * - 通过 [runningFlow] / [latestLogFlow] 向 UI 同步状态
- * - 内部使用 Koin 全局上下文获取 [CourseSelectionUseCase]
- */
+
 class CourseSelectionService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -89,7 +83,7 @@ class CourseSelectionService : Service() {
         emitLog("后台抢课已停止", ServiceLogEntry.LEVEL_WARN)
     }
 
-    /** 抢课主循环：复用 ViewModel 同样的循环结构 */
+    
     private suspend fun runSnatchLoop(cfg: SnatchServiceConfig) {
         val koin = GlobalContext.getOrNull() ?: run {
             emitLog("Koin 未初始化，停止", ServiceLogEntry.LEVEL_ERROR)
@@ -103,7 +97,7 @@ class CourseSelectionService : Service() {
             classifications = emptyList(),
             extraRules = cfg.extraRules,
         )
-        // 标记各目标状态
+
         val pending = cfg.targets.toMutableList()
         var attempt = 0
 
@@ -145,7 +139,7 @@ class CourseSelectionService : Service() {
                         AppLogger.log("CourseSelectionService", "抢课请求异常", e)
                         emitLog("${target.courseName}：${e.message ?: "请求异常"}", ServiceLogEntry.LEVEL_ERROR)
 
-                        // 认证失效则刷新会话
+
                         if (cfg.refreshSessionOnAuthError && isAuthError(e)) {
                             emitLog("认证失效，刷新会话...", ServiceLogEntry.LEVEL_WARN)
                             try {
@@ -258,14 +252,14 @@ class CourseSelectionService : Service() {
         const val CHANNEL_ID = "course_selection_snatch"
         const val NOTIFICATION_ID = 0xC0EE
 
-        /** 由 Port 写入、Service 读取的启动配置 */
+        
         @Volatile
         var pendingConfig: SnatchServiceConfig? = null
 
-        /** 后台抢课运行状态（跨进程共享，由 Service 单实例维护） */
+        
         val runningFlow = MutableStateFlow(false)
 
-        /** 最近一条后台日志（带 level） */
+        
         val latestLogFlow = MutableStateFlow(ServiceLogEntry(""))
     }
 }

@@ -13,22 +13,10 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-/**
- * iCalendar (.ics) 导出器
- *
- * 将课程列表导出为符合 RFC 5545 的 ICS 文件,可一键导入系统日历。
- * 每门课的每个上课日展开为独立的 VEVENT,保证所有日历应用兼容。
- */
+
 object IcsExporter {
 
-    /**
-     * 导出课程为 ICS 字符串
-     *
-     * @param courses 课程列表
-     * @param termStartMs 学期开始时间戳(毫秒)
-     * @param timetable 校区节次时间表
-     * @return ICS 文件内容(UTF-8, CRLF 换行)
-     */
+    
     @OptIn(ExperimentalTime::class)
     fun export(
         courses: List<Course>,
@@ -89,7 +77,7 @@ object IcsExporter {
         return escapeText(parts.joinToString(" / "))
     }
 
-    /** ICS 文本转义:反斜杠、分号、逗号、换行 */
+    
     private fun escapeText(value: String): String {
         return value
             .replace("\\", "\\\\")

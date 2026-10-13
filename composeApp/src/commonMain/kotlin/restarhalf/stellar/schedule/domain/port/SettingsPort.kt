@@ -2,104 +2,95 @@ package restarhalf.stellar.schedule.domain.port
 
 import kotlinx.coroutines.flow.Flow
 
-/**
- * 设置端口接口
- * 
- * 定义应用设置的抽象接口，提供响应式的数据观察和更新能力。
- */
+
 interface SettingsPort {
     companion object {
-        /** 课程表格子高度默认值（dp） */
+        
         const val DEFAULT_ROW_HEIGHT_DP = 64
-        /** 课程表格子高度下限（dp） */
+        
         const val MIN_ROW_HEIGHT_DP = 48
-        /** 课程表格子高度上限（dp） */
+        
         const val MAX_ROW_HEIGHT_DP = 120
     }
 
-    /** 观察是否显示非当前周课程 */
+    
     fun observeShowNonCurrentWeek(): Flow<Boolean>
-    /** 设置是否显示非当前周课程 */
+    
     fun setShowNonCurrentWeek(show: Boolean)
 
-    /** 观察课程表格子高度（dp） */
+    
     fun observeScheduleRowHeight(): Flow<Int>
-    /** 设置课程表格子高度（dp，范围 48-120） */
+    
     fun setScheduleRowHeight(heightDp: Int)
 
-    /** 观察主题模式变化 */
+    
     fun observeThemeMode(): Flow<Int>
-    /** 设置主题模式（0=跟随系统，1=浅色，2=深色） */
+    
     fun setThemeMode(mode: Int)
 
-    /** 观察选中的学期变化 */
+    
     fun observeSelectedTerm(): Flow<String>
-    /** 设置选中的学期 */
+    
     fun setSelectedTerm(term: String)
 
-    /** 观察激活的课程表学期变化 */
+    
     fun observeActiveScheduleTerm(): Flow<String>
-    /** 设置激活的课程表学期 */
+    
     fun setActiveScheduleTerm(term: String)
 
-    /** 观察课程提醒开关状态 */
+    
     fun observeCourseReminderEnabled(): Flow<Boolean>
-    /** 设置课程提醒开关 */
+    
     fun setCourseReminderEnabled(enabled: Boolean)
 
-    /** 观察考试提醒开关状态 */
+    
     fun observeExamReminderEnabled(): Flow<Boolean>
-    /** 设置考试提醒开关 */
+    
     fun setExamReminderEnabled(enabled: Boolean)
 
-    /** 观察浮动导航栏模式变化 */
+    
     fun observeFloatingBar(): Flow<Int>
-    /** 设置浮动导航栏模式 */
+    
     fun setFloatingBar(mode: Int)
 
-    /** 观察日志开关状态 */
+    
     fun observeLogEnabled(): Flow<Boolean>
-    /** 设置日志开关 */
+    
     fun setLogEnabled(enabled: Boolean)
 
-    /**
-     * 检查是否需要自动同步，并标记已同步时间
-     * 
-     * @param nowMs 当前时间戳（毫秒）
-     * @return 如果距离上次同步超过24小时返回true，否则返回false
-     */
+    
     suspend fun shouldAutoSyncAndMark(nowMs: Long): Boolean
 
-    /** 获取设备唯一标识符 */
+    
     fun getDeviceId(): String
 
-    /** 获取 star 验证状态 */
+    
     fun getStarVerified(): Boolean
 
-    /** 设置 star 验证状态 */
+    
     fun setStarVerified(verified: Boolean)
 
-    /** 观察缓存的学期ID列表变化 */
+    
     fun observeCachedSemesterIds(): Flow<List<String>>
 
-    /** 设置缓存的学期ID列表 */
+    
     fun setCachedSemesterIds(semesterIds: List<String>)
 
-    /** 观察当前学期ID缓存 */
+    
     fun observeCurrentTermId(): Flow<String>
 
-    /** 设置当前学期ID缓存 */
+    
     fun setCurrentTermId(termId: String)
 
-    /** 获取用户自定义头像URI */
+    
     fun getUserAvatarUri(): String?
 
-    /** 设置用户自定义头像URI */
+    
     fun setUserAvatarUri(uri: String?)
 
-    /** 获取用户自定义昵称 */
+    
     fun getUserNickname(): String?
 
-    /** 设置用户自定义昵称 */
+    
     fun setUserNickname(nickname: String?)
 }

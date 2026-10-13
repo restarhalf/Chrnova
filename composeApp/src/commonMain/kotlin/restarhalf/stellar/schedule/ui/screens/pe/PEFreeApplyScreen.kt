@@ -55,11 +55,6 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 免测申请记录
- *
- * 列表卡片与体测成绩页一致；底栏「我要申请」。
- */
 @Composable
 fun PEFreeApplyScreen(
     vm: PEFreeApplyViewModel,

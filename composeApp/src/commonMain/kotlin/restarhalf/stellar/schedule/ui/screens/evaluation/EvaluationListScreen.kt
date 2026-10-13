@@ -53,15 +53,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 课程评价列表页（顶层入口）。
- *
- * 设计参考 EMSScreen：
- * - 顶栏标题 + 右上角 IconButton（写评价）
- * - 顶部状态药丸显示错误
- * - TabRowWithContour + HorizontalPager 切换"全部评价"/"我的评价"
- * - 每个 Tab 独立搜索栏 + PullToRefresh + 列表
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EvaluationListScreen(
@@ -83,7 +75,7 @@ fun EvaluationListScreen(
 
     LaunchedEffect(Unit) {
         vm.loadCourseSummaries()
-        // 进入页面就预加载全部评价，供"我的评价"过滤用
+
         vm.loadEvaluations()
     }
 
@@ -113,7 +105,7 @@ fun EvaluationListScreen(
                         }
                     },
                 )
-                // Tab 切换
+
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -128,7 +120,7 @@ fun EvaluationListScreen(
                         },
                     )
                 }
-                // 错误状态药丸
+
                 AnimatedVisibility(
                     visible = uiState.error != null,
                     enter = fadeIn() + expandVertically(),
@@ -168,9 +160,7 @@ fun EvaluationListScreen(
     }
 }
 
-/**
- * "全部评价"页：搜索栏 + 课程聚合卡片。
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AllEvaluationsPage(
@@ -233,9 +223,7 @@ private fun AllEvaluationsPage(
     }
 }
 
-/**
- * "我的评价"页：搜索栏 + 个人评价列表。
- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MyEvaluationsPage(
@@ -247,7 +235,7 @@ private fun MyEvaluationsPage(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
 
-    // 进入我的评价 Tab 时确保开启过滤
+
     LaunchedEffect(Unit) {
         if (!uiState.onlyMine) vm.setOnlyMine(true)
     }

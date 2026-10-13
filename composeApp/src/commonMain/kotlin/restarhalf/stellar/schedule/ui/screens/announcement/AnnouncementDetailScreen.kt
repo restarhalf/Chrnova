@@ -36,13 +36,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 公告详情页
- *
- * 与首页/列表页共享同一个 ViewModel 实例：进入时 load()（共享 VM 已加载过则
- * 直接命中缓存，不重复打网络），再从共享列表中按 id 选中当前公告；
- * 选中成功后把最后阅读时间推进到该条公告，此条在列表中的红点随之消失。
- */
+
 @Composable
 fun AnnouncementDetailScreen(
     vm: AnnouncementViewModel,
@@ -62,7 +56,7 @@ fun AnnouncementDetailScreen(
             vm.selectAnnouncement(announcementId)
         }
     }
-    // 选中成功后标记该条已读（共享 VM 同步推进 lastReadAtMs 并重算未读数量）
+
     LaunchedEffect(uiState.selectedAnnouncement) {
         val announcement = uiState.selectedAnnouncement
         if (announcement != null && announcement.id == announcementId) {

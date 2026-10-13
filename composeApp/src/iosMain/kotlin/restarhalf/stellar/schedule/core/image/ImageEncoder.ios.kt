@@ -12,7 +12,7 @@ actual fun encodeImageBitmapToJpeg(bitmap: ImageBitmap, quality: Int): ByteArray
     val height = bitmap.height
     if (width <= 0 || height <= 0) return ByteArray(0)
 
-    // 整块打包像素，避免逐点再拆一次 Color
+
     val pixels = bitmap.toPixelMap()
     val rgba = ByteArray(width * height * 4)
     var o = 0

@@ -60,7 +60,7 @@ class FetchExaminationsUseCaseTest {
         val result = useCase()
 
         assertEquals(1, result.size)
-        // 学号绑定到结果
+
         assertEquals("2023001", result[0].userNo)
         verifySuspend(VerifyMode.exactly(1)) { academic.fetchExaminations("2026-1", "2023001") }
         verifySuspend(VerifyMode.exactly(1)) { repository.replaceExaminations("2026-1", result) }

@@ -11,12 +11,7 @@ import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
 import restarhalf.stellar.schedule.domain.port.SnatchServiceConfig
 
-/**
- * Android 后台抢课端口实现。
- *
- * 通过启动 [CourseSelectionService] Foreground Service 实现真正后台抢课。
- * 状态通过 Service 的静态字段同步给本端口。
- */
+
 class CourseSelectionServicePortImpl(
     private val context: Context,
 ) : CourseSelectionServicePort {
@@ -43,7 +38,7 @@ class CourseSelectionServicePortImpl(
             }
             true
         } catch (e: Exception) {
-            // 部分厂商后台启动限制可能抛 IllegalStateException
+
             CourseSelectionService.pendingConfig = null
             false
         }

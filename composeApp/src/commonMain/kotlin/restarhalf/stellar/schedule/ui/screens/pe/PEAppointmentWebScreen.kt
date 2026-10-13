@@ -23,11 +23,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 官方体测预约网页（免登录）。
- *
- * 学校验收时点开即可看到官方预约页，会话由 App 注入，不再出现登录页。
- */
+
 @Composable
 fun PEAppointmentWebScreen(
     onBack: () -> Unit,

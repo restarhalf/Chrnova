@@ -3,13 +3,9 @@ package restarhalf.stellar.schedule.data.remote
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * 体育系统API数据传输对象（DTO）
- *
- * 定义与体育系统通信的所有数据结构，用于JSON序列化/反序列化。
- */
 
-/** 登录响应 */
+
+
 @Serializable
 data class PELoginResponse(
     @SerialName("status") val status: String = "",
@@ -18,7 +14,7 @@ data class PELoginResponse(
     @SerialName("user_id") val userId: String? = null,
 )
 
-/** 成绩列表响应 */
+
 @Serializable
 data class PEScoreListResponse(
     @SerialName("status") val status: String = "",
@@ -26,7 +22,7 @@ data class PEScoreListResponse(
     @SerialName("data_arr") val dataArr: List<PEYearScore> = emptyList(),
 )
 
-/** 年度成绩 */
+
 @Serializable
 data class PEYearScore(
     @SerialName("school_year") val schoolYear: String = "",
@@ -36,7 +32,7 @@ data class PEYearScore(
     @SerialName("nums") val nums: Int = 0,
 )
 
-/** 成绩详情响应 */
+
 @Serializable
 data class PEDetailResponse(
     @SerialName("status") val status: String = "",
@@ -44,7 +40,7 @@ data class PEDetailResponse(
     @SerialName("data") val data: PEDetailData? = null,
 )
 
-/** 成绩详情数据 */
+
 @Serializable
 data class PEDetailData(
     @SerialName("total_score") val totalScore: Double = 0.0,
@@ -52,7 +48,7 @@ data class PEDetailData(
     @SerialName("data_arr") val dataArr: List<PESubjectScore> = emptyList(),
 )
 
-/** 科目成绩 */
+
 @Serializable
 data class PESubjectScore(
     @SerialName("subject_id") val subjectId: String = "",
@@ -65,7 +61,7 @@ data class PESubjectScore(
     @SerialName("is_join") val isJoin: Int = 0,
 )
 
-/** 单科成绩历史响应 */
+
 @Serializable
 data class PESubjectHistoryResponse(
     @SerialName("status") val status: String = "",
@@ -73,14 +69,14 @@ data class PESubjectHistoryResponse(
     @SerialName("data") val data: PESubjectHistoryData? = null,
 )
 
-/** 单科成绩历史数据 */
+
 @Serializable
 data class PESubjectHistoryData(
     @SerialName("data_list") val dataList: List<PESubjectHistoryItem> = emptyList(),
     @SerialName("total_rows") val totalRows: Int = 0,
 )
 
-/** 单科成绩历史记录 */
+
 @Serializable
 data class PESubjectHistoryItem(
     @SerialName("result") val result: String? = null,
@@ -91,7 +87,7 @@ data class PESubjectHistoryItem(
     @SerialName("score_status") val scoreStatus: String = "",
 )
 
-/** 学生信息响应 */
+
 @Serializable
 data class PEAuthProfileResponse(
     @SerialName("status") val status: String = "",
@@ -99,7 +95,7 @@ data class PEAuthProfileResponse(
     @SerialName("data") val data: PEAuthProfile? = null,
 )
 
-/** 学生信息 */
+
 @Serializable
 data class PEAuthProfile(
     @SerialName("testCode") val testCode: String = "",
@@ -107,7 +103,7 @@ data class PEAuthProfile(
     @SerialName("stdNumber") val stdNumber: String = "",
 )
 
-/** 学生预约列表响应 */
+
 @Serializable
 data class PEAppointmentListResponse(
     @SerialName("status") val status: String = "",
@@ -115,27 +111,27 @@ data class PEAppointmentListResponse(
     @SerialName("data") val data: PEAppointmentListData? = null,
 )
 
-/** 学生预约列表数据 */
+
 @Serializable
 data class PEAppointmentListData(
     @SerialName("data_list") val dataList: List<PEAppointmentItem> = emptyList(),
-    /** 服务端返回字符串，如 "4" */
+    
     @SerialName("total_rows") val totalRows: String = "0",
 ) {
     val totalRowsInt: Int
         get() = totalRows.toIntOrNull() ?: dataList.size
 }
 
-/** 预约条目（我的预约 / 可预约共用；可预约侧以 appointment_id 为主键） */
+
 @Serializable
 data class PEAppointmentItem(
     @SerialName("appointment_id") val appointmentId: String = "",
-    /** 仅「我的预约」可能有，用于 cancelRegistration */
+    
     @SerialName("temporary_id") val temporaryId: String = "",
     @SerialName("appointment_name") val appointmentName: String = "",
-    /** 0 已取消 / 1 已预约 / 2 已取消 / 3 可预约 / 4 已结束/不可约 */
+    
     @SerialName("appointment_status") val appointmentStatus: String = "",
-    /** 可预约侧为日期区间字符串；已预约侧可能是具体日期 */
+    
     @SerialName("appointment_date") val appointmentDate: String = "",
     @SerialName("appointment_times") val appointmentTimes: String = "",
     @SerialName("enter_start_time") val enterStartTime: String = "",
@@ -147,7 +143,7 @@ data class PEAppointmentItem(
     @SerialName("appointment_content") val appointmentContent: String = "",
 )
 
-/** 预约详情响应（selectUserAppointmentDetail） */
+
 @Serializable
 data class PEAppointmentDetailResponse(
     @SerialName("status") val status: String = "",
@@ -155,7 +151,7 @@ data class PEAppointmentDetailResponse(
     @SerialName("data") val data: PEAppointmentDetail? = null,
 )
 
-/** 预约详情 */
+
 @Serializable
 data class PEAppointmentDetail(
     @SerialName("appointment_id") val appointmentId: String = "",
@@ -168,12 +164,12 @@ data class PEAppointmentDetail(
     @SerialName("already_quota") val alreadyQuota: Int = 0,
     @SerialName("time_quota") val timeQuota: Int = 0,
     @SerialName("max_app_num") val maxAppNum: Int = 0,
-    /** 可选日期列表（字段名服务端为 tern_list） */
+    
     @SerialName("tern_list") val availableDates: List<String> = emptyList(),
     @SerialName("times_list") val timesList: List<PEAppointmentTimesBrief> = emptyList(),
 )
 
-/** 详情中的时段摘要（无 times_id，正式约需再查 selectAppointmentTimes） */
+
 @Serializable
 data class PEAppointmentTimesBrief(
     @SerialName("appointment_times") val appointmentTimes: String = "",
@@ -181,7 +177,7 @@ data class PEAppointmentTimesBrief(
     @SerialName("time_quota") val timeQuota: Int = 0,
 )
 
-/** 某日可约时段响应（selectAppointmentTimes） */
+
 @Serializable
 data class PEAppointmentTimesResponse(
     @SerialName("status") val status: String = "",
@@ -189,7 +185,7 @@ data class PEAppointmentTimesResponse(
     @SerialName("dataList") val dataList: List<PEAppointmentTimeSlot> = emptyList(),
 )
 
-/** 某日可约时段 */
+
 @Serializable
 data class PEAppointmentTimeSlot(
     @SerialName("times_id") val timesId: String = "",
@@ -203,14 +199,14 @@ data class PEAppointmentTimeSlot(
     val label: String get() = "$startTime~$endTime"
 }
 
-/** 预约操作（取消 / 报名）响应 */
+
 @Serializable
 data class PEAppointmentActionResponse(
     @SerialName("status") val status: String = "",
     @SerialName("message") val message: String = "",
 )
 
-/** 免测申请列表响应 — data 直接是数组 */
+
 @Serializable
 data class PEFreeApplyListResponse(
     @SerialName("status") val status: String = "",
@@ -218,7 +214,7 @@ data class PEFreeApplyListResponse(
     @SerialName("data") val data: List<PEFreeApplyItem> = emptyList(),
 )
 
-/** 免测申请记录（列表 selectList / 详情 selectDetailData 共用） */
+
 @Serializable
 data class PEFreeApplyItem(
     @SerialName("applyId") val applyId: String = "",
@@ -235,18 +231,18 @@ data class PEFreeApplyItem(
     @SerialName("schoolGrade") val schoolGrade: String = "",
     @SerialName("attList") val attList: List<PEFreeApplyAtt> = emptyList(),
 ) {
-    /** 列表展示时间：兼容 applyTime / crtTime 字段名 */
+    
     val displayTime: String get() = applyTime.ifBlank { crtTime }
 }
 
-/** 免测申请附件 */
+
 @Serializable
 data class PEFreeApplyAtt(
     @SerialName("attId") val attId: String = "",
     @SerialName("fileName") val fileName: String = "",
 )
 
-/** 免测申请详情响应 */
+
 @Serializable
 data class PEFreeApplyDetailResponse(
     @SerialName("status") val status: String = "",
@@ -254,7 +250,7 @@ data class PEFreeApplyDetailResponse(
     @SerialName("data") val data: PEFreeApplyItem? = null,
 )
 
-/** 可申请学年响应 */
+
 @Serializable
 data class PEFreeSchoolYearResponse(
     @SerialName("status") val status: String = "",
@@ -274,7 +270,7 @@ data class PECodeItem(
     @SerialName("label") val label: String = "",
 )
 
-/** 通用操作响应（申请 / 上传） */
+
 @Serializable
 data class PEFreeActionResponse(
     @SerialName("status") val status: String = "",
@@ -282,7 +278,7 @@ data class PEFreeActionResponse(
     @SerialName("att_id") val attId: String? = null,
 )
 
-/** 字典响应（searchCodeList，结构可能多样，尽量兼容） */
+
 @Serializable
 data class PECodeListResponse(
     @SerialName("status") val status: String = "",

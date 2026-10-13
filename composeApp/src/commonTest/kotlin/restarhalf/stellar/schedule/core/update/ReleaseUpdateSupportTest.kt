@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 class ReleaseUpdateSupportTest {
 
-    // ---------- normalizeVersion ----------
+
 
     @Test
     fun stripsVPrefix() {
@@ -22,7 +22,7 @@ class ReleaseUpdateSupportTest {
 
     @Test
     fun nonNumericSuffixConsumedAsDelimiter() {
-        // [^0-9]+ 贪婪匹配，"-" 与 "beta" 整段被吃掉
+
         assertEquals(listOf(1, 2, 3), normalizeVersion("1.2.3-beta"))
         assertEquals(listOf(1, 2, 3, 2), normalizeVersion("1.2.3-rc.2"))
         assertEquals(listOf(1, 2), normalizeVersion("beta1.2"))
@@ -38,7 +38,7 @@ class ReleaseUpdateSupportTest {
         assertEquals(listOf(2, 0), normalizeVersion(" 2.0 "))
     }
 
-    // ---------- isNewerVersion ----------
+
 
     @Test
     fun newerPatch() {
@@ -76,7 +76,7 @@ class ReleaseUpdateSupportTest {
         assertTrue(isNewerVersion("10.0.0", "9.0.0"))
     }
 
-    // ---------- buildVersionWorkerUrl ----------
+
 
     @Test
     fun baseUrlWithoutUid() {
@@ -102,7 +102,7 @@ class ReleaseUpdateSupportTest {
         assertTrue(url.contains("uid=a%20b%26c"))
     }
 
-    // ---------- VersionJsonResponse ----------
+
 
     @Test
     fun versionJsonDefaults() {
@@ -112,7 +112,7 @@ class ReleaseUpdateSupportTest {
         assertEquals("", resp.changelog)
     }
 
-    // ---------- QQ 群链接 ----------
+
 
     @Test
     fun defaultKeyIncludesAuthKey() {

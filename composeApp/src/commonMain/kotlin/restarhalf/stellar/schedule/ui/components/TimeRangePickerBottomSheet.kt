@@ -9,20 +9,7 @@ import kotlinx.collections.immutable.toPersistentList
 
 private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
 
-/**
- * 时间范围选择器底部弹窗
- * 
- * 提供小时和分钟的滚轮选择器，用于选择开始和结束时间。
- * 
- * @param show 是否显示
- * @param title 标题
- * @param initialStartHour 初始开始小时（0-23）
- * @param initialStartMinute 初始开始分钟（0-59）
- * @param initialEndHour 初始结束小时（0-23）
- * @param initialEndMinute 初始结束分钟（0-59）
- * @param onDismissRequest 关闭回调
- * @param onConfirm 确认回调，返回(开始小时, 开始分钟, 结束小时, 结束分钟)
- */
+
 @Composable
 fun TimeRangePickerBottomSheet(
     show: Boolean,

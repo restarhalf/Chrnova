@@ -4,12 +4,6 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIScreen
 import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 
-/**
- * iOS 实现：
- *
- * - 常亮：idleTimerDisabled 阻止自动锁屏
- * - 亮度：UIScreen.brightness 拉满，退出时恢复原值
- */
 class ScreenTunerPortImpl : ScreenTunerPort {
 
     private var previousBrightness: Double? = null

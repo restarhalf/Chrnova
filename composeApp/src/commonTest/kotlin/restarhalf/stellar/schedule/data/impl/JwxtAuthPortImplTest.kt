@@ -44,8 +44,8 @@ class JwxtAuthPortImplTest {
 
     @Test
     fun setCredentialsStoresSavedCredentials() {
-        // setCredentials 写入的是"自动登录凭据"（saved_user_no/saved_password），
-        // 不改写当前档案学号（KEY_USER_NO 由登录成功后的 setProfile 写入）
+
+
         impl.setCredentials("2024999999", "secret")
         assertEquals("2024999999" to "secret", store.getCredentials())
         assertNull(store.getUserNo())

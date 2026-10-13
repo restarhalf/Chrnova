@@ -24,9 +24,9 @@ interface Paper {
   created_at: number;
 }
 
-// ─── Security helpers & constants ───
 
-/** 恒定时间比较，避免令牌逐字节爆破 */
+
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -34,12 +34,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/**
- * 校验管理令牌。
- * 关键：`!expected` 守卫——若 ADMIN_TOKEN 未通过 `wrangler secret put` 配置，
- * env 值为 undefined，而未带 Authorization 头时 token 同样是 undefined，
- * 直接用 `!==` 比较会让两者相等从而放行。必须显式拒绝未配置的情况。
- */
+
 function isAdmin(c: any): boolean {
   const expected = c.env.ADMIN_TOKEN;
   if (!expected) return false;
@@ -52,17 +47,17 @@ function clientIp(c: any): string {
   return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
 }
 
-/** 上传允许的文件扩展名（白名单，防止上传可执行 / 脚本文件） */
+
 const ALLOWED_EXT = ['pdf', 'doc', 'docx'];
-/** 单文件大小上限：20 MB */
+
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
-/** 去除标题中的特殊字符，防止 Content-Disposition 头注入 / 文件名穿越 */
+
 function safeFileName(title: string): string {
   return (title || '').replace(/[^\w一-龥\-_. ]/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'paper';
 }
 
-/** 文件头魔数校验：仅放行真实 PDF / DOC / DOCX，防止扩展名伪造上传任意二进制 */
+
 async function isAllowedDocument(file: File): Promise<boolean> {
   let buf: Uint8Array;
   try {
@@ -72,22 +67,19 @@ async function isAllowedDocument(file: File): Promise<boolean> {
   }
   if (buf.length < 4) return false;
   const eq = (sig: number[]) => sig.every((b, i) => buf[i] === b);
-  if (eq([0x25, 0x50, 0x44, 0x46])) return true;        // %PDF
-  if (eq([0x50, 0x4B, 0x03, 0x04])) return true;        // PK..（docx 实为 zip）
-  if (eq([0xD0, 0xCF, 0x11, 0xE0])) return true;        // OLE（旧版 .doc）
+  if (eq([0x25, 0x50, 0x44, 0x46])) return true;
+  if (eq([0x50, 0x4B, 0x03, 0x04])) return true;
+  if (eq([0xD0, 0xCF, 0x11, 0xE0])) return true;
   return false;
 }
 
-/** 剥离 device_id 等敏感字段，仅返回公开安全字段（防 IDOR 泄漏） */
+
 function publicPaper(p: Paper): Omit<Paper, 'device_id'> {
   const { device_id, ...rest } = p;
   return rest;
 }
 
-/**
- * 进程内滑动窗口限流（轻量，防单实例滥用）。
- * 注意：Cloudflare Worker 实例间状态不共享，分布式限流需改用 KV / Durable Object。
- */
+
 const rateBuckets = new Map<string, { count: number; reset: number }>();
 function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
   const now = Date.now();
@@ -103,7 +95,7 @@ function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读接口开放，且限定为自有前端域；管理接口同源（管理后台同源部署），无需 CORS。
+
 const CORS_ORIGINS = [
   'https://chrnova.restarhalf.dpdns.org',
   'http://localhost:5173',
@@ -117,7 +109,7 @@ app.use('/download/*', cors({ origin: CORS_ORIGINS }));
 app.use('/file/*', cors({ origin: CORS_ORIGINS }));
 app.use('/verify-star', cors({ origin: CORS_ORIGINS }));
 
-// Get all papers with optional filters
+
 app.get('/papers', async (c) => {
   const folder = c.req.query('folder');
   const course = c.req.query('course');
@@ -145,7 +137,7 @@ app.get('/papers', async (c) => {
   return c.json(result.results.map(publicPaper));
 });
 
-// Get unique courses
+
 app.get('/courses', async (c) => {
   const result = await c.env.DB.prepare(
     'SELECT DISTINCT course FROM papers ORDER BY course'
@@ -153,7 +145,7 @@ app.get('/courses', async (c) => {
   return c.json(result.results.map((r) => r.course));
 });
 
-// Get unique folders
+
 app.get('/folders', async (c) => {
   const result = await c.env.DB.prepare(
     'SELECT DISTINCT folder FROM papers ORDER BY folder'
@@ -161,7 +153,7 @@ app.get('/folders', async (c) => {
   return c.json(result.results.map((r) => r.folder));
 });
 
-// Get paper detail
+
 app.get('/papers/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
@@ -174,10 +166,10 @@ app.get('/papers/:id', async (c) => {
   return c.json(publicPaper(result));
 });
 
-// Download paper link for App / API clients.
-// 兼容策略：
-// - GET /download/:id → JSON { url, title }（应用拿链接）
-// - GET /file/:id     → 文件流（浏览器/下载器打开 url 时用）
+
+
+
+
 app.get('/download/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
@@ -195,7 +187,7 @@ app.get('/download/:id', async (c) => {
   });
 });
 
-// Stream paper file (proxy download from GitHub)
+
 app.get('/file/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
@@ -237,17 +229,17 @@ app.get('/file/:id', async (c) => {
   });
 });
 
-// Upload paper
-// 公开接口，依赖 X-Device-Id 做软鉴权（客户端契约，不可改为管理令牌以免破坏 App）。
-// 缓解措施：文件类型 / 大小白名单 + 限流 + 错误信息脱敏。
+
+
+
 app.post('/upload', async (c) => {
   const deviceId = c.req.header('X-Device-Id');
   if (!deviceId) {
     return c.json({ error: 'X-Device-Id header required' }, 400);
   }
 
-  // IP 级限流：即使轮换 device_id 也无法绕过，遏制批量注入 GitHub / D1。
-  // 上限 30/min：容纳校园网同 IP 整班并发上传课件。
+
+
   if (!rateLimit(`ip-upload:${clientIp(c)}`, 30, 60)) {
     return c.json({ error: '上传过于频繁，请稍后再试' }, 429);
   }
@@ -275,7 +267,7 @@ app.post('/upload', async (c) => {
       return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
     }
 
-    // 扩展名之外再校验文件头魔数，防止伪造类型上传任意二进制
+
     if (!(await isAllowedDocument(file))) {
       return c.json({ error: '文件内容与扩展名不符，仅支持真实 PDF / DOC / DOCX' }, 400);
     }
@@ -325,7 +317,7 @@ app.post('/upload', async (c) => {
   }
 });
 
-// Verify GitHub star
+
 app.get('/verify-star', async (c) => {
   const username = c.req.query('username');
   if (!username) {
@@ -365,7 +357,7 @@ app.get('/verify-star', async (c) => {
   }
 });
 
-// Delete paper (only by device_id match)
+
 app.delete('/papers/:id', async (c) => {
   const id = c.req.param('id');
   const deviceId = c.req.header('X-Device-Id');
@@ -390,13 +382,13 @@ app.delete('/papers/:id', async (c) => {
   return c.json({ message: 'Paper deleted' });
 });
 
-// ─── Admin Web UI ───
+
 
 app.get('/', (c) => {
   return c.html(getAdminHTML());
 });
 
-// Admin auth middleware
+
 const adminAuth = async (c: any, next: any) => {
   if (!isAdmin(c)) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -404,7 +396,7 @@ const adminAuth = async (c: any, next: any) => {
   await next();
 };
 
-// Admin: list all papers
+
 app.get('/admin/api/papers', adminAuth, async (c) => {
   const q = c.req.query('q');
   const folder = c.req.query('folder');
@@ -427,7 +419,7 @@ app.get('/admin/api/papers', adminAuth, async (c) => {
   return c.json(result.results);
 });
 
-// Admin: get paper detail
+
 app.get('/admin/api/papers/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare('SELECT * FROM papers WHERE id = ?').bind(id).first<Paper>();
@@ -435,13 +427,13 @@ app.get('/admin/api/papers/:id', adminAuth, async (c) => {
   return c.json(result);
 });
 
-// Admin: delete paper (no device_id check)
+
 app.delete('/admin/api/papers/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare('SELECT * FROM papers WHERE id = ?').bind(id).first<Paper>();
   if (!result) return c.json({ error: 'Not found' }, 404);
 
-  // Get SHA from GitHub then delete
+
   try {
     const meta = await fetch(
       `https://api.github.com/repos/${c.env.GITHUB_OWNER}/${c.env.GITHUB_REPO}/contents/${result.path}`,
@@ -467,13 +459,13 @@ app.delete('/admin/api/papers/:id', adminAuth, async (c) => {
         }
       );
     }
-  } catch (_) { /* GitHub deletion best-effort */ }
+  } catch (_) {  }
 
   await c.env.DB.prepare('DELETE FROM papers WHERE id = ?').bind(id).run();
   return c.json({ ok: true });
 });
 
-// Admin: upload paper
+
 app.post('/admin/api/upload', adminAuth, async (c) => {
   try {
     const formData = await c.req.formData();
@@ -494,7 +486,7 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
       return c.json({ error: `不支持的文件类型，仅允许：${ALLOWED_EXT.join(', ')}` }, 400);
     }
 
-    // 扩展名之外再校验文件头魔数，防止伪造类型上传任意二进制
+
     if (!(await isAllowedDocument(file))) {
       return c.json({ error: '文件内容与扩展名不符，仅支持真实 PDF / DOC / DOCX' }, 400);
     }
@@ -544,7 +536,7 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
   }
 });
 
-// Admin: get unique folders
+
 app.get('/admin/api/folders', adminAuth, async (c) => {
   const result = await c.env.DB.prepare(
     'SELECT DISTINCT folder FROM papers ORDER BY folder'

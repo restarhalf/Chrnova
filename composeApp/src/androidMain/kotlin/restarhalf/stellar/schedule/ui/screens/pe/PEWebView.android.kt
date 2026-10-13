@@ -42,10 +42,7 @@ actual fun PEWebView(
                     ?: WebSettings.getDefaultUserAgent(context)
 
                 webViewClient = object : WebViewClient() {
-                    /**
-                     * 在 HTML 文档返回给解析器之前把会话脚本插进 `<head>`，
-                     * 保证先于 Vue 路由守卫执行，避免「第一次进登录页」。
-                     */
+                    
                     override fun shouldInterceptRequest(
                         view: WebView?,
                         request: WebResourceRequest?,
@@ -88,7 +85,7 @@ actual fun PEWebView(
                     }
 
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                        // 双保险：即便拦截没命中，也在文档开始时再写一次
+
                         if (url != null && url.startsWith(PE_ORIGIN_PREFIX)) {
                             view?.evaluateJavascript(authScript, null)
                         }
@@ -101,7 +98,7 @@ actual fun PEWebView(
                             navRetry = 0
                             return
                         }
-                        // 落在登录页 / 首页时：再注一次会话，然后整页进预约页
+
                         if (navRetry < MAX_NAV_RETRY) {
                             navRetry++
                             view.evaluateJavascript(authScript) {

@@ -36,7 +36,7 @@ class BuildHomePeriodRenderRowsUseCaseTest {
 
     @Test
     fun `进行中的课行状态与内容`() {
-        // 第1节 08:00-08:45 → 480-525 分钟
+
         val rows = useCase(listOf(PeriodItem(1, 1, course("高数"))), timetable, nowMinutes = 500)
         assertEquals(1, rows.size)
         val row = rows[0]

@@ -15,7 +15,6 @@ class BuildHomeTodayScheduleUseCaseTest {
 
     private val useCase = BuildHomeTodayScheduleUseCase()
 
-    /** 2026-03-02（周一）00:00 本地时区 */
     private val termStartMs = LocalDateTime.parse("2026-03-02T00:00")
         .toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     private val dayMs = 24 * 60 * 60 * 1000L
@@ -117,7 +116,7 @@ class BuildHomeTodayScheduleUseCaseTest {
             todayDayOfWeekMon1 = 1,
             nowMs = termStartMs + 10 * dayMs,
         )
-        // 原位置(1-2节)被调课覆盖，只剩调课后的位置(5-6节)
+
         assertEquals(1, schedule.todayCourses.size)
         assertEquals(5, schedule.todayCourses[0].startSection)
         assertFalse(schedule.hasFirstClass)
@@ -153,7 +152,7 @@ class BuildHomeTodayScheduleUseCaseTest {
             todayDayOfWeekMon1 = 1,
             nowMs = termStartMs + 10 * dayMs,
         )
-        // 期望：1-2 有课、3 空闲、4 有课
+
         assertEquals(
             listOf(1 to 2, 3 to 3, 4 to 4),
             schedule.morningItems.map { it.startSection to it.endSection },
@@ -202,6 +201,5 @@ class BuildHomeTodayScheduleUseCaseTest {
     }
 }
 
-/** 测试用条目投影（PeriodItem 的 course 为引用类型，比较时投影为名称更直观） */
 private fun Period(startSection: Int, endSection: Int, course: Course?): Triple<Int, Int, String?> =
     Triple(startSection, endSection, course?.name)

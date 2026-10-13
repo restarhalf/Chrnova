@@ -34,16 +34,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 
-/**
- * 课程详情项组件
- * 
- * 在课程详情弹窗中显示单个课程的详细信息，包括：
- * - 课程名称和标签（实验课、调课、非本周）
- * - 周次和节次时间
- * - 地点和教师
- * - 操作按钮（调课、编辑）
- *
- */
+
 @Composable
 fun CourseDetailItem(
     modifier: Modifier = Modifier,

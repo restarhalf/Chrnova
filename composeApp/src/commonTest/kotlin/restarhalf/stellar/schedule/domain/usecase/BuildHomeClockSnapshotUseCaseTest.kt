@@ -6,12 +6,6 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * 首页时钟快照测试。
- *
- * 输入/输出均为本地时区下的时间语义，期望值用同一时区动态推导，
- * 不依赖测试机时区。
- */
 class BuildHomeClockSnapshotUseCaseTest {
 
     private val useCase = BuildHomeClockSnapshotUseCase()
@@ -27,7 +21,7 @@ class BuildHomeClockSnapshotUseCaseTest {
 
     @Test
     fun `星期日快照字段正确`() {
-        // 2026-09-06 是星期日
+
         val nowMs = 1_786_368_000_000L // 2026-09-06T15:30+08:00 附近，具体由动态推导校验
         val snapshot = useCase(nowMs)
         val dt = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(TimeZone.currentSystemDefault())

@@ -19,13 +19,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 日志页 Compose UI 测试（Ultron KMP 入口）。
- *
- * LogScreen 无 VM：日志数据来自 AppLogger 单例 StateFlow，测试前写入条目。
- * koinInject(AppInfoPort) 与 AboutScreenUiTest 共享进程级 Koin（loadKoinModules 兜底）。
- * 清空确认对话框是 WindowDialog 独立窗口（主窗口语义树不可见），仅断言按钮存在。
- */
+
 class LogScreenUiTest {
 
     private val appInfo = object : AppInfoPort {
@@ -58,7 +52,7 @@ class LogScreenUiTest {
     @Test
     fun 渲染日志条目与操作按钮() = runUltronUiTest {
         ensureKoin()
-        // AppLogger.enabled 默认 false，log() 直接 return
+
         AppLogger.setEnabled(true)
         AppLogger.clear()
         AppLogger.log("TestTag", "测试日志消息XYZABC")
@@ -71,7 +65,7 @@ class LogScreenUiTest {
         waitText("测试日志消息XYZABC")
         onNodeWithText("清空").assertExists()
         onNodeWithText("导出").assertExists()
-        // 条目头部标签（INFO 级别 tag 为 "INFO"）
+
         onAllNodesWithText("[INFO/TestTag]")[0].assertExists()
     }
 

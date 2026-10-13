@@ -26,12 +26,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * CourseEnrollViewModel 单元测试。
- *
- * CourseSelectionUseCase 为真实实例 + mock JwxtGateway；
- * session 通过 selectRotation → initSelectionSession 成功响应建立。
- */
 class CourseEnrollViewModelTest {
 
     private val gateway = mock<JwxtGateway>(MockMode.autofill)

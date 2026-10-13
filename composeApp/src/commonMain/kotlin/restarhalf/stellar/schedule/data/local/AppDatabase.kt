@@ -22,17 +22,7 @@ import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-/**
- * 应用Room数据库
- * 
- * 定义应用的本地数据库结构，包含以下表：
- * - courses: 课程表
- * - examinations: 考试安排
- * - grades: 成绩
- * - pe_scores: 体育成绩
- * - pe_detail_scores: 体育详情成绩
- * - pe_detail_summary: 体育成绩摘要
- */
+
 @Database(
     entities = [
         CourseEntity::class,
@@ -49,15 +39,15 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    /** 课程DAO */
+    
     abstract fun courseDao(): CourseDao
-    /** 考试安排DAO */
+    
     abstract fun examinationDao(): ExaminationDao
-    /** 成绩DAO */
+    
     abstract fun gradeDao(): GradeDao
-    /** 体育年度成绩DAO */
+    
     abstract fun peYearScoreDao(): PEYearScoreDao
-    /** 体育详情DAO */
+    
     abstract fun peDetailDao(): PEDetailDao
 
     companion object {
@@ -65,47 +55,47 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-/** 数据库构造器（平台特定实现） */
+
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
 
-/** 数据库迁移：添加type字段 */
+
 private val migration2To3 = object : Migration(2, 3) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN type INTEGER NOT NULL DEFAULT 0")
     }
 }
 
-/** 数据库迁移：添加remoteKey字段 */
+
 private val migration3To4 = object : Migration(3, 4) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN remoteKey TEXT NOT NULL DEFAULT ''")
     }
 }
 
-/** 数据库迁移：添加originRemoteKey字段 */
+
 private val migration4To5 = object : Migration(4, 5) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN originRemoteKey TEXT")
     }
 }
 
-/** 数据库迁移：添加targetWeek字段 */
+
 private val migration5To6 = object : Migration(5, 6) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN targetWeek INTEGER NOT NULL DEFAULT 0")
     }
 }
 
-/** 数据库迁移：添加semesterId字段 */
+
 private val migration6To7 = object : Migration(6, 7) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN semesterId TEXT NOT NULL DEFAULT ''")
     }
 }
 
-/** 数据库迁移：创建考试和成绩表 */
+
 private val migration7To8 = object : Migration(7, 8) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -117,7 +107,7 @@ private val migration7To8 = object : Migration(7, 8) {
     }
 }
 
-/** 数据库迁移：创建体育成绩表 */
+
 private val migration8To9 = object : Migration(8, 9) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -126,7 +116,7 @@ private val migration8To9 = object : Migration(8, 9) {
     }
 }
 
-/** 数据库迁移：创建体育学生信息表 */
+
 private val migration9To10 = object : Migration(9, 10) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -135,7 +125,7 @@ private val migration9To10 = object : Migration(9, 10) {
     }
 }
 
-/** 数据库迁移：创建体育详情成绩表和摘要表 */
+
 private val migration10To11 = object : Migration(10, 11) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -147,28 +137,28 @@ private val migration10To11 = object : Migration(10, 11) {
     }
 }
 
-/** 数据库迁移：考试表添加source字段 */
+
 private val migration11To12 = object : Migration(11, 12) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE examinations ADD COLUMN source TEXT NOT NULL DEFAULT 'sync'")
     }
 }
 
-/** 数据库迁移：考试表添加userNo字段 */
+
 private val migration12To13 = object : Migration(12, 13) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE examinations ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
     }
 }
 
-/** 数据库迁移：课程表添加userNo字段 */
+
 private val migration13To14 = object : Migration(13, 14) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
     }
 }
 
-/** 数据库迁移：添加常用查询字段索引 */
+
 private val migration14To15 = object : Migration(14, 15) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_semesterId ON courses(semesterId)")
@@ -179,7 +169,7 @@ private val migration14To15 = object : Migration(14, 15) {
     }
 }
 
-/** 数据库迁移：成绩表添加userNo字段 */
+
 private val migration15To16 = object : Migration(15, 16) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE grades ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
@@ -187,40 +177,35 @@ private val migration15To16 = object : Migration(15, 16) {
     }
 }
 
-/** 数据库迁移：课程表添加复合索引 */
+
 private val migration16To17 = object : Migration(16, 17) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_userNo_semesterId ON courses(userNo, semesterId)")
     }
 }
 
-/** 数据库迁移：课程表添加type索引 */
+
 private val migration17To18 = object : Migration(17, 18) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_type ON courses(type)")
     }
 }
 
-/** 数据库迁移：成绩表添加复合索引 */
+
 private val migration18To19 = object : Migration(18, 19) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_grades_userNo_semester ON grades(userNo, semester)")
     }
 }
 
-/** 数据库迁移：删除体育学生信息表（学生档案改存KV） */
+
 private val migration19To20 = object : Migration(19, 20) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP TABLE IF EXISTS pe_student_info")
     }
 }
 
-/**
- * 构建应用数据库
- * 
- * @param builder Room数据库构建器
- * @return 配置好的AppDatabase实例
- */
+
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())

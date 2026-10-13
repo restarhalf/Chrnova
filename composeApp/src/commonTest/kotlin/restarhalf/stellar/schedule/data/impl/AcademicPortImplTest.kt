@@ -31,14 +31,14 @@ class AcademicPortImplTest {
     private val settings = SettingsPortImpl(MapSettings())
     private val impl = AcademicPortImpl(gateway, settings)
 
-    // ---------- fetchCurrentTermId ----------
+
 
     @Test
     fun fetchCurrentTermIdSuccessCaches() = runTest {
         everySuspend { gateway.getCurrentTerm() } returns
             JwxtApiResponse<List<JwxtCurrentTermItem>>(code = "1", data = listOf(JwxtCurrentTermItem(semesterId = "2026-2027-1")))
         assertEquals("2026-2027-1", impl.fetchCurrentTermId())
-        // 已写入缓存
+
         assertEquals("2026-2027-1", settings.observeCurrentTermId().first())
     }
 
@@ -65,7 +65,7 @@ class AcademicPortImplTest {
         assertFailsWith<IllegalStateException> { impl.fetchCurrentTermId() }
     }
 
-    // ---------- fetchCampuses ----------
+
 
     @Test
     fun fetchCampusesMapsDefaultFlag() = runTest {
@@ -92,7 +92,7 @@ class AcademicPortImplTest {
         assertTrue(error.message!!.contains("campus err"))
     }
 
-    // ---------- fetchSemesterIds ----------
+
 
     @Test
     fun fetchSemesterIdsDedupAndFilterBlank() = runTest {
@@ -105,7 +105,7 @@ class AcademicPortImplTest {
         assertEquals(listOf("S1", "S2"), impl.fetchSemesterIds())
     }
 
-    // ---------- fetchExaminations ----------
+
 
     @Test
     fun fetchExaminationsMapsFields() = runTest {
@@ -131,7 +131,7 @@ class AcademicPortImplTest {
         assertEquals("考场三", exam.examinationPlace)
         assertEquals("18", exam.zwh)
         assertEquals("正常", exam.ksbz)
-        // 默认来源为教务同步
+
         assertEquals("sync", exam.source)
     }
 
@@ -143,7 +143,7 @@ class AcademicPortImplTest {
         assertTrue(error.message!!.contains("exam err"))
     }
 
-    // ---------- fetchTeachingWeekTotal ----------
+
 
     @Test
     fun teachingWeekTotalCountsData() = runTest {

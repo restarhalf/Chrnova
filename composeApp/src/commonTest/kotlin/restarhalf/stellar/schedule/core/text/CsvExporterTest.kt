@@ -7,7 +7,6 @@ import kotlin.test.assertTrue
 
 class CsvExporterTest {
 
-    /** appendLine 的换行符随平台不同，统一归一化为 \n 后断言 */
     private fun exportNormalized(courses: List<Course>): String =
         CsvExporter.export(courses).replace("\r\n", "\n")
 
@@ -88,7 +87,7 @@ class CsvExporterTest {
 
     @Test
     fun twoItemEvenRunStillTagged() {
-        // CsvExporter 对步长2无数量门槛，两个双周也合并
+
         val csv = exportNormalized(listOf(course(weeks = listOf(2, 4))))
         assertTrue(csv.trim().endsWith("2-4双"))
     }

@@ -34,19 +34,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * 公告列表页 Compose UI 测试（Ultron KMP 入口）
- *
- * [runUltronUiTest] 是 Ultron 的 KMP 测试入口（块内接收者为 androidx ComposeUiTest）。
- * 注意：Ultron 的 SemanticsMatcher 扩展（hasText("x").click() 等）绑定 ComposeTestRule 环境，
- * 与 runUltronUiTest 的 ComposeUiTest 环境互斥（混用抛 IllegalStateException），
- * 因此块内统一使用标准 ComposeUiTest API，异步等待用 waitUntil。
- * 另外严禁嵌套调用 runUltronUiTest（内层 afterTest 会重置 ComposeRootRegistry）。
- *
- * 数据层与单测同策略：mock [AnnouncementPort] 与 [ObservableSettings]，
- * ViewModel / UseCase / Store 全部真实实现，验证从数据到渲染的完整链路。
- * 真机测试不注入 setMain（会破坏 lifecycle 主线程检查），viewModelScope 走原生主线程。
- */
+
 @RunWith(AndroidJUnit4::class)
 class AnnouncementListScreenUiTest {
 
@@ -65,8 +53,8 @@ class AnnouncementListScreenUiTest {
         )
     }
 
-    // 注意：这里绝不能再用 runUltronUiTest 包装（会嵌套 runComposeUiTest，
-    // 内层 afterTest 会重置 ComposeRootRegistry，导致外层所有节点查询失败）
+
+
     private fun androidx.compose.ui.test.ComposeUiTest.setContentFor(
         vm: AnnouncementViewModel,
         onAnnouncementClick: (String) -> Unit = {},

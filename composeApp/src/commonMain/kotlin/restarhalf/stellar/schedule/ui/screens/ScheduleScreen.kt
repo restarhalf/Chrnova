@@ -93,26 +93,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("UNUSED_VALUE")
-/**
- * 课程表屏幕
- * 
- * 显示完整的课程表，支持：
- * - 左右滑动切换周次
- * - 课程卡片显示
- * - 课程详情弹窗
- * - 调课功能
- * - 点击空格子添加实验课
- * 
- * @param onSync 同步回调
- * @param syncUiState 全局同步状态（用于展示同步中/失败提示）
- * @param showMessage 轻提示回调（Toast）
- * @param onSyncErrorConsumed 错误提示展示后的确认回调，避免重复弹出
- * @param campus 当前校区
- * @param termStartMs 学期开始时间戳
- * @param totalWeeks 学期总周数
- * @param onAddLabCourse 添加课程回调，参数为(dayOfWeek, startSection, selectedWeek)
- * @param onEditLabCourse 编辑实验课回调
- */
+
 fun ScheduleScreen(
     vm: ScheduleViewModel,
     onSync: suspend () -> Unit,
@@ -165,7 +146,7 @@ fun ScheduleScreen(
         selectedEmptyCell = null
     }
 
-    // 自动/手动同步失败时给出可见反馈，并向上确认消费，避免切页后重复弹出
+
     LaunchedEffect(syncUiState) {
         if (syncUiState is SyncUiState.Error) {
             showMessage("课表同步失败：${syncUiState.message}")
@@ -216,7 +197,7 @@ fun ScheduleScreen(
         )
     }
 
-    // 带动画跳转到指定周次（供"回到当前周"与周次选择弹窗复用）
+
     fun animateToWeek(targetWeek: Int) {
         scope.launch {
             val targetPage = vm.weekToPage(
@@ -281,7 +262,7 @@ fun ScheduleScreen(
                         }
                     },
                 )
-                // 点击顶栏标题区域弹出周次选择（matchParentSize 跟随顶栏高度，不参与测量）
+
                 Box(
                     modifier = Modifier.matchParentSize(),
                     contentAlignment = Alignment.TopCenter

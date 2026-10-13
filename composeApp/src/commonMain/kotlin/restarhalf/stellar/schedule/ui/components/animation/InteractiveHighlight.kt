@@ -1,9 +1,9 @@
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
+
+
 
 package restarhalf.stellar.schedule.ui.components.animation
 
-// Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
@@ -35,8 +35,8 @@ internal class InteractiveHighlight(
     private val positionAnimation = Animatable(Offset.Zero, Offset.VectorConverter, Offset.VisibilityThreshold)
     private var startPosition = Offset.Zero
 
-    // Smoothstep press spot; without runtime shader support, falls back to a radialGradient
-    // approximation (linear instead of S-curve falloff — barely distinguishable).
+
+
     private val spotShader: RuntimeShader? =
         if (isRuntimeShaderSupported()) RuntimeShader(SPOT_SHADER) else null
 
@@ -96,7 +96,7 @@ internal class InteractiveHighlight(
         }
     }
 
-    // On release the spot springs back to the press-down point while the press fades out.
+
     private fun release() {
         animationScope.launch {
             launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
@@ -105,7 +105,7 @@ internal class InteractiveHighlight(
     }
 }
 
-// Press spot: solid within half the radius, smoothstep falloff toward the edge.
+
 private const val SPOT_SHADER = """
     layout(color) uniform half4 color;
     uniform float radius;

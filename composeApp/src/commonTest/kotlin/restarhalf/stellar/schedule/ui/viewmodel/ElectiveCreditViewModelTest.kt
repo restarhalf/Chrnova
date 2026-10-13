@@ -34,14 +34,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * ElectiveCreditViewModel 单元测试。
- *
- * FetchSemesterIdsUseCase / CalculateElectiveCreditsUseCase 为 final class，
- * 用真实实现 + mock 端口（AcademicPort / SettingsPort / GradeRepository）。
- * load() 协程经 viewModelScope(Main) 与真实 IO 调度，断言用真实时间轮询 +
- * drain Main 队列（advanceUntilIdle），避免非可取消恢复入队后停滞。
- */
 class ElectiveCreditViewModelTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)

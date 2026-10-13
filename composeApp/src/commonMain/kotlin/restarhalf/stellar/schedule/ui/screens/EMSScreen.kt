@@ -79,20 +79,7 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class, ExperimentalFoundationApi::class)
 @Composable
-        /**
-         * 考试与成绩屏幕
-         *
-         * 显示考试安排和成绩信息，支持Tab切换和左右滑动切换。
-         * 包含以下功能：
-         * - 考试安排列表（显示未结束的考试）
-         * - 成绩列表（按学期筛选）
-         * - 成绩详情弹窗
-         * - 下拉刷新
-         * - 左右滑动切换考试/成绩Tab
-         *
-         * @param onLoadExaminations 加载考试安排的挂起函数
-         * @param onLoadGrades 加载成绩的挂起函数
-         */
+        
 fun EMSScreen(
     examVm: ExaminationViewModel,
     gradeVm: GradeViewModel,

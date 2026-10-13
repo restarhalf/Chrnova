@@ -33,17 +33,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-/**
- * AnnouncementViewModel 单元测试（Mokkery）
- *
- * ViewModel 与四个 UseCase 均为 final class（Mokkery 3.x 仅支持接口 / open 类），
- * 因此保持它们为真实实现，在端口层 [AnnouncementPort] 与 [ObservableSettings]
- * 打 mock，从入口到状态流全链路验证。
- *
- * viewModelScope 绑定 Dispatchers.Main（经 TestMainDispatcher 包装后落到后台线程），
- * 挂起任务与测试线程是并发的，因此断言前统一用 [awaitState] 真实时间轮询等
- * 状态就绪（终态 = loaded 或 error 非空），避免与协程执行产生竞态。
- */
+
 class AnnouncementViewModelTest {
 
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
@@ -59,16 +49,12 @@ class AnnouncementViewModelTest {
         fetchAnnouncement = FetchAnnouncementUseCase(port),
     )
 
-    /** viewModelScope 依赖 Main dispatcher；绑定 runTest 的 scheduler 使协程可被驱动 */
+    
     private fun installTestMain(testScheduler: kotlinx.coroutines.test.TestCoroutineScheduler) {
         Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
     }
 
-    /**
-     * 等待 ViewModel 到达指定状态。
-     * viewModelScope 经 TestMainDispatcher 包装后落到后台线程执行，StateFlow.value
-     * 是 volatile 读，用真实时间短轮询与协程同步，避免断言竞态。
-     */
+    
     private suspend fun awaitState(
         vm: AnnouncementViewModel,
         timeoutMs: Long = 5_000,
@@ -83,7 +69,7 @@ class AnnouncementViewModelTest {
         return state
     }
 
-    /** 等待首次加载到终态（成功或失败） */
+    
     private suspend fun awaitSettled(vm: AnnouncementViewModel): AnnouncementViewModel.AnnouncementUiState =
         awaitState(vm) { (it.loaded && !it.loading) || it.error != null }
 
@@ -172,7 +158,7 @@ class AnnouncementViewModelTest {
 
         val after = vm.uiState.value
         assertEquals(1_000_000L, after.lastReadAtMs)
-        // newer(5000s) > lastReadAtMs(1000s) → 仍有一条未读
+
         assertEquals(1, after.unreadCount)
     }
 }

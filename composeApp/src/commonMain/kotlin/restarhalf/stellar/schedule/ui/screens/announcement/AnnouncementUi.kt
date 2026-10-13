@@ -21,7 +21,7 @@ import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 公告发布时间（Unix 秒）格式化为 yyyy/MM/dd */
+
 fun formatAnnouncementDate(createdAtSec: Long): String {
     if (createdAtSec <= 0) return ""
     return runCatching {
@@ -36,12 +36,7 @@ fun formatAnnouncementDate(createdAtSec: Long): String {
     }.getOrDefault("")
 }
 
-/**
- * 公告小徽标（置顶/重要）。
- *
- * @param text 徽标文字
- * @param color 徽标文字与底色（低透明度）颜色
- */
+
 @Composable
 fun AnnouncementBadge(
     text: String,
@@ -64,13 +59,7 @@ fun AnnouncementBadge(
     }
 }
 
-/**
- * 公告标题行：置顶/重要徽标 + 标题。
- *
- * @param title 公告标题
- * @param pinned 是否置顶
- * @param important 是否重要
- */
+
 @Composable
 fun AnnouncementTitleRow(
     title: String,
@@ -108,9 +97,7 @@ fun AnnouncementTitleRow(
     }
 }
 
-/**
- * 未读小圆点（无数字），用于列表页标记单条公告未读。
- */
+
 @Composable
 fun UnreadBadge(modifier: Modifier = Modifier) {
     val colors = MiuixTheme.colorScheme

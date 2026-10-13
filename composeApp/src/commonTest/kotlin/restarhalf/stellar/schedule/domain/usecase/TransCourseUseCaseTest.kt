@@ -142,7 +142,7 @@ class TransCourseUseCaseTest {
     @Test
     fun `冲突检测基于目标周的生效课程`() {
         val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
-        // 课程只在第3周，第4周不生效 → 不冲突
+
         val otherWeek3 = course("体育", dayOfWeek = 3, startSection = 5, sectionCount = 2, weeks = listOf(3))
         val result = useCase(
             allCourses = listOf(origin, otherWeek3),

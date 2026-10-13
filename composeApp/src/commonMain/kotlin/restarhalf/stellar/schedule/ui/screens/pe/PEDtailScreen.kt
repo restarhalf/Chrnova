@@ -53,18 +53,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 体育成绩详情屏幕
- *
- * 显示指定学年的体测详情，包括：
- * - 各项体测成绩（点击可查看该项目的全部历史成绩记录）
- * - 成绩等级
- * - 总分和总等级
- *
- * @param schoolYear 学年
- * @param onSubjectClick 点击某个科目卡片，跳转单科成绩历史
- * @param onBack 返回回调
- */
+
 @Composable
 fun PEDetailScreen(
     vm: PEViewModel,

@@ -53,13 +53,13 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** 分享卡固定宽度（dp）。导出按此宽度离屏合成，不跟随窗口/面板宽度。 */
+
 val ShareCardWidth: Dp = 380.dp
 
 private val ShareLabelWidth = 36.dp
 private val ShareFooterHeight = 80.dp
 
-/** 分享课表格子几何：构建 CourseCardModel 时必须使用同一套 Y/高度。 */
+
 object ShareTimetableGeometry {
     val rowHeight = 60.dp
     val rowGap = 1.dp
@@ -80,19 +80,14 @@ object ShareTimetableGeometry {
     val gridHeight: Dp get() = rowHeight * 12 + rowGap * 11 + restHeight * 2
 }
 
-/** 估算整卡高度，便于预览缩放与离屏画布尺寸。 */
+
 fun shareCardHeight(showSharer: Boolean): Dp {
     val top = if (showSharer) 14.dp + 48.dp + 10.dp + 16.dp + 14.dp else 16.dp + 22.dp + 16.dp
     val gridBlock = 8.dp + 50.dp + 6.dp + ShareTimetableGeometry.gridHeight + 8.dp
     return top + gridBlock + ShareFooterHeight + 4.dp
 }
 
-/**
- * 课表分享卡片。
- *
- * 与应用一致：整卡铺背景（主题色或自定义壁纸），课表内容直接浮在背景上，
- * 不额外叠大面积色块；有昵称时顶部展示分享人，否则整块隐藏。
- */
+
 @Composable
 fun ShareTimetableCard(
     nickname: String?,
@@ -124,7 +119,7 @@ fun ShareTimetableCard(
             .clip(cardShape)
             .border(2.dp, colors.surfaceContainerHigh, cardShape)
     ) {
-        // 与 AppContent 相同的背景铺法：surface 底 + 自定义壁纸
+
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -143,7 +138,7 @@ fun ShareTimetableCard(
         }
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            // 顶部信息：直接落在背景上
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -200,7 +195,7 @@ fun ShareTimetableCard(
                 )
             }
 
-            // 课表：与 ScheduleScreen 一样直接铺在背景上
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -251,7 +246,7 @@ fun ShareTimetableCard(
                 }
             }
 
-            // 底栏：轻透明，类似应用底栏浮在背景上
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -362,11 +357,7 @@ private fun ShareSectionLabels(
     }
 }
 
-/**
- * 离屏捕获容器：按固定像素尺寸记入 [layer]，供导出 PNG。
- *
- * Android/iOS 无 Desktop 的 ImageComposeScene；CMP 下用 GraphicsLayer 等价离屏合成。
- */
+
 @Composable
 fun ShareCaptureBox(
     layer: GraphicsLayer,

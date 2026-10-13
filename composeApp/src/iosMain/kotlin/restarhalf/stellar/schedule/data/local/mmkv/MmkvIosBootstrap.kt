@@ -22,7 +22,7 @@ object MmkvIosBootstrap {
         val kv = MMKV.mmkvWithID(name)
         if (kv.containsKey(MmkvStores.MIGRATION_FLAG)) return
 
-        // Kotlin/Native 里 NSUserDefaults(suiteName:) 返回非空
+
         val defaults = NSUserDefaults(suiteName = name)
         val dict = defaults.dictionaryRepresentation()
         var copied = 0
@@ -34,7 +34,7 @@ object MmkvIosBootstrap {
                     copied++
                 }
                 is NSNumber -> {
-                    // objCType 是 CPointer<ByteVar>，不是 String
+
                     val type = value.objCType?.toKString() ?: ""
                     when {
                         type == "B" || (type.contains("c") && type.length <= 2) ->

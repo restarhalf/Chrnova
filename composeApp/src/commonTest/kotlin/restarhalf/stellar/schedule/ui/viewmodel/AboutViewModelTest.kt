@@ -29,17 +29,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
-/**
- * AboutViewModel 单元测试。
- *
- * CheckAppUpdateUseCase 是 final class 无法 mock，用真实实例 + mock AppUpdatePort。
- *
- * 两个关键点（与裸 MutableStateFlow 型 ViewModel 不同）：
- * 1. uiState 是 stateIn(WhileSubscribed)——测试必须先订阅才能驱动 combine 上游，
- *    否则 uiState.value 永远停在 initialValue；
- * 2. checkUpdate 内部 withContext(Dispatchers.IO)，协程跨线程恢复——Main dispatcher
- *    用 @BeforeTest 类级安装，避免协程在 resetMain 之后恢复触发 ISE。
- */
 class AboutViewModelTest {
 
     private val appUpdate = mock<AppUpdatePort>(MockMode.autofill)
@@ -51,21 +40,18 @@ class AboutViewModelTest {
         changelog = "更新",
     )
 
-    /** 类级持有 Main dispatcher，测试中可主动 drain 其内部任务队列 */
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun makeViewModel() = AboutViewModel(
         checkAppUpdate = CheckAppUpdateUseCase(appUpdate),
     )
 
-    /** 驱动 stateIn(WhileSubscribed)：订阅 uiState，combine 上游才开始运行 */
     private fun kotlinx.coroutines.test.TestScope.subscribeUi(vm: AboutViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    /** 真实时间轮询等待 uiState 就绪（checkUpdate 走真实 IO 线程），每轮 drain Main 队列 */
     private suspend fun awaitState(
         vm: AboutViewModel,
         timeoutMs: Long = 5_000,

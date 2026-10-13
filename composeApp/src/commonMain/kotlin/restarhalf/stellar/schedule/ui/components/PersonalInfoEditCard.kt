@@ -43,7 +43,7 @@ fun PersonalInfoEditCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 头像点击区域
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -64,7 +64,7 @@ fun PersonalInfoEditCard(
                 }
             }
 
-            // 昵称点击区域
+
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -86,7 +86,7 @@ fun PersonalInfoEditCard(
         }
     }
 
-    // 昵称编辑对话框
+
     if (showNicknameDialog) {
         NicknameEditDialog(
             initialNickname = nickname ?: "",
@@ -98,7 +98,7 @@ fun PersonalInfoEditCard(
         )
     }
 
-    // 清除头像确认对话框
+
     if (showClearAvatarDialog) {
         WindowDialog(
             show = true,

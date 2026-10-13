@@ -27,12 +27,7 @@ import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
-/**
- * 应用主ViewModel
- *
- * 管理应用的核心状态，包括校区、学期开始时间、总周数等。
- * 负责处理同步、登录、登出等全局操作。
- */
+
 class AppViewModel(
     private val auth: JwxtAuthPort,
     private val timetable: TimetablePort,
@@ -59,13 +54,7 @@ class AppViewModel(
         }
     }
 
-    /**
-     * 应用UI状态数据类
-     * 
-     * @param campus 当前校区
-     * @param termStartMs 学期开始时间戳（毫秒）
-     * @param totalWeeks 学期总周数
-     */
+    
     @Immutable
     data class AppUiState(
         val campus: Campus,
@@ -92,25 +81,22 @@ class AppViewModel(
                     ),
             )
 
-    /** 对外暴露的UI状态流 */
+    
     val uiState: StateFlow<AppUiState> = _uiState
 
     private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
 
-    /** 教务系统同步进度状态流 */
+    
     val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
 
-    /**
-     * UI 层展示过同步错误提示后调用，把状态复位为 Idle，
-     * 避免用户切回旧页面时对同一次失败重复弹提示。
-     */
+    
     fun acknowledgeSyncResult() {
         if (_syncUiState.value is SyncUiState.Error) {
             _syncUiState.value = SyncUiState.Idle
         }
     }
 
-    /** 执行教务系统同步，进度与结果通过 [syncUiState] 暴露 */
+    
     suspend fun runSync() {
         _syncUiState.value = SyncUiState.Loading
         _syncUiState.value =
@@ -130,33 +116,27 @@ class AppViewModel(
                 )
     }
 
-    /** 用户登出，清除认证信息 */
+    
     fun logout() {
         auth.clear()
     }
 
-    /** 校区变更回调 */
+    
     fun onCampusChanged(campus: Campus) {
         timetable.setCampus(campus)
     }
 
-    /** 学期开始时间变更回调 */
+    
     fun onTermStartMsChanged(ms: Long) {
         timetable.setTermStartMs(ms)
     }
 
-    /** 总周数变更回调 */
+    
     fun onTotalWeeksChanged(weeks: Int) {
         timetable.setTotalWeeks(weeks)
     }
 
-    /**
-     * 获取考试安排
-     * 
-     * @param semester 学期ID，空字符串表示当前学期
-     * @param nameOrNumber 课程名称或编号筛选
-     * @return 考试安排列表
-     */
+    
     suspend fun fetchExaminationArrangements(
         semester: String = "",
         nameOrNumber: String = ""
@@ -164,25 +144,12 @@ class AppViewModel(
         return fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
     }
 
-    /**
-     * 获取成绩报告
-     * 
-     * @param semester 学期ID，空字符串表示当前学期
-     * @return 学期成绩报告
-     */
+    
     suspend fun fetchGradeReport(semester: String = ""): TermGradeReport {
         return fetchGrades(semester = semester)
     }
 
-    /**
-     * 用户登录
-     * 
-     * @param userNo 学号
-     * @param password 密码
-     * @param captchaData 验证码数据（Base64编码）
-     * @param codeVal 用户输入的验证码
-     * @param p 加密参数（可选）
-     */
+    
     suspend fun login(
         userNo: String,
         password: String,

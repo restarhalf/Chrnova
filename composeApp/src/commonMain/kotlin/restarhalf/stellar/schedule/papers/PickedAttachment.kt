@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.papers
 
-/** 文件选择结果 */
 data class PickedAttachment(
     val bytes: ByteArray,
     val name: String,

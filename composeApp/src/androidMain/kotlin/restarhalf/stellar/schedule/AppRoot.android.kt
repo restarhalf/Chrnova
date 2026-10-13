@@ -40,8 +40,8 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
         defaultHandler?.uncaughtException(thread, throwable)
     }
     setContent {
-        // 镜像主题模式（真源在 common AppRoot 的 AppState，经 onThemeModeChange 同步），
-        // 仅用于 edge-to-edge 系统栏样式；初值直接读 settings 避免冷启动闪错色
+
+
         var themeMode by remember { mutableIntStateOf(settings.getInt(SettingsKeys.THEME_MODE, 0)) }
         val darkMode =
             when (themeMode) {
@@ -93,7 +93,7 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
                 PdfFilePickerHost(multiple = multiple, onPicked = onPicked)
             },
             ensureNotificationPermission = { onGranted ->
-                // 课程/考试本地通知需要 POST_NOTIFICATIONS（Android 13+）；抢课前台服务同样依赖
+
                 val perms = mutableListOf<String>()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     perms.add(Manifest.permission.POST_NOTIFICATIONS)

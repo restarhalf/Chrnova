@@ -197,9 +197,7 @@ object AppLogger {
         }
     }
 
-    /**
-     * 导出日志供 bug 反馈，包含设备元数据和可读堆栈。
-     */
+    
     fun toExportText(metadata: Map<String, String> = emptyMap()): String {
         val header = buildString {
             appendLine("=== Chrnova Log Export ===")

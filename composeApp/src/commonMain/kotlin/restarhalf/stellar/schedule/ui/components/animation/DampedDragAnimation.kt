@@ -1,9 +1,9 @@
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
+
+
 
 package restarhalf.stellar.schedule.ui.components.animation
 
-// Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
+
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring

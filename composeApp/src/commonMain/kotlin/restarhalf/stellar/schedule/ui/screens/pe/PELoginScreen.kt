@@ -52,13 +52,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 体育系统登录页面
- *
- * @param vm PE登录ViewModel
- * @param onBack 返回回调
- * @param onLoginSuccess 登录成功回调
- */
+
 @Composable
 fun PELoginScreen(
     vm: PELoginViewModel,

@@ -47,21 +47,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 单科体测成绩历史屏幕
- *
- * 显示某学年中单个体测科目的全部历史成绩记录：
- * - 每次测试的成绩与时间
- * - 所属考核场次
- * - 详情页当前采用成绩的标记
- *
- * @param schoolYear 学年
- * @param subjectId 科目ID
- * @param subjectName 科目名称
- * @param unit 成绩单位
- * @param currentResult 详情页当前采用的成绩
- * @param onBack 返回回调
- */
 @Composable
 fun PESubjectHistoryScreen(
     vm: PEViewModel,
@@ -92,9 +77,9 @@ fun PESubjectHistoryScreen(
         }
     }
 
-    // 只采用与路由科目一致的历史状态，避免短暂显示上一次科目的记录
+
     val history = uiState.subjectHistory?.takeIf { it.subjectId == subjectId }
-    // 详情页当前采用的成绩在历史记录中最新的那条（与 currentResult 数值一致）
+
     val currentSourceId = currentResult
         ?.takeIf { it.isNotBlank() }
         ?.let { result -> history?.records?.firstOrNull { it.result == result }?.sourceScoreId }

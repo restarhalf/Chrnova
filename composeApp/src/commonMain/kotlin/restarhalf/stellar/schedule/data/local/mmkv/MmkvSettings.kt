@@ -4,11 +4,6 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.SettingsListener
 import com.tencent.mmkv.kmp.MMKV
 
-/**
- * multiplatform-settings 适配层：底层用 mmkv-kmp，上层保持 ObservableSettings API。
- *
- * 监听只在经由本类 put/remove/clear 的写路径上触发；跨进程/绕过适配层的写不会通知。
- */
 class MmkvSettings internal constructor(
     private val kv: MMKV,
 ) : ObservableSettings {

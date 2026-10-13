@@ -22,12 +22,7 @@ import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.port.SettingsPort
 
-/**
- * 课程评价 ViewModel
- *
- * 负责评价列表/详情的加载、提交、删除与点赞（交互操作）。
- * 提交评价时由客户端限制只能选择“已选课程”（来自 CourseRepository），后端不做此限制。
- */
+
 class CourseEvaluationViewModel(
     private val port: CourseEvaluationPort,
     private val courseRepository: CourseRepository,
@@ -43,30 +38,30 @@ class CourseEvaluationViewModel(
         val evaluations: ImmutableList<Evaluation> = persistentListOf(),
         val total: Int = 0,
         val searchQuery: String = "",
-        /** 列表页课程筛选（null 表示全部） */
+        
         val selectedCourse: String? = null,
-        /** 列表页教师筛选（null 表示全部；"教师未知"匹配空教师） */
+        
         val selectedTeacher: String? = null,
-        /** 列表页"仅看我的"筛选（true 只显示当前 user_hash 提交的评价） */
+        
         val onlyMine: Boolean = false,
-        /** 课程聚合列表（评价列表页顶层视图，按课程分组） */
+        
         val courseSummaries: ImmutableList<CourseEvaluationSummary> = persistentListOf(),
         val selectedEvaluation: Evaluation? = null,
-        /** 当前用户已选课程（用于提交时限制可选课程） */
+        
         val myCourses: ImmutableList<Course> = persistentListOf(),
         val submitting: Boolean = false,
         val userNo: String = "",
         val profileName: String = "",
-        /** 用户自定义昵称（优先于 profileName 用作评价署名） */
+        
         val userNickname: String? = null,
-        /** 当前登录用户的 user_hash（学号 SHA-256），用于判断评价是否为本机提交 */
+        
         val userHash: String = "",
-        /** 预计算：按搜索词过滤后的课程聚合（避免 UI 每次重组现算） */
+        
         val filteredCourseSummaries: ImmutableList<CourseEvaluationSummary> = persistentListOf(),
-        /** 预计算：onlyMine + 搜索词过滤后的评价列表 */
+        
         val filteredEvaluations: ImmutableList<Evaluation> = persistentListOf(),
     ) {
-        /** 在数据/筛选条件变化后填充 filtered* 字段 */
+        
         fun recomputed(): EvaluationUiState {
             val summaries =
                 if (searchQuery.isEmpty()) {
@@ -104,7 +99,7 @@ class CourseEvaluationViewModel(
             }
         }
 
-        /** 当前评价是否为本人提交（可删除 / 可编辑） */
+        
         val canDeleteSelected: Boolean
             get() = selectedEvaluation != null &&
                 userHash.isNotBlank() &&
@@ -173,13 +168,13 @@ class CourseEvaluationViewModel(
         }
     }
 
-    /** 按课程 + 教师加载评价列表（用于 EvaluationCourseScreen 第二层页面） */
+    
     fun loadEvaluations(course: String, teacher: String?) {
         updateState { it.copy(selectedCourse = course, selectedTeacher = teacher) }
         loadEvaluations()
     }
 
-    /** 加载课程聚合列表（评价列表页顶层视图） */
+    
     fun loadCourseSummaries() {
         viewModelScope.launch {
             updateState { it.copy(loading = true, error = null) }
@@ -234,12 +229,7 @@ class CourseEvaluationViewModel(
         }
     }
 
-    /**
-     * 删除评价。
-     *
-     * @param id 评价ID
-     * @param onResult 删除结果回调（true=成功）；失败时调用方应留在本页展示错误
-     */
+    
     fun deleteEvaluation(id: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
@@ -295,10 +285,7 @@ class CourseEvaluationViewModel(
         updateState { it.copy(onlyMine = onlyMine) }
     }
 
-    /**
-     * 编辑本人提交的评价（需登录）。course_name 不可改。
-     * 编辑成功后会同步刷新列表与详情页中对应条目。
-     */
+    
     fun updateEvaluation(id: String, req: EvaluationUpdateRequest) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {

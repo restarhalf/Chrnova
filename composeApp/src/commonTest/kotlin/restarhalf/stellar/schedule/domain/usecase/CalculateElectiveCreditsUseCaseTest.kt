@@ -55,7 +55,7 @@ class CalculateElectiveCreditsUseCaseTest {
             innovationGuidanceCourses = emptyList(),
             professionalGuidanceCourses = emptyList(),
         )
-        // Z1→X4，Z4→X5
+
         assertEquals(2.0, result.first { it.code == "X4" }.credits)
         assertEquals(1.0, result.first { it.code == "X5" }.credits)
     }
@@ -88,7 +88,7 @@ class CalculateElectiveCreditsUseCaseTest {
             innovationGuidanceCourses = emptyList(),
             professionalGuidanceCourses = emptyList(),
         )
-        // "优秀"+合格 与 "59"+合格 通过；"良好"+不合格 不通过
+
         assertEquals(2.0, result.first { it.code == "X2" }.credits)
         assertEquals(1.0, result.first { it.code == "挂科" }.credits)
     }
@@ -104,7 +104,7 @@ class CalculateElectiveCreditsUseCaseTest {
             professionalGuidanceCourses = emptyList(),
         )
         val innovation = result.first { it.code == "创新创业选修" }
-        // 匹配代码且通过的才有学分：X5B002 挂科不计
+
         assertEquals(2.0, innovation.credits)
         assertEquals(1, innovation.courses.size)
     }

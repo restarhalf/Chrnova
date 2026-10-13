@@ -60,11 +60,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 免测申请详情页
- *
- * 证明材料走 Coil URL 预览（与公告图片同一套缓存），点开复用公告全屏看图器。
- */
 @Composable
 fun PEFreeApplyDetailScreen(
     vm: PEFreeApplyViewModel,

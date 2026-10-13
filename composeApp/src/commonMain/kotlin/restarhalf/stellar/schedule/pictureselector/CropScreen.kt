@@ -74,12 +74,6 @@ private const val GestureGridHoldMs = 420L
 private val StageInk = Color(0xFF0A0A0C)
 private val DimScrim = Color.Black.copy(alpha = 0.55f)
 
-/**
- * 图片裁剪页。
- *
- * 顶部沿用主题顶栏与原图标配色；下方为暗色裁剪舞台（窗外压暗）。
- * 手势期间淡入三分线，双指缩放、拖动平移、双击复位。
- */
 @Composable
 fun CropScreen(
     imageUri: String,
@@ -283,7 +277,7 @@ private fun CropStage(
         val scope = rememberCoroutineScope()
 
         val cropAspect = outputWidthPx.toFloat() / outputHeightPx.coerceAtLeast(1).toFloat()
-        // 为顶部/底部悬浮控件留出空间，裁剪窗略偏上
+
         val maxFrameWidthPx = with(density) { (maxWidth - 36.dp).toPx().coerceAtLeast(1f) }
         val maxFrameHeightPx = with(density) { (maxHeight - 240.dp).toPx().coerceAtLeast(1f) }
 
@@ -568,7 +562,7 @@ private fun CropOverlay(
         val cornerStroke = 3.5.dp.toPx()
         val cornerColor = Color.White.copy(alpha = 0.92f + 0.08f * gridAlpha)
 
-        // 四角 L 形手柄
+
         drawLine(cornerColor, Offset(cropLeft, cropTop), Offset(cropLeft + cornerLen, cropTop), cornerStroke, StrokeCap.Round)
         drawLine(cornerColor, Offset(cropLeft, cropTop), Offset(cropLeft, cropTop + cornerLen), cornerStroke, StrokeCap.Round)
         drawLine(
@@ -648,7 +642,6 @@ private fun fitFrame(
     }
 }
 
-/** 保证图片始终覆盖裁剪窗（而不是整个舞台）。 */
 private fun clampOffsetToCrop(
     offset: Offset,
     cropLeft: Float,

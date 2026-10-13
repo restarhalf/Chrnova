@@ -49,10 +49,10 @@ class DauReporterTest {
     fun pingsOncePerDay() = runTest {
         val settings = MapSettings(SettingsKeys.CONFIRM_PRIVACY to true)
         assertTrue(DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.OK)))
-        // 当日第二次不再发送
+
         assertFalse(DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.OK)))
         assertEquals(1, capturedUrls.size)
-        // 已记录上报日期
+
         assertFalse(settings.getStringOrNull(SettingsKeys.DAU_LAST_PING_DAY).isNullOrEmpty())
     }
 
@@ -71,7 +71,7 @@ class DauReporterTest {
             DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.BadGateway))
         }
         assertTrue(error.message!!.contains("502"))
-        // 失败后不记录日期，允许下次重试
+
         assertNull(settings.getStringOrNull(SettingsKeys.DAU_LAST_PING_DAY))
     }
 }

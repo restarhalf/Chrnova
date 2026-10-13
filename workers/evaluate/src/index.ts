@@ -24,14 +24,13 @@ interface EvaluationRow {
   updated_at: number;
 }
 
-// ─── Security helpers & constants ───
+
 
 const SESSION_TTL_SEC = 3600;
 const MAX_CONTENT_LEN = 2000;
 const MAX_AUTHOR_LEN = 50;
 const MAX_COURSE_LEN = 100;
 
-/** 恒定时间比较，避免令牌逐字节爆破 */
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -43,10 +42,6 @@ function clientIp(c: any): string {
   return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
 }
 
-/**
- * 进程内滑动窗口限流（轻量，防单实例滥用）。
- * 注意：Cloudflare Worker 实例间状态不共享，分布式限流需改用 KV / Durable Object。
- */
 const rateBuckets = new Map<string, { count: number; reset: number }>();
 function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
   const now = Date.now();
@@ -60,7 +55,7 @@ function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
   return true;
 }
 
-// ─── HMAC 签名会话：登录后签发，过期失效，本身不是主密钥 ───
+
 function b64url(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let s = '';
@@ -115,10 +110,6 @@ async function verifySession(secret: string, token: string): Promise<boolean> {
   }
 }
 
-/**
- * 管理鉴权：未配置 ADMIN_TOKEN 时显式拒绝（防 undefined === undefined 误放行）。
- * 接受签名会话令牌；过渡期同时兼容原始 ADMIN_TOKEN，便于已持有主密钥的调用方平滑迁移。
- */
 async function checkAdmin(c: any): Promise<boolean> {
   const expected = c.env.ADMIN_TOKEN;
   if (!expected) return false;
@@ -130,9 +121,9 @@ async function checkAdmin(c: any): Promise<boolean> {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读 GET 接口开放，且限定为自有前端域；
-// 写接口（POST /evaluations、like、delete、patch）不开放跨域，
-// 防止第三方网页借访客浏览器向本平台注入内容。
+
+
+
 const CORS_ORIGINS = [
   'https://chrnova.restarhalf.dpdns.org',
   'http://localhost:5173',
@@ -140,14 +131,12 @@ const CORS_ORIGINS = [
 ];
 app.use('/courses', cors({ origin: CORS_ORIGINS }));
 
-// ─── Helpers ───
 
-/** 取 X-User-Hash（学号 SHA-256，客户端计算）。 */
+
 function userHashOf(c: any): string {
   return (c.req.header('X-User-Hash') || '').trim();
 }
 
-/** 取 X-Device-Id（仅用于本地评价归属判定）。 */
 function deviceIdOf(c: any): string {
   return (c.req.header('X-Device-Id') || '').trim();
 }
@@ -160,10 +149,10 @@ function rowToEval(r: EvaluationRow, liked: boolean, userHashVisible: boolean) {
     rating: r.rating,
     content: r.content,
     anonymous: !!r.anonymous,
-    // 匿名时隐藏作者信息
+
     author: r.anonymous ? '' : r.author,
-    // 不返回学号明文（user_no）与设备 ID；user_hash 仅对"本人"或"管理员"可见，
-    // 防止公开接口泄露他人标识（客户端依赖本人 user_hash 做"我的评价"过滤）。
+
+
     user_hash: userHashVisible ? r.user_hash : '',
     likes: r.likes,
     status: r.status,
@@ -172,7 +161,6 @@ function rowToEval(r: EvaluationRow, liked: boolean, userHashVisible: boolean) {
   };
 }
 
-/** 检查当前 user_hash 是否已封号 */
 async function isBanned(db: D1Database, userHash: string): Promise<boolean> {
   if (!userHash) return false;
   const row = await db
@@ -182,7 +170,7 @@ async function isBanned(db: D1Database, userHash: string): Promise<boolean> {
   return !!row;
 }
 
-// 为一组评价计算当前用户是否已点赞；includeUserHash=true 时（管理员）始终暴露 user_hash
+
 async function withLiked(c: any, rows: EvaluationRow[], includeUserHash = false): Promise<any[]> {
   const uh = userHashOf(c);
   return Promise.all(
@@ -206,7 +194,7 @@ function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-// 进程内"相同内容短时重复提交"去重：遏制轮换 user_hash 刷同一条垃圾内容
+
 const recentPosts = new Map<string, number>();
 function isDuplicatePost(ip: string, content: string): boolean {
   const key = `${ip}:${content}`;
@@ -217,10 +205,10 @@ function isDuplicatePost(ip: string, content: string): boolean {
   return false;
 }
 
-// ─── Public: list course summaries (aggregated) ───
-// 按 (course_name, teacher) 联合聚合：平均分、评价数、最新评价时间。
-// 同一门课不同老师各自独立一条（教学班差异大，不应混合平均）。
-// 用于评价列表页的"课程卡片"视图（类似评分应用的课程列表）。
+
+
+
+
 app.get('/courses', async (c) => {
   try {
     const rows = await c.env.DB.prepare(
@@ -248,8 +236,8 @@ app.get('/courses', async (c) => {
   }
 });
 
-// ─── Public: list evaluations ───
-// 去掉审核后，所有评价默认可见。仍保留 status 字段做向前兼容（旧数据可能含 pending/rejected）。
+
+
 app.get('/evaluations', cors({ origin: CORS_ORIGINS }), async (c) => {
   const course = c.req.query('course');
   const teacher = c.req.query('teacher');
@@ -264,8 +252,8 @@ app.get('/evaluations', cors({ origin: CORS_ORIGINS }), async (c) => {
     params.push(course);
   }
   if (teacher) {
-    // 与 /courses 聚合的规范化保持一致：空 teacher 视为"教师未知"
-    // 用 LIKE 模糊匹配，"教师未知" 也能正确命中空 teacher
+
+
     where.push("COALESCE(NULLIF(TRIM(teacher), ''), '教师未知') LIKE ?");
     params.push(`%${teacher}%`);
   }
@@ -289,7 +277,7 @@ app.get('/evaluations', cors({ origin: CORS_ORIGINS }), async (c) => {
   return c.json({ items, total, page, size });
 });
 
-// ─── Public: evaluation detail ───
+
 app.get('/evaluations/:id', cors({ origin: CORS_ORIGINS }), async (c) => {
   const id = c.req.param('id');
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?')
@@ -312,8 +300,8 @@ app.get('/evaluations/:id', cors({ origin: CORS_ORIGINS }), async (c) => {
   return c.json(rowToEval(row, liked, row.user_hash === uh));
 });
 
-// ─── Public: create evaluation ───
-// 需要登录（X-User-Hash 非空）；封号用户禁止提交。
+
+
 app.post('/evaluations', async (c) => {
   try {
     const uh = userHashOf(c);
@@ -324,9 +312,9 @@ app.post('/evaluations', async (c) => {
       return c.json({ error: '账号已被封禁，无法提交评价' }, 403);
     }
 
-    // IP 级限流：user_hash 可由客户端伪造，纯靠 per-user 限制可被轮换绕过，
-    // 叠加 IP 维度遏制批量刷内容（即"被他人利用生成违规内容"的主要入口）。
-    // 上限 30/min：仍远低于攻击者所需吞吐，但容纳校园网同 IP 整班并发。
+
+
+
     if (!rateLimit(`ip-submit:${clientIp(c)}`, 30, 60)) {
       return c.json({ error: '提交过于频繁，请稍后再试' }, 429);
     }
@@ -377,7 +365,7 @@ app.post('/evaluations', async (c) => {
     }
     const author = anonymous ? '' : authorRaw;
     const deviceId = deviceIdOf(c);
-    // 不再存储学号明文，仅保留 user_hash（来自 X-User-Hash 头）
+
     await c.env.DB.prepare(
       `INSERT INTO evaluations
         (id, course_name, teacher, rating, content, anonymous, author, user_no, user_hash, device_id, likes, status, created_at, updated_at)
@@ -393,8 +381,8 @@ app.post('/evaluations', async (c) => {
   }
 });
 
-// ─── Public: toggle like (interaction) ───
-// 需要登录（X-User-Hash 非空）；封号用户禁止点赞。
+
+
 app.post('/evaluations/:id/like', async (c) => {
   const id = c.req.param('id');
   const uh = userHashOf(c);
@@ -443,8 +431,8 @@ app.post('/evaluations/:id/like', async (c) => {
   return c.json({ likes: updated?.likes ?? 0, liked });
 });
 
-// ─── Public: delete own evaluation ───
-// 需要登录（X-User-Hash 非空）；封号用户禁止删除。
+
+
 app.delete('/evaluations/:id', async (c) => {
   const id = c.req.param('id');
   const uh = userHashOf(c);
@@ -471,9 +459,9 @@ app.delete('/evaluations/:id', async (c) => {
   return c.json({ ok: true });
 });
 
-// ─── Public: update own evaluation ───
-// 需登录（X-User-Hash 非空）；封号用户禁止修改；只能改本人提交的评价。
-// 可改字段：teacher / rating / content / anonymous / author（course_name 不可改）。
+
+
+
 app.patch('/evaluations/:id', async (c) => {
   try {
     const id = c.req.param('id');
@@ -539,7 +527,7 @@ app.patch('/evaluations/:id', async (c) => {
   }
 });
 
-// ─── Admin auth ───
+
 const adminAuth = async (c: any, next: any) => {
   if (!(await checkAdmin(c))) {
     return c.json({ error: 'Unauthorized' }, 401);
@@ -547,7 +535,7 @@ const adminAuth = async (c: any, next: any) => {
   await next();
 };
 
-// 管理员登录：校验管理密码后签发 HMAC 签名会话令牌（1 小时过期，本身不是主密钥）
+
 app.post('/admin/login', async (c) => {
   if (!rateLimit(`login:${clientIp(c)}`, 5, 300)) {
     return c.json({ error: '尝试次数过多，请 5 分钟后再试' }, 429);
@@ -567,7 +555,7 @@ app.post('/admin/login', async (c) => {
   }
 });
 
-// 管理员：列出全部评价（可按课程筛选）
+
 app.get('/admin/evaluations', adminAuth, async (c) => {
   const course = c.req.query('course');
   const page = Math.max(1, parseInt(c.req.query('page') || '1', 10) || 1);
@@ -596,7 +584,7 @@ app.get('/admin/evaluations', adminAuth, async (c) => {
   return c.json({ items, total, page, size });
 });
 
-// 管理员：评价详情
+
 app.get('/admin/evaluations/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -606,7 +594,7 @@ app.get('/admin/evaluations/:id', adminAuth, async (c) => {
   return c.json(rowToEval(row, false, true));
 });
 
-// 管理员：修改评价（内容 / 评分等，不再有审核状态字段）
+
 app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const row = await c.env.DB.prepare('SELECT * FROM evaluations WHERE id = ?').bind(id).first<EvaluationRow>();
@@ -673,7 +661,7 @@ app.patch('/admin/evaluations/:id', adminAuth, async (c) => {
   return c.json(rowToEval(updated!, false, true));
 });
 
-// 管理员：删除任意评价
+
 app.delete('/admin/evaluations/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   await c.env.DB.prepare('DELETE FROM evaluation_likes WHERE evaluation_id = ?').bind(id).run();
@@ -681,7 +669,7 @@ app.delete('/admin/evaluations/:id', adminAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// 管理员：列出封号用户
+
 app.get('/admin/bans', adminAuth, async (c) => {
   const rows = await c.env.DB.prepare(
     'SELECT * FROM banned_users ORDER BY banned_at DESC LIMIT 500'
@@ -689,7 +677,7 @@ app.get('/admin/bans', adminAuth, async (c) => {
   return c.json({ items: rows.results });
 });
 
-// 管理员：封号（按 user_hash）
+
 app.post('/admin/bans', adminAuth, async (c) => {
   try {
     const body = await c.req.json<{ user_hash?: string; reason?: string }>();
@@ -710,14 +698,14 @@ app.post('/admin/bans', adminAuth, async (c) => {
   }
 });
 
-// 管理员：解封（按 user_hash）
+
 app.delete('/admin/bans/:user_hash', adminAuth, async (c) => {
   const uh = c.req.param('user_hash');
   await c.env.DB.prepare('DELETE FROM banned_users WHERE user_hash = ?').bind(uh).run();
   return c.json({ ok: true });
 });
 
-// ─── Admin Web UI（根地址即为管理后台入口）───
+
 app.get('/', (c) => c.html(getAdminHTML()));
 
 function getAdminHTML(): string {
@@ -980,7 +968,6 @@ function getAdminHTML(): string {
           '<b>提交时间:</b> ' + new Date(e.created_at * 1000).toLocaleString('zh-CN') + '<br>' +
           '<b>内容:</b><br>' + esc(e.content);
         const banBtn = document.getElementById('detailBanBtn');
-        // 仅当存在 user_hash 时显示封号按钮
         banBtn.style.display = e.user_hash ? '' : 'none';
         document.getElementById('detailModal').classList.remove('hidden');
       } catch (e) { toast('加载失败', false); }

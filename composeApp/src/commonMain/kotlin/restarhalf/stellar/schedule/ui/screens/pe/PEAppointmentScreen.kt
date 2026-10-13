@@ -71,12 +71,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-/**
- * 学生体测预约屏幕
- *
- * 对齐真实接口链路：
- * 列表 → 详情（选日期）→ 选时段 → appointmentEnter
- */
+
 @Composable
 fun PEAppointmentScreen(
     vm: PEAppointmentViewModel,
@@ -353,7 +348,7 @@ private fun BookingSheet(
         summary = state.item.appointmentName.ifBlank { "选择日期与时段" },
         onDismissRequest = { if (!actionInFlight) onDismiss() },
     ) {
-        // 按钮固定在底部，中间内容可滚动，避免时段过多把按钮挤出可视区
+
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -558,7 +553,7 @@ private fun AppointmentListPage(
             },
         ) { item ->
             val canAct = if (isMy) canCancelAppointment(item) else canEnterAppointment(item)
-            // 报名结束后与「取消预约」一同收起「打开预约页」入口
+
             val canOpenWeb = isMy && canCancelAppointment(item)
             AppCard(
                 modifier = Modifier

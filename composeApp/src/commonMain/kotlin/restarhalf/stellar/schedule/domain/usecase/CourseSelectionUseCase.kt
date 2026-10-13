@@ -20,33 +20,24 @@ import restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import kotlin.runCatching
 
-/**
- * 选课抢课用例
- *
- * 封装教务系统选课相关单次操作：加载轮次、初始化会话、加载课程、提交选课、退课。
- * 抢课的循环重试逻辑由 [restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel] 管理，
- * 本用例只负责每次操作的请求与解析。
- *
- * @param gateway 教务系统网关
- * @param authWorkflow 认证工作流，用于确保已登录
- */
+
 class CourseSelectionUseCase(
     private val gateway: JwxtGateway,
     private val authWorkflow: JwxtAuthWorkflowPort,
 ) {
 
-    /** 初始化会话后返回的上下文，后续选课/退课都需要带上 */
+    
     data class SessionContext(
         val rotationId: String,
         val sessionTime: String,
         val classifications: List<JwxtSelectionClassification>,
-        /** 选课规则位，原样回传给选课/退课接口 */
+        
         val extraRules: Map<String, String>,
     )
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    /** 加载选课轮次列表 */
+    
     suspend fun loadRotations(): List<JwxtSelectionRotation> {
         authWorkflow.ensureLoggedIn()
         val resp = gateway.fetchSelectionRotations(isnew = 1)
@@ -56,7 +47,7 @@ class CourseSelectionUseCase(
         return parseList(resp.data, JwxtSelectionRotation.serializer(), "选课轮次列表")
     }
 
-    /** 进入选课轮次并初始化会话 */
+    
     suspend fun initSession(rotationId: String): SessionContext {
         authWorkflow.ensureLoggedIn()
         val resp = gateway.initSelectionSession(rotationId)
@@ -66,11 +57,7 @@ class CourseSelectionUseCase(
         return parseSessionContext(rotationId, resp.data)
     }
 
-    /**
-     * 加载指定分类下的可选课程列表。
-     *
-     * @param courseInformation 课程名称搜索关键词（原样回传给 wxgetKcList 的 courseInformation 参数，空串不筛选）
-     */
+    
     suspend fun loadCourses(
         ctx: SessionContext,
         classificationCode: String,
@@ -89,14 +76,7 @@ class CourseSelectionUseCase(
         return parseList(resp.data, JwxtSelectionCourse.serializer(), "课程列表")
     }
 
-    /**
-     * 提交一次选课。
-     *
-     * 对于 success_needcf（需选关联教学班）的响应，自动尝试选关联课程列表中
-     * noticeId == yxjx0404id 的教学班，最多重试 [MAX_NEEDCF_DEPTH] 次。
-     *
-     * @return 最终的选课结果
-     */
+    
     suspend fun submitOnce(
         ctx: SessionContext,
         classificationCode: String,
@@ -124,7 +104,7 @@ class CourseSelectionUseCase(
                 "needcf: yxcfbs=${result.yxcfbs}, cfbs=${result.cfbs}, xkkcid=${result.xkkcid}, yxjx0404id=$relatedNoticeId, msg=${result.message}",
             )
 
-            // 重新拉取课程列表，找到与 yxjx0404id 匹配的教学班
+
             val courses = runCatching {
                 loadCourses(ctx, classificationCode)
             }.getOrElse { e ->
@@ -141,7 +121,7 @@ class CourseSelectionUseCase(
                 return result
             }
 
-            // 携带前一次已选的教学班作为 selectedNoticeId
+
             val prevNoticeId = currentCourse.noticeId
             val prevSplit = currentCourse.splitIdentification
             result = gateway.submitSelection(
@@ -160,7 +140,7 @@ class CourseSelectionUseCase(
         return result
     }
 
-    /** 退课 */
+    
     suspend fun drop(ctx: SessionContext, noticeId: String): JwxtSelectionResponse {
         return gateway.dropSelection(
             rotationId = ctx.rotationId,
@@ -170,7 +150,7 @@ class CourseSelectionUseCase(
         )
     }
 
-    /** 加载已选课程列表（用于退课，isCanTk=1 表示可退课） */
+    
     suspend fun loadSelectedCourses(ctx: SessionContext): List<JwxtSelectedCourse> {
         val resp = gateway.fetchSelectedCourses(rotationId = ctx.rotationId)
         if (!resp.isSuccess()) {
@@ -179,13 +159,13 @@ class CourseSelectionUseCase(
         return parseList(resp.data, JwxtSelectedCourse.serializer(), "已选课程列表")
     }
 
-    /** 刷新会话（token 过期或 sessionTime 失效时调用） */
+    
     suspend fun refreshSession(rotationId: String): SessionContext {
         authWorkflow.refreshSession()
         return initSession(rotationId)
     }
 
-    /** 解析 JSON 数组元素为列表 */
+    
     private fun <T> parseList(
         data: JsonElement?,
         serializer: kotlinx.serialization.KSerializer<T>,
@@ -200,7 +180,7 @@ class CourseSelectionUseCase(
         }
     }
 
-    /** 从 wxinitXscache 响应中解析 sessionTime、分类列表与规则位 */
+    
     private fun parseSessionContext(
         rotationId: String,
         data: JsonElement?,
@@ -242,10 +222,10 @@ class CourseSelectionUseCase(
     }
 
     private companion object {
-        /** needcf 关联教学班自动选择的最大深度，防止无限循环 */
+        
         const val MAX_NEEDCF_DEPTH = 3
 
-        /** wxinitXscache 返回的布尔规则位字段名，回传给后续接口 */
+        
         val BOOL_RULE_KEYS = listOf(
             "compulsorySemester",
             "compulsorySelection",

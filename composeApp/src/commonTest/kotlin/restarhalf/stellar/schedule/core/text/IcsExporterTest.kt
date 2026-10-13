@@ -20,10 +20,8 @@ class IcsExporterTest {
         TimetableSlot(num = 2, start = "08:55", end = "09:40"),
     )
 
-    /** 固定学期起点：2026-03-04T00:00:00Z（周三），学期周一 = 2026-03-02 */
     private val termStartInstant = Instant.parse("2026-03-04T00:00:00Z")
 
-    /** 与生产同源的学期周一推导（用于独立计算期望日期） */
     private val termStartMonday: kotlinx.datetime.LocalDate = run {
         val date = termStartInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
         date.minus(date.dayOfWeek.ordinal, DateTimeUnit.DAY)
@@ -101,7 +99,7 @@ class IcsExporterTest {
         val dtStart = lines.first { it.startsWith("DTSTART:") }.removePrefix("DTSTART:")
         val dtEnd = lines.first { it.startsWith("DTEND:") }.removePrefix("DTEND:")
         assertEquals(stamp(expectedDate(1, 1), 8, 0), dtStart)
-        // DTEND = 第 (startSection + sectionCount - 1) 节的 end：占第1、2节 → 第2节下课 09:40
+
         assertEquals(stamp(expectedDate(1, 1), 9, 40), dtEnd)
     }
 

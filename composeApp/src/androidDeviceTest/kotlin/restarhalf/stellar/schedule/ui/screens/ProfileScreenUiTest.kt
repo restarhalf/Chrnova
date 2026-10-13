@@ -19,13 +19,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 个人资料页 Compose UI 测试（Ultron KMP 入口）。
- *
- * PersonalInfoViewModel 手动构造（settingsPort mock，VM init 读取头像/昵称）。
- * 两个退出确认对话框均为 WindowDialog 独立窗口（主窗口语义树不可见），
- * 仅断言门控行为："退出登录"入口存在、未登录分区不渲染。
- */
+
 class ProfileScreenUiTest {
 
     private val settingsPort = mock<SettingsPort>(MockMode.autofill)
@@ -81,7 +75,7 @@ class ProfileScreenUiTest {
             }
         }
         waitText("教务系统")
-        // stdNumber 为空 → isPeLoggedIn=false → 体测平台分区不渲染
+
         assertEquals(0, onAllNodesWithText("体测平台").fetchSemanticsNodes().size)
     }
 }

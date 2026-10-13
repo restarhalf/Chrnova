@@ -27,14 +27,14 @@ interface AdConfig {
   updated_at: number;
 }
 
-/** 宽松 URL 校验：仅要求 http(s):// 开头，避免把明显非链接串入库 */
+
 const URL_RE = /^https?:\/\/.+/i;
 
-/** 字段上限：与客户端模型对应，防止超长内容拖垮列表与详情页 */
+
 const MAX_TITLE_LEN = 200;
 const MAX_CONTENT_LEN = 20000;
 
-/** 恒定时间比较，避免令牌逐字节爆破 */
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -42,12 +42,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/**
- * 校验管理令牌。
- * 关键：`!expected` 守卫——若 ADMIN_TOKEN 未通过 `wrangler secret put` 配置，
- * env 值为 undefined，而未带 Authorization 头时 token 同样是 undefined，
- * 直接用 `!==` 比较会让两者相等从而放行。必须显式拒绝未配置的情况。
- */
+
 function isAdmin(c: any): boolean {
   const expected = c.env.ADMIN_TOKEN;
   if (!expected) return false;
@@ -60,10 +55,7 @@ function clientIp(c: any): string {
   return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
 }
 
-/**
- * 进程内滑动窗口限流（轻量，防单实例滥用）。
- * 注意：Cloudflare Worker 实例间状态不共享，分布式限流需改用 KV / Durable Object。
- */
+
 const rateBuckets = new Map<string, { count: number; reset: number }>();
 function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
   const now = Date.now();
@@ -77,7 +69,7 @@ function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
   return true;
 }
 
-/** 校验新增/编辑入参，返回错误信息（null 表示合法） */
+
 function validateInput(body: any): string | null {
   if (typeof body.title !== 'string' || body.title.trim() === '') {
     return '标题不能为空';
@@ -102,7 +94,7 @@ function validateInput(body: any): string | null {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS 仅对公开只读接口开放，且限定为自有前端域；管理接口同源（管理后台同源部署），无需 CORS。
+
 const CORS_ORIGINS = [
   'https://chrnova.restarhalf.dpdns.org',
   'http://localhost:5173',
@@ -112,9 +104,9 @@ app.use('/announcements', cors({ origin: CORS_ORIGINS }));
 app.use('/announcements/*', cors({ origin: CORS_ORIGINS }));
 app.use('/ad', cors({ origin: CORS_ORIGINS }));
 
-// ─── 公开只读接口（仅返回已发布） ───
 
-// Get published announcements
+
+
 app.get('/announcements', async (c) => {
   const limitParam = c.req.query('limit');
   const limit = Math.min(Math.max(parseInt(limitParam || '50', 10) || 50, 1), 100);
@@ -126,7 +118,7 @@ app.get('/announcements', async (c) => {
   return c.json(result.results.map((a) => toWireAnnouncement(a, new URL(c.req.url).origin)));
 });
 
-// Get published announcement detail
+
 app.get('/announcements/:id', async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
@@ -139,8 +131,8 @@ app.get('/announcements/:id', async (c) => {
   return c.json(toWireAnnouncement(result, new URL(c.req.url).origin));
 });
 
-// 运行时自愈：确保 ad_config 表存在（与 src/schema.sql 结构一致）。
-// 即使部署后未手动执行迁移，接口也能自动建表，避免 "no such table" 导致 500。
+
+
 async function ensureAdTable(c: any): Promise<void> {
   await c.env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS ad_config (
@@ -154,13 +146,13 @@ async function ensureAdTable(c: any): Promise<void> {
   ).run();
 }
 
-// 公告列表页顶部广告位：单例配置（ad_config.id=1）
+
 app.get('/ad', async (c) => {
   await ensureAdTable(c);
   const row = await c.env.DB.prepare(
     'SELECT * FROM ad_config WHERE id = 1'
   ).first<AdConfig>();
-  // 未配置 / 未启用 / 三个字段全空 → 返回 null，客户端据此隐藏广告位
+
   if (!row || !row.enabled) return c.json(null);
   if (!row.image_url && !row.target_url && !row.announcement_id) return c.json(null);
   const origin = new URL(c.req.url).origin;
@@ -171,7 +163,7 @@ app.get('/ad', async (c) => {
   });
 });
 
-// ─── 管理接口（Bearer ADMIN_TOKEN） ───
+
 
 const adminAuth = async (c: any, next: any) => {
   if (!isAdmin(c)) {
@@ -180,8 +172,8 @@ const adminAuth = async (c: any, next: any) => {
   await next();
 };
 
-// Admin: list all announcements (含草稿；管理端需要 status 字段，返回原始行)
-// 广告位配置（单例 id=1）随公告列表一起下发，不再单独提供 /admin/api/ad 读接口
+
+
 app.get('/admin/api/announcements', adminAuth, async (c) => {
   const result = await c.env.DB.prepare(
     'SELECT * FROM announcements ORDER BY pinned DESC, created_at DESC'
@@ -201,7 +193,7 @@ app.get('/admin/api/announcements', adminAuth, async (c) => {
   return c.json({ items: result.results, adConfig });
 });
 
-// Admin: get detail
+
 app.get('/admin/api/announcements/:id', adminAuth, async (c) => {
   const id = c.req.param('id');
   const result = await c.env.DB.prepare(
@@ -211,7 +203,7 @@ app.get('/admin/api/announcements/:id', adminAuth, async (c) => {
   return c.json(result);
 });
 
-// Admin: create
+
 app.post('/admin/api/announcements', adminAuth, async (c) => {
   if (!rateLimit(`admin:${clientIp(c)}`, 30, 60)) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
@@ -252,7 +244,7 @@ app.post('/admin/api/announcements', adminAuth, async (c) => {
   return c.json(created, 201);
 });
 
-// Admin: update
+
 app.patch('/admin/api/announcements/:id', adminAuth, async (c) => {
   if (!rateLimit(`admin:${clientIp(c)}`, 30, 60)) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
@@ -302,7 +294,7 @@ app.patch('/admin/api/announcements/:id', adminAuth, async (c) => {
   return c.json(updated);
 });
 
-// Admin: delete
+
 app.delete('/admin/api/announcements/:id', adminAuth, async (c) => {
   if (!rateLimit(`admin:${clientIp(c)}`, 20, 60)) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
@@ -318,7 +310,7 @@ app.delete('/admin/api/announcements/:id', adminAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// Admin: upsert ad config（单例，id 固定为 1；读取已并入 GET /admin/api/announcements）
+
 app.put('/admin/api/ad', adminAuth, async (c) => {
   await ensureAdTable(c);
   if (!rateLimit(`admin:${clientIp(c)}`, 30, 60)) {
@@ -369,15 +361,15 @@ app.put('/admin/api/ad', adminAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-// ─── 图片上传（代理 imgbb，API key 仅存于 Worker secret，不暴露给前端/客户端） ───
 
-/** 单张图片上限：imgbb 免费 key 单图上限 32MB，这里保守限制 10MB */
+
+
 const MAX_IMG_BYTES = 10 * 1024 * 1024;
 const IMG_DATA_URI_RE = /^data:image\/(jpeg|png|webp|gif);base64,([A-Za-z0-9+/=]+)$/;
 
-// Admin: upload image → imgbb，返回可直链访问的图片 URL
+
 app.post('/admin/api/upload', adminAuth, async (c) => {
-  // 与 ADMIN_TOKEN 相同思路：key 未配置时显式拒绝，避免误以为可用
+
   if (!c.env.IMG_BB_API_KEY) {
     return c.json({ error: '服务器未配置 IMG_BB_API_KEY' }, 500);
   }
@@ -397,8 +389,8 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
   if (!m) {
     return c.json({ error: '仅支持 jpeg/png/webp/gif 图片' }, 400);
   }
-  // imgbb 的 image 参数要求纯 base64：带 `data:image/...;base64,` 前缀会被其校验
-  // 拒绝（"Invalid base64 string."）。剥掉前缀，并按 base64 长度估算解码后字节数。
+
+
   const base64 = m[2].replace(/\s+/g, '');
   const approxBytes = Math.floor((base64.length * 3) / 4);
   if (approxBytes > MAX_IMG_BYTES) {
@@ -433,12 +425,7 @@ app.post('/admin/api/upload', adminAuth, async (c) => {
   });
 });
 
-/**
- * 转换对外输出：剥离 status 管理字段，并把 DB 的 pinned 0/1 转为布尔，
- * 与客户端 @Serializable 模型（pinned: Boolean）一一对应。
- * 同时把正文中直连图床的地址改写为本 Worker 的 /img 反代——
- * imgbb 的 i.ibb.co 在大陆网络经常不可达，走自有域名过 Cloudflare 更稳。
- */
+
 function toWireAnnouncement(
   a: Announcement,
   origin: string,
@@ -447,7 +434,7 @@ function toWireAnnouncement(
   return { ...rest, content: rewriteImageUrls(a.content, origin), pinned: !!pinned };
 }
 
-/** 允许反代的图床域名（含子域） */
+
 const IMG_PROXY_HOSTS = ['ibb.co'];
 const IMG_PROXY_URL_RE = new RegExp(
   `https?://([a-z0-9-]+\\.)*(${IMG_PROXY_HOSTS.join('|').replace(/\./g, '\\.')})/[^\\s)\\]]+`,
@@ -459,10 +446,7 @@ function rewriteImageUrls(content: string, origin: string): string {
   return content.replace(IMG_PROXY_URL_RE, (m) => `${origin}/img?url=${encodeURIComponent(m)}`);
 }
 
-/**
- * 单条图片 URL 的反代改写：ibb.co（含子域）走本 Worker 的 /img 反代，
- * 绕开 imgbb 大陆直连不可达；其余域名（如自有 CDN）原样返回，避免被 /img 的白名单拒绝。
- */
+
 function maybeProxyImage(url: string, origin: string): string {
   try {
     const u = new URL(url);
@@ -471,12 +455,12 @@ function maybeProxyImage(url: string, origin: string): string {
       IMG_PROXY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
     if (proxied) return `${origin}/img?url=${encodeURIComponent(url)}`;
   } catch {
-    /* 非法 URL 原样返回，由上层校验拦截 */
+    
   }
   return url;
 }
 
-// ─── 图片反代（公开）：客户端经自有域名拉取图床资源 ───
+
 
 app.get('/img', async (c) => {
   const raw = c.req.query('url') || '';
@@ -492,7 +476,7 @@ app.get('/img', async (c) => {
   if (!allowed) {
     return c.json({ error: 'Host not allowed' }, 400);
   }
-  // 图片请求数远多于写接口，限流阈值放宽；进程内窗口仅防单实例滥用
+
   if (!rateLimit(`img:${clientIp(c)}`, 120, 60)) {
     return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
   }
@@ -516,12 +500,12 @@ app.get('/img', async (c) => {
     'Content-Type',
     upstream.headers.get('Content-Type') || 'application/octet-stream',
   );
-  // 图床直链内容不变，可长缓存，减轻 Worker 与图床压力
+
   headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   return new Response(upstream.body, { status: 200, headers });
 });
 
-// ─── Admin Web UI ───
+
 
 app.get('/', (c) => {
   return c.html(getAdminHTML());
@@ -782,7 +766,6 @@ function getAdminHTML(): string {
 
     function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
 
-    // ─── 广告位配置（随公告列表一起加载，无需单独请求） ───
     function openAd() {
       const ad = adConfig || { imageUrl: '', targetUrl: '', announcementId: '', enabled: false };
       const sel = document.getElementById('adAnnouncementId');
@@ -876,7 +859,6 @@ function getAdminHTML(): string {
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-    // ─── 图片上传：FileReader 读 data URI → /admin/api/upload → 光标处插入 ![图片](url) ───
     document.getElementById('imgInput').addEventListener('change', uploadImage);
 
     async function uploadImage() {
@@ -899,8 +881,6 @@ function getAdminHTML(): string {
         const dataUri = await readAsDataURL(file);
         const res = await apiFetch('/admin/api/upload', { method: 'POST', body: JSON.stringify({ image: dataUri }) });
         const data = await res.json();
-        // 直链经本 Worker 的 /img 反代下发，绕开 imgbb 大陆直连不可达问题；
-        // 公开接口返回时也会对历史直链自动改写，这里提前写入保持一致
         const proxied = location.origin + '/img?url=' + encodeURIComponent(data.url);
         insertAtCursor('editContent', '![图片](' + proxied + ')\\n');
         toast('图片已上传，将显示在公告正文', true);

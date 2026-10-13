@@ -22,12 +22,7 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-/**
- * 更换背景页 Compose UI 测试（Ultron KMP 入口）。
- *
- * BackgroundViewModel(port) 手动构造，observe 流用 MutableStateFlow 模拟，
- * 可验证 imageUri 变化驱动的响应式 UI（纯色/自定义切换 + 清除图片项出现）。
- */
+
 class ChangeBackgroundScreenUiTest {
 
     private val port = mock<BackgroundSettingsPort>(MockMode.autofill)
@@ -42,7 +37,7 @@ class ChangeBackgroundScreenUiTest {
         every { port.observeBackgroundAlpha() } returns alphaFlow
         every { port.observeBackgroundBlur() } returns blurFlow
         every { port.observeComponentsAlpha() } returns componentsAlphaFlow
-        // setter 回写 observe 流，模拟真实设置的响应式链路
+
         every { port.setBackgroundImageUri(any()) } calls { (uri: String?) -> imageUriFlow.value = uri }
     }
 
@@ -91,7 +86,7 @@ class ChangeBackgroundScreenUiTest {
         }
         onNodeWithText("清除图片").assertExists()
         onNodeWithText("恢复为纯色背景").assertExists()
-        // 清除图片走 VM 回写 null
+
         onNodeWithText("清除图片").performSemanticsAction(SemanticsActions.OnClick)
         waitUntil(timeoutMillis = 3_000) { imageUriFlow.value == null }
         assertEquals(null, imageUriFlow.value)

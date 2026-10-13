@@ -55,19 +55,7 @@ import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 体育成绩屏幕
- *
- * 显示体测成绩列表，支持：
- * - 登录体育系统
- * - 查看年度体测成绩
- * - 点击查看详情
- * - 下拉刷新
- * - 登出功能
- *
- * @param onNavigateToDetail 导航到成绩详情页面的回调
- * @param onQRCode 导航到二维码页面的回调
- */
+
 @Composable
 fun PEScoreScreen(
     vm: PEViewModel,
