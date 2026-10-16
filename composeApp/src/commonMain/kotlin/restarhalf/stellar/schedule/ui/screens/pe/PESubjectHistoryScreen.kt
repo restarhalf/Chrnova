@@ -47,6 +47,14 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+private fun formatHistoryResult(result: String?, unit: String): String {
+    if (result.isNullOrBlank()) return "--"
+    if (!unit.contains("kg/m", ignoreCase = true)) return result + unit
+    val parts = result.split(",")
+    if (parts.size != 2) return result
+    return "${parts[0].trim()}cm / ${parts[1].trim()}kg"
+}
+
 @Composable
 fun PESubjectHistoryScreen(
     vm: PEViewModel,
@@ -183,7 +191,7 @@ fun PESubjectHistoryScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "${record.result ?: "--"}${data.unit}",
+                                        text = formatHistoryResult(record.result, data.unit),
                                         style = MiuixTheme.textStyles.title4,
                                         fontWeight = FontWeight.SemiBold
                                     )

@@ -82,6 +82,9 @@ android {
             storePassword = localProps["KEYSTORE_PASS"] as? String ?: System.getenv("KEYSTORE_PASS")
             keyAlias = localProps["KEY_ALIAS"] as? String ?: System.getenv("KEY_ALIAS")
             keyPassword = localProps["KEY_PASSWORD"] as? String ?: System.getenv("KEY_PASSWORD")
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
         }
         create("release") {
             storeFile = localProps["KEYSTORE_PATH"]?.let { file(it) }
@@ -89,6 +92,9 @@ android {
             storePassword = localProps["KEYSTORE_PASS"] as? String ?: System.getenv("KEYSTORE_PASS")
             keyAlias = localProps["KEY_ALIAS"] as? String ?: System.getenv("KEY_ALIAS")
             keyPassword = localProps["KEY_PASSWORD"] as? String ?: System.getenv("KEY_PASSWORD")
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
         }
     }
     namespace = "restarhalf.stellar.schedule.androidapp"
