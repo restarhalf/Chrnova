@@ -26,7 +26,7 @@ import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
+import restarhalf.stellar.schedule.ui.model.home.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase

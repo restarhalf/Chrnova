@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.ui.model.home
 
 import androidx.compose.runtime.Stable
 import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek

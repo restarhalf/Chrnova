@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.ui.model.home
 
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns

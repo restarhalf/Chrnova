@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import restarhalf.stellar.schedule.ui.model.ExamUi
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -43,17 +43,6 @@ fun HomeExamSection(
         }
     }
 }
-
-@Immutable
-data class ExamUi(
-    val title: String,
-    val startTime: String,
-    val endTime: String,
-    val location: String,
-    val accentCourseName: String,
-    val isEnded: Boolean,
-    val isStarted: Boolean,
-)
 
 @Composable
 private fun ExamRow(

@@ -1,7 +1,7 @@
-package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.ui.model.home
 
 import androidx.compose.runtime.Immutable
-import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase.PeriodItem
+import restarhalf.stellar.schedule.ui.model.home.BuildHomeTodayScheduleUseCase.PeriodItem
 
 class BuildHomePeriodRowUiUseCase {
 

@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRenderRowsUseCase
+import restarhalf.stellar.schedule.ui.model.home.BuildHomePeriodRenderRowsUseCase
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme

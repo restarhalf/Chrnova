@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.ui.model.home
 
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime

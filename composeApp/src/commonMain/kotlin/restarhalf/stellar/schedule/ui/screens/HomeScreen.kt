@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.Campus
-import restarhalf.stellar.schedule.domain.usecase.BuildHomeSurfaceUiUseCase
+import restarhalf.stellar.schedule.ui.model.home.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomeExamSection
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
 import restarhalf.stellar.schedule.ui.icons.Notifications

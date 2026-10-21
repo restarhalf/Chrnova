@@ -33,7 +33,7 @@ import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
+import restarhalf.stellar.schedule.ui.model.home.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher

@@ -1,9 +1,9 @@
-package restarhalf.stellar.schedule.domain.usecase
+package restarhalf.stellar.schedule.ui.model.home
 
 import androidx.compose.runtime.Stable
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.domain.usecase.BuildHomePeriodRowUiUseCase.RowUi
-import restarhalf.stellar.schedule.domain.usecase.BuildHomeTodayScheduleUseCase.PeriodItem
+import restarhalf.stellar.schedule.ui.model.home.BuildHomePeriodRowUiUseCase.RowUi
+import restarhalf.stellar.schedule.ui.model.home.BuildHomeTodayScheduleUseCase.PeriodItem
 
 class BuildHomePeriodRenderRowsUseCase(
     private val buildHomeTodayScheduleUseCase: BuildHomeTodayScheduleUseCase,
