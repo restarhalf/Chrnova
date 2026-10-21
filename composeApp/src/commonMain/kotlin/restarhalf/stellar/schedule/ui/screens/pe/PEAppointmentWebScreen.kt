@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import org.koin.compose.koinInject
-import restarhalf.stellar.schedule.data.remote.PEAuthStore
+import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
@@ -27,11 +27,11 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun PEAppointmentWebScreen(
     onBack: () -> Unit,
-    authStore: PEAuthStore = koinInject(),
+    peAuth: PEAuthPort = koinInject(),
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val token = authStore.getToken()
-    val userId = authStore.getUserId()
+    val token = peAuth.getToken()
+    val userId = peAuth.getUserId()
     val canAutoLogin = !token.isNullOrBlank() && !userId.isNullOrBlank()
 
     Scaffold(

@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.serialization.SerializationException
-import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
+import restarhalf.stellar.schedule.domain.error.PETokenExpiredException
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 

@@ -16,16 +16,16 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import restarhalf.stellar.schedule.data.remote.PEAuthProfile as PEAuthProfileDto
-import restarhalf.stellar.schedule.data.remote.PEAuthProfileResponse
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PEDetailResponse
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.remote.PEScoreListResponse
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryData
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryItem
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryResponse
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEAuthProfile as PEAuthProfileDto
+import restarhalf.stellar.schedule.domain.model.PEAuthProfileResponse
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PEDetailResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryData
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryItem
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryResponse
+import restarhalf.stellar.schedule.domain.model.PEYearScore
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort

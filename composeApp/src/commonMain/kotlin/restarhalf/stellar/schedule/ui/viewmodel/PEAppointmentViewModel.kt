@@ -21,9 +21,9 @@ import kotlinx.datetime.toInstant
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.PEAppointmentDetail
-import restarhalf.stellar.schedule.data.remote.PEAppointmentItem
-import restarhalf.stellar.schedule.data.remote.PEAppointmentTimeSlot
+import restarhalf.stellar.schedule.domain.model.PEAppointmentDetail
+import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
+import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEAppointmentDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAppointmentListUseCase

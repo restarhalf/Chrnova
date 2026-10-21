@@ -5,9 +5,9 @@ import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 import restarhalf.stellar.schedule.data.local.Campus as DataCampus
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PESubjectScore
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PESubjectScore
+import restarhalf.stellar.schedule.domain.model.PEYearScore
 import restarhalf.stellar.schedule.domain.model.Campus as DomainCampus
 import kotlin.test.Test
 import kotlin.test.assertEquals

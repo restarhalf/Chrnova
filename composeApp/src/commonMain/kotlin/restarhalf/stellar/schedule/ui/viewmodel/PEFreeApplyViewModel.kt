@@ -18,9 +18,8 @@ import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.PEAuthStore
-import restarhalf.stellar.schedule.data.remote.PECodeItem
-import restarhalf.stellar.schedule.data.remote.PEFreeApplyItem
+import restarhalf.stellar.schedule.domain.model.PECodeItem
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyItem
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
 import restarhalf.stellar.schedule.ui.image.isImageAttachment
@@ -29,7 +28,6 @@ import restarhalf.stellar.schedule.ui.image.isImageAttachment
 class PEFreeApplyViewModel(
     private val useCase: PEFreeApplyUseCase,
     private val peAuth: PEAuthPort,
-    private val authStore: PEAuthStore,
 ) : ViewModel() {
 
     @Stable
@@ -285,7 +283,7 @@ class PEFreeApplyViewModel(
 
     fun submitApply() {
         val state = _uiState.value
-        val stdNumber = authStore.getStdNumber().orEmpty()
+        val stdNumber = peAuth.getStdNumber().orEmpty()
         when {
             stdNumber.isBlank() -> {
                 _uiState.update { it.copy(error = "缺少学号，请先完善体测系统资料") }

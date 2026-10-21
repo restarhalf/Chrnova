@@ -1,6 +1,13 @@
 package restarhalf.stellar.schedule.data.remote
 
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.domain.model.PEAppointmentListResponse
+import restarhalf.stellar.schedule.domain.model.PEAuthProfileResponse
+import restarhalf.stellar.schedule.domain.model.PEDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyListResponse
+import restarhalf.stellar.schedule.domain.model.PELoginResponse
+import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryResponse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

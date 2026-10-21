@@ -38,7 +38,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import restarhalf.stellar.schedule.data.remote.PEFreeApplyAtt
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyAtt
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.image.attachmentBadgeLabel

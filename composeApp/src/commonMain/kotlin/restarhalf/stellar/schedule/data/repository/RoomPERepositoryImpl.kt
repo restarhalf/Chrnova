@@ -7,20 +7,21 @@ import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PEYearScore
+import restarhalf.stellar.schedule.domain.repository.PERepository
 
-class RoomPERepository(
+class RoomPERepositoryImpl(
     private val peYearScoreDao: PEYearScoreDao,
     private val peDetailDao: PEDetailDao
-) {
-    fun observeAllScores(): Flow<List<PEYearScore>> {
+) : PERepository {
+    override fun observeAllScores(): Flow<List<PEYearScore>> {
         return peYearScoreDao.observeAllScores().map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    fun observeDetailData(schoolYear: String): Flow<PEDetailData?> {
+    override fun observeDetailData(schoolYear: String): Flow<PEDetailData?> {
         return combine(
             peDetailDao.observeDetailSummary(schoolYear),
             peDetailDao.observeDetailScores(schoolYear)
@@ -29,16 +30,16 @@ class RoomPERepository(
         }
     }
 
-    suspend fun replaceScores(scores: List<PEYearScore>) {
+    override suspend fun replaceScores(scores: List<PEYearScore>) {
         peYearScoreDao.replaceAll(scores.map { it.toEntity() })
     }
 
-    suspend fun saveDetailData(schoolYear: String, detail: PEDetailData) {
+    override suspend fun saveDetailData(schoolYear: String, detail: PEDetailData) {
         val (summaries, scores) = detail.toEntity(schoolYear)
         peDetailDao.replaceDetailByYear(schoolYear, summaries.firstOrNull(), scores)
     }
 
-    suspend fun clearAll() {
+    override suspend fun clearAll() {
         peDetailDao.deleteAllPeData()
     }
 }

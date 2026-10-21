@@ -20,9 +20,9 @@ import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryItem
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryItem
+import restarhalf.stellar.schedule.domain.model.PEYearScore
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort

@@ -42,8 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.data.remote.PEAppointmentItem
-import restarhalf.stellar.schedule.data.remote.PEAppointmentTimeSlot
+import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
+import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar

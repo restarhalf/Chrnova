@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.data.mapper
 
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEYearScore
 
 fun PEYearScore.toEntity() = PEYearScoreEntity(
     schoolYear = schoolYear,

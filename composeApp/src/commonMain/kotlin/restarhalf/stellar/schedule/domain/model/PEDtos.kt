@@ -1,11 +1,13 @@
-package restarhalf.stellar.schedule.data.remote
+package restarhalf.stellar.schedule.domain.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
 
 
+@Immutable
 @Serializable
 data class PELoginResponse(
     @SerialName("status") val status: String = "",
@@ -15,6 +17,7 @@ data class PELoginResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEScoreListResponse(
     @SerialName("status") val status: String = "",
@@ -23,6 +26,7 @@ data class PEScoreListResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEYearScore(
     @SerialName("school_year") val schoolYear: String = "",
@@ -33,6 +37,7 @@ data class PEYearScore(
 )
 
 
+@Immutable
 @Serializable
 data class PEDetailResponse(
     @SerialName("status") val status: String = "",
@@ -41,6 +46,7 @@ data class PEDetailResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEDetailData(
     @SerialName("total_score") val totalScore: Double = 0.0,
@@ -49,6 +55,7 @@ data class PEDetailData(
 )
 
 
+@Immutable
 @Serializable
 data class PESubjectScore(
     @SerialName("subject_id") val subjectId: String = "",
@@ -62,6 +69,7 @@ data class PESubjectScore(
 )
 
 
+@Immutable
 @Serializable
 data class PESubjectHistoryResponse(
     @SerialName("status") val status: String = "",
@@ -70,6 +78,7 @@ data class PESubjectHistoryResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PESubjectHistoryData(
     @SerialName("data_list") val dataList: List<PESubjectHistoryItem> = emptyList(),
@@ -77,6 +86,7 @@ data class PESubjectHistoryData(
 )
 
 
+@Immutable
 @Serializable
 data class PESubjectHistoryItem(
     @SerialName("result") val result: String? = null,
@@ -88,6 +98,7 @@ data class PESubjectHistoryItem(
 )
 
 
+@Immutable
 @Serializable
 data class PEAuthProfileResponse(
     @SerialName("status") val status: String = "",
@@ -96,14 +107,7 @@ data class PEAuthProfileResponse(
 )
 
 
-@Serializable
-data class PEAuthProfile(
-    @SerialName("testCode") val testCode: String = "",
-    @SerialName("stuName") val stuName: String = "",
-    @SerialName("stdNumber") val stdNumber: String = "",
-)
-
-
+@Immutable
 @Serializable
 data class PEAppointmentListResponse(
     @SerialName("status") val status: String = "",
@@ -112,6 +116,7 @@ data class PEAppointmentListResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentListData(
     @SerialName("data_list") val dataList: List<PEAppointmentItem> = emptyList(),
@@ -123,6 +128,7 @@ data class PEAppointmentListData(
 }
 
 
+@Immutable
 @Serializable
 data class PEAppointmentItem(
     @SerialName("appointment_id") val appointmentId: String = "",
@@ -144,6 +150,7 @@ data class PEAppointmentItem(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentDetailResponse(
     @SerialName("status") val status: String = "",
@@ -152,6 +159,7 @@ data class PEAppointmentDetailResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentDetail(
     @SerialName("appointment_id") val appointmentId: String = "",
@@ -170,6 +178,7 @@ data class PEAppointmentDetail(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentTimesBrief(
     @SerialName("appointment_times") val appointmentTimes: String = "",
@@ -178,6 +187,7 @@ data class PEAppointmentTimesBrief(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentTimesResponse(
     @SerialName("status") val status: String = "",
@@ -186,6 +196,7 @@ data class PEAppointmentTimesResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEAppointmentTimeSlot(
     @SerialName("times_id") val timesId: String = "",
@@ -200,6 +211,7 @@ data class PEAppointmentTimeSlot(
 }
 
 
+@Immutable
 @Serializable
 data class PEAppointmentActionResponse(
     @SerialName("status") val status: String = "",
@@ -207,6 +219,7 @@ data class PEAppointmentActionResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEFreeApplyListResponse(
     @SerialName("status") val status: String = "",
@@ -215,6 +228,7 @@ data class PEFreeApplyListResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEFreeApplyItem(
     @SerialName("applyId") val applyId: String = "",
@@ -236,6 +250,7 @@ data class PEFreeApplyItem(
 }
 
 
+@Immutable
 @Serializable
 data class PEFreeApplyAtt(
     @SerialName("attId") val attId: String = "",
@@ -243,6 +258,7 @@ data class PEFreeApplyAtt(
 )
 
 
+@Immutable
 @Serializable
 data class PEFreeApplyDetailResponse(
     @SerialName("status") val status: String = "",
@@ -251,6 +267,7 @@ data class PEFreeApplyDetailResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PEFreeSchoolYearResponse(
     @SerialName("status") val status: String = "",
@@ -258,12 +275,14 @@ data class PEFreeSchoolYearResponse(
     @SerialName("data") val data: PEFreeSchoolYearData? = null,
 )
 
+@Immutable
 @Serializable
 data class PEFreeSchoolYearData(
     @SerialName("nowSchoolYear") val nowSchoolYear: String = "",
     @SerialName("dataList") val dataList: List<PECodeItem> = emptyList(),
 )
 
+@Immutable
 @Serializable
 data class PECodeItem(
     @SerialName("code") val code: String = "",
@@ -271,6 +290,7 @@ data class PECodeItem(
 )
 
 
+@Immutable
 @Serializable
 data class PEFreeActionResponse(
     @SerialName("status") val status: String = "",
@@ -279,6 +299,7 @@ data class PEFreeActionResponse(
 )
 
 
+@Immutable
 @Serializable
 data class PECodeListResponse(
     @SerialName("status") val status: String = "",
@@ -286,6 +307,7 @@ data class PECodeListResponse(
     @SerialName("data") val data: PECodeListData? = null,
 )
 
+@Immutable
 @Serializable
 data class PECodeListData(
     @SerialName("free_apply_type") val freeApplyType: List<PECodeItem> = emptyList(),

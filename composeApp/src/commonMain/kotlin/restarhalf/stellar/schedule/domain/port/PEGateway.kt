@@ -1,4 +1,18 @@
-package restarhalf.stellar.schedule.data.remote
+package restarhalf.stellar.schedule.domain.port
+
+import restarhalf.stellar.schedule.domain.model.PEAppointmentActionResponse
+import restarhalf.stellar.schedule.domain.model.PEAppointmentDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEAppointmentListResponse
+import restarhalf.stellar.schedule.domain.model.PEAppointmentTimesResponse
+import restarhalf.stellar.schedule.domain.model.PEAuthProfileResponse
+import restarhalf.stellar.schedule.domain.model.PEDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeActionResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyListResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeSchoolYearResponse
+import restarhalf.stellar.schedule.domain.model.PELoginResponse
+import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryResponse
 
 
 interface PEGateway {

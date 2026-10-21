@@ -9,10 +9,10 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryData
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryItem
-import restarhalf.stellar.schedule.data.remote.PESubjectHistoryResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryData
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryItem
+import restarhalf.stellar.schedule.domain.model.PESubjectHistoryResponse
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import kotlin.test.Test
 import kotlin.test.assertEquals

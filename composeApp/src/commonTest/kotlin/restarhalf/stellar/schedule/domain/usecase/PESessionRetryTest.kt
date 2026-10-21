@@ -6,7 +6,7 @@ import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
-import restarhalf.stellar.schedule.data.remote.PETokenExpiredException
+import restarhalf.stellar.schedule.domain.error.PETokenExpiredException
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import kotlin.test.Test
 import kotlin.test.assertEquals

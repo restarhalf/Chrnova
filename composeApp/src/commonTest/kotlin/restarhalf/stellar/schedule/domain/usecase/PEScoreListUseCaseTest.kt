@@ -10,10 +10,10 @@ import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.data.local.dao.PEDetailDao
 import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.remote.PEScoreListResponse
-import restarhalf.stellar.schedule.data.remote.PEYearScore
-import restarhalf.stellar.schedule.data.repository.RoomPERepository
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
+import restarhalf.stellar.schedule.domain.model.PEYearScore
+import restarhalf.stellar.schedule.data.repository.RoomPERepositoryImpl
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -47,7 +47,7 @@ class PEScoreListUseCaseTest {
     @Test
     fun `repository非空时替换本地成绩`() = runTest {
         val yearScoreDao = mock<PEYearScoreDao>(MockMode.autofill)
-        val repository = RoomPERepository(yearScoreDao, mock<PEDetailDao>(MockMode.autofill))
+        val repository = RoomPERepositoryImpl(yearScoreDao, mock<PEDetailDao>(MockMode.autofill))
         val useCase = PEScoreListUseCase(gateway, authWorkflow, repository)
         everySuspend { gateway.getScoreList() } returns PEScoreListResponse(
             dataArr = listOf(PEYearScore(schoolYear = "2025-2026", total = 95.0))

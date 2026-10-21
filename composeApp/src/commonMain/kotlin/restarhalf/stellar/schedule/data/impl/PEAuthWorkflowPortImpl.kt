@@ -3,15 +3,15 @@ package restarhalf.stellar.schedule.data.impl
 import kotlinx.coroutines.CancellationException
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.repository.RoomPERepository
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 
 class PEAuthWorkflowPortImpl(
     private val gateway: PEGateway,
     private val authStore: PEAuthStore,
-    private val repository: RoomPERepository,
+    private val repository: PERepository,
 ) : PEAuthWorkflowPort {
 
     

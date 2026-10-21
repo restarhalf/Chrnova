@@ -1,16 +1,16 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PEDetailResponse
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.repository.RoomPERepository
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PEDetailResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 class PEScoreDetailUseCase(
     private val gateway: PEGateway,
     private val authWorkflow: PEAuthWorkflowPort,
-    private val repository: RoomPERepository? = null,
+    private val repository: PERepository? = null,
 ) {
     fun observeDetailData(schoolYear: String): Flow<PEDetailData?> =
         repository?.observeDetailData(schoolYear)

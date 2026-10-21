@@ -35,12 +35,13 @@ import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.data.remote.PEClient
-import restarhalf.stellar.schedule.data.remote.PEGateway
+import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.data.remote.PapersApi
 import restarhalf.stellar.schedule.data.repository.RoomCourseRepository
 import restarhalf.stellar.schedule.data.repository.RoomExaminationRepository
 import restarhalf.stellar.schedule.data.repository.RoomGradeRepository
-import restarhalf.stellar.schedule.data.repository.RoomPERepository
+import restarhalf.stellar.schedule.data.repository.RoomPERepositoryImpl
+import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
@@ -212,7 +213,7 @@ val portModule = module {
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
-    single { RoomPERepository(peYearScoreDao = get(), peDetailDao = get()) }
+    single<PERepository> { RoomPERepositoryImpl(peYearScoreDao = get(), peDetailDao = get()) }
 
 
     single(named("papers")) {
@@ -548,7 +549,6 @@ val viewModelModule = module {
         PEFreeApplyViewModel(
             useCase = get(),
             peAuth = get(),
-            authStore = get(),
         )
     }
     viewModel {

@@ -2,8 +2,8 @@ package restarhalf.stellar.schedule.data.mapper
 
 import restarhalf.stellar.schedule.data.local.entity.PEDetailSummaryEntity
 import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PESubjectScore
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PESubjectScore
 
 fun PEDetailData.toEntity(schoolYear: String) = listOf(
     PEDetailSummaryEntity(

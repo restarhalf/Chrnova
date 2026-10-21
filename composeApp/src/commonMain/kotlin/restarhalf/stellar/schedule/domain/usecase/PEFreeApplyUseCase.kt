@@ -1,10 +1,10 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.data.remote.PEFreeActionResponse
-import restarhalf.stellar.schedule.data.remote.PEFreeApplyDetailResponse
-import restarhalf.stellar.schedule.data.remote.PEFreeApplyListResponse
-import restarhalf.stellar.schedule.data.remote.PEFreeSchoolYearResponse
-import restarhalf.stellar.schedule.data.remote.PEGateway
+import restarhalf.stellar.schedule.domain.model.PEFreeActionResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeApplyListResponse
+import restarhalf.stellar.schedule.domain.model.PEFreeSchoolYearResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 class PEFreeApplyUseCase(

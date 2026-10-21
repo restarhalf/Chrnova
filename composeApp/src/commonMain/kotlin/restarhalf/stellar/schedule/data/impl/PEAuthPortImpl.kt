@@ -51,4 +51,10 @@ class PEAuthPortImpl(
     override fun clear() {
         authStore.clear()
     }
+
+    override fun getToken(): String? = authStore.getToken()
+
+    override fun getUserId(): String? = authStore.getUserId()
+
+    override fun getStdNumber(): String? = authStore.getStdNumber()
 }

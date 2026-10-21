@@ -1,8 +1,8 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.data.remote.PEAppointmentDetailResponse
-import restarhalf.stellar.schedule.data.remote.PEAppointmentTimesResponse
-import restarhalf.stellar.schedule.data.remote.PEGateway
+import restarhalf.stellar.schedule.domain.model.PEAppointmentDetailResponse
+import restarhalf.stellar.schedule.domain.model.PEAppointmentTimesResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 class PEAppointmentDetailUseCase(

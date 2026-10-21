@@ -16,9 +16,9 @@ import restarhalf.stellar.schedule.data.local.dao.PEYearScoreDao
 import restarhalf.stellar.schedule.data.local.entity.PEDetailSummaryEntity
 import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
-import restarhalf.stellar.schedule.data.remote.PEDetailData
-import restarhalf.stellar.schedule.data.remote.PESubjectScore
-import restarhalf.stellar.schedule.data.remote.PEYearScore
+import restarhalf.stellar.schedule.domain.model.PEDetailData
+import restarhalf.stellar.schedule.domain.model.PESubjectScore
+import restarhalf.stellar.schedule.domain.model.PEYearScore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -40,7 +40,7 @@ class RoomPERepositoryTest {
         every { observeDetailScores(any()) } returns detailScores
     }
 
-    private val repo = RoomPERepository(yearDao, detailDao)
+    private val repo = RoomPERepositoryImpl(yearDao, detailDao)
 
     @Test
     fun observeAllScoresMapsToDomain() = runTest {

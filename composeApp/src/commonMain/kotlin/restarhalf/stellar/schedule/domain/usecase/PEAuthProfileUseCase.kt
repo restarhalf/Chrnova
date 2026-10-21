@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.data.remote.PEGateway
-import restarhalf.stellar.schedule.data.remote.PEAuthProfileResponse
+import restarhalf.stellar.schedule.domain.port.PEGateway
+import restarhalf.stellar.schedule.domain.model.PEAuthProfileResponse
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort

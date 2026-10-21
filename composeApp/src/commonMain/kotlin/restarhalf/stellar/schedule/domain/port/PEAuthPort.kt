@@ -17,6 +17,15 @@ interface PEAuthPort {
     
     fun setCredentials(username: String, password: String)
 
-    
+
     fun clear()
+
+
+    fun getToken(): String?
+
+
+    fun getUserId(): String?
+
+
+    fun getStdNumber(): String?
 }
