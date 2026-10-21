@@ -3,31 +3,31 @@ package restarhalf.stellar.schedule.domain.usecase
 import dev.mokkery.MockMode
 import dev.mokkery.answering.calls
 import dev.mokkery.answering.returns
+import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
-import restarhalf.stellar.schedule.data.remote.JwxtGateway
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionResponse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
+import restarhalf.stellar.schedule.domain.port.CourseSelectionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtSelectionDropResult
+import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class CourseSelectionUseCaseTest {
 
-    private val gateway = mock<JwxtGateway>(MockMode.autofill)
+    private val gateway = mock<CourseSelectionPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val useCase = CourseSelectionUseCase(gateway, authWorkflow)
-
-    private val json = Json { ignoreUnknownKeys = true }
 
     private val ctx = CourseSelectionUseCase.SessionContext(
         rotationId = "r1",
@@ -36,12 +36,21 @@ class CourseSelectionUseCaseTest {
         extraRules = mapOf("courseQualification" to "false"),
     )
 
-    private fun ok(data: String) = JwxtSelectionResponse(errorCode = "success", data = json.parseToJsonElement(data))
+    private fun session(
+        sessionTime: String = "st-123",
+        classifications: List<JwxtSelectionClassification> = emptyList(),
+        extraRules: Map<String, String> = emptyMap(),
+    ) = JwxtSelectionSession(
+        sessionTime = sessionTime,
+        classifications = classifications,
+        extraRules = extraRules,
+    )
 
     @Test
-    fun `loadRotations成功解析轮次并确保已登录`() = runTest {
-        everySuspend { gateway.fetchSelectionRotations(any()) } returns
-            ok("""[{"rotationid":"r1","rotationname":"第一轮"}]""")
+    fun `loadRotations成功返回轮次并确保已登录`() = runTest {
+        everySuspend { gateway.fetchRotations() } returns listOf(
+            JwxtSelectionRotation(rotationId = "r1", rotationName = "第一轮"),
+        )
 
         val rotations = useCase.loadRotations()
 
@@ -49,36 +58,25 @@ class CourseSelectionUseCaseTest {
         assertEquals("r1", rotations[0].rotationId)
         assertEquals("第一轮", rotations[0].rotationName)
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
-        verifySuspend(VerifyMode.exactly(1)) { gateway.fetchSelectionRotations(1) }
+        verifySuspend(VerifyMode.exactly(1)) { gateway.fetchRotations() }
     }
 
     @Test
-    fun `loadRotations失败时抛出解析后的错误消息`() = runTest {
-        everySuspend { gateway.fetchSelectionRotations(any()) } returns JwxtSelectionResponse(
-            errorCode = "fail",
-            errorMessage = "还有[0]需要选",
-            errorMessageParam = listOf("讲课学时"),
-        )
+    fun `loadRotations透传端口异常`() = runTest {
+        everySuspend { gateway.fetchRotations() } throws IllegalStateException("还有讲课学时需要选")
 
-        val e = assertFailsWith<IllegalStateException> { useCase.loadRotations() }
+        val e = runCatching { useCase.loadRotations() }.exceptionOrNull()
 
+        assertIs<IllegalStateException>(e)
         assertEquals("还有讲课学时需要选", e.message)
     }
 
     @Test
-    fun `loadRotations失败且消息为空时使用默认文案`() = runTest {
-        everySuspend { gateway.fetchSelectionRotations(any()) } returns JwxtSelectionResponse(errorCode = "fail")
-
-        val e = assertFailsWith<IllegalStateException> { useCase.loadRotations() }
-
-        assertEquals("获取选课轮次失败", e.message)
-    }
-
-    @Test
-    fun `initSession解析sessionTime分类与规则位`() = runTest {
-        everySuspend { gateway.initSelectionSession("r1") } returns ok(
-            """{"sessionTime":"st-123","classificationList":[{"classificationCode":"01","classificationName":"必修"}],""" +
-                """"compulsorySelection":true,"courseQualification":"false"}"""
+    fun `initSession映射会话字段`() = runTest {
+        everySuspend { gateway.initSession("r1") } returns session(
+            sessionTime = "st-123",
+            classifications = listOf(JwxtSelectionClassification(classificationCode = "01", classificationName = "必修")),
+            extraRules = mapOf("compulsorySelection" to "true", "courseQualification" to "false"),
         )
 
         val context = useCase.initSession("r1")
@@ -89,39 +87,22 @@ class CourseSelectionUseCaseTest {
         assertEquals("01", context.classifications[0].classificationCode)
         assertEquals("true", context.extraRules["compulsorySelection"])
         assertEquals("false", context.extraRules["courseQualification"])
-    }
-
-    @Test
-    fun `initSession缺少sessionTime时抛出异常`() = runTest {
-        everySuspend { gateway.initSelectionSession("r1") } returns ok("""{"foo":1}""")
-
-        val e = assertFailsWith<IllegalStateException> { useCase.initSession("r1") }
-
-        assertEquals("会话初始化失败：未获取到 sessionTime", e.message)
+        verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
     }
 
     @Test
     fun `loadCourses透传上下文与搜索词`() = runTest {
-        everySuspend { gateway.fetchSelectionCourses(any(), any(), any(), any(), any()) } returns
-            ok("""[{"courseName":"高数","courseId":"c1","noticeId":"n1"}]""")
+        everySuspend { gateway.fetchCourses(any(), any(), any(), any(), any()) } returns listOf(
+            JwxtSelectionCourse(courseName = "高数", courseId = "c1", noticeId = "n1"),
+        )
 
         val courses = useCase.loadCourses(ctx, classificationCode = "01", courseInformation = "高数")
 
         assertEquals(1, courses.size)
         assertEquals("c1", courses[0].courseId)
         verifySuspend(VerifyMode.exactly(1)) {
-            gateway.fetchSelectionCourses("r1", "01", "st-123", mapOf("courseQualification" to "false"), "高数")
+            gateway.fetchCourses("r1", "01", "st-123", mapOf("courseQualification" to "false"), "高数")
         }
-    }
-
-    @Test
-    fun `loadCourses失败且消息为空时使用默认文案`() = runTest {
-        everySuspend { gateway.fetchSelectionCourses(any(), any(), any(), any(), any()) } returns
-            JwxtSelectionResponse(errorCode = "fail")
-
-        val e = assertFailsWith<IllegalStateException> { useCase.loadCourses(ctx, "01") }
-
-        assertEquals("获取课程列表失败", e.message)
     }
 
     @Test
@@ -133,7 +114,7 @@ class CourseSelectionUseCaseTest {
         val result = useCase.submitOnce(
             ctx,
             classificationCode = "01",
-            course = restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse(
+            course = JwxtSelectionCourse(
                 courseName = "高数", courseId = "c1", noticeId = "n1",
             ),
         )
@@ -158,13 +139,14 @@ class CourseSelectionUseCaseTest {
                 JwxtSelectionOperResult.Success("选课成功")
             }
         }
-        everySuspend { gateway.fetchSelectionCourses(any(), any(), any(), any(), any()) } returns
-            ok("""[{"courseName":"关联班","courseId":"c2","noticeId":"n2"}]""")
+        everySuspend { gateway.fetchCourses(any(), any(), any(), any(), any()) } returns listOf(
+            JwxtSelectionCourse(courseName = "关联班", courseId = "c2", noticeId = "n2"),
+        )
 
         val result = useCase.submitOnce(
             ctx,
             classificationCode = "01",
-            course = restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse(
+            course = JwxtSelectionCourse(
                 courseName = "高数", courseId = "c1", noticeId = "n1",
             ),
         )
@@ -182,13 +164,36 @@ class CourseSelectionUseCaseTest {
         everySuspend {
             gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
         } returns JwxtSelectionOperResult.NeedConfirm("还有关联课", yxcfbs = "y1", cfbs = "c1", xkkcid = "x1", yxjx0404id = "n404")
-        everySuspend { gateway.fetchSelectionCourses(any(), any(), any(), any(), any()) } returns
-            ok("""[{"courseName":"无关课","courseId":"c9","noticeId":"n9"}]""")
+        everySuspend { gateway.fetchCourses(any(), any(), any(), any(), any()) } returns listOf(
+            JwxtSelectionCourse(courseName = "无关课", courseId = "c9", noticeId = "n9"),
+        )
 
         val result = useCase.submitOnce(
             ctx,
             classificationCode = "01",
-            course = restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse(
+            course = JwxtSelectionCourse(
+                courseName = "高数", courseId = "c1", noticeId = "n1",
+            ),
+        )
+
+        assertIs<JwxtSelectionOperResult.NeedConfirm>(result)
+        verifySuspend(VerifyMode.exactly(1)) {
+            gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `submitOnce重新加载课程列表失败时返回NeedConfirm`() = runTest {
+        everySuspend {
+            gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns JwxtSelectionOperResult.NeedConfirm("还有关联课", yxcfbs = "y1", cfbs = "c1", xkkcid = "x1", yxjx0404id = "n2")
+        everySuspend { gateway.fetchCourses(any(), any(), any(), any(), any()) } throws
+            IllegalStateException("网络异常")
+
+        val result = useCase.submitOnce(
+            ctx,
+            classificationCode = "01",
+            course = JwxtSelectionCourse(
                 courseName = "高数", courseId = "c1", noticeId = "n1",
             ),
         )
@@ -202,7 +207,7 @@ class CourseSelectionUseCaseTest {
     @Test
     fun `drop透传courseQualification规则位`() = runTest {
         everySuspend { gateway.dropSelection(any(), any(), any(), any()) } returns
-            JwxtSelectionResponse(errorCode = "success")
+            JwxtSelectionDropResult(success = true, message = "")
 
         useCase.drop(ctx, noticeId = "n1")
 
@@ -212,7 +217,7 @@ class CourseSelectionUseCaseTest {
     @Test
     fun `drop无规则位时使用默认true`() = runTest {
         everySuspend { gateway.dropSelection(any(), any(), any(), any()) } returns
-            JwxtSelectionResponse(errorCode = "success")
+            JwxtSelectionDropResult(success = true, message = "")
         val ctxNoRule = ctx.copy(extraRules = emptyMap())
 
         useCase.drop(ctxNoRule, noticeId = "n1")
@@ -221,9 +226,12 @@ class CourseSelectionUseCaseTest {
     }
 
     @Test
-    fun `loadSelectedCourses解析已选课程`() = runTest {
-        everySuspend { gateway.fetchSelectedCourses(any()) } returns
-            ok("""[{"courseName":"高数","noticeId":"n1","isCanTk":"1"}]""")
+    fun `loadSelectedCourses返回已选课程`() = runTest {
+        everySuspend { gateway.fetchSelectedCourses(any()) } returns listOf(
+            restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse(
+                courseName = "高数", noticeId = "n1", isCanTk = "1",
+            ),
+        )
 
         val selected = useCase.loadSelectedCourses(ctx)
 
@@ -234,12 +242,12 @@ class CourseSelectionUseCaseTest {
 
     @Test
     fun `refreshSession刷新会话后重新初始化`() = runTest {
-        everySuspend { gateway.initSelectionSession("r1") } returns ok("""{"sessionTime":"st-456"}""")
+        everySuspend { gateway.initSession("r1") } returns session(sessionTime = "st-456")
 
         val context = useCase.refreshSession("r1")
 
         assertEquals("st-456", context.sessionTime)
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
-        verifySuspend(VerifyMode.exactly(1)) { gateway.initSelectionSession("r1") }
+        verifySuspend(VerifyMode.exactly(1)) { gateway.initSession("r1") }
     }
 }

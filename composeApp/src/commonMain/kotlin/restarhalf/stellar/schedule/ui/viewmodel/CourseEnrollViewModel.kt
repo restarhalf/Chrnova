@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
+import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -242,7 +242,7 @@ class CourseEnrollViewModel(
         viewModelScope.launch {
             try {
                 val resp = useCase.drop(ctx, course.noticeId)
-                if (resp.isSuccess()) {
+                if (resp.success) {
                     _uiState.update {
                         it.copy(
                             submitting = false,
@@ -261,7 +261,7 @@ class CourseEnrollViewModel(
                     _uiState.update {
                         it.copy(
                             submitting = false,
-                            error = resp.resolvedMessage().ifBlank { "退课失败" },
+                            error = resp.message.ifBlank { "退课失败" },
                         )
                     }
                 }

@@ -2,14 +2,14 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.CancellationException
 import kotlin.time.Clock
-import restarhalf.stellar.schedule.data.local.AnnouncementStore
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 
 
 class FetchAnnouncementsUseCase(
     private val port: AnnouncementPort,
-    private val store: AnnouncementStore,
+    private val store: AnnouncementCachePort,
 ) {
     
     suspend operator fun invoke(forceRefresh: Boolean = false): FetchResult {

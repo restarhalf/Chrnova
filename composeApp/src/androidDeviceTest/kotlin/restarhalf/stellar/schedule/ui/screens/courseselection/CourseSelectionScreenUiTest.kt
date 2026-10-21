@@ -14,12 +14,14 @@ import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import restarhalf.stellar.schedule.data.remote.JwxtGateway
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionResponse
+import restarhalf.stellar.schedule.domain.port.CourseSelectionPort
+import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
+import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
@@ -30,39 +32,39 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 
 class CourseSelectionScreenUiTest {
 
-    private val gateway = mock<JwxtGateway>(MockMode.autofill)
+    private val port = mock<CourseSelectionPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val servicePort = mock<CourseSelectionServicePort>(MockMode.autofill)
 
     private val runningFlow = MutableStateFlow(false)
     private val latestLogFlow = MutableStateFlow(ServiceLogEntry(""))
 
-    private fun okResponse(dataJson: String? = null) = JwxtSelectionResponse(
-        errorCode = "success",
-        data = dataJson?.let { Json.parseToJsonElement(it) },
-    )
-
     private fun makeViewModel(): CourseSelectionViewModel {
         every { servicePort.running } returns runningFlow
         every { servicePort.latestLog } returns latestLogFlow
         every { servicePort.isSupported } returns false
         return CourseSelectionViewModel(
-            useCase = CourseSelectionUseCase(gateway, authWorkflow),
+            useCase = CourseSelectionUseCase(port, authWorkflow),
             servicePort = servicePort,
         )
     }
 
     private fun stubFullSession() {
-        everySuspend { gateway.fetchSelectionRotations(any()) } returns okResponse(
-            """[{"rotationid":"r1","rotationname":"第一轮"},{"rotationid":"r2","rotationname":"第二轮"}]""",
+        everySuspend { port.fetchRotations() } returns listOf(
+            JwxtSelectionRotation(rotationId = "r1", rotationName = "第一轮"),
+            JwxtSelectionRotation(rotationId = "r2", rotationName = "第二轮"),
         )
-        everySuspend { gateway.initSelectionSession("r1") } returns okResponse(
-            """{"sessionTime":"st-1","classificationList":[
-                {"classificationCode":"c1","classificationName":"通识"},
-                {"classificationCode":"c2","classificationName":"体育"}]}""",
+        everySuspend { port.initSession("r1") } returns JwxtSelectionSession(
+            sessionTime = "st-1",
+            classifications = listOf(
+                JwxtSelectionClassification(classificationCode = "c1", classificationName = "通识"),
+                JwxtSelectionClassification(classificationCode = "c2", classificationName = "体育"),
+            ),
+            extraRules = emptyMap(),
         )
-        everySuspend { gateway.fetchSelectedCourses(any()) } returns okResponse(
-            """[{"courseName":"体育","noticeId":"n9"},{"courseName":"大学英语","noticeId":"n8"}]""",
+        everySuspend { port.fetchSelectedCourses(any()) } returns listOf(
+            JwxtSelectedCourse(courseName = "体育", noticeId = "n9"),
+            JwxtSelectedCourse(courseName = "大学英语", noticeId = "n8"),
         )
     }
 

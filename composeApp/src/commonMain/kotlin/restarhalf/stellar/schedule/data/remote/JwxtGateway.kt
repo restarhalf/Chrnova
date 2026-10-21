@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.data.remote
 
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
 
 interface JwxtGateway {
     

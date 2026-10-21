@@ -1,6 +1,6 @@
 package restarhalf.stellar.schedule.domain.port
 
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import kotlinx.coroutines.flow.StateFlow
 
 

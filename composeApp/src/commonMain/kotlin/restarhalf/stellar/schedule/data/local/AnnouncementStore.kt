@@ -7,16 +7,17 @@ import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Announcement
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 
 
 class AnnouncementStore(
     private val settings: ObservableSettings,
-) {
-    
-    fun getCacheTtlMs(): Long = CACHE_TTL_MS
+) : AnnouncementCachePort {
 
-    
-    fun getCachedAnnouncements(): List<Announcement>? {
+    override fun getCacheTtlMs(): Long = CACHE_TTL_MS
+
+
+    override fun getCachedAnnouncements(): List<Announcement>? {
         val raw = settings.getStringOrNull(KEY_CACHE)
         if (raw.isNullOrBlank()) return null
         return try {
@@ -28,19 +29,19 @@ class AnnouncementStore(
     }
 
     
-    fun setCachedAnnouncements(announcements: List<Announcement>) {
+    override fun setCachedAnnouncements(announcements: List<Announcement>) {
         settings[KEY_CACHE] = Json.encodeToString(ListSerializer(Announcement.serializer()), announcements)
         settings[KEY_CACHE_AT_MS] = Clock.System.now().toEpochMilliseconds()
     }
 
     
-    fun getCacheTimestampMs(): Long = settings.getLong(KEY_CACHE_AT_MS, 0L)
+    override fun getCacheTimestampMs(): Long = settings.getLong(KEY_CACHE_AT_MS, 0L)
 
     
-    fun getLastReadAtMs(): Long = settings.getLong(KEY_LAST_READ_AT_MS, 0L)
+    override fun getLastReadAtMs(): Long = settings.getLong(KEY_LAST_READ_AT_MS, 0L)
 
     
-    fun setLastReadAtMs(ms: Long) {
+    override fun setLastReadAtMs(ms: Long) {
         settings[KEY_LAST_READ_AT_MS] = ms
     }
 

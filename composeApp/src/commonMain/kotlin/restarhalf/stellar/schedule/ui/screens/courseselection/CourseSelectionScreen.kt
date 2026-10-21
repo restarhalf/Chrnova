@@ -51,8 +51,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar

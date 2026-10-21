@@ -31,6 +31,7 @@ import restarhalf.stellar.schedule.data.remote.CourseEvaluationApi
 import restarhalf.stellar.schedule.data.remote.JwxtAuthPlugin
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtClient
+import restarhalf.stellar.schedule.data.remote.JwxtCourseSelectionAdapter
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
@@ -44,7 +45,9 @@ import restarhalf.stellar.schedule.data.repository.RoomPERepositoryImpl
 import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
+import restarhalf.stellar.schedule.domain.port.CourseSelectionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
@@ -204,6 +207,9 @@ val portModule = module {
     }
 
 
+    single<CourseSelectionPort> { JwxtCourseSelectionAdapter(gateway = get()) }
+
+
     single { JwxtSync(get()) }
 
 
@@ -291,7 +297,7 @@ val portModule = module {
             baseUrl = "https://chrnova.announcement.restarhalf.dpdns.org",
         )
     }
-    single { AnnouncementStore(get(named(SettingsKeys.PREFS_NAME))) }
+    single<AnnouncementCachePort> { AnnouncementStore(get(named(SettingsKeys.PREFS_NAME))) }
 }
 
 

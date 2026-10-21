@@ -25,8 +25,8 @@ import restarhalf.stellar.schedule.CourseSelectionService.Companion.latestLogFlo
 import restarhalf.stellar.schedule.CourseSelectionService.Companion.pendingConfig
 import restarhalf.stellar.schedule.CourseSelectionService.Companion.runningFlow
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
 import restarhalf.stellar.schedule.domain.port.SnatchServiceConfig
 import restarhalf.stellar.schedule.domain.port.SnatchTarget

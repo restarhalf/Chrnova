@@ -18,11 +18,11 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
+import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
 import restarhalf.stellar.schedule.domain.port.SnatchServiceConfig
@@ -480,7 +480,7 @@ class CourseSelectionViewModel(
         viewModelScope.launch {
             try {
                 val resp = useCase.drop(ctx, course.noticeId)
-                if (resp.isSuccess()) {
+                if (resp.success) {
                     appendLog(SelectionLog(now(), "退课成功：${course.courseName}", SelectionLog.LogLevel.SUCCESS))
 
                     _uiState.update {
@@ -491,7 +491,7 @@ class CourseSelectionViewModel(
                         )
                     }
                 } else {
-                    appendLog(SelectionLog(now(), "退课失败：${course.courseName} - ${resp.resolvedMessage()}", SelectionLog.LogLevel.ERROR))
+                    appendLog(SelectionLog(now(), "退课失败：${course.courseName} - ${resp.message}", SelectionLog.LogLevel.ERROR))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

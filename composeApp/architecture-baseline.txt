@@ -1,26 +1,2 @@
 # 分层解耦基线：每行 <相对路径>|<被越界 import 的完整符号>
 # 阶段 1/2/3 逐步删除，阶段 5 清空；条目存在即代表已知越界。
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/port/CourseSelectionServicePort.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtGateway
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionResponse
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/CourseSelectionUseCase.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/FetchAnnouncementsUseCase.kt|restarhalf.stellar.schedule.data.local.AnnouncementStore
-src/commonMain/kotlin/restarhalf/stellar/schedule/domain/usecase/MarkAnnouncementsReadUseCase.kt|restarhalf.stellar.schedule.data.local.AnnouncementStore
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/screens/courseselection/CourseEnrollScreen.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/screens/courseselection/CourseEnrollScreen.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/screens/courseselection/CourseSelectionScreen.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/screens/courseselection/CourseSelectionScreen.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseEnrollViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseEnrollViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseEnrollViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseEnrollViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseEnrollViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseSelectionViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseSelectionViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionClassification
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseSelectionViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseSelectionViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-src/commonMain/kotlin/restarhalf/stellar/schedule/ui/viewmodel/CourseSelectionViewModel.kt|restarhalf.stellar.schedule.data.remote.JwxtSelectionRotation

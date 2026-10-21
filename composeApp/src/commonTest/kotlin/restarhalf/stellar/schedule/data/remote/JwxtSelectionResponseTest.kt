@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.data.remote
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

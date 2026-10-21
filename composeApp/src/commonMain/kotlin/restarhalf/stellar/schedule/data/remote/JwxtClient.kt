@@ -21,6 +21,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 

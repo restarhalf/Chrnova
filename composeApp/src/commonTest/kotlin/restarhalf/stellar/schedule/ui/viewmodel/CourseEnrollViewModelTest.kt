@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.ui.viewmodel
 import dev.mokkery.MockMode
 import dev.mokkery.answering.calls
 import dev.mokkery.answering.returns
-import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
@@ -12,13 +11,15 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.serialization.json.Json
-import restarhalf.stellar.schedule.data.remote.JwxtGateway
-import restarhalf.stellar.schedule.data.remote.JwxtSelectedCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionCourse
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionOperResult
-import restarhalf.stellar.schedule.data.remote.JwxtSelectionResponse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
+import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
+import restarhalf.stellar.schedule.domain.port.CourseSelectionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.JwxtSelectionDropResult
+import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -28,7 +29,7 @@ import kotlin.test.assertTrue
 
 class CourseEnrollViewModelTest {
 
-    private val gateway = mock<JwxtGateway>(MockMode.autofill)
+    private val port = mock<CourseSelectionPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val mainDispatcher = UnconfinedTestDispatcher()
     private var selectedHasCourse = false
@@ -46,32 +47,28 @@ class CourseEnrollViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun okResponse(dataJson: String? = null) = JwxtSelectionResponse(
-        errorCode = "success",
-        data = dataJson?.let { Json.parseToJsonElement(it) },
-    )
-
     private fun makeViewModel() = CourseEnrollViewModel(
-        useCase = CourseSelectionUseCase(gateway, authWorkflow),
+        useCase = CourseSelectionUseCase(port, authWorkflow),
     )
 
     private fun stubRotations() {
-        everySuspend { gateway.fetchSelectionRotations(any()) } returns okResponse(
-            """[{"rotationid":"r1","rotationname":"第一轮"}]""",
+        everySuspend { port.fetchRotations() } returns listOf(
+            JwxtSelectionRotation(rotationId = "r1", rotationName = "第一轮"),
         )
     }
 
     private fun stubSession(rotationId: String = "r1") {
-        everySuspend { gateway.initSelectionSession(rotationId) } returns okResponse(
-            """{"sessionTime":"st-1","classificationList":[
-                {"classificationCode":"c1","classificationName":"通识"}]}""",
+        everySuspend { port.initSession(rotationId) } returns JwxtSelectionSession(
+            sessionTime = "st-1",
+            classifications = listOf(JwxtSelectionClassification(classificationCode = "c1", classificationName = "通识")),
+            extraRules = emptyMap(),
         )
     }
 
-    private fun stubCourses(jsonArray: String = "[]") {
+    private fun stubCourses(courses: List<JwxtSelectionCourse> = emptyList()) {
         everySuspend {
-            gateway.fetchSelectionCourses(any(), any(), any(), any(), any())
-        } returns okResponse(jsonArray)
+            port.fetchCourses(any(), any(), any(), any(), any())
+        } returns courses
     }
 
     private fun selectionCourse(
@@ -89,7 +86,7 @@ class CourseEnrollViewModelTest {
     fun `加载轮次并自动进入首个轮次`() = runTest {
         stubRotations()
         stubSession()
-        everySuspend { gateway.fetchSelectedCourses(any()) } returns okResponse("[]")
+        everySuspend { port.fetchSelectedCourses(any()) } returns emptyList()
         stubCourses()
 
         val vm = makeViewModel()
@@ -107,18 +104,16 @@ class CourseEnrollViewModelTest {
     fun `选课成功写入notice并刷新已选`() = runTest {
         stubRotations()
         stubSession()
-        stubCourses("""[{"courseId":"k1","noticeId":"n1","courseName":"高等数学","kxh":"01"}]""")
-        everySuspend { gateway.fetchSelectedCourses(any()) } calls {
-            okResponse(
-                if (selectedHasCourse) {
-                    """[{"courseName":"高等数学","noticeId":"n1"}]"""
-                } else {
-                    "[]"
-                },
-            )
+        stubCourses(listOf(selectionCourse()))
+        everySuspend { port.fetchSelectedCourses(any()) } calls {
+            if (selectedHasCourse) {
+                listOf(JwxtSelectedCourse(courseName = "高等数学", noticeId = "n1"))
+            } else {
+                emptyList()
+            }
         }
         everySuspend {
-            gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            port.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
         } calls {
             selectedHasCourse = true
             JwxtSelectionOperResult.Success("选课成功")
@@ -140,9 +135,9 @@ class CourseEnrollViewModelTest {
         stubRotations()
         stubSession()
         stubCourses()
-        everySuspend { gateway.fetchSelectedCourses(any()) } returns okResponse("[]")
+        everySuspend { port.fetchSelectedCourses(any()) } returns emptyList()
         everySuspend {
-            gateway.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
+            port.submitSelection(any(), any(), any(), any(), any(), any(), any(), any(), any())
         } returns JwxtSelectionOperResult.Fail("课容量已满")
 
         val vm = makeViewModel()
@@ -159,10 +154,11 @@ class CourseEnrollViewModelTest {
         stubRotations()
         stubSession()
         stubCourses()
-        everySuspend { gateway.fetchSelectedCourses(any()) } returns okResponse(
-            """[{"courseName":"高等数学","noticeId":"n1","isCanTk":"1"}]""",
+        everySuspend { port.fetchSelectedCourses(any()) } returns listOf(
+            JwxtSelectedCourse(courseName = "高等数学", noticeId = "n1", isCanTk = "1"),
         )
-        everySuspend { gateway.dropSelection(any(), any(), any(), any()) } returns okResponse()
+        everySuspend { port.dropSelection(any(), any(), any(), any()) } returns
+            JwxtSelectionDropResult(success = true, message = "")
 
         val vm = makeViewModel()
         vm.loadRotations()
