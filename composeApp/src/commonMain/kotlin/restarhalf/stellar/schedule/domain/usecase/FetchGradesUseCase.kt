@@ -8,14 +8,14 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
 
 class FetchGradesUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
     private val repository: GradeRepository,
     private val auth: JwxtAuthPort,
 ) {

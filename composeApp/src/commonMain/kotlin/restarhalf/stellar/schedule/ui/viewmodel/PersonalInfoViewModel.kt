@@ -6,10 +6,10 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 
 class PersonalInfoViewModel(
-    private val settingsPort: SettingsPort,
+    private val settingsPort: UserProfilePort,
 ) : ViewModel() {
     @Immutable
     data class UiState(

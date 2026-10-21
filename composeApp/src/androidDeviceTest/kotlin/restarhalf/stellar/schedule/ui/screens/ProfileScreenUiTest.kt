@@ -13,7 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -22,7 +22,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 
 class ProfileScreenUiTest {
 
-    private val settingsPort = mock<SettingsPort>(MockMode.autofill)
+    private val settingsPort = mock<UserProfilePort>(MockMode.autofill)
 
     private fun androidx.compose.ui.test.ComposeUiTest.waitText(text: String, timeoutMs: Long = 5_000) {
         waitUntil(timeoutMillis = timeoutMs) {

@@ -18,7 +18,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import restarhalf.stellar.schedule.domain.model.Paper
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -29,7 +29,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 class PapersScreenUiTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<DeviceSettingsPort>(MockMode.autofill)
 
     private val samplePapers = listOf(
         Paper(id = "pf1", title = "高数期末.pdf", folder = "高等数学"),

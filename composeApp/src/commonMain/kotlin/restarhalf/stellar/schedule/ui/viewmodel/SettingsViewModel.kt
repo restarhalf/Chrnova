@@ -23,7 +23,12 @@ import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
@@ -39,7 +44,12 @@ import kotlin.time.Instant
 class SettingsViewModel(
     private val auth: JwxtAuthPort,
     private val authWorkflow: JwxtAuthWorkflowPort,
-    private val settings: SettingsPort,
+    private val displaySettings: DisplaySettingsPort,
+    private val reminderSettings: ReminderSettingsPort,
+    private val termSettings: TermSettingsPort,
+    private val logSettings: LogSettingsPort,
+    private val userProfile: UserProfilePort,
+    private val deviceSettings: DeviceSettingsPort,
     private val cancelAllCourseReminders: CancelAllCourseRemindersUseCase,
     private val cancelAllExamReminders: CancelAllExamRemindersUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
@@ -50,7 +60,7 @@ class SettingsViewModel(
 
     val starVerification = StarVerificationHolder(
         verifyGitHubStar = verifyGitHubStar,
-        settings = settings,
+        settings = deviceSettings,
         scope = viewModelScope,
     )
     
@@ -124,15 +134,15 @@ class SettingsViewModel(
     private val _remoteTermItems = MutableStateFlow<ImmutableList<String>>(persistentListOf())
 
     private val basePrefsFlow = combine(
-        settings.observeShowNonCurrentWeek(),
-        settings.observeCourseReminderEnabled(),
-        settings.observeExamReminderEnabled(),
-        settings.observeThemeMode(),
-        settings.observeFloatingBar(),
+        displaySettings.observeShowNonCurrentWeek(),
+        reminderSettings.observeCourseReminderEnabled(),
+        reminderSettings.observeExamReminderEnabled(),
+        displaySettings.observeThemeMode(),
+        displaySettings.observeFloatingBar(),
     ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
         SettingsPrefsState(
             showNonCurrentWeek = showNonCurrentWeek,
-            scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
+            scheduleRowHeight = DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP,
             reminderEnabled = reminderEnabled,
             examReminderEnabled = examReminderEnabled,
             themeMode = themeMode,
@@ -143,9 +153,9 @@ class SettingsViewModel(
     }
 
     private val extraPrefsFlow = combine(
-        settings.observeSelectedTerm(),
-        settings.observeLogEnabled(),
-        settings.observeScheduleRowHeight(),
+        termSettings.observeSelectedTerm(),
+        logSettings.observeLogEnabled(),
+        displaySettings.observeScheduleRowHeight(),
     ) { selectedTerm, logEnabled, scheduleRowHeight ->
         Triple(selectedTerm, logEnabled, scheduleRowHeight)
     }
@@ -193,7 +203,7 @@ class SettingsViewModel(
                 initialValue =
                     SettingsUiState(
                         showNonCurrentWeek = true,
-                        scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
+                        scheduleRowHeight = DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP,
                         reminderEnabled = false,
                         examReminderEnabled = false,
                         themeMode = 0,
@@ -325,8 +335,8 @@ class SettingsViewModel(
     
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
-            settings.setSelectedTerm(value)
-            settings.setActiveScheduleTerm(value)
+            termSettings.setSelectedTerm(value)
+            termSettings.setActiveScheduleTerm(value)
 
             runCatching { scheduleNextExamReminder(selectedTerm = value) }
                 .onFailure { e ->
@@ -338,27 +348,27 @@ class SettingsViewModel(
 
     
     fun onThemeModeChanged(mode: Int) {
-        settings.setThemeMode(mode)
+        displaySettings.setThemeMode(mode)
     }
 
     
     fun onFloatingBarChanged(mode: Int) {
-        settings.setFloatingBar(mode)
+        displaySettings.setFloatingBar(mode)
     }
 
     
     fun onShowNonCurrentWeekChanged(show: Boolean) {
-        settings.setShowNonCurrentWeek(show)
+        displaySettings.setShowNonCurrentWeek(show)
     }
 
     
     fun onScheduleRowHeightChanged(heightDp: Int) {
-        settings.setScheduleRowHeight(heightDp)
+        displaySettings.setScheduleRowHeight(heightDp)
     }
 
     
     fun onReminderEnabledChanged(enabled: Boolean) {
-        settings.setCourseReminderEnabled(enabled)
+        reminderSettings.setCourseReminderEnabled(enabled)
         if (!enabled) {
             viewModelScope.launch {
                 withContext(AppIoDispatcher) {
@@ -370,7 +380,7 @@ class SettingsViewModel(
 
     
     fun onExamReminderEnabledChanged(enabled: Boolean) {
-        settings.setExamReminderEnabled(enabled)
+        reminderSettings.setExamReminderEnabled(enabled)
         if (!enabled) {
             viewModelScope.launch {
                 withContext(AppIoDispatcher) {
@@ -381,7 +391,7 @@ class SettingsViewModel(
     }
 
     fun onLogEnabledChanged(enabled: Boolean) {
-        settings.setLogEnabled(enabled)
+        logSettings.setLogEnabled(enabled)
     }
 
     
@@ -458,8 +468,8 @@ class SettingsViewModel(
     
     fun loadPersonalInfo() {
         viewModelScope.launch {
-            val avatarUri = settings.getUserAvatarUri()
-            val nickname = settings.getUserNickname()
+            val avatarUri = userProfile.getUserAvatarUri()
+            val nickname = userProfile.getUserNickname()
             _personalInfoUiState.value = PersonalInfoUiState(
                 avatarUri = avatarUri,
                 nickname = nickname,

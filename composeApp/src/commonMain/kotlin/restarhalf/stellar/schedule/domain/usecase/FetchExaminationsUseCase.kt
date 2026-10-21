@@ -7,7 +7,7 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
 
@@ -16,7 +16,7 @@ class FetchExaminationsUseCase(
     private val academic: AcademicPort,
     private val repository: ExaminationRepository,
     private val auth: JwxtAuthPort,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
 ) {
     
     suspend operator fun invoke(

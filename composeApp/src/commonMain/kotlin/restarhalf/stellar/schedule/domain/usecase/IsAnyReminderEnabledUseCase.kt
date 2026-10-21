@@ -1,10 +1,10 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 
 class IsAnyReminderEnabledUseCase(
-    private val settings: SettingsPort,
+    private val settings: ReminderSettingsPort,
 ) {
     suspend operator fun invoke(): Boolean {
         val courseEnabled = settings.observeCourseReminderEnabled().first()

@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,18 +12,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
-import com.russhwolf.settings.ObservableSettings
+import kotlinx.coroutines.flow.combine
 import org.koin.compose.koinInject
-import org.koin.core.qualifier.named
+import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.stats.DauReporter
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
-import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
@@ -72,38 +70,30 @@ fun AppRoot(
     val appUpdate: AppUpdatePort = koinInject()
     val checkAppUpdate: CheckAppUpdateUseCase = koinInject()
     val appInfo: AppInfoPort = koinInject()
-    val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
-    val settingsPort: SettingsPort = koinInject()
+    val displaySettings: DisplaySettingsPort = koinInject()
+    val deviceSettings: DeviceSettingsPort = koinInject()
 
 
     var appState by remember {
         mutableStateOf(
             AppState(
-                themeMode = settings.getInt(SettingsKeys.THEME_MODE, 0),
-                barMode = settings.getInt(SettingsKeys.FLOATING_BAR, 0),
+                themeMode = displaySettings.getThemeMode(),
+                barMode = displaySettings.getFloatingBar(),
             ),
         )
     }
-    val updateAppState = remember {
-        { transform: (AppState) -> AppState ->
-            val updated = transform(appState)
-            if (updated != appState) {
-                appState = updated
-            }
-        }
-    }
 
-    DisposableEffect(settings) {
-        val barListener = settings.addIntListener(SettingsKeys.FLOATING_BAR, appState.barMode) { newValue ->
-            updateAppState { current -> current.copy(barMode = newValue) }
-        }
-        val themeListener = settings.addIntListener(SettingsKeys.THEME_MODE, appState.themeMode) { newValue ->
-            updateAppState { current -> current.copy(themeMode = newValue) }
-        }
-        onDispose {
-            barListener.deactivate()
-            themeListener.deactivate()
-        }
+    LaunchedEffect(displaySettings) {
+        combine(
+            displaySettings.observeThemeMode(),
+            displaySettings.observeFloatingBar(),
+        ) { themeMode, barMode -> themeMode to barMode }
+            .collect { (themeMode, barMode) ->
+                val updated = appState.copy(themeMode = themeMode, barMode = barMode)
+                if (updated != appState) {
+                    appState = updated
+                }
+            }
     }
 
 
@@ -122,7 +112,7 @@ fun AppRoot(
     val showWelcome = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val hasShown = settings.getBoolean(SettingsKeys.CONFIRM_PRIVACY, false)
+        val hasShown = deviceSettings.getConfirmPrivacy()
         if (!hasShown) {
             showWelcome.value = true
         }
@@ -144,7 +134,7 @@ fun AppRoot(
 
     LaunchedEffect(Unit) {
 
-        runCatching { DauReporter.pingTodayIfDue(settings = settings, deviceId = settingsPort.getDeviceId()) }
+        runCatching { DauReporter.pingTodayIfDue(deviceSettings = deviceSettings) }
             .onFailure {
                 AppLogger.log("Dau", "日活上报失败", it)
             }
@@ -165,7 +155,6 @@ fun AppRoot(
     MiuixTheme(controller = themeController) {
         CompositionLocalProvider(
             LocalAppState provides appState,
-            LocalUpdateAppState provides updateAppState,
         ) {
             AppContent(
                 vm = vm,

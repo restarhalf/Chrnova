@@ -25,7 +25,8 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
@@ -44,7 +45,8 @@ class ExaminationViewModelTest {
 
     private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
@@ -61,7 +63,7 @@ class ExaminationViewModelTest {
         every { examinationRepository.observeAllExaminations() } returns examsFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
-        every { settings.observeExamReminderEnabled() } returns examReminderEnabledFlow
+        every { reminderSettings.observeExamReminderEnabled() } returns examReminderEnabledFlow
         everySuspend { academic.fetchExaminations(any(), any()) } returns emptyList()
         everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
         val observeAllExaminations = ObserveAllExaminationsUseCase(examinationRepository, auth)
@@ -71,7 +73,7 @@ class ExaminationViewModelTest {
             auth = auth,
             settings = settings,
             rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
-                settings = settings,
+                settings = reminderSettings,
                 fetchExaminations = FetchExaminationsUseCase(
                     authWorkflow = authWorkflow,
                     academic = academic,

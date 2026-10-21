@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -23,7 +23,7 @@ class FetchSemesterIdsUseCaseTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
 
     private val useCase = FetchSemesterIdsUseCase(authWorkflow, academic, settings)
 

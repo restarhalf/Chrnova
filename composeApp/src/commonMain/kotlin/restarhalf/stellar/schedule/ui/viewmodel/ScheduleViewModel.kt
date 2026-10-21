@@ -30,7 +30,8 @@ import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
@@ -42,7 +43,8 @@ import kotlin.time.ExperimentalTime
 
 
 class ScheduleViewModel(
-    private val settings: SettingsPort,
+    private val settings: DisplaySettingsPort,
+    private val termSettings: TermSettingsPort,
     private val courseRepository: CourseRepository,
     private val buildScheduleUiStateUseCase: BuildScheduleUiStateUseCase,
     private val transCourseWithConflicts: TransCourseWithConflictsUseCase,
@@ -163,7 +165,7 @@ class ScheduleViewModel(
                 initialValue =
                     ScheduleUiState(
                         showNonCurrentWeek = true,
-                        scheduleRowHeight = SettingsPort.DEFAULT_ROW_HEIGHT_DP,
+                        scheduleRowHeight = DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP,
                         transDialogUiState = TransDialogUiState(),
                         transConflictUiState = TransConflictUiState(),
                         detailSheetUiState = DetailSheetUiState(),
@@ -480,7 +482,7 @@ class ScheduleViewModel(
     suspend fun shouldAutoSync(): Boolean {
         return withContext(AppIoDispatcher) {
             val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-            val result = settings.shouldAutoSyncAndMark(nowMs = now)
+            val result = termSettings.shouldAutoSyncAndMark(nowMs = now)
             result
         }
     }

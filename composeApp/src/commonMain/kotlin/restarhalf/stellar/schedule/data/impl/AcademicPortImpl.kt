@@ -9,12 +9,12 @@ import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 
 
 class AcademicPortImpl(
     private val gateway: JwxtGateway,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
 ) : AcademicPort {
 
     

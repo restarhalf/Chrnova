@@ -12,7 +12,7 @@ import dev.mokkery.verify
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class VerifyGitHubStarUseCaseTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
-    private val settingsPort = mock<SettingsPort>(MockMode.autofill)
+    private val settingsPort = mock<DeviceSettingsPort>(MockMode.autofill)
     private val useCase = VerifyGitHubStarUseCase(papersPort, settingsPort)
 
     @Test

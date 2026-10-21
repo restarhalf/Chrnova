@@ -17,7 +17,7 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import kotlin.test.AfterTest
@@ -34,7 +34,7 @@ class GradeViewModelTest {
 
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
 
     private val mainDispatcher = UnconfinedTestDispatcher()
 

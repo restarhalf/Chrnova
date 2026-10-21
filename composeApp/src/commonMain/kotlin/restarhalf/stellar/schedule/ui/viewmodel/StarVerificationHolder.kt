@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 
 @Immutable
@@ -22,7 +22,7 @@ data class StarVerificationState(
 
 class StarVerificationHolder(
     private val verifyGitHubStar: VerifyGitHubStarUseCase,
-    private val settings: SettingsPort,
+    private val settings: DeviceSettingsPort,
     private val scope: CoroutineScope,
 ) {
     private val _state = MutableStateFlow(StarVerificationState())

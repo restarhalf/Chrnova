@@ -18,7 +18,7 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +28,7 @@ class FetchGradesUseCaseTest {
 
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
     private val repository = mock<GradeRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
 

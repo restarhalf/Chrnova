@@ -8,12 +8,12 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
 class RescheduleRemindersUseCase(
-    private val settings: SettingsPort,
+    private val settings: ReminderSettingsPort,
     private val courseRepository: CourseRepository,
     private val timetable: TimetablePort,
     private val courseReminder: CourseReminderPort,

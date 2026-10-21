@@ -25,7 +25,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
@@ -36,7 +36,7 @@ class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
     private val auth: JwxtAuthPort,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
     private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
 

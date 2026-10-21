@@ -19,6 +19,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSemesterListItem
 import restarhalf.stellar.schedule.data.remote.JwxtTeachingWeekItem
 import restarhalf.stellar.schedule.data.remote.JwxtTeachingWeekResponse
+import restarhalf.stellar.schedule.data.impl.settings.TermSettingsPortImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -28,7 +29,7 @@ import kotlin.test.assertTrue
 class AcademicPortImplTest {
 
     private val gateway = mock<JwxtGateway>(MockMode.autofill)
-    private val settings = SettingsPortImpl(MapSettings())
+    private val settings = TermSettingsPortImpl(MapSettings())
     private val impl = AcademicPortImpl(gateway, settings)
 
 

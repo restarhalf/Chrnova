@@ -3,11 +3,11 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
 class RefreshCourseRemindersIfEnabledUseCase(
-    private val settings: SettingsPort,
+    private val settings: ReminderSettingsPort,
     private val courseRepository: CourseRepository,
     private val courseReminder: CourseReminderPort,
 ) {

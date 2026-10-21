@@ -18,7 +18,7 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
@@ -33,7 +33,7 @@ class ExamEditScreenUiTest {
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
 
     private val coursesFlow = MutableStateFlow(

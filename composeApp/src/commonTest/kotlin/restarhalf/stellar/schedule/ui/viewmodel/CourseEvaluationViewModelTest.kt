@@ -26,7 +26,7 @@ import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.LikeResult
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -42,7 +42,7 @@ class CourseEvaluationViewModelTest {
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<UserProfilePort>(MockMode.autofill)
 
     
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())

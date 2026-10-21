@@ -9,7 +9,7 @@ import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 
@@ -18,7 +18,7 @@ class RunSyncUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val timetable: TimetablePort,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
     private val sync: SyncPort,
     private val reminderScheduler: ReminderSchedulerPort,
 ) {

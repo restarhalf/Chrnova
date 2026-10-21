@@ -20,14 +20,14 @@ import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 
 
 class CourseEvaluationViewModel(
     private val port: CourseEvaluationPort,
     private val courseRepository: CourseRepository,
     private val auth: JwxtAuthPort,
-    private val settings: SettingsPort,
+    private val settings: UserProfilePort,
 ) : ViewModel() {
 
     @Stable

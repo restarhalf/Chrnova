@@ -21,7 +21,12 @@ import restarhalf.stellar.schedule.data.impl.PEAuthPortImpl
 import restarhalf.stellar.schedule.data.impl.PEAuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.PEPasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.JwxtPasswordEncryptionPortImpl
-import restarhalf.stellar.schedule.data.impl.SettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.DeviceSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.DisplaySettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.LogSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.ReminderSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.TermSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.UserProfilePortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.AnnouncementStore
@@ -57,7 +62,12 @@ import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -236,7 +246,12 @@ val portModule = module {
     }
 
 
-    single<SettingsPort> { SettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<DisplaySettingsPort> { DisplaySettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<ReminderSettingsPort> { ReminderSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<TermSettingsPort> { TermSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<DeviceSettingsPort> { DeviceSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<LogSettingsPort> { LogSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
+    single<UserProfilePort> { UserProfilePortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<JwxtPasswordEncryptionPort> { JwxtPasswordEncryptionPortImpl() }
     single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
     single<BackgroundSettingsPort> {
@@ -266,7 +281,7 @@ val portModule = module {
             httpClient = get(named("papers")),
             json = get(),
             baseUrl = "https://chrnova.paper.restarhalf.dpdns.org",
-            getDeviceId = { get<SettingsPort>().getDeviceId() },
+            getDeviceId = { get<DeviceSettingsPort>().getDeviceId() },
         )
     }
     single<CourseEvaluationPort> {
@@ -274,7 +289,7 @@ val portModule = module {
             httpClient = get(named("evaluate")),
             json = get(),
             baseUrl = "https://chrnova.evaluate.restarhalf.dpdns.org",
-            getDeviceId = { get<SettingsPort>().getDeviceId() },
+            getDeviceId = { get<DeviceSettingsPort>().getDeviceId() },
             getUserHash = {
                 val userNo = get<JwxtAuthStore>().getUserNo() ?: ""
                 CourseEvaluationPort.hashUserNo(userNo)
@@ -471,6 +486,7 @@ val viewModelModule = module {
     viewModel {
         ScheduleViewModel(
             settings = get(),
+            termSettings = get(),
             courseRepository = get(),
             buildScheduleUiStateUseCase = get(),
             transCourseWithConflicts = get(),
@@ -481,7 +497,12 @@ val viewModelModule = module {
         SettingsViewModel(
             auth = get(),
             authWorkflow = get(),
-            settings = get(),
+            displaySettings = get(),
+            reminderSettings = get(),
+            termSettings = get(),
+            logSettings = get(),
+            userProfile = get(),
+            deviceSettings = get(),
             cancelAllCourseReminders = get(),
             cancelAllExamReminders = get(),
             fetchSemesterIds = get(),

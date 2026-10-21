@@ -12,7 +12,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,7 +24,7 @@ class PersonalInfoViewModelTest {
     private var avatarState: String? = null
     private var nicknameState: String? = null
 
-    private val settingsPort = mock<SettingsPort>(MockMode.autofill)
+    private val settingsPort = mock<UserProfilePort>(MockMode.autofill)
 
     
     private val mainDispatcher = UnconfinedTestDispatcher()

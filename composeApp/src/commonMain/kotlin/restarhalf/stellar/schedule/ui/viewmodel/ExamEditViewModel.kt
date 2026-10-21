@@ -23,7 +23,7 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
@@ -35,7 +35,7 @@ class ExamEditViewModel(
     private val courseRepository: CourseRepository,
     private val examinationRepository: ExaminationRepository,
     private val auth: JwxtAuthPort,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
     private val academic: AcademicPort,
     private val saveExaminationUseCase: SaveExaminationUseCase,
     private val deleteExaminationUseCase: DeleteExaminationUseCase,

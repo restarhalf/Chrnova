@@ -19,7 +19,7 @@ import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import kotlin.test.Test
@@ -31,7 +31,7 @@ class RunSyncUseCaseTest {
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
     private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
 

@@ -16,12 +16,12 @@ import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Paper
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 
 class PapersViewModel(
     private val papersPort: PapersPort,
-    private val settings: SettingsPort,
+    private val settings: DeviceSettingsPort,
     verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
 

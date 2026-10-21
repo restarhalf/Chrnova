@@ -20,11 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import org.koin.compose.koinInject
-import org.koin.core.qualifier.named
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import top.yukonga.miuix.kmp.basic.Button
@@ -39,7 +36,7 @@ fun EnterScreen(
     pagerState: PagerState
 ) {
     val appInfo: AppInfoPort = koinInject()
-    val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
+    val deviceSettings: DeviceSettingsPort = koinInject()
     val appName = remember(appInfo.appName) { appInfo.appName }
     val go = remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
@@ -96,7 +93,7 @@ fun EnterScreen(
                 .padding(horizontal = 28.dp),
             colors = ButtonDefaults.buttonColorsPrimary(),
             onClick = {
-                settings[SettingsKeys.CONFIRM_PRIVACY] = true
+                deviceSettings.setConfirmPrivacy(true)
                 onDismissRequest()
             }
         ) {

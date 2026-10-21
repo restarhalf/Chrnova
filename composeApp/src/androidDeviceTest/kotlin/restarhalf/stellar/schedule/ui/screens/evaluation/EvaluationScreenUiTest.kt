@@ -24,7 +24,7 @@ import restarhalf.stellar.schedule.domain.model.EvaluationPage
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -37,7 +37,7 @@ class EvaluationScreenUiTest {
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val userProfile = mock<UserProfilePort>(MockMode.autofill)
 
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
@@ -62,10 +62,10 @@ class EvaluationScreenUiTest {
 
     
     private fun createVm(courses: List<Course> = emptyList()): CourseEvaluationViewModel {
-        every { settings.getUserNickname() } returns null
+        every { userProfile.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
         everySuspend { courseRepository.getAllCoursesAcrossSemesters() } returns courses
-        return CourseEvaluationViewModel(port, courseRepository, auth, settings)
+        return CourseEvaluationViewModel(port, courseRepository, auth, userProfile)
     }
 
     private fun stubListData() {

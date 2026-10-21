@@ -21,14 +21,14 @@ import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import kotlin.math.roundToInt
 
 
 class GradeViewModel(
     observeAllGrades: ObserveAllGradesUseCase,
-    private val settings: SettingsPort,
+    private val settings: TermSettingsPort,
 ) : ViewModel() {
 
     

@@ -21,7 +21,9 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.usecase.BuildScheduleUiStateUseCase
@@ -37,13 +39,15 @@ import kotlin.time.Clock
 
 class ScheduleScreenUiTest {
 
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<DisplaySettingsPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
     private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
 
     private val showNonCurrentWeekFlow = MutableStateFlow(true)
-    private val rowHeightFlow = MutableStateFlow(SettingsPort.DEFAULT_ROW_HEIGHT_DP)
+    private val rowHeightFlow = MutableStateFlow(DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP)
     private val reminderFlow = MutableStateFlow(false)
     private val coursesFlow = MutableStateFlow<List<Course>>(emptyList())
 
@@ -74,18 +78,19 @@ class ScheduleScreenUiTest {
 
         every { settings.observeShowNonCurrentWeek() } returns showNonCurrentWeekFlow
         every { settings.observeScheduleRowHeight() } returns rowHeightFlow
-        every { settings.observeCourseReminderEnabled() } returns reminderFlow
+        every { reminderSettings.observeCourseReminderEnabled() } returns reminderFlow
         every { courseRepository.observeAllCourses() } returns coursesFlow
         every { timetable.getCampusTimetable(any()) } returns timetableSlots
         return ScheduleViewModel(
             settings = settings,
+            termSettings = termSettings,
             courseRepository = courseRepository,
             buildScheduleUiStateUseCase = BuildScheduleUiStateUseCase(timetable),
             transCourseWithConflicts = TransCourseWithConflictsUseCase(
                 courseRepository, TransCourseUseCase(),
             ),
             refreshCourseRemindersIfEnabledUseCase = RefreshCourseRemindersIfEnabledUseCase(
-                settings = settings,
+                settings = reminderSettings,
                 courseRepository = courseRepository,
                 courseReminder = courseReminder,
             ),

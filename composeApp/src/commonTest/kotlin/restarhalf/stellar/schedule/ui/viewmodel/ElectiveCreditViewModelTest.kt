@@ -21,7 +21,8 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
@@ -40,7 +41,8 @@ class ElectiveCreditViewModelTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<UserProfilePort>(MockMode.autofill)
+    private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
 
     private val mainDispatcher = UnconfinedTestDispatcher()
 
@@ -49,7 +51,7 @@ class ElectiveCreditViewModelTest {
         academic = academic,
         auth = auth,
         gradeRepository = gradeRepository,
-        fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, settings),
+        fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, termSettings),
         calculateElectiveCredits = CalculateElectiveCreditsUseCase(),
     )
 
@@ -132,7 +134,7 @@ class ElectiveCreditViewModelTest {
     fun `load时学期列表为空置错误`() = runTest {
         everySuspend { academic.fetchCurrentTermId() } returns "2026-1"
         stubSemesters(emptyList())
-        every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
+        every { termSettings.observeCachedSemesterIds() } returns flowOf(emptyList())
         val vm = makeViewModel()
 
         vm.load()

@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
@@ -35,7 +35,7 @@ class ElectiveCreditScreenUiTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<TermSettingsPort>(MockMode.autofill)
 
     private fun stubSuccess() {
         everySuspend { academic.fetchCurrentTermId() } returns "2026-1"

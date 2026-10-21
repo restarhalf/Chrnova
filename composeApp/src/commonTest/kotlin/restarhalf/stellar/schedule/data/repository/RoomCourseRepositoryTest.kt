@@ -18,7 +18,7 @@ import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -50,7 +50,7 @@ class RoomCourseRepositoryTest {
         every { getCourseById(any()) } returns MutableStateFlow<CourseEntity?>(null)
     }
 
-    private val settings = mock<SettingsPort> {
+    private val settings = mock<TermSettingsPort> {
         every { observeActiveScheduleTerm() } returns termFlow
     }
     private val auth = mock<JwxtAuthPort> {

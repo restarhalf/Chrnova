@@ -25,14 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.russhwolf.settings.ObservableSettings
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 
 @RequiresApi(Build.VERSION_CODES.Q)
-fun ComponentActivity.AppRoot(settings: ObservableSettings) {
+fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     AppLogger.init(filesDir.absolutePath + "/logs")
     val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
@@ -42,7 +41,7 @@ fun ComponentActivity.AppRoot(settings: ObservableSettings) {
     setContent {
 
 
-        var themeMode by remember { mutableIntStateOf(settings.getInt(SettingsKeys.THEME_MODE, 0)) }
+        var themeMode by remember { mutableIntStateOf(displaySettings.getThemeMode()) }
         val darkMode =
             when (themeMode) {
                 1 -> false

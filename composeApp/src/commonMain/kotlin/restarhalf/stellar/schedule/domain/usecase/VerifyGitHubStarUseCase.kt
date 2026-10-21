@@ -1,11 +1,11 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 
 class VerifyGitHubStarUseCase(
     private val papersPort: PapersPort,
-    private val settingsPort: SettingsPort,
+    private val settingsPort: DeviceSettingsPort,
 ) {
     suspend operator fun invoke(username: String): Boolean {
         val starred = papersPort.verifyStar(username)

@@ -11,6 +11,7 @@ import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.core.update.VERSION_WORKER_URL
+import restarhalf.stellar.schedule.data.impl.settings.DeviceSettingsPortImpl
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,10 +38,18 @@ class DauReporterTest {
         }
     }
 
+    private fun deviceSettings(vararg pairs: Pair<String, Any>) =
+        DeviceSettingsPortImpl(MapSettings(*pairs))
+
     @Test
     fun privacyNotConfirmedNeverPings() = runTest {
         val settings = MapSettings()
-        assertFalse(DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.OK)))
+        assertFalse(
+            DauReporter.pingTodayIfDue(
+                deviceSettings = DeviceSettingsPortImpl(settings),
+                client = mockClient(HttpStatusCode.OK),
+            ),
+        )
         assertTrue(capturedUrls.isEmpty())
         assertNull(settings.getStringOrNull(SettingsKeys.DAU_LAST_PING_DAY))
     }
@@ -48,9 +57,20 @@ class DauReporterTest {
     @Test
     fun pingsOncePerDay() = runTest {
         val settings = MapSettings(SettingsKeys.CONFIRM_PRIVACY to true)
-        assertTrue(DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.OK)))
+        val deviceSettings = DeviceSettingsPortImpl(settings)
+        assertTrue(
+            DauReporter.pingTodayIfDue(
+                deviceSettings = deviceSettings,
+                client = mockClient(HttpStatusCode.OK),
+            ),
+        )
 
-        assertFalse(DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.OK)))
+        assertFalse(
+            DauReporter.pingTodayIfDue(
+                deviceSettings = deviceSettings,
+                client = mockClient(HttpStatusCode.OK),
+            ),
+        )
         assertEquals(1, capturedUrls.size)
 
         assertFalse(settings.getStringOrNull(SettingsKeys.DAU_LAST_PING_DAY).isNullOrEmpty())
@@ -59,8 +79,11 @@ class DauReporterTest {
     @Test
     fun requestTargetsVersionWorkerPing() = runTest {
         val client = mockClient(HttpStatusCode.OK)
-        val settings = MapSettings(SettingsKeys.CONFIRM_PRIVACY to true)
-        assertTrue(DauReporter.pingTodayIfDue(settings, "aid-42", client))
+        val deviceSettings = deviceSettings(
+            SettingsKeys.CONFIRM_PRIVACY to true,
+            SettingsKeys.DEVICE_ID to "aid-42",
+        )
+        assertTrue(DauReporter.pingTodayIfDue(deviceSettings = deviceSettings, client = client))
         assertEquals("$VERSION_WORKER_URL/ping", capturedUrls.single())
     }
 
@@ -68,7 +91,10 @@ class DauReporterTest {
     fun httpFailureThrowsIllegalState() = runTest {
         val settings = MapSettings(SettingsKeys.CONFIRM_PRIVACY to true)
         val error = assertFailsWith<IllegalStateException> {
-            DauReporter.pingTodayIfDue(settings, "device-1", mockClient(HttpStatusCode.BadGateway))
+            DauReporter.pingTodayIfDue(
+                deviceSettings = DeviceSettingsPortImpl(settings),
+                client = mockClient(HttpStatusCode.BadGateway),
+            )
         }
         assertTrue(error.message!!.contains("502"))
 

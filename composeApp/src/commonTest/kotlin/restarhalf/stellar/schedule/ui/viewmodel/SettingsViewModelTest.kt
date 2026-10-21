@@ -25,7 +25,12 @@ import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
+import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
@@ -50,7 +55,12 @@ class SettingsViewModelTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val displaySettings = mock<DisplaySettingsPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
+    private val logSettings = mock<LogSettingsPort>(MockMode.autofill)
+    private val userProfile = mock<UserProfilePort>(MockMode.autofill)
+    private val deviceSettings = mock<DeviceSettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
     private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
@@ -74,16 +84,16 @@ class SettingsViewModelTest {
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
     private fun makeViewModel(): SettingsViewModel {
-        every { settings.observeShowNonCurrentWeek() } returns showFlow
-        every { settings.observeCourseReminderEnabled() } returns reminderFlow
-        every { settings.observeExamReminderEnabled() } returns examReminderFlow
-        every { settings.observeThemeMode() } returns themeFlow
-        every { settings.observeFloatingBar() } returns floatingBarFlow
-        every { settings.observeSelectedTerm() } returns termFlow
-        every { settings.observeLogEnabled() } returns logFlow
-        every { settings.observeScheduleRowHeight() } returns rowHeightFlow
-        every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
-        every { settings.getStarVerified() } returns false
+        every { displaySettings.observeShowNonCurrentWeek() } returns showFlow
+        every { reminderSettings.observeCourseReminderEnabled() } returns reminderFlow
+        every { reminderSettings.observeExamReminderEnabled() } returns examReminderFlow
+        every { displaySettings.observeThemeMode() } returns themeFlow
+        every { displaySettings.observeFloatingBar() } returns floatingBarFlow
+        every { termSettings.observeSelectedTerm() } returns termFlow
+        every { logSettings.observeLogEnabled() } returns logFlow
+        every { displaySettings.observeScheduleRowHeight() } returns rowHeightFlow
+        every { termSettings.observeCachedSemesterIds() } returns flowOf(emptyList())
+        every { deviceSettings.getStarVerified() } returns false
         every { auth.observeToken() } returns tokenFlow
         every { auth.observeProfile() } returns profileFlow
         everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
@@ -91,18 +101,23 @@ class SettingsViewModelTest {
         return SettingsViewModel(
             auth = auth,
             authWorkflow = authWorkflow,
-            settings = settings,
+            displaySettings = displaySettings,
+            reminderSettings = reminderSettings,
+            termSettings = termSettings,
+            logSettings = logSettings,
+            userProfile = userProfile,
+            deviceSettings = deviceSettings,
             cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
             cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
-            fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, settings),
+            fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, termSettings),
             scheduleNextCourseReminder = ScheduleNextCourseReminderUseCase(
                 courseRepository, courseReminder,
             ),
             scheduleNextExamReminder = ScheduleNextExamReminderUseCase(
-                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, settings),
+                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, termSettings),
                 examReminder,
             ),
-            verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, settings),
+            verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, deviceSettings),
         )
     }
 
@@ -177,7 +192,7 @@ class SettingsViewModelTest {
 
         vm.onThemeModeChanged(2)
 
-        verify(VerifyMode.exactly(1)) { settings.setThemeMode(2) }
+        verify(VerifyMode.exactly(1)) { displaySettings.setThemeMode(2) }
     }
 
     @Test
@@ -186,7 +201,7 @@ class SettingsViewModelTest {
 
         vm.onFloatingBarChanged(1)
 
-        verify(VerifyMode.exactly(1)) { settings.setFloatingBar(1) }
+        verify(VerifyMode.exactly(1)) { displaySettings.setFloatingBar(1) }
     }
 
     @Test
@@ -195,7 +210,7 @@ class SettingsViewModelTest {
 
         vm.onShowNonCurrentWeekChanged(false)
 
-        verify(VerifyMode.exactly(1)) { settings.setShowNonCurrentWeek(false) }
+        verify(VerifyMode.exactly(1)) { displaySettings.setShowNonCurrentWeek(false) }
     }
 
     @Test
@@ -204,7 +219,7 @@ class SettingsViewModelTest {
 
         vm.onScheduleRowHeightChanged(72)
 
-        verify(VerifyMode.exactly(1)) { settings.setScheduleRowHeight(72) }
+        verify(VerifyMode.exactly(1)) { displaySettings.setScheduleRowHeight(72) }
     }
 
     @Test
@@ -213,7 +228,7 @@ class SettingsViewModelTest {
 
         vm.onLogEnabledChanged(true)
 
-        verify(VerifyMode.exactly(1)) { settings.setLogEnabled(true) }
+        verify(VerifyMode.exactly(1)) { logSettings.setLogEnabled(true) }
     }
 
     @Test
@@ -223,7 +238,7 @@ class SettingsViewModelTest {
         vm.onReminderEnabledChanged(true)
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { settings.setCourseReminderEnabled(true) }
+        verify(VerifyMode.exactly(1)) { reminderSettings.setCourseReminderEnabled(true) }
         verify(VerifyMode.not) { courseReminder.cancelAll() }
     }
 
@@ -236,7 +251,7 @@ class SettingsViewModelTest {
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { settings.setCourseReminderEnabled(false) }
+        verify(VerifyMode.exactly(1)) { reminderSettings.setCourseReminderEnabled(false) }
         verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
     }
 
@@ -247,7 +262,7 @@ class SettingsViewModelTest {
         vm.onExamReminderEnabledChanged(true)
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { settings.setExamReminderEnabled(true) }
+        verify(VerifyMode.exactly(1)) { reminderSettings.setExamReminderEnabled(true) }
         verify(VerifyMode.not) { examReminder.cancelAll() }
     }
 
@@ -259,7 +274,7 @@ class SettingsViewModelTest {
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { settings.setExamReminderEnabled(false) }
+        verify(VerifyMode.exactly(1)) { reminderSettings.setExamReminderEnabled(false) }
         verify(VerifyMode.exactly(1)) { examReminder.cancelAll() }
     }
 
@@ -271,8 +286,8 @@ class SettingsViewModelTest {
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { settings.setSelectedTerm("2025-2") }
-        verify(VerifyMode.exactly(1)) { settings.setActiveScheduleTerm("2025-2") }
+        verify(VerifyMode.exactly(1)) { termSettings.setSelectedTerm("2025-2") }
+        verify(VerifyMode.exactly(1)) { termSettings.setActiveScheduleTerm("2025-2") }
         verify(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
     }
 
@@ -409,8 +424,8 @@ class SettingsViewModelTest {
     @Test
     fun `loadPersonalInfo填充并标记hasPersonalInfo`() = runTest {
         val vm = makeViewModel()
-        every { settings.getUserAvatarUri() } returns "content://avatar"
-        every { settings.getUserNickname() } returns null
+        every { userProfile.getUserAvatarUri() } returns "content://avatar"
+        every { userProfile.getUserNickname() } returns null
 
         vm.loadPersonalInfo()
         advanceMain()
@@ -423,8 +438,8 @@ class SettingsViewModelTest {
     @Test
     fun `loadPersonalInfo全空时hasPersonalInfo为false`() = runTest {
         val vm = makeViewModel()
-        every { settings.getUserAvatarUri() } returns null
-        every { settings.getUserNickname() } returns null
+        every { userProfile.getUserAvatarUri() } returns null
+        every { userProfile.getUserNickname() } returns null
 
         vm.loadPersonalInfo()
         advanceMain()

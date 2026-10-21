@@ -26,7 +26,8 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -56,7 +57,8 @@ class AppViewModelTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<LogSettingsPort>(MockMode.autofill)
+    private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -97,7 +99,7 @@ class AppViewModelTest {
     )
 
     private fun stubHappyPath() {
-        every { settings.observeSelectedTerm() } returns selectedTermFlow
+        every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan, development)
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(5, "c-js")
@@ -113,24 +115,24 @@ class AppViewModelTest {
         every { timetable.getTermStartMs() } returns 1000L
         every { timetable.getTotalWeeks() } returns 20
         every { settings.observeLogEnabled() } returns logFlow
-        every { settings.observeSelectedTerm() } returns selectedTermFlow
+        every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { auth.observeProfile() } returns profileFlow
         return AppViewModel(
             auth = auth,
             timetable = timetable,
             settings = settings,
             fetchExaminations = FetchExaminationsSimpleUseCase(
-                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, settings),
+                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, termSettings),
             ),
             fetchGrades = FetchGradesSimpleUseCase(
-                FetchGradesUseCase(authWorkflow, academic, settings, gradeRepository, auth),
+                FetchGradesUseCase(authWorkflow, academic, termSettings, gradeRepository, auth),
             ),
             jwxtLoginUseCase = JwxtLoginUseCase(authWorkflow),
             runSyncUseCase = RunSyncUseCase(
                 authWorkflow = authWorkflow,
                 academic = academic,
                 timetable = timetable,
-                settings = settings,
+                settings = termSettings,
                 sync = sync,
                 reminderScheduler = reminderScheduler,
             ),
@@ -226,7 +228,7 @@ class AppViewModelTest {
 
     @Test
     fun `runSync失败置Error且文案非空`() = runTest {
-        every { settings.observeSelectedTerm() } returns selectedTermFlow
+        every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } throws RuntimeException("网络故障")
         val vm = makeViewModel()
@@ -241,7 +243,7 @@ class AppViewModelTest {
 
     @Test
     fun `acknowledgeSyncResult把Error复位为Idle`() = runTest {
-        every { settings.observeSelectedTerm() } returns selectedTermFlow
+        every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } throws RuntimeException("网络故障")
         val vm = makeViewModel()

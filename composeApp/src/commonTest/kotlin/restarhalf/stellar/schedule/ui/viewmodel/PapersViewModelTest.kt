@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import restarhalf.stellar.schedule.domain.model.Paper
 import restarhalf.stellar.schedule.domain.port.PapersPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -26,7 +26,7 @@ import kotlin.test.assertFalse
 class PapersViewModelTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
-    private val settings = mock<SettingsPort>(MockMode.autofill)
+    private val settings = mock<DeviceSettingsPort>(MockMode.autofill)
 
     
     private val mainDispatcher = UnconfinedTestDispatcher()

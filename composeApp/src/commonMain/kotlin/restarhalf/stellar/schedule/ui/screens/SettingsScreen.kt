@@ -32,7 +32,7 @@ import restarhalf.stellar.schedule.core.text.CsvExporter
 import restarhalf.stellar.schedule.core.text.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.CardItem
@@ -177,7 +177,7 @@ fun SettingsScreen(
                     show = showRowHeightPicker.value,
                     title = "课程格子高度（dp）",
                     initialHeightDp = settingsUiState.scheduleRowHeight,
-                    heightRange = SettingsPort.MIN_ROW_HEIGHT_DP..SettingsPort.MAX_ROW_HEIGHT_DP,
+                    heightRange = DisplaySettingsPort.MIN_ROW_HEIGHT_DP..DisplaySettingsPort.MAX_ROW_HEIGHT_DP,
                     onDismissRequest = { showRowHeightPicker.value = false },
                     onConfirm = { heightDp: Int ->
                         vm.onScheduleRowHeightChanged(heightDp)

@@ -2,10 +2,10 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
-import restarhalf.stellar.schedule.domain.port.SettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 
 class RescheduleNextExamReminderIfEnabledUseCase(
-    private val settings: SettingsPort,
+    private val settings: ReminderSettingsPort,
     private val fetchExaminations: FetchExaminationsUseCase,
     private val examReminder: ExamReminderPort,
 ) {

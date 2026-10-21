@@ -13,13 +13,13 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.atiurin.ultron.core.compose.runUltronUiTest
-import com.russhwolf.settings.ObservableSettings
-import dev.mokkery.answering.returns
 import dev.mokkery.MockMode
+import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
+import com.russhwolf.settings.ObservableSettings
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.koin.core.context.startKoin
@@ -27,6 +27,7 @@ import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -38,6 +39,7 @@ class ExclusionScreenUiTest {
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
         every { putBoolean(any(), any()) } returns Unit
     }
+    private val deviceSettings = mock<DeviceSettingsPort>(MockMode.autofill)
 
     private fun startKoinForTest() {
         stopKoin()
@@ -51,6 +53,7 @@ class ExclusionScreenUiTest {
                         }
                     }
                     single<ObservableSettings>(named(SettingsKeys.PREFS_NAME)) { settings }
+                    single<DeviceSettingsPort> { deviceSettings }
                 }
             )
         }
@@ -196,7 +199,7 @@ class ExclusionScreenUiTest {
         waitUntil(timeoutMillis = 2_000) { dismissed }
         assertEquals(true, dismissed)
 
-        verify { settings.putBoolean(SettingsKeys.CONFIRM_PRIVACY, true) }
+        verify { deviceSettings.setConfirmPrivacy(true) }
     }
 
 

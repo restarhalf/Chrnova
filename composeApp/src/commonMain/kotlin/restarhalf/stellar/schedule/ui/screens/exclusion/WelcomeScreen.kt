@@ -26,13 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
+import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.qualifier.named
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.screens.JwxtLoginScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
@@ -49,7 +46,7 @@ fun WelcomeScreen(
     exitApp : () -> Unit,
     openUri: (String) -> Boolean = { false },
 ) {
-    val settings: ObservableSettings = koinInject(named(SettingsKeys.PREFS_NAME))
+    val deviceSettings: DeviceSettingsPort = koinInject()
     val coroutineScope = rememberCoroutineScope()
     val jwxtLoginVm: JwxtLoginViewModel = koinViewModel()
     val peLoginVm: PELoginViewModel = koinViewModel()
@@ -119,7 +116,7 @@ fun WelcomeScreen(
                 when (page) {
                     0 -> WelcomeEnterScreen(pagerState = pagerState)
                     1 -> PrivacyScreen(pagerState = pagerState, onExit = {
-                        settings[SettingsKeys.CONFIRM_PRIVACY] = false
+                        deviceSettings.setConfirmPrivacy(false)
                         exitApp()
                     })
                     2 -> JwxtLoginScreen(
