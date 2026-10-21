@@ -59,6 +59,76 @@ room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
+// 分层守卫：domain 不得依赖 data/ui，ui 不得依赖 data。
+// 已知越界记录在 architecture-baseline.txt（每行 <相对路径>|<import 符号>），逐步清空后即零容忍。
+val architectureBaselineFile = layout.projectDirectory.file("architecture-baseline.txt")
+
+abstract class VerifyLayeringTask : DefaultTask() {
+    @get:InputFiles
+    abstract val sources: ConfigurableFileCollection
+
+    @get:InputFile
+    abstract val baseline: RegularFileProperty
+
+    @get:Internal
+    abstract val projectDirPath: Property<String>
+
+    @TaskAction
+    fun verify() {
+        val root = projectDirPath.get().replace('\\', '/')
+        val allowed = baseline.get().asFile
+            .readLines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") }
+            .toSet()
+
+        val violations = mutableListOf<String>()
+        sources.files.sortedBy { it.path }.forEach fileLoop@{ file ->
+            val relative = file.path.replace('\\', '/').removePrefix("$root/")
+            val inDomain = relative.contains("/domain/")
+            val inUi = relative.contains("/ui/")
+            if (!inDomain && !inUi) return@fileLoop
+
+            file.readLines().forEach lineLoop@{ line ->
+                val trimmed = line.trim()
+                if (!trimmed.startsWith("import ")) return@lineLoop
+                val symbol = trimmed.removePrefix("import ").trim()
+                val forbidden = if (inDomain) {
+                    symbol.startsWith("restarhalf.stellar.schedule.data.") ||
+                        symbol.startsWith("restarhalf.stellar.schedule.ui.")
+                } else {
+                    symbol.startsWith("restarhalf.stellar.schedule.data.")
+                }
+                if (!forbidden) return@lineLoop
+                if ("$relative|$symbol" !in allowed) violations += "$relative -> $symbol"
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("分层越界 ${violations.size} 处（如为有意改动，请同步更新 architecture-baseline.txt）：")
+                    violations.forEach { appendLine("  $it") }
+                }
+            )
+        }
+    }
+}
+
+val verifyLayering = tasks.register<VerifyLayeringTask>("verifyLayering") {
+    group = "verification"
+    description = "校验 domain/ui 不依赖 data 层（含基线白名单）"
+    projectDirPath.set(projectDir.absolutePath)
+    baseline.set(architectureBaselineFile)
+    sources.from(
+        layout.projectDirectory.dir("src/commonMain/kotlin").asFileTree.matching { include("**/*.kt") },
+        layout.projectDirectory.dir("src/androidMain/kotlin").asFileTree.matching { include("**/*.kt") },
+        layout.projectDirectory.dir("src/iosMain/kotlin").asFileTree.matching { include("**/*.kt") },
+    )
+}
+
+tasks.named("check") { dependsOn(verifyLayering) }
+
 composeCompiler {
     stabilityConfigurationFiles.add(
         project.layout.projectDirectory.file("compose_compiler_config.conf")
