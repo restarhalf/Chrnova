@@ -4,18 +4,14 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
@@ -25,14 +21,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigationevent.NavigationEventInfo
-import androidx.navigationevent.compose.NavigationBackHandler
-import androidx.navigationevent.compose.rememberNavigationEventState
 import coil3.compose.AsyncImage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -47,68 +39,22 @@ import restarhalf.stellar.schedule.ui.navigation.AppScaffoldBody
 import restarhalf.stellar.schedule.ui.navigation.LocalAppChromeState
 import restarhalf.stellar.schedule.ui.navigation.LocalMainPagerState
 import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
-import restarhalf.stellar.schedule.ui.navigation.MainPagerState
 import restarhalf.stellar.schedule.ui.navigation.RootTabs
 import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.navigation.TransparentStackTransition
+import restarhalf.stellar.schedule.ui.navigation.graph.AppNavDeps
+import restarhalf.stellar.schedule.ui.navigation.graph.announcementEntries
+import restarhalf.stellar.schedule.ui.navigation.graph.courseSelectionEntries
+import restarhalf.stellar.schedule.ui.navigation.graph.evaluationEntries
+import restarhalf.stellar.schedule.ui.navigation.graph.miscEntries
+import restarhalf.stellar.schedule.ui.navigation.graph.papersEntries
+import restarhalf.stellar.schedule.ui.navigation.graph.peEntries
 import restarhalf.stellar.schedule.ui.navigation.rememberMainPagerState
-import restarhalf.stellar.schedule.ui.navigation.rootTabAt
-import restarhalf.stellar.schedule.ui.screens.AboutScreen
-import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
-import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
-import restarhalf.stellar.schedule.ui.screens.EMSScreen
-import restarhalf.stellar.schedule.ui.screens.ElectiveCreditScreen
-import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
-import restarhalf.stellar.schedule.ui.screens.HomeScreen
-import restarhalf.stellar.schedule.ui.screens.JwxtLoginScreen
-import restarhalf.stellar.schedule.ui.screens.LogScreen
-import restarhalf.stellar.schedule.ui.screens.ProfileScreen
-import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
-import restarhalf.stellar.schedule.ui.screens.SettingsScreen
-import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementDetailScreen
-import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementImageViewerScreen
-import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
-import restarhalf.stellar.schedule.ui.screens.courseselection.CourseEnrollScreen
-import restarhalf.stellar.schedule.ui.screens.courseselection.CourseSelectionScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationCourseScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationDetailScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationListScreen
-import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
-import restarhalf.stellar.schedule.ui.screens.papers.PapersDetailScreen
-import restarhalf.stellar.schedule.ui.screens.papers.PapersListScreen
-import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEDetailScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PESubjectHistoryScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PELoginScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEQRCodeScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEAppointmentWebScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyEditScreen
-import restarhalf.stellar.schedule.ui.screens.pe.PEFreeApplyDetailScreen
-import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
+import restarhalf.stellar.schedule.ui.screens.main.MainRouteContent
+import restarhalf.stellar.schedule.ui.screens.main.MainScreenBackHandler
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseEnrollViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -124,13 +70,9 @@ import kotlin.time.Clock
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppContent(
-    
     vm: AppViewModel,
-    
     bgVm: BackgroundViewModel,
-    
     appUpdate: AppUpdatePort,
-    
     pictureSelectorHost: @Composable (
         show: Boolean,
         onDismissRequest: () -> Unit,
@@ -138,30 +80,19 @@ fun AppContent(
         outputWidthPx: Int?,
         outputHeightPx: Int?,
     ) -> Unit = { _, _, _, _, _ -> },
-    
     pdfFilePickerHost: @Composable (
         multiple: Boolean,
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
     ) -> Unit = { _, _ -> },
-    
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
-    
     openUri: (String) -> Boolean = { false },
-    
     showMessage: (String) -> Unit = {},
-    
     canSaveAwardPicture: Boolean = false,
-    
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
-    
     runSync: suspend () -> Unit,
-    
     saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    
     canSaveImage: Boolean = false,
-    
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
 ) {
     val appState = LocalAppState.current
@@ -170,7 +101,7 @@ fun AppContent(
 
     val backgroundUiState by bgVm.uiState.collectAsStateWithLifecycle()
     val surfaceColor = colors.surface
-    val backdrop = rememberLayerBackdrop{
+    val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
         drawContent()
     }
@@ -183,14 +114,9 @@ fun AppContent(
 
     val backStack = rememberNavBackStack<Screen>(Screen.Main)
     val navigator = remember(backStack) { AppNavigator(backStack) }
-    val scope = rememberCoroutineScope()
     val currentRoute = (navigator.current() as? Screen) ?: Screen.Main
     val chromeState =
-        remember(
-            currentRoute,
-            mainPagerState.selectedPage,
-            appState.barMode,
-        ) {
+        remember(currentRoute, mainPagerState.selectedPage, appState.barMode) {
             AppChromeState(
                 currentScreen = mainPagerState.currentScreen,
                 isMainRoute = currentRoute == Screen.Main,
@@ -214,8 +140,7 @@ fun AppContent(
             withContext(AppIoDispatcher) {
                 runCatching {
                     val bytes = announcementHttpClient.get(url).body<ByteArray>()
-                    val name = deriveImageFileName(url)
-                    saveImageState(name, bytes)
+                    saveImageState(deriveImageFileName(url), bytes)
                 }.getOrDefault(false)
             }
         }
@@ -234,9 +159,7 @@ fun AppContent(
 
     val navCornerRadius = rememberNavSystemCornerRadius()
     val navEffects =
-        remember(
-            navCornerRadius,
-        ) {
+        remember(navCornerRadius) {
             NavDisplayEffects(
                 enableCornerClip = true,
                 cornerClipRadius = navCornerRadius,
@@ -245,6 +168,25 @@ fun AppContent(
                 blockInputDuringTransition = true,
             )
         }
+
+    val deps = AppNavDeps(
+        navigator = navigator,
+        appUpdate = appUpdate,
+        bgVm = bgVm,
+        announcementVm = announcementVm,
+        totalWeeks = appUiState.totalWeeks,
+        pictureSelectorHost = pictureSelectorHostState,
+        pdfFilePickerHost = pdfFilePickerHost,
+        ensureNotificationPermission = ensureNotificationPermissionState,
+        openUri = openUriState,
+        showMessage = showMessageState,
+        canSaveAwardPicture = canSaveAwardPicture,
+        saveAwardPicture = saveAwardPictureState,
+        saveLog = saveLog,
+        canSaveImage = canSaveImageState,
+        saveImageFromUrl = saveImageFromUrl,
+        onLogoutJwxt = { vm.logout() },
+    )
 
     CompositionLocalProvider(
         LocalNavigator provides navigator,
@@ -291,10 +233,6 @@ fun AppContent(
                         NavDisplay(
                             backStack = backStack,
                             onBack = { navigator.pop() },
-
-
-
-
                             transition = TransparentStackTransition,
                             effects = navEffects,
                         ) {
@@ -311,534 +249,18 @@ fun AppContent(
                                     saveImage = saveImageState,
                                 )
                             }
-                            entry<Screen.ChangeBackground> {
-                                ChangeBackgroundScreen(
-                                    vm = bgVm,
-                                    onBack = { navigator.pop() },
-                                    pictureSelectorHost = pictureSelectorHostState,
-                                )
-                            }
-                            entry<Screen.About> {
-                                val aboutVm: AboutViewModel = koinViewModel()
-                                AboutScreen(
-                                    vm = aboutVm,
-                                    onBack = { navigator.pop() },
-                                    showMessage = showMessageState,
-                                    canSaveAwardPicture = canSaveAwardPicture,
-                                    onSaveAwardPicture = saveAwardPictureState,
-                                    onIconTap = { navigator.push(Screen.Log) },
-                                    onHandleEvent = { event ->
-                                        when (event) {
-                                            is AboutViewModel.AboutUiEvent.OpenUri -> {
-                                                if (!openUriState(event.uri)) {
-                                                    showMessageState("无法打开链接")
-                                                }
-                                            }
-
-                                            is AboutViewModel.AboutUiEvent.JoinQqGroup -> {
-                                                if (!appUpdate.joinQqGroup(key = event.key)) {
-                                                    showMessageState("请检查是否安装了 QQ")
-                                                }
-                                            }
-
-                                            AboutViewModel.AboutUiEvent.WxPayAwardRequested -> {
-                                                val saved = appUpdate.saveWxpayToPictures()
-                                                showMessageState(
-                                                    if (saved) {
-                                                        "赞赏码已保存到相册，即将跳转到微信扫一扫"
-                                                    } else {
-                                                        "保存赞赏码失败，请重试"
-                                                    },
-                                                )
-                                                if (!appUpdate.openWeChatScanDirect()) {
-                                                    showMessageState("微信启动失败，请检查是否安装微信")
-                                                }
-                                            }
-                                        }
-                                    },
-                                    onStartDownload = { info -> appUpdate.startDirectDownload(info) },
-                                )
-                            }
-                            entry<Screen.ClassEdit> { screen ->
-                                val isEdit = remember(screen.courseId) { screen.courseId != null }
-                                val courseEditVm: CourseEditViewModel = koinViewModel()
-                                CourseEditScreen(
-                                    vm = courseEditVm,
-                                    onBack = { navigator.pop() },
-                                    isEdit = isEdit,
-                                    onEditChanged = { },
-                                    courseId = screen.courseId,
-                                    initialDayOfWeek = screen.dayOfWeek,
-                                    initialStartSection = screen.startSection,
-                                    initialSelectedWeek = screen.selectedWeek, totalWeeks = appUiState.totalWeeks,
-                                    showMessage = showMessageState,
-                                )
-                            }
-                            entry<Screen.ExamEdit> { screen ->
-                                val isEdit = remember(screen.examinationId) { screen.examinationId != null }
-                                val examEditVm: ExamEditViewModel = koinViewModel()
-                                ExamEditScreen(
-                                    vm = examEditVm,
-                                    onBack = { navigator.pop() },
-                                    isEdit = isEdit,
-                                    onEditChanged = { },
-                                    examinationId = screen.examinationId,
-                                    showMessage = showMessageState,
-                                )
-                            }
-                            entry<Screen.Log> {
-                                LogScreen(
-                                    onBack = { navigator.pop() },
-                                    onExport = { fileName, content ->
-                                        scope.launch {
-                                            val path = saveLog(fileName, content)
-                                            showMessageState(if (path != null) "已保存: $path" else "保存失败")
-                                        }
-                                    },
-                                )
-                            }
-                            entry<Screen.PEDetail> { screen ->
-                                val peVm: PEViewModel = koinViewModel()
-                                PEDetailScreen(
-                                    vm = peVm,
-                                    schoolYear = screen.schoolYear,
-                                    onSubjectClick = { subject ->
-                                        navigator.push(
-                                            Screen.PESubjectHistory(
-                                                schoolYear = screen.schoolYear,
-                                                subjectId = subject.subjectId,
-                                                subjectName = subject.subName,
-                                                unit = subject.unit,
-                                                currentResult = subject.result,
-                                            )
-                                        )
-                                    },
-                                    onBack = { navigator.pop() }
-                                )
-                            }
-                            entry<Screen.PESubjectHistory> { screen ->
-                                val peVm: PEViewModel = koinViewModel()
-                                PESubjectHistoryScreen(
-                                    vm = peVm,
-                                    schoolYear = screen.schoolYear,
-                                    subjectId = screen.subjectId,
-                                    subjectName = screen.subjectName,
-                                    unit = screen.unit,
-                                    currentResult = screen.currentResult,
-                                    onBack = { navigator.pop() }
-                                )
-                            }
-                            entry<Screen.PEQRCode> {
-                                val settingsVm: SettingsViewModel = koinViewModel()
-                                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
-                                val peVm: PEViewModel = koinViewModel()
-                                PEQRCodeScreen(
-                                    vm = peVm,
-                                    jwxtAuthProfile = settingsUiState.profile,
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.PEAppointment> {
-                                val peAppointmentVm: PEAppointmentViewModel = koinViewModel()
-                                PEAppointmentScreen(
-                                    vm = peAppointmentVm,
-                                    onLogin = { navigator.push(Screen.PELogin) },
-                                    onOpenWeb = { navigator.push(Screen.PEAppointmentWeb) },
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.PEAppointmentWeb> {
-                                PEAppointmentWebScreen(
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.PEFreeApply> {
-                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
-                                PEFreeApplyScreen(
-                                    vm = peFreeVm,
-                                    onLogin = { navigator.push(Screen.PELogin) },
-                                    onApply = {
-                                        peFreeVm.prepareApplyForm()
-                                        navigator.push(Screen.PEFreeApplyEdit)
-                                    },
-                                    onDetail = { applyId ->
-                                        navigator.push(Screen.PEFreeApplyDetail(applyId))
-                                    },
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.PEFreeApplyEdit> {
-                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
-                                PEFreeApplyEditScreen(
-                                    vm = peFreeVm,
-                                    onBack = { navigator.pop() },
-                                    onSubmitted = { navigator.pop() },
-                                    onImageClick = { url ->
-                                        navigator.push(Screen.AnnouncementImageViewer(url))
-                                    },
-                                    pdfFilePickerHost = pdfFilePickerHost,
-                                )
-                            }
-                            entry<Screen.PEFreeApplyDetail> { screen ->
-                                val peFreeVm: PEFreeApplyViewModel = koinViewModel()
-                                PEFreeApplyDetailScreen(
-                                    vm = peFreeVm,
-                                    applyId = screen.applyId,
-                                    onImageClick = { url ->
-                                        navigator.push(Screen.AnnouncementImageViewer(url))
-                                    },
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.Profile> {
-                                val settingsVm: SettingsViewModel = koinViewModel()
-                                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
-                                val peVm: PEViewModel = koinViewModel()
-                                val peUiState by peVm.uiState.collectAsStateWithLifecycle()
-                                val personalInfoViewModel: PersonalInfoViewModel = koinViewModel()
-                                ProfileScreen(
-                                    peAuthProfile = peUiState.authProfile,
-                                    jwxtAuthProfile = settingsUiState.profile,
-                                    onBack = { navigator.pop() },
-                                    onLogoutJW = { vm.logout() },
-                                    onLogoutPE = { peVm.logout() },
-                                    pictureSelectorHost = pictureSelectorHostState,
-                                    personalInfoViewModel = personalInfoViewModel,
-                                )
-                            }
-                            entry<Screen.Papers> {
-                                val paperVm: PapersViewModel = koinViewModel()
-                                PapersListScreen(
-                                    vm = paperVm,
-                                    onBack = { navigator.pop() },
-                                    onPaperDetail = { paperId ->
-                                        navigator.push(Screen.PapersDetail(paperId))
-                                    },
-                                    onUploadClick = { navigator.push(Screen.PapersUpload) },
-                                )
-                            }
-                            entry<Screen.PapersDetail> { screen ->
-                                val paperVm: PapersViewModel = koinViewModel()
-                                PapersDetailScreen(
-                                    vm = paperVm,
-                                    paperId = screen.paperId,
-                                    onBack = { navigator.pop() },
-                                    onDownload = { url, title -> openUriState(url) },
-                                )
-                            }
-                            entry<Screen.PapersUpload> {
-                                val paperVm: PapersViewModel = koinViewModel()
-                                PapersUploadScreen(
-                                    vm = paperVm,
-                                    onBack = { navigator.pop() },
-                                    onResult = { showMessageState(it) },
-                                    pdfFilePickerHost = pdfFilePickerHost,
-                                )
-                            }
-                            entry<Screen.Evaluation> {
-                                val evalVm: CourseEvaluationViewModel = koinViewModel()
-                                EvaluationListScreen(
-                                    vm = evalVm,
-                                    onBack = { navigator.pop() },
-                                    onCourseClick = { courseName, teacher ->
-                                        navigator.push(Screen.EvaluationCourse(courseName, teacher))
-                                    },
-                                    onEvaluationDetail = { evaluationId ->
-                                        navigator.push(Screen.EvaluationDetail(evaluationId))
-                                    },
-                                    onSubmitClick = { navigator.push(Screen.EvaluationSubmit()) },
-                                )
-                            }
-                            entry<Screen.EvaluationCourse> { screen ->
-                                val evalVm: CourseEvaluationViewModel = koinViewModel()
-                                EvaluationCourseScreen(
-                                    vm = evalVm,
-                                    courseName = screen.courseName,
-                                    teacher = screen.teacher,
-                                    onBack = { navigator.pop() },
-                                    onEvaluationDetail = { evaluationId ->
-                                        navigator.push(Screen.EvaluationDetail(evaluationId))
-                                    },
-                                )
-                            }
-                            entry<Screen.EvaluationDetail> { screen ->
-                                val evalVm: CourseEvaluationViewModel = koinViewModel()
-                                EvaluationDetailScreen(
-                                    vm = evalVm,
-                                    evaluationId = screen.evaluationId,
-                                    onBack = { navigator.pop() },
-                                    onEditEvaluation = { evaluationId ->
-                                        navigator.push(Screen.EvaluationSubmit(evaluationId))
-                                    },
-                                )
-                            }
-                            entry<Screen.EvaluationSubmit> { screen ->
-                                val evalVm: CourseEvaluationViewModel = koinViewModel()
-                                EvaluationSubmitScreen(
-                                    vm = evalVm,
-                                    onBack = { navigator.pop() },
-                                    onSubmitted = { navigator.pop() },
-                                    evaluationId = screen.evaluationId,
-                                )
-                            }
-                            entry<Screen.JwxtLogin> {
-                                val jwLoginVm: JwxtLoginViewModel = koinViewModel()
-                                JwxtLoginScreen(
-                                    vm = jwLoginVm,
-                                    onBack = { navigator.pop() },
-                                    onLoginSuccess = { navigator.pop() },
-                                    inWel = false,
-                                    next = {}
-                                )
-                            }
-                            entry<Screen.PELogin> {
-                                val peLoginVm: PELoginViewModel = koinViewModel()
-                                PELoginScreen(
-                                    vm = peLoginVm,
-                                    onBack = { navigator.pop() },
-                                    onLoginSuccess = { navigator.pop() },
-                                    inWel = false,
-                                    next = {}
-                                )
-                            }
-                            entry<Screen.ElectiveCredit> {
-                                val electiveCreditVm: ElectiveCreditViewModel = koinViewModel()
-                                ElectiveCreditScreen(
-                                    vm = electiveCreditVm,
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.CourseEnroll> {
-                                val courseEnrollVm: CourseEnrollViewModel = koinViewModel()
-                                CourseEnrollScreen(
-                                    vm = courseEnrollVm,
-                                    onBack = { navigator.pop() },
-                                )
-                            }
-                            entry<Screen.CourseSelection> {
-                                val courseSelectionVm: CourseSelectionViewModel = koinViewModel()
-                                CourseSelectionScreen(
-                                    vm = courseSelectionVm,
-                                    onBack = { navigator.pop() },
-                                    ensureNotificationPermission = ensureNotificationPermissionState,
-                                )
-                            }
-                            entry<Screen.AnnouncementList> {
-                                AnnouncementListScreen(
-                                    vm = announcementVm,
-                                    onBack = { navigator.pop() },
-                                    onAnnouncementClick = { announcementId ->
-                                        navigator.push(Screen.AnnouncementDetail(announcementId))
-                                    },
-                                    onAdOpenUrl = { openUriState(it) },
-                                )
-                            }
-                            entry<Screen.AnnouncementDetail> { screen ->
-                                AnnouncementDetailScreen(
-                                    vm = announcementVm,
-                                    announcementId = screen.announcementId,
-                                    onBack = { navigator.pop() },
-                                    onImageClick = { url ->
-                                        navigator.push(Screen.AnnouncementImageViewer(url))
-                                    },
-                                )
-                            }
-                            entry<Screen.AnnouncementImageViewer> { screen ->
-                                AnnouncementImageViewerScreen(
-                                    url = screen.url,
-                                    alt = null,
-                                    canSaveImage = canSaveImageState,
-                                    saveImage = saveImageFromUrl,
-                                    showMessage = showMessageState,
-                                    onBack = { navigator.pop() },
-                                )
-                            }
+                            peEntries(deps)
+                            papersEntries(deps)
+                            evaluationEntries(deps)
+                            courseSelectionEntries(deps)
+                            announcementEntries(deps)
+                            miscEntries(deps)
                         }
                     }
                 }
             }
         }
     }
-}
-
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun MainRouteContent(
-    
-    bgVm: BackgroundViewModel,
-    
-    vm: AppViewModel,
-    
-    announcementVm: AnnouncementViewModel,
-    
-    runSync: suspend () -> Unit,
-    
-    ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
-    
-    saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
-    
-    showMessage: (String) -> Unit = {},
-    
-    canSaveImage: Boolean = false,
-    
-    saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
-) {
-    val homeVm: HomeViewModel = koinViewModel()
-    val scheduleVm: ScheduleViewModel = koinViewModel()
-    val examVm: ExaminationViewModel = koinViewModel()
-    val gradeVm: GradeViewModel = koinViewModel()
-    val peVm: PEViewModel = koinViewModel()
-    val settingsVm: SettingsViewModel = koinViewModel()
-    val appUiState by vm.uiState.collectAsStateWithLifecycle()
-    val syncUiState by vm.syncUiState.collectAsStateWithLifecycle()
-    val navigator = LocalNavigator.current
-    val mainPagerState = LocalMainPagerState.current
-
-
-
-    LaunchedEffect(mainPagerState.pagerState.currentPage) {
-        if (rootTabAt(mainPagerState.pagerState.currentPage) == Screen.Home) {
-            announcementVm.refresh()
-        }
-    }
-
-    HorizontalPager(
-        state = mainPagerState.pagerState,
-        modifier = Modifier.fillMaxSize(),
-        userScrollEnabled = true,
-        verticalAlignment = Alignment.Top,
-    ) { page ->
-        when (rootTabAt(page)) {
-            Screen.Home -> {
-                val bgUiState by bgVm.uiState.collectAsStateWithLifecycle()
-                HomeScreen(
-                    vm = homeVm,
-                    announcementVm = announcementVm,
-                    onAnnouncementClick = { navigator.push(Screen.AnnouncementList) },
-                    campus = appUiState.campus,
-                    termStartMs = appUiState.termStartMs,
-                    totalWeeks = appUiState.totalWeeks,
-                    componentsAlpha = bgUiState.componentsAlpha,
-                    hasBackground = bgUiState.backgroundImageUri != null
-                )
-            }
-
-            Screen.Schedule -> {
-                val personalInfoVm: PersonalInfoViewModel = koinViewModel()
-                val personalInfo by personalInfoVm.uiState.collectAsStateWithLifecycle()
-                val bgState by bgVm.uiState.collectAsStateWithLifecycle()
-                ScheduleScreen(
-                    vm = scheduleVm,
-                    onSync = runSync,
-                    syncUiState = syncUiState,
-                    showMessage = showMessage,
-                    onSyncErrorConsumed = { vm.acknowledgeSyncResult() },
-                    campus = appUiState.campus,
-                    termStartMs = appUiState.termStartMs,
-                    totalWeeks = appUiState.totalWeeks,
-                    onAddLabCourse = { dayOfWeek, startSection, selectedWeek ->
-                        navigator.push(Screen.ClassEdit(dayOfWeek = dayOfWeek, startSection = startSection, selectedWeek = selectedWeek))
-                    },
-                    onEditLabCourse = { courseId ->
-                        navigator.push(Screen.ClassEdit(courseId = courseId))
-                    },
-                    canSaveImage = canSaveImage,
-                    onSaveImage = saveImage,
-                    sharerNickname = personalInfo.nickname,
-                    sharerAvatarUri = personalInfo.avatarUri,
-                    backgroundImageUri = bgState.backgroundImageUri,
-                    backgroundAlpha = bgState.backgroundAlpha,
-                    backgroundBlur = bgState.backgroundBlur,
-                )
-            }
-
-            Screen.EMS -> {
-                EMSScreen(
-                    examVm = examVm,
-                    gradeVm = gradeVm,
-                    onLoadExaminations = { vm.fetchExaminationArrangements() },
-                    onLoadGrades = { vm.fetchGradeReport() },
-                    onAddExam = { navigator.push(Screen.ExamEdit()) },
-                    onEditExam = { examId -> navigator.push(Screen.ExamEdit(examinationId = examId)) },
-                    onNavigateToElectiveCredit = { navigator.push(Screen.ElectiveCredit) },
-                )
-            }
-
-            Screen.PEScore -> {
-                val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
-                PEScoreScreen(
-                    vm = peVm,
-                    onNavigateToDetail = { schoolYear ->
-                        navigator.push(Screen.PEDetail(schoolYear))
-                    },
-                    onQRCode = { navigator.push(Screen.PEQRCode) },
-                    onLogin = { navigator.push(Screen.PELogin) },
-                    onAppointment = { navigator.push(Screen.PEAppointment) },
-                    onFreeApply = { navigator.push(Screen.PEFreeApply) },
-                    jwxtAuthProfile = settingsUiState.profile
-                )
-            }
-
-            Screen.Settings -> {
-                val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
-
-                val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
-                SettingsScreen(
-                    vm = settingsVm,
-                    syncUiState = syncUiState,
-                    campus = appUiState.campus,
-                    termStartMs = appUiState.termStartMs,
-                    totalWeeks = appUiState.totalWeeks,
-                    onSync = runSync,
-                    onLogout = { vm.logout() },
-                    ensureCourseReminderPermission = ensureNotificationPermission,
-                    ensureExamReminderPermission = ensureNotificationPermission,
-                    onCampusChange = { campus -> vm.onCampusChanged(campus) },
-                    onTermStartChange = { termStartMs -> vm.onTermStartMsChanged(termStartMs) },
-                    onTotalWeeksChange = { totalWeeks -> vm.onTotalWeeksChanged(totalWeeks) },
-                    onChangeBackground = { navigator.push(Screen.ChangeBackground) },
-                    onAbout = { navigator.push(Screen.About) },
-                    onPaper = { navigator.push(Screen.Papers) },
-                    onEvaluation = { navigator.push(Screen.Evaluation) },
-                    onCourseSelection = { navigator.push(Screen.CourseSelection) },
-                    onCourseEnroll = { navigator.push(Screen.CourseEnroll) },
-                    onLogin = { navigator.push(Screen.JwxtLogin) },
-                    onProfile = { navigator.push(Screen.Profile) },
-                    isPeLoggedIn = isPeLoggedIn,
-                    onExportCsv = saveCsv,
-                    courses = courses,
-                    showMessage = showMessage,
-                )
-            }
-
-            else -> Unit
-        }
-    }
-}
-
-@Composable
-private fun MainScreenBackHandler(
-    mainState: MainPagerState,
-    navigator: AppNavigator,
-) {
-    val isPagerBackHandlerEnabled by remember {
-        derivedStateOf {
-            navigator.current() is Screen.Main &&
-                    navigator.backStackSize() == 1 &&
-                    mainState.selectedPage != 0
-        }
-    }
-
-    val navEventState = rememberNavigationEventState(NavigationEventInfo.None)
-
-    NavigationBackHandler(
-        state = navEventState,
-        isBackEnabled = isPagerBackHandlerEnabled,
-        onBackCompleted = {
-            mainState.animateToPage(0)
-        },
-    )
 }
 
 
