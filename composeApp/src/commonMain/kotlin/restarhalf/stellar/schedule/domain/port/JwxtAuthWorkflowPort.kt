@@ -14,9 +14,6 @@ interface JwxtAuthWorkflowPort {
         p: String? = null,
     )
 
-    
-    fun logout()
 
-    
     suspend fun refreshSession()
 }

@@ -71,12 +71,7 @@ class JwxtAuthWorkflowPortImpl(
         authStore.setCredentials(userNo, password)
     }
 
-    
-    override fun logout() {
-        authStore.clearSession()
-    }
 
-    
     override suspend fun refreshSession() {
         val (userNo, password) = authStore.getCredentials() ?: return
         val oldToken = authStore.getToken()

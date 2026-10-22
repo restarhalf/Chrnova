@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { CORS_ORIGINS, clientIp, isAdmin, rateLimit } from '../../shared/http';
 
 interface Env {
   DB: D1Database;
@@ -26,26 +27,6 @@ interface Paper {
 
 
 
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-
-function isAdmin(c: any): boolean {
-  const expected = c.env.ADMIN_TOKEN;
-  if (!expected) return false;
-  const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')?.trim();
-  if (!token) return false;
-  return timingSafeEqual(token, expected);
-}
-
-function clientIp(c: any): string {
-  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
-}
 
 
 const ALLOWED_EXT = ['pdf', 'doc', 'docx'];
@@ -80,28 +61,10 @@ function publicPaper(p: Paper): Omit<Paper, 'device_id'> {
 }
 
 
-const rateBuckets = new Map<string, { count: number; reset: number }>();
-function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
-  const now = Date.now();
-  const b = rateBuckets.get(bucket);
-  if (!b || now > b.reset) {
-    rateBuckets.set(bucket, { count: 1, reset: now + windowSec * 1000 });
-    return true;
-  }
-  if (b.count >= limit) return false;
-  b.count++;
-  return true;
-}
-
 const app = new Hono<{ Bindings: Env }>();
-
-
-const CORS_ORIGINS = [
-  'https://chrnova.restarhalf.dpdns.org',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
 app.use('/papers', cors({ origin: CORS_ORIGINS }));
+
+
 app.use('/papers/*', cors({ origin: CORS_ORIGINS }));
 app.use('/courses', cors({ origin: CORS_ORIGINS }));
 app.use('/folders', cors({ origin: CORS_ORIGINS }));

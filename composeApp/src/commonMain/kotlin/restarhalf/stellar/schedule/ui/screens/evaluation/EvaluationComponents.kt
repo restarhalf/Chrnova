@@ -53,7 +53,7 @@ private val StatusPillHeight = 28.dp
 
 
 @Composable
-fun StarRatingDisplay(
+private fun StarRatingDisplay(
     rating: Int,
     modifier: Modifier = Modifier,
     starSize: Int = 16,
@@ -75,7 +75,7 @@ fun StarRatingDisplay(
 
 
 @Composable
-fun HalfStarRatingDisplay(
+private fun HalfStarRatingDisplay(
     rating: Double,
     modifier: Modifier = Modifier,
     starSize: Int = 14,
@@ -165,7 +165,7 @@ fun StarRatingInput(
 
 
 @Composable
-fun LikeButton(
+private fun LikeButton(
     liked: Boolean,
     likes: Int,
     onClick: () -> Unit,
@@ -236,7 +236,7 @@ fun EvaluationStatusPill(
 
 
 @Composable
-fun EvaluationTag(
+private fun EvaluationTag(
     text: String,
     modifier: Modifier = Modifier,
     background: Color = StatusColors.neutral.copy(alpha = 0.85f),

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { CORS_ORIGINS, clientIp, isAdmin, rateLimit } from '../../shared/http';
 
 interface Env {
   DB: D1Database;
@@ -35,41 +36,6 @@ const MAX_TITLE_LEN = 200;
 const MAX_CONTENT_LEN = 20000;
 
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-
-function isAdmin(c: any): boolean {
-  const expected = c.env.ADMIN_TOKEN;
-  if (!expected) return false;
-  const token = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')?.trim();
-  if (!token) return false;
-  return timingSafeEqual(token, expected);
-}
-
-function clientIp(c: any): string {
-  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
-}
-
-
-const rateBuckets = new Map<string, { count: number; reset: number }>();
-function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
-  const now = Date.now();
-  const b = rateBuckets.get(bucket);
-  if (!b || now > b.reset) {
-    rateBuckets.set(bucket, { count: 1, reset: now + windowSec * 1000 });
-    return true;
-  }
-  if (b.count >= limit) return false;
-  b.count++;
-  return true;
-}
-
-
 function validateInput(body: any): string | null {
   if (typeof body.title !== 'string' || body.title.trim() === '') {
     return '标题不能为空';
@@ -95,11 +61,6 @@ function validateInput(body: any): string | null {
 const app = new Hono<{ Bindings: Env }>();
 
 
-const CORS_ORIGINS = [
-  'https://chrnova.restarhalf.dpdns.org',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
 app.use('/announcements', cors({ origin: CORS_ORIGINS }));
 app.use('/announcements/*', cors({ origin: CORS_ORIGINS }));
 app.use('/ad', cors({ origin: CORS_ORIGINS }));

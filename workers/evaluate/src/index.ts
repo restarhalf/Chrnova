@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { CORS_ORIGINS, clientIp, rateLimit, timingSafeEqual } from '../../shared/http';
 
 interface Env {
   DB: D1Database;
@@ -30,30 +31,6 @@ const SESSION_TTL_SEC = 3600;
 const MAX_CONTENT_LEN = 2000;
 const MAX_AUTHOR_LEN = 50;
 const MAX_COURSE_LEN = 100;
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-function clientIp(c: any): string {
-  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
-}
-
-const rateBuckets = new Map<string, { count: number; reset: number }>();
-function rateLimit(bucket: string, limit: number, windowSec: number): boolean {
-  const now = Date.now();
-  const b = rateBuckets.get(bucket);
-  if (!b || now > b.reset) {
-    rateBuckets.set(bucket, { count: 1, reset: now + windowSec * 1000 });
-    return true;
-  }
-  if (b.count >= limit) return false;
-  b.count++;
-  return true;
-}
 
 
 function b64url(buf: ArrayBuffer | Uint8Array): string {
@@ -120,16 +97,11 @@ async function checkAdmin(c: any): Promise<boolean> {
 }
 
 const app = new Hono<{ Bindings: Env }>();
-
-
-
-
-const CORS_ORIGINS = [
-  'https://chrnova.restarhalf.dpdns.org',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
 app.use('/courses', cors({ origin: CORS_ORIGINS }));
+
+
+
+
 
 
 

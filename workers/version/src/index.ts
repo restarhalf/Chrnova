@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { CORS_ORIGINS, clientIp, timingSafeEqual } from '../../shared/http';
 
 interface Env {
   VERSION_KV: KVNamespace;
@@ -52,16 +53,9 @@ const AID_PATTERN = /^[0-9A-Za-z]{16,64}$/;
 const DAU_RETENTION_DAYS = 730;
 
 const app = new Hono<{ Bindings: Env }>();
+app.use('/version.json', cors({ origin: CORS_ORIGINS }));
 
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
-}
 
 
 function isAuthorized(c: any): boolean {
@@ -70,10 +64,6 @@ function isAuthorized(c: any): boolean {
   const token = c.req.header('Authorization')?.replace('Bearer ', '')?.trim();
   if (!token) return false;
   return timingSafeEqual(token, expected);
-}
-
-function clientIp(c: any): string {
-  return c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
 }
 
 
@@ -124,12 +114,6 @@ async function parseGrayTargets(raw: unknown): Promise<string[]> {
 
 
 
-const CORS_ORIGINS = [
-  'https://chrnova.restarhalf.dpdns.org',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
-app.use('/version.json', cors({ origin: CORS_ORIGINS }));
 
 
 
