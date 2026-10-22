@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.core.stats
+package restarhalf.stellar.schedule.data.impl
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post

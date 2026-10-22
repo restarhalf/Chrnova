@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import restarhalf.stellar.schedule.ui.model.BackgroundScreenUi
+import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +26,6 @@ import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
-import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -51,7 +52,7 @@ fun ChangeBackgroundScreen(
         derivedStateOf {
             val s = backgroundUiState
             val hasCustomImage = !s.backgroundImageUri.isNullOrBlank()
-            BackgroundViewModel.ScreenUi(
+            BackgroundScreenUi(
                 hasCustomImage = hasCustomImage,
                 imageSummary = if (hasCustomImage) "当前：自定义背景" else "当前：纯色背景",
                 backgroundAlphaPercent = "${(s.backgroundAlpha * 100).toInt()}%",

@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.CourseDetailTagStyle
+import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -753,7 +755,7 @@ class ScheduleViewModelTest {
             timetable = timetableSlots,
         )
         assertEquals("实验课", detail.tagText)
-        assertEquals(ScheduleViewModel.CourseDetailTagStyle.LAB, detail.tagStyle)
+        assertEquals(CourseDetailTagStyle.LAB, detail.tagStyle)
     }
 
     @Test
@@ -766,7 +768,7 @@ class ScheduleViewModelTest {
             timetable = timetableSlots,
         )
         assertEquals("调课", detail.tagText)
-        assertEquals(ScheduleViewModel.CourseDetailTagStyle.TRANS, detail.tagStyle)
+        assertEquals(CourseDetailTagStyle.TRANS, detail.tagStyle)
 
         assertTrue(detail.weekLine.startsWith("第2周（原1周）   |   "))
     }
@@ -791,7 +793,7 @@ class ScheduleViewModelTest {
             timetable = timetableSlots,
         )
         assertEquals("非本周", detail.tagText)
-        assertEquals(ScheduleViewModel.CourseDetailTagStyle.NON_CURRENT, detail.tagStyle)
+        assertEquals(CourseDetailTagStyle.NON_CURRENT, detail.tagStyle)
     }
 
     @Test

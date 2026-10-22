@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.core.text
+package restarhalf.stellar.schedule.domain.policy
 
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant

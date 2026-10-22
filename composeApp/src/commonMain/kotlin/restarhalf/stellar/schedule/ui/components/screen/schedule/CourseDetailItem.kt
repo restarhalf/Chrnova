@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.components.screen.schedule
 
+import restarhalf.stellar.schedule.ui.model.CourseDetailUi
+import restarhalf.stellar.schedule.ui.model.CourseDetailTagStyle
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -27,7 +29,6 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Edit
 import restarhalf.stellar.schedule.ui.icons.Revert
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -43,7 +44,7 @@ fun CourseDetailItem(
     surfaceSoft: Color,
     textPrimary: Color,
     textSecondary: Color,
-    detailUi: ScheduleViewModel.CourseDetailUi,
+    detailUi: CourseDetailUi,
     onEditLabCourse: (Long) -> Unit,
     onTransCourse: (Course) -> Unit,
     onRevertTrans: (Long) -> Unit
@@ -82,9 +83,9 @@ fun CourseDetailItem(
             if (tagText != null) {
                 val tagBackground =
                     when (detailUi.tagStyle) {
-                        ScheduleViewModel.CourseDetailTagStyle.LAB -> StatusColors.labTag.copy(0.8f)
-                        ScheduleViewModel.CourseDetailTagStyle.TRANS -> StatusColors.transTag.copy(0.8f)
-                        ScheduleViewModel.CourseDetailTagStyle.NON_CURRENT -> surfaceSoft
+                        CourseDetailTagStyle.LAB -> StatusColors.labTag.copy(0.8f)
+                        CourseDetailTagStyle.TRANS -> StatusColors.transTag.copy(0.8f)
+                        CourseDetailTagStyle.NON_CURRENT -> surfaceSoft
                         null -> surfaceSoft
                     }
                 Box(

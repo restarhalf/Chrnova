@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.core.text
+package restarhalf.stellar.schedule.domain.policy
 
 import restarhalf.stellar.schedule.domain.model.Course
 import kotlin.test.Test

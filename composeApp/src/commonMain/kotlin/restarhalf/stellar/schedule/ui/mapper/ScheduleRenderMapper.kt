@@ -7,10 +7,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import restarhalf.stellar.schedule.core.course.filterNonOverlapping
-import restarhalf.stellar.schedule.core.course.findOverlappingCourses
-import restarhalf.stellar.schedule.core.course.hasOverlapWith
-import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.filterNonOverlapping
+import restarhalf.stellar.schedule.domain.policy.findOverlappingCourses
+import restarhalf.stellar.schedule.domain.policy.hasOverlapWith
+import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.ui.theme.pickCourseColor
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor

@@ -18,8 +18,8 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
-import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator

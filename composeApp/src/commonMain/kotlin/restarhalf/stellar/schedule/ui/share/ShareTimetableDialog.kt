@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.share
 
+import restarhalf.stellar.schedule.ui.model.WeekHeaderUi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,6 @@ import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.ui.icons.Close
 import restarhalf.stellar.schedule.ui.icons.Save
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
@@ -44,7 +44,7 @@ fun ShareTimetableDialog(
     nickname: String?,
     avatarUri: String?,
     weekLabel: String,
-    weekHeaderUi: ScheduleViewModel.WeekHeaderUi,
+    weekHeaderUi: WeekHeaderUi,
     dayRenderData: ImmutableMap<Int, DayRenderData>,
     timetable: ImmutableList<TimetableSlot>,
     canSaveImage: Boolean,

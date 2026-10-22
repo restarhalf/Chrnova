@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.components.screen.schedule
 
+import restarhalf.stellar.schedule.ui.model.WeekHeaderUi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
 fun WeekHeaderRow(
-    ui: ScheduleViewModel.WeekHeaderUi,
+    ui: WeekHeaderUi,
     primary: Color,
     textSecondary: Color,
     modifier: Modifier = Modifier,

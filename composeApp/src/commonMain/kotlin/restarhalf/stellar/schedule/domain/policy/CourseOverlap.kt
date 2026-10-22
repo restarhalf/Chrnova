@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.core.course
+package restarhalf.stellar.schedule.domain.policy
 
 import restarhalf.stellar.schedule.domain.model.Course
 

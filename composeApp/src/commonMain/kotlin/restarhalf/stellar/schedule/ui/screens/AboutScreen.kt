@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import restarhalf.stellar.schedule.ui.model.AboutScreenUi
+import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +68,6 @@ import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
-import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -320,7 +321,7 @@ private fun AboutContent(
     lazyListState: LazyListState,
     scrollProgress: Float,
     appName: String,
-    screenUi: AboutViewModel.AboutScreenUi,
+    screenUi: AboutScreenUi,
     isDark: Boolean,
     onIconTap: () -> Unit,
     showAward: MutableState<Boolean>,

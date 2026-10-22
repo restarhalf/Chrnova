@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.share
 
+import restarhalf.stellar.schedule.ui.model.WeekHeaderUi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,7 +49,6 @@ import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
 import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
-import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -93,7 +93,7 @@ fun ShareTimetableCard(
     nickname: String?,
     avatarUri: String?,
     weekLabel: String,
-    weekHeaderUi: ScheduleViewModel.WeekHeaderUi,
+    weekHeaderUi: WeekHeaderUi,
     dayRenderData: ImmutableMap<Int, DayRenderData>,
     timetable: ImmutableList<TimetableSlot>,
     modifier: Modifier = Modifier,

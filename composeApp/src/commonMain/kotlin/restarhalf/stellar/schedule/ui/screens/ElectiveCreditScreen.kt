@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import restarhalf.stellar.schedule.ui.model.GradeCardUi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -49,7 +50,6 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
-import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
@@ -253,8 +253,8 @@ private fun CategoryCard(
 }
 
 
-private fun buildGradeCardUi(grade: GradeCourse): GradeViewModel.GradeCardUi {
-    return GradeViewModel.GradeCardUi(
+private fun buildGradeCardUi(grade: GradeCourse): GradeCardUi {
+    return GradeCardUi(
         idKey = grade.gradeId.ifBlank { grade.courseCode + grade.courseName },
         grade = grade,
         title = grade.courseName.ifBlank { "未命名课程" },

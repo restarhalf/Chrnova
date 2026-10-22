@@ -1,7 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
-import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Course
 
 

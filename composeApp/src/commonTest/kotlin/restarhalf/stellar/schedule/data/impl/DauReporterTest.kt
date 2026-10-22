@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.core.stats
+package restarhalf.stellar.schedule.data.impl
 
 import com.russhwolf.settings.MapSettings
 import io.ktor.client.HttpClient

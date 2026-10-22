@@ -1,5 +1,8 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.TermSelectionUi
+import restarhalf.stellar.schedule.ui.model.SettingsScreenUi
+import restarhalf.stellar.schedule.ui.model.AccountUi
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
@@ -81,32 +84,6 @@ class SettingsViewModel(
     private data class SettingsAuthState(
         val authToken: String,
         val profile: JwxtAuthProfile,
-    )
-
-    
-    @Stable
-    data class SettingsScreenUi(
-        val campusOptions: ImmutableList<String>,
-        val campusSelectedIndex: Int,
-        val themeOptions: ImmutableList<String>,
-        val floatingBarOptions: ImmutableList<String>,
-        val termStartSummary: String,
-        val syncSummary: String,
-    )
-
-    
-    @Stable
-    data class TermSelectionUi(
-        val items: ImmutableList<String>,
-        val selectedIndex: Int,
-    )
-
-    
-    @Immutable
-    data class AccountUi(
-        val loggedIn: Boolean,
-        val title: String,
-        val summary: String,
     )
 
     

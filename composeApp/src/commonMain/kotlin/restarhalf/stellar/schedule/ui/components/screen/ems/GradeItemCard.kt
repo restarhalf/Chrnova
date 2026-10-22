@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.components.screen.ems
 
+import restarhalf.stellar.schedule.ui.model.GradeCardUi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
-import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -37,7 +37,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun GradeItemCard(
     modifier: Modifier = Modifier,
-    card: GradeViewModel.GradeCardUi,
+    card: GradeCardUi,
     onClick: () -> Unit,
 ) {
     val animProgress = remember { Animatable(0f) }

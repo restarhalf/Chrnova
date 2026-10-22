@@ -1,5 +1,8 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.GradeSummary
+import restarhalf.stellar.schedule.ui.model.GradeScreenUi
+import restarhalf.stellar.schedule.ui.model.GradeCardUi
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
@@ -37,35 +40,6 @@ class GradeViewModel(
         val loading: Boolean,
         val error: String,
         val report: TermGradeReport,
-    )
-
-    
-    @Immutable
-    data class GradeSummary(
-        val earnedCredits: String = "",
-        val totalGradePoints: String = "",
-        val averageCreditGradePoint: String = "",
-    )
-
-    
-    @Stable
-    data class GradeScreenUi(
-        val cards: ImmutableList<GradeCardUi>,
-        val summary: GradeSummary,
-        val statusText: String?,
-    )
-
-    
-    @Immutable
-    data class GradeCardUi(
-        val idKey: String,
-        val grade: GradeCourse,
-        val title: String,
-        val subtitle: String,
-        val scoreText: String,
-        val jdText: String,
-        val isRetakeExam: Boolean,
-        val isFailed: Boolean = false,
     )
 
     private val _loading = MutableStateFlow(false)

@@ -28,8 +28,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
-import restarhalf.stellar.schedule.core.text.CsvExporter
-import restarhalf.stellar.schedule.core.text.IcsExporter
+import restarhalf.stellar.schedule.domain.policy.CsvExporter
+import restarhalf.stellar.schedule.domain.policy.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort

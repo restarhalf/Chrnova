@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.combine
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.core.stats.DauReporter
+import restarhalf.stellar.schedule.data.impl.DauReporter
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort

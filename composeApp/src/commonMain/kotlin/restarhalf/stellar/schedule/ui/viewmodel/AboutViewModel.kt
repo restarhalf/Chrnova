@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.AboutScreenUi
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,15 +43,6 @@ class AboutViewModel(
         val updateChecking: Boolean,
         val updateSummary: String,
         val pendingUpdate: AppUpdateInfo?,
-    )
-
-    
-    @Immutable
-    data class AboutScreenUi(
-        val versionDisplay: String,
-        val currentVersionForCheck: String,
-        val updateActionSummary: String,
-        val canCheckUpdate: Boolean,
     )
 
     

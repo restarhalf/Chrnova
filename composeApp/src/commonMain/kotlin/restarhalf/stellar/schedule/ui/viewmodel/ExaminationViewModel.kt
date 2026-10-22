@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.ExaminationScreenUi
+import restarhalf.stellar.schedule.ui.model.ExamCardUi
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
@@ -39,27 +41,6 @@ class ExaminationViewModel(
     private val settings: TermSettingsPort,
     private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
-
-    
-    @Immutable
-    data class ExamCardUi(
-        val idKey: String,
-        val exam: Examination,
-        val title: String,
-        val dateText: String,
-        val timeText: String,
-        val locationText: String,
-        val seatText: String,
-        val remarkText: String?,
-        val isEnded: Boolean = false,
-    )
-
-    
-    @Stable
-    data class ExaminationScreenUi(
-        val cards: ImmutableList<ExamCardUi>,
-        val statusText: String?,
-    )
 
     
     @Stable

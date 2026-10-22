@@ -55,8 +55,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
-import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseCard

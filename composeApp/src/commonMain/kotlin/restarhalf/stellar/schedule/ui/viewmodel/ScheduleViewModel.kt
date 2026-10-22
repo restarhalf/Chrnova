@@ -1,5 +1,9 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.WeekHeaderUi
+import restarhalf.stellar.schedule.ui.model.PageRenderUi
+import restarhalf.stellar.schedule.ui.model.CourseDetailUi
+import restarhalf.stellar.schedule.ui.model.CourseDetailTagStyle
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
@@ -21,8 +25,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
-import restarhalf.stellar.schedule.core.course.effectiveCoursesForWeek
-import restarhalf.stellar.schedule.core.course.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.WeeksFormatter
 import restarhalf.stellar.schedule.core.time.AcademicCalendar
@@ -52,21 +56,6 @@ class ScheduleViewModel(
 ) : ViewModel() {
 
     
-    @Stable
-    data class WeekHeaderUi(
-        val days: ImmutableList<String>,
-        val dates: ImmutableList<String>,
-        val todayIndex: Int?,
-    )
-
-    
-    @Stable
-    data class PageRenderUi(
-        val actualWeek: Int,
-        val dayRenderData: ImmutableMap<Int, DayRenderData>,
-    )
-
-    
     @Immutable
     data class ScheduleUiState(
         val showNonCurrentWeek: Boolean,
@@ -74,25 +63,6 @@ class ScheduleViewModel(
         val transDialogUiState: TransDialogUiState,
         val transConflictUiState: TransConflictUiState,
         val detailSheetUiState: DetailSheetUiState,
-    )
-
-    
-    enum class CourseDetailTagStyle {
-        
-        LAB,
-        
-        TRANS,
-        
-        NON_CURRENT,
-    }
-
-    
-    @Immutable
-    data class CourseDetailUi(
-        val weekLine: String,
-        val locationLine: String,
-        val tagText: String?,
-        val tagStyle: CourseDetailTagStyle?,
     )
 
     

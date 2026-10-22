@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.ui.screens.pe
 
+import restarhalf.stellar.schedule.ui.model.AttachmentUi
+import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +44,6 @@ import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
 import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.FreeApplyTypes
-import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -295,7 +296,7 @@ fun PEFreeApplyEditScreen(
 
 @Composable
 private fun AttachmentThumb(
-    att: PEFreeApplyViewModel.AttachmentUi,
+    att: AttachmentUi,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {

@@ -1,5 +1,6 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
+import restarhalf.stellar.schedule.ui.model.SectionRenderUi
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,13 +57,6 @@ class HomeViewModel(
         val courses: ImmutableList<Course>,
         val exams: ImmutableList<Examination>,
         val nowMs: Long,
-    )
-
-    
-    @Stable
-    data class SectionRenderUi(
-        val title: String,
-        val rows: ImmutableList<BuildHomePeriodRenderRowsUseCase.RowRenderUi>,
     )
 
     
