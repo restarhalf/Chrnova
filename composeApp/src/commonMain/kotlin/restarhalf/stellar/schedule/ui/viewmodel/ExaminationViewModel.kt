@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import restarhalf.stellar.schedule.ui.model.ExaminationScreenUi
 import restarhalf.stellar.schedule.ui.model.ExamCardUi
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

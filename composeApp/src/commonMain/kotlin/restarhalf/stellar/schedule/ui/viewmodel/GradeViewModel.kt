@@ -4,7 +4,6 @@ import restarhalf.stellar.schedule.ui.model.GradeSummary
 import restarhalf.stellar.schedule.ui.model.GradeScreenUi
 import restarhalf.stellar.schedule.ui.model.GradeCardUi
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.ImmutableList
