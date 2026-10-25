@@ -1,2 +1,15 @@
 # 分层解耦基线：每行 <相对路径>|<被越界 import 的完整符号>
-# 阶段 1/2/3 逐步删除，阶段 5 清空；条目存在即代表已知越界。
+# 条目存在即代表已知越界；删掉一行就意味着该处已修复，不允许新增。
+#
+# 规则见 build.gradle.kts 的 VerifyLayeringTask.RULES：
+#   domain   不得依赖 data/ui/platform
+#   ui       不得依赖 data
+#   core     不得依赖 domain/data/ui/platform
+#   data     不得依赖 ui
+#   ui/viewmodel、ui/screens 不得直连 domain.repository（请经 UseCase / Port；只约束生产代码）
+#   reminder、widget 不得依赖 data（请经 Port）
+#
+# 扫描范围：commonMain / androidMain / iosMain（全部规则）+ commonTest / androidDeviceTest
+# （层归属规则；测试里 mock 仓库接口再包进 UseCase 属正常写法，故不套用直连仓库规则）。
+#
+# 当前 0 处：基线为空即为达标状态。

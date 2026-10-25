@@ -59,19 +59,101 @@ room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
-// 分层守卫：domain 不得依赖 data/ui，ui 不得依赖 data。
+// 分层守卫：按规则表校验「某层源文件不得 import 某些前缀」。
 // 已知越界记录在 architecture-baseline.txt（每行 <相对路径>|<import 符号>），逐步清空后即零容忍。
+// 生产源集与测试源集都扫：测试目录镜像主源码，同一套规则同样适用；
+// 测试里实现真实端口（fake/stub）不算越界，越界的只是「测试去 import data 实现类」这类硬依赖。
 val architectureBaselineFile = layout.projectDirectory.file("architecture-baseline.txt")
 
 abstract class VerifyLayeringTask : DefaultTask() {
+    /** 生产源集：全部规则适用。 */
     @get:InputFiles
-    abstract val sources: ConfigurableFileCollection
+    abstract val prodSources: ConfigurableFileCollection
+
+    /** 测试源集：只套用「层归属」规则，不套用「表现层不得直连仓库」规则。 */
+    @get:InputFiles
+    abstract val testSources: ConfigurableFileCollection
 
     @get:InputFile
     abstract val baseline: RegularFileProperty
 
     @get:Internal
     abstract val projectDirPath: Property<String>
+
+    /**
+     * 一条规则：路径含 [pathSegment] 的文件，不得 import [forbiddenPrefixes] 开头的符号。
+     *
+     * [appliesToTests] 为 false 时只约束生产代码。测试里 mock 一个仓库接口、再包进
+     * UseCase 去构造被测对象是标准做法，不属于「表现层绕过用例层」。
+     */
+    private data class Rule(
+        val label: String,
+        val pathSegment: String,
+        val forbiddenPrefixes: List<String>,
+        val appliesToTests: Boolean = true,
+    )
+
+    private companion object {
+        const val APP_PACKAGE = "restarhalf.stellar.schedule"
+
+        val RULES = listOf(
+            // 核心分层
+            Rule(
+                label = "domain 不得依赖 data/ui/platform",
+                pathSegment = "/domain/",
+                forbiddenPrefixes = listOf(
+                    "$APP_PACKAGE.data.",
+                    "$APP_PACKAGE.ui.",
+                    "$APP_PACKAGE.platform.",
+                ),
+            ),
+            Rule(
+                label = "ui 不得依赖 data",
+                pathSegment = "/ui/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.data."),
+            ),
+            Rule(
+                label = "core 不得依赖 domain/data/ui/platform",
+                pathSegment = "/core/",
+                forbiddenPrefixes = listOf(
+                    "$APP_PACKAGE.domain.",
+                    "$APP_PACKAGE.data.",
+                    "$APP_PACKAGE.ui.",
+                    "$APP_PACKAGE.platform.",
+                ),
+            ),
+            // 反向依赖：数据层不得回头依赖表现层
+            Rule(
+                label = "data 不得依赖 ui",
+                pathSegment = "/data/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.ui."),
+            ),
+            // 表现层不得绕过用例层直连仓库
+            Rule(
+                label = "表现层不得直连仓库接口（请经 UseCase / Port）",
+                pathSegment = "/ui/viewmodel/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.domain.repository."),
+                appliesToTests = false,
+            ),
+            Rule(
+                label = "表现层不得直连仓库接口（请经 UseCase / Port）",
+                pathSegment = "/ui/screens/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.domain.repository."),
+                appliesToTests = false,
+            ),
+            // 平台胶水层（不在 domain/ui 命名空间下，原先被规则漏掉）
+            Rule(
+                label = "reminder 层不得依赖 data（请经 Port）",
+                pathSegment = "/reminder/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.data."),
+            ),
+            Rule(
+                label = "widget 层不得依赖 data（请经 Port）",
+                pathSegment = "/widget/",
+                forbiddenPrefixes = listOf("$APP_PACKAGE.data."),
+            ),
+        )
+    }
 
     @TaskAction
     fun verify() {
@@ -83,26 +165,32 @@ abstract class VerifyLayeringTask : DefaultTask() {
             .toSet()
 
         val violations = mutableListOf<String>()
-        sources.files.sortedBy { it.path }.forEach fileLoop@{ file ->
-            val relative = file.path.replace('\\', '/').removePrefix("$root/")
-            val inDomain = relative.contains("/domain/")
-            val inUi = relative.contains("/ui/")
-            if (!inDomain && !inUi) return@fileLoop
 
-            file.readLines().forEach lineLoop@{ line ->
-                val trimmed = line.trim()
-                if (!trimmed.startsWith("import ")) return@lineLoop
-                val symbol = trimmed.removePrefix("import ").trim()
-                val forbidden = if (inDomain) {
-                    symbol.startsWith("restarhalf.stellar.schedule.data.") ||
-                        symbol.startsWith("restarhalf.stellar.schedule.ui.")
-                } else {
-                    symbol.startsWith("restarhalf.stellar.schedule.data.")
+        fun scan(files: Collection<File>, isTest: Boolean) {
+            files.sortedBy { it.path }.forEach fileLoop@{ file ->
+                val relative = file.path.replace('\\', '/').removePrefix("$root/")
+                val applicable = RULES.filter {
+                    relative.contains(it.pathSegment) && (isTest.not() || it.appliesToTests)
                 }
-                if (!forbidden) return@lineLoop
-                if ("$relative|$symbol" !in allowed) violations += "$relative -> $symbol"
+                if (applicable.isEmpty()) return@fileLoop
+
+                file.readLines().forEach lineLoop@{ line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) return@lineLoop
+                    // 去掉 `as Alias`，让基线条目稳定且可读
+                    val symbol = trimmed.removePrefix("import ").trim().substringBefore(" as ")
+                    val hit = applicable.firstOrNull { rule ->
+                        rule.forbiddenPrefixes.any { symbol.startsWith(it) }
+                    } ?: return@lineLoop
+                    if ("$relative|$symbol" !in allowed) {
+                        violations += "$relative -> $symbol  [${hit.label}]"
+                    }
+                }
             }
         }
+
+        scan(prodSources.files, isTest = false)
+        scan(testSources.files, isTest = true)
 
         if (violations.isNotEmpty()) {
             throw GradleException(
@@ -117,13 +205,19 @@ abstract class VerifyLayeringTask : DefaultTask() {
 
 val verifyLayering = tasks.register<VerifyLayeringTask>("verifyLayering") {
     group = "verification"
-    description = "校验 domain/ui 不依赖 data 层（含基线白名单）"
+    description = "按规则表校验分层依赖（domain/ui/core/data/reminder/widget，含基线白名单；生产与测试源集都扫）"
     projectDirPath.set(projectDir.absolutePath)
     baseline.set(architectureBaselineFile)
-    sources.from(
+    prodSources.from(
         layout.projectDirectory.dir("src/commonMain/kotlin").asFileTree.matching { include("**/*.kt") },
         layout.projectDirectory.dir("src/androidMain/kotlin").asFileTree.matching { include("**/*.kt") },
         layout.projectDirectory.dir("src/iosMain/kotlin").asFileTree.matching { include("**/*.kt") },
+    )
+    // 测试目录镜像主源码，层归属规则同样适用：测试直接 import data 实现类
+    // 同样是硬依赖，会让重构数据层时连带改测试。
+    testSources.from(
+        layout.projectDirectory.dir("src/commonTest/kotlin").asFileTree.matching { include("**/*.kt") },
+        layout.projectDirectory.dir("src/androidDeviceTest/kotlin").asFileTree.matching { include("**/*.kt") },
     )
 }
 
@@ -145,21 +239,12 @@ val localProps = Properties().apply {
     runCatching { rootProject.file("local.properties").inputStream().use(::load) }
 }
 
-val localSecretsSignKey =
-    (localProps.getProperty("SIGN_KEY") ?: System.getenv("SIGN_KEY"))
+// 密钥在任务执行时才解析：配置期不再 error，这样只跑校验类任务
+// （如 verifyLayering）的人无需准备 local.properties。
+fun readSecret(name: String): String? =
+    (localProps.getProperty(name) ?: System.getenv(name))
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
-        ?: error("SIGN_KEY missing in local.properties or environment")
-val localSecretsAesKey =
-    (localProps.getProperty("AES_KEY") ?: System.getenv("AES_KEY"))
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
-        ?: error("AES_KEY missing in local.properties or environment")
-
-
-require(localSecretsAesKey.toByteArray(Charsets.UTF_8).size == 16) {
-    "AES_KEY must be exactly 16 bytes for AES-128"
-}
 
 val generatedLocalSecretsDir = layout.buildDirectory.dir("generated/source/localSecrets/kotlin")
 
@@ -175,6 +260,10 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
+        val aesKeyValue = aesKey.get()
+        require(aesKeyValue.toByteArray(Charsets.UTF_8).size == 16) {
+            "AES_KEY must be exactly 16 bytes for AES-128"
+        }
         val outputFile =
             outputDir.file("restarhalf/stellar/schedule/config/LocalSecrets.kt").get().asFile
 
@@ -187,7 +276,7 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
             return sb.toString()
         }
 
-        val aesChars = aesKey.get().toHexStringArray()
+        val aesChars = aesKeyValue.toHexStringArray()
         val signChars = signKey.get().toHexStringArray()
 
         outputFile.parentFile.mkdirs()
@@ -209,8 +298,9 @@ abstract class GenerateLocalSecretsTask : DefaultTask() {
 
 val generateLocalSecrets = tasks.register<GenerateLocalSecretsTask>("generateLocalSecrets") {
     description = "生成LocalSecrets"
-    aesKey.set(localSecretsAesKey)
-    signKey.set(localSecretsSignKey)
+    // 惰性求值：只有真正执行到该任务时才要求密钥存在。
+    aesKey.set(providers.provider { readSecret("AES_KEY") ?: error("AES_KEY missing in local.properties or environment") })
+    signKey.set(providers.provider { readSecret("SIGN_KEY") ?: error("SIGN_KEY missing in local.properties or environment") })
     outputDir.set(generatedLocalSecretsDir)
 }
 
