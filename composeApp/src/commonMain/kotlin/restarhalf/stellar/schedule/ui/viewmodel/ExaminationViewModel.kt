@@ -23,6 +23,7 @@ import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.core.text.uniqueKeys
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -111,7 +112,11 @@ class ExaminationViewModel(
         nowMs: Long,
     ): ExaminationScreenUi {
         val sorted = items.sortedBy { it.time.substringBefore(" ").ifBlank { "9999-99-99" } }
-        val cards = sorted.map { exam -> buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not()) }
+        // idKey 依赖自增主键，正常不会撞；这里仍兜一层，避免数据源异常时 LazyColumn 崩溃
+        val uniqueIdKeys = sorted.uniqueKeys { "${it.id}-${it.courseNumber}-${it.zwh}-${it.time}" }
+        val cards = sorted.mapIndexed { index, exam ->
+            buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not(), uniqueIdKeys[index])
+        }
         val statusText =
             when {
                 error.isNotBlank() -> error
@@ -155,7 +160,11 @@ class ExaminationViewModel(
     }
 
     
-    private fun buildExamCardUi(exam: Examination, isEnded: Boolean = false): ExamCardUi {
+    private fun buildExamCardUi(
+        exam: Examination,
+        isEnded: Boolean = false,
+        idKey: String = "${exam.id}-${exam.courseNumber}-${exam.zwh}-${exam.time}",
+    ): ExamCardUi {
         val title = exam.courseName.ifBlank { "未命名课程" }
         val datePart = exam.time.substringBefore(" ").ifBlank { "待定" }
         val timePart = exam.time.substringAfter(" ", "").ifBlank { "待定" }
@@ -175,7 +184,7 @@ class ExaminationViewModel(
         }
         return ExamCardUi(
 
-            idKey = "${exam.id}-${exam.courseNumber}-${exam.zwh}-${exam.time}",
+            idKey = idKey,
             exam = exam,
             title = title,
             dateText = dateText,

@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,18 +14,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.policy.buildCourseNames
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.platform.AppIoDispatcher
+import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 
 
 class CourseEditViewModel(
-    private val courseRepository: CourseRepository,
+    private val observeAllCourses: ObserveAllCoursesUseCase,
+    private val observeCourseById: ObserveCourseByIdUseCase,
+    private val saveCourse: SaveCourseUseCase,
+    private val deleteCourseUseCase: DeleteCourseUseCase,
     private val auth: JwxtAuthPort,
 ) : ViewModel() {
 
@@ -57,7 +59,7 @@ class CourseEditViewModel(
     )
 
     private val _uiState: StateFlow<CourseEditUiState> =
-        courseRepository.observeAllCourses()
+        observeAllCourses()
             .map { courses ->
                 CourseEditUiState(courses = courses.toPersistentList(), courseNames = buildCourseNames(courses).toPersistentList())
             }
@@ -149,7 +151,7 @@ class CourseEditViewModel(
 
     
     fun observeEditingCourse(courseId: Long?): Flow<Course?> {
-        return courseRepository.observeCourseById(courseId ?: -1)
+        return observeCourseById(courseId ?: -1)
     }
 
     
@@ -206,13 +208,7 @@ class CourseEditViewModel(
         if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
             try {
-                val saved = runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
-                    .onFailure { e ->
-                        if (e is CancellationException) throw e
-                        AppLogger.log("CourseEdit", "保存实验课失败", e)
-                    }
-                    .isSuccess
-                onResult(saved)
+                onResult(saveCourse(course))
             } finally {
                 _saving.value = false
             }
@@ -222,13 +218,7 @@ class CourseEditViewModel(
     
     fun deleteCourse(course: Course, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val deleted = runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
-                .onFailure { e ->
-                    if (e is CancellationException) throw e
-                    AppLogger.log("CourseEdit", "删除课程失败", e)
-                }
-                .isSuccess
-            onResult(deleted)
+            onResult(deleteCourseUseCase(course))
         }
     }
 

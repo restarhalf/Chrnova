@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.policy.distinctExaminations
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
@@ -49,7 +50,7 @@ class FetchExaminationsUseCase(
             AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
             ""
         }
-        val boundExams = exams.map { it.copy(userNo = userNo) }
+        val boundExams = exams.distinctExaminations().map { it.copy(userNo = userNo) }
 
         if (nameOrNumber.isBlank()) {
             repository.replaceExaminations(resolvedSemester, boundExams)

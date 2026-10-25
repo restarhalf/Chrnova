@@ -38,11 +38,11 @@ import restarhalf.stellar.schedule.domain.model.PECodeItem
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.image.attachmentBadgeLabel
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.FreeApplyTypes
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults

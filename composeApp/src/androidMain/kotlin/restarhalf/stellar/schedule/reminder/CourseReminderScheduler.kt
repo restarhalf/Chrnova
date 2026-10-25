@@ -21,8 +21,8 @@ import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
-import restarhalf.stellar.schedule.data.local.Campus
-import restarhalf.stellar.schedule.data.local.getCampusTimetable
+import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.policy.getCampusTimetable
 import restarhalf.stellar.schedule.reminder.receiver.CourseReminderReceiver
 import kotlin.time.ExperimentalTime
 import restarhalf.stellar.schedule.domain.model.Course as DomainCourse
@@ -50,7 +50,6 @@ class CourseReminderScheduler(
         nowMs: Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
     ): ScheduleResult {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        getCampusTimetable(campus)
 
         val next =
             findNextReminder(

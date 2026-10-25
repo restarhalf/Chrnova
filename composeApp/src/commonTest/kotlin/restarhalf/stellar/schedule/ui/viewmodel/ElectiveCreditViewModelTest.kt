@@ -26,6 +26,7 @@ import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetGradesByUserNoUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -50,7 +51,7 @@ class ElectiveCreditViewModelTest {
         authWorkflow = authWorkflow,
         academic = academic,
         auth = auth,
-        gradeRepository = gradeRepository,
+        getGradesByUserNo = GetGradesByUserNoUseCase(gradeRepository),
         fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, termSettings),
         calculateElectiveCredits = CalculateElectiveCreditsUseCase(),
     )

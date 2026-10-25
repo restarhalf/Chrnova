@@ -27,6 +27,7 @@ import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesAcrossSemestersUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -65,7 +66,7 @@ class EvaluationCourseScreenUiTest {
         every { userProfile.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
         everySuspend { courseRepository.getAllCoursesAcrossSemesters() } returns emptyList()
-        return CourseEvaluationViewModel(port, courseRepository, auth, userProfile)
+        return CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, userProfile)
     }
 
     private fun stubCourseData(evaluations: List<Evaluation> = listOf(sampleEvaluation)) {

@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
 import com.atiurin.ultron.core.compose.runUltronUiTest
-import com.russhwolf.settings.ObservableSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -21,12 +20,12 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -45,6 +44,7 @@ import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.MarkAnnouncementsReadUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.ui.model.home.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
@@ -62,9 +62,8 @@ class HomeScreenUiTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
     private val announcementPort = mock<AnnouncementPort>(MockMode.autofill)
-    private val observableSettings = mock<ObservableSettings>(MockMode.autofill) {
-        every { putString(any(), any()) } returns Unit
-        every { putLong(any(), any()) } returns Unit
+    private val announcementCache = mock<AnnouncementCachePort>(MockMode.autofill) {
+        every { getCacheTtlMs() } returns 10L * 60L * 1000L
     }
 
     private val coursesFlow = MutableStateFlow<List<Course>>(emptyList())
@@ -107,7 +106,7 @@ class HomeScreenUiTest {
         every { timetable.getCampusTimetable(any()) } returns timetableSlots
         val todaySchedule = BuildHomeTodayScheduleUseCase()
         return HomeViewModel(
-            courseRepository = courseRepository,
+            observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
             observeAllExaminations = ObserveAllExaminationsUseCase(examinationRepository, auth),
             auth = auth,
             isExamNotEnded = IsExamNotEndedUseCase(),
@@ -125,10 +124,10 @@ class HomeScreenUiTest {
 
     private fun makeAnnouncementViewModel() = AnnouncementViewModel(
         fetchAnnouncements = FetchAnnouncementsUseCase(
-            announcementPort, AnnouncementStore(observableSettings),
+            announcementPort, announcementCache,
         ),
         markAnnouncementsRead = MarkAnnouncementsReadUseCase(
-            AnnouncementStore(observableSettings),
+            announcementCache,
         ),
         fetchAdConfig = FetchAdConfigUseCase(announcementPort),
         fetchAnnouncement = FetchAnnouncementUseCase(announcementPort),

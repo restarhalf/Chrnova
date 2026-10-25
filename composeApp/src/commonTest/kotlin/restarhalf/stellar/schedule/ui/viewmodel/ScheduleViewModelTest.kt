@@ -36,6 +36,9 @@ import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
@@ -132,7 +135,9 @@ class ScheduleViewModelTest {
         return ScheduleViewModel(
             settings = settings,
             termSettings = termSettings,
-            courseRepository = courseRepository,
+            observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
+            saveCourse = SaveCourseUseCase(courseRepository),
+            deleteCourseUseCase = DeleteCourseUseCase(courseRepository),
             buildScheduleUiStateUseCase = BuildScheduleUiStateUseCase(timetable),
             transCourseWithConflicts = TransCourseWithConflictsUseCase(
                 courseRepository, TransCourseUseCase(),

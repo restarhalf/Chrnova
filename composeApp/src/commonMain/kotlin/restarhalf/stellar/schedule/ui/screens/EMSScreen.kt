@@ -58,11 +58,11 @@ import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeSummaryCard
 import restarhalf.stellar.schedule.ui.icons.Credit
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
 import top.yukonga.miuix.kmp.basic.Icon

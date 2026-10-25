@@ -19,13 +19,13 @@ import restarhalf.stellar.schedule.domain.model.EvaluationCreateRequest
 import restarhalf.stellar.schedule.domain.model.EvaluationUpdateRequest
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
+import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesAcrossSemestersUseCase
 
 
 class CourseEvaluationViewModel(
     private val port: CourseEvaluationPort,
-    private val courseRepository: CourseRepository,
+    private val getAllCoursesAcrossSemesters: GetAllCoursesAcrossSemestersUseCase,
     private val auth: JwxtAuthPort,
     private val settings: UserProfilePort,
 ) : ViewModel() {
@@ -133,7 +133,7 @@ class CourseEvaluationViewModel(
             }
         }
         viewModelScope.launch {
-            runCatching { courseRepository.getAllCoursesAcrossSemesters() }
+            runCatching { getAllCoursesAcrossSemesters() }
                 .onSuccess { courses ->
                     updateState { it.copy(myCourses = courses.toPersistentList()) }
                 }

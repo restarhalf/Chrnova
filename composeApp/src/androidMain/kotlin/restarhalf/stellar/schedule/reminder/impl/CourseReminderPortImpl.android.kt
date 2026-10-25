@@ -23,11 +23,7 @@ class CourseReminderPortImpl(
         val result =
             scheduler.scheduleNextReminder(
                 courses = courses,
-                campus =
-                    when (campus) {
-                        Campus.Development -> restarhalf.stellar.schedule.data.local.Campus.Development
-                        Campus.Jinshitan -> restarhalf.stellar.schedule.data.local.Campus.Jinshitan
-                    },
+                campus = campus,
                 termStartMs = termStartMs,
                 totalWeeks = totalWeeks
             )

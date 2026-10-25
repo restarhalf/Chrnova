@@ -20,6 +20,7 @@ import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
+import restarhalf.stellar.schedule.core.text.uniqueKeys
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
@@ -122,14 +123,10 @@ class GradeViewModel(
     ): GradeScreenUi {
         val courses = report.achievements
 
-        val seenKeys = HashSet<String>()
-        val cards = courses.map { grade ->
-            val card = buildGradeCardUi(grade)
-            if (seenKeys.add(card.idKey)) {
-                card
-            } else {
-                card.copy(idKey = "${card.idKey}#${seenKeys.size}")
-            }
+        val cards = courses.map { buildGradeCardUi(it) }
+        val uniqueIdKeys = cards.uniqueKeys { it.idKey }
+        val dedupedCards = cards.mapIndexed { index, card ->
+            if (uniqueIdKeys[index] == card.idKey) card else card.copy(idKey = uniqueIdKeys[index])
         }
         val summary = GradeSummary(
             earnedCredits = report.earnedCredits,
@@ -139,10 +136,10 @@ class GradeViewModel(
         val statusText =
             when {
                 error.isNotBlank() -> error
-                !loading && cards.isEmpty() -> "暂无成绩数据"
+                !loading && dedupedCards.isEmpty() -> "暂无成绩数据"
                 else -> null
             }
-        return GradeScreenUi(cards = cards.toPersistentList(), summary = summary, statusText = statusText)
+        return GradeScreenUi(cards = dedupedCards.toPersistentList(), summary = summary, statusText = statusText)
     }
 
     

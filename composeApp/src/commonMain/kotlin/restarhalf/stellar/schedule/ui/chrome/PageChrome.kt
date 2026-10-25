@@ -1,4 +1,4 @@
-package restarhalf.stellar.schedule.ui.navigation
+package restarhalf.stellar.schedule.ui.chrome
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope

@@ -27,6 +27,7 @@ import restarhalf.stellar.schedule.data.impl.settings.ReminderSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.TermSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.UserProfilePortImpl
 import restarhalf.stellar.schedule.data.impl.SyncPortImpl
+import restarhalf.stellar.schedule.data.impl.ScheduleSnapshotPortImpl
 import restarhalf.stellar.schedule.data.impl.TimetablePortImpl
 import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.data.local.TimetableSettings
@@ -60,6 +61,7 @@ import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
+import restarhalf.stellar.schedule.domain.port.ScheduleSnapshotPort
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
@@ -198,6 +200,7 @@ val portModule = module {
         )
     }
     single<TimetablePort> { TimetablePortImpl(prefs = get()) }
+    single<ScheduleSnapshotPort> { ScheduleSnapshotPortImpl(courseRepository = get(), timetable = get()) }
     single<SyncPort> { SyncPortImpl(jwxtSync = get(), courseRepository = get(), auth = get()) }
     single<PapersPort> {
         PapersApi(

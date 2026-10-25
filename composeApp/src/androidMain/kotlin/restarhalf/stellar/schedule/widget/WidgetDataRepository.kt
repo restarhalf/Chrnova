@@ -1,11 +1,8 @@
 package restarhalf.stellar.schedule.widget
 
-import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
-import com.tencent.mmkv.kmp.MMKV
-import com.tencent.mmkv.kmp.initialize
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -23,15 +20,9 @@ import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
-import restarhalf.stellar.schedule.data.local.AppDatabase
-import restarhalf.stellar.schedule.data.local.TimetableSettings
-import restarhalf.stellar.schedule.data.local.TimetableSlot
-import restarhalf.stellar.schedule.data.local.buildPlatformAppDatabase
-import restarhalf.stellar.schedule.data.local.getCampusTimetable
-import restarhalf.stellar.schedule.data.local.mmkv.MmkvSettingsFactory
-import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.domain.port.ScheduleSnapshotPort
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -49,6 +40,7 @@ internal data class SmallNextCourse(
     val end: String,
     val location: String,
     val restCount: Int,
+    val dotColors: List<Color>,
 )
 
 @Immutable
@@ -104,38 +96,20 @@ private data class Session(
 
 internal object WidgetDataRepository {
 
-    private const val UPCOMING_WINDOW_MINUTES = 15
+    /** 小爱 isShowNextClass：1 <= 距开课分钟数 < 11，即 1~10 分钟 */
+    private const val UPCOMING_WINDOW_MINUTES = 10
 
-    @Volatile
-    private var dbCache: AppDatabase? = null
+    /** 4×2 组件一屏放两行；其余课程用页脚"还有 N 节课"概括 */
+    private const val MAX_ROWS = 2
 
     @OptIn(ExperimentalTime::class)
-    suspend fun load(context: Context): WidgetSnapshot =
+    suspend fun load(snapshotPort: ScheduleSnapshotPort): WidgetSnapshot =
         withContext(Dispatchers.IO) {
-            val db =
-                dbCache
-                    ?: synchronized(this@WidgetDataRepository) {
-                        dbCache ?: buildPlatformAppDatabase(context.applicationContext).also {
-                            dbCache = it
-                        }
-                    }
-            val courses = db.courseDao().getAllCoursesOnce().map { it.toDomain() }
-            MMKV.initialize(context.applicationContext)
-            val settingsFactory = MmkvSettingsFactory()
-            val settings = settingsFactory.create("timetable_prefs")
-            val prefs = TimetableSettings(settings)
-            val timetable = getCampusTimetable(prefs.getCampus())
-            val totalWeeks = prefs.getTotalWeeks()
-            val termStartMs = prefs.getTermStartMs()
-
-
-            val appSettings = settingsFactory.create(SettingsKeys.PREFS_NAME)
-            val activeScheduleTerm = appSettings.getString(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
-            val filteredCourses = if (activeScheduleTerm.isNotBlank()) {
-                db.courseDao().getCoursesBySemesterOnce(activeScheduleTerm).map { it.toDomain() }
-            } else {
-                courses
-            }
+            val snapshot = snapshotPort.load()
+            val filteredCourses = snapshot.courses
+            val timetable = snapshot.timetable
+            val totalWeeks = snapshot.totalWeeks
+            val termStartMs = snapshot.termStartMs
 
             val now =
                 Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -238,14 +212,15 @@ internal object WidgetDataRepository {
         val first = todayRemaining.first()
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
-            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
+            weekLabel = weekLabelOf(today),
             nextCourse =
                 SmallNextCourse(
                     title = first.title,
                     start = first.start,
                     end = first.end,
                     location = first.location,
-                    restCount = (todayRemaining.size - 1).coerceAtLeast(0)
+                    restCount = (todayRemaining.size - 1).coerceAtLeast(0),
+                    dotColors = todayRemaining.drop(1).map { it.barColor },
                 ),
             emptyText = ""
         )
@@ -255,14 +230,15 @@ internal object WidgetDataRepository {
         val first = tomorrow.sessions.first()
         return SmallWidgetState(
             dayLabel = "明天",
-            weekLabel = if (tomorrow.isHoliday) "假期中" else "第${tomorrow.week}周",
+            weekLabel = weekLabelOf(tomorrow),
             nextCourse =
                 SmallNextCourse(
                     title = first.title,
                     start = first.start,
                     end = first.end,
                     location = first.location,
-                    restCount = (tomorrow.sessions.size - 1).coerceAtLeast(0)
+                    restCount = (tomorrow.sessions.size - 1).coerceAtLeast(0),
+                    dotColors = tomorrow.sessions.drop(1).map { it.barColor },
                 ),
             emptyText = ""
         )
@@ -274,9 +250,9 @@ internal object WidgetDataRepository {
     ): SmallWidgetState {
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
-            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
+            weekLabel = weekLabelOf(today),
             nextCourse = null,
-            emptyText = if (today.isHoliday) "假期愉快" else if (thisWeekLaterHasCourse) "今日课程已上完" else "本周课程已上完"
+            emptyText = emptyTextOf(today, thisWeekLaterHasCourse),
         )
     }
 
@@ -284,7 +260,7 @@ internal object WidgetDataRepository {
         val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
         val focus = pickFocusStatus(today.sessions, nowMinutes)
         val rows =
-            todayRemaining.take(2).map { session ->
+            todayRemaining.take(MAX_ROWS).map { session ->
                 val status =
                     if (focus != null && session.id == focus.id) {
                         focus.type to focus.text
@@ -296,49 +272,50 @@ internal object WidgetDataRepository {
 
         return LargeWidgetState(
             headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
-            weekLabel = if (today.isHoliday) "假期中" else "第${today.week}周",
+            weekLabel = weekLabelOf(today),
             rows = rows.toPersistentList(),
-            emptyText = null
+            emptyText = null,
         )
     }
 
-    private fun buildLargeFromTomorrow(tomorrow: DayCourses): LargeWidgetState {
-        return LargeWidgetState(
+    private fun buildLargeFromTomorrow(tomorrow: DayCourses): LargeWidgetState =
+        LargeWidgetState(
             headerLabel = "明天课程预告 / ${weekdayLabel(tomorrow.weekday)}",
-            weekLabel = if (tomorrow.isHoliday) "假期中" else "第${tomorrow.week}周",
-            rows = tomorrow.sessions.take(2).map { it.toLargeRow(StatusType.NONE, null) }.toPersistentList(),
-            emptyText = null
+            weekLabel = weekLabelOf(tomorrow),
+            rows = tomorrow.sessions.take(MAX_ROWS)
+                .map { it.toLargeRow(StatusType.NONE, null) }
+                .toPersistentList(),
+            emptyText = null,
         )
-    }
 
     private fun buildLargeEmpty(
         today: DayCourses,
         thisWeekLaterHasCourse: Boolean,
-    ): LargeWidgetState {
-        if (today.isHoliday) {
-            return LargeWidgetState(
-                headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
-                weekLabel = "假期中",
-                rows = persistentListOf(),
-                emptyText = "假期愉快"
-            )
+    ): LargeWidgetState =
+        LargeWidgetState(
+            headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
+            weekLabel = weekLabelOf(today),
+            rows = persistentListOf(),
+            emptyText = emptyTextOf(today, thisWeekLaterHasCourse),
+        )
+
+    /**
+     * 空态文案对齐小爱课程表的 CourseViewStyle / WeekCourseViewStyle：
+     *   HOLIDAY    -> 假期快乐~!
+     *   COURSE_END -> 恭喜！本周课程已通关~
+     *   EMPTY      -> 今明两天无课
+     *   今日已上完 -> 今日课程已上完
+     */
+    private fun emptyTextOf(today: DayCourses, thisWeekLaterHasCourse: Boolean): String =
+        when {
+            today.isHoliday -> "假期快乐~!"
+            today.sessions.isEmpty() && !thisWeekLaterHasCourse -> "恭喜！本周课程已通关~"
+            today.sessions.isNotEmpty() -> "今日课程已上完"
+            else -> "今明两天无课"
         }
-        return if (today.sessions.isNotEmpty() || thisWeekLaterHasCourse) {
-            LargeWidgetState(
-                headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
-                weekLabel = "第${today.week}周",
-                rows = persistentListOf(),
-                emptyText = "今日课程已上完"
-            )
-        } else {
-            LargeWidgetState(
-                headerLabel = "今天 / ${weekdayLabel(today.weekday)}",
-                weekLabel = "第${today.week}周",
-                rows = persistentListOf(),
-                emptyText = "本周课程已上完"
-            )
-        }
-    }
+
+    private fun weekLabelOf(day: DayCourses): String =
+        if (day.isHoliday) "假期中" else "第${day.week}周"
 
     private fun pickFocusStatus(todaySessions: List<Session>, nowMinutes: Int): FocusStatus? {
         val inProgress =
@@ -351,16 +328,17 @@ internal object WidgetDataRepository {
             )
         }
 
-        val upcomingWithin15 =
+        // 小爱：isShowNextClass 判定 1 <= 分钟数 < 11，即只在开课前 1~10 分钟提示
+        val upcoming =
             todaySessions.firstOrNull {
                 val diff = it.startMin - nowMinutes
                 nowMinutes < it.startMin && diff in 1..UPCOMING_WINDOW_MINUTES
             }
-        if (upcomingWithin15 != null) {
+        if (upcoming != null) {
             return FocusStatus(
-                id = upcomingWithin15.id,
+                id = upcoming.id,
                 type = StatusType.UPCOMING,
-                text = "${(upcomingWithin15.startMin - nowMinutes).coerceAtLeast(0)}分钟后"
+                text = "${(upcoming.startMin - nowMinutes).coerceAtLeast(0)}分钟后"
             )
         }
         return null

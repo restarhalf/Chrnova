@@ -35,6 +35,7 @@ import restarhalf.stellar.schedule.ui.model.home.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.ui.model.home.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.ui.model.ExamUi
@@ -139,7 +140,7 @@ class HomeViewModelTest {
         every { timetable.getCampusTimetable(any()) } returns timetableSlots
         val todaySchedule = BuildHomeTodayScheduleUseCase()
         return HomeViewModel(
-            courseRepository = courseRepository,
+            observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
             observeAllExaminations = ObserveAllExaminationsUseCase(examinationRepository, auth),
             auth = auth,
             isExamNotEnded = IsExamNotEndedUseCase(),

@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.atiurin.ultron.core.compose.runUltronUiTest
 import dev.mokkery.MockMode
+import dev.mokkery.answering.calls
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -127,6 +128,66 @@ class PEFreeApplyScreenUiTest {
         onNodeWithText("2026-03-01 09:00").assertIsDisplayed()
         onNodeWithText("通过").assertIsDisplayed()
         onNodeWithText("我要申请").assertIsDisplayed()
+    }
+
+    @Test
+    fun 重复申请记录不再崩溃且逐条渲染() = runUltronUiTest {
+        tokenFlow.value = "tok"
+        // 后台把同一条记录返回两次：去重后应只剩一条；即便去重被绕过，key 兜底也不能崩
+        stubLoggedInData(
+            listOf(
+                PEFreeApplyItem(
+                    applyId = "ap1",
+                    schoolYear = "2025-2026",
+                    freeApplyType = "free",
+                    applyStatus = "2",
+                    applyTime = "2026-03-01 09:00",
+                ),
+                PEFreeApplyItem(
+                    applyId = "ap1",
+                    schoolYear = "2025-2026",
+                    freeApplyType = "free",
+                    applyStatus = "2",
+                    applyTime = "2026-03-01 09:00",
+                ),
+            ),
+        )
+        setContent {
+            MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
+                PEFreeApplyScreen(vm = makeViewModel(), onLogin = {}, onApply = {}, onDetail = {}, onBack = {})
+            }
+        }
+        waitText("2025-2026【免测】")
+
+        assertEquals(1, onAllNodesWithText("2025-2026【免测】").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun 记录从空变为非空时不崩溃() = runUltronUiTest {
+        tokenFlow.value = "tok"
+        val listFlow = MutableStateFlow<List<PEFreeApplyItem>>(emptyList())
+        everySuspend { peGateway.getFreeApplyList() } calls {
+            PEFreeApplyListResponse(status = "1", data = listFlow.value)
+        }
+        everySuspend { peGateway.getFreeSchoolYears() } returns PEFreeSchoolYearResponse(
+            status = "1",
+            data = PEFreeSchoolYearData(nowSchoolYear = "2025-2026", dataList = emptyList()),
+        )
+        val vm = makeViewModel()
+        setContent {
+            MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
+                PEFreeApplyScreen(vm = vm, onLogin = {}, onApply = {}, onDetail = {}, onBack = {})
+            }
+        }
+        waitText("暂无申请记录")
+
+        // 先渲染空列表，再让数据到达：key 列表与 items 若不同步，这里会 index 0 越界
+        listFlow.value = listOf(
+            PEFreeApplyItem(applyId = "ap1", schoolYear = "2025-2026", freeApplyType = "free", applyStatus = "2"),
+        )
+        vm.refresh()
+        waitText("2025-2026【免测】")
+        onNodeWithText("2025-2026【免测】").assertIsDisplayed()
     }
 
     @Test

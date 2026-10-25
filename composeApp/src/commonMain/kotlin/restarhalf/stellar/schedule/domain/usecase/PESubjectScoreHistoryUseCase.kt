@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.model.PESubjectHistoryItem
+import restarhalf.stellar.schedule.domain.policy.distinctSubjectHistory
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 class PESubjectScoreHistoryUseCase(
@@ -25,7 +26,7 @@ class PESubjectScoreHistoryUseCase(
             if (data.dataList.isEmpty() || items.size >= data.totalRows) break
             pageNum++
         }
-        return items.sortedByDescending { it.scoreTime }
+        return items.distinctSubjectHistory().sortedByDescending { it.scoreTime }
     }
 
     private companion object {

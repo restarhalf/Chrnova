@@ -21,6 +21,10 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -52,7 +56,13 @@ class CourseEditScreenUiTest {
 
         every { courseRepository.observeCourseById(any()) } returns MutableStateFlow<Course?>(null)
         every { auth.observeProfile() } returns profileFlow
-        return CourseEditViewModel(courseRepository, auth)
+        return CourseEditViewModel(
+            observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
+            observeCourseById = ObserveCourseByIdUseCase(courseRepository),
+            saveCourse = SaveCourseUseCase(courseRepository),
+            deleteCourseUseCase = DeleteCourseUseCase(courseRepository),
+            auth = auth,
+        )
     }
 
     private fun androidx.compose.ui.test.ComposeUiTest.waitText(text: String, timeoutMs: Long = 5_000) {

@@ -273,7 +273,23 @@ class GradeViewModelTest {
         val ui = vm.buildScreenUi(report, loading = false, error = "")
 
         assertEquals("g1", ui.cards[0].idKey)
-        assertEquals("g1#1", ui.cards[1].idKey)
+        assertEquals("g1\u00002", ui.cards[1].idKey)
+    }
+
+    @Test
+    fun `三条相同idKey仍逐项唯一`() = runTest {
+        val vm = makeViewModel()
+        val report = TermGradeReport(
+            achievements = listOf(
+                GradeCourse(gradeId = "g1", courseName = "A"),
+                GradeCourse(gradeId = "g1", courseName = "B"),
+                GradeCourse(gradeId = "g1", courseName = "C"),
+            )
+        )
+
+        val ui = vm.buildScreenUi(report, loading = false, error = "")
+
+        assertEquals(3, ui.cards.map { it.idKey }.toSet().size)
     }
 
     @Test

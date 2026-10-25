@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.PEAppointmentDetail
 import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
 import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
+import restarhalf.stellar.schedule.domain.policy.distinctAppointments
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEAppointmentDetailUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAppointmentListUseCase
@@ -181,12 +182,16 @@ class PEAppointmentViewModel(
                 val page = response.data?.dataList.orEmpty()
                 val total = response.data?.totalRowsInt ?: (state.myItems.size + page.size)
                 _uiState.update {
-                    val merged = (it.myItems + page).toPersistentList()
+                    // 后台翻页边界错位时下一页会重复上一页的尾项，合并后必须再去一次重
+                    val merged = (it.myItems + page).distinctAppointments().toPersistentList()
+                    // 进度按未去重的累加数算：若按 merged.size，后台持续返回重复项时
+                    // 它会永远小于 total，导致无限翻页
+                    val fetched = it.myItems.size + page.size
                     it.copy(
                         myItems = merged,
                         myTotalRows = total,
                         myPageNum = it.myPageNum + 1,
-                        myHasMore = page.isNotEmpty() && merged.size < total,
+                        myHasMore = page.isNotEmpty() && fetched < total,
                         loadingMore = false,
                     )
                 }
@@ -208,12 +213,16 @@ class PEAppointmentViewModel(
                 val page = response.data?.dataList.orEmpty()
                 val total = response.data?.totalRowsInt ?: (state.availableItems.size + page.size)
                 _uiState.update {
-                    val merged = (it.availableItems + page).toPersistentList()
+                    // 后台翻页边界错位时下一页会重复上一页的尾项，合并后必须再去一次重
+                    val merged = (it.availableItems + page).distinctAppointments().toPersistentList()
+                    // 进度按未去重的累加数算：若按 merged.size，后台持续返回重复项时
+                    // 它会永远小于 total，导致无限翻页
+                    val fetched = it.availableItems.size + page.size
                     it.copy(
                         availableItems = merged,
                         availableTotalRows = total,
                         availablePageNum = it.availablePageNum + 1,
-                        availableHasMore = page.isNotEmpty() && merged.size < total,
+                        availableHasMore = page.isNotEmpty() && fetched < total,
                         loadingMore = false,
                     )
                 }

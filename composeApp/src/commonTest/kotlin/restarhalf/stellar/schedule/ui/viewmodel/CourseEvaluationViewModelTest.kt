@@ -28,6 +28,7 @@ import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesAcrossSemestersUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -88,7 +89,7 @@ class CourseEvaluationViewModelTest {
         every { settings.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
         everySuspend { courseRepository.getAllCoursesAcrossSemesters() } returns emptyList()
-        return CourseEvaluationViewModel(port, courseRepository, auth, settings)
+        return CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, settings)
     }
 
     
@@ -103,7 +104,7 @@ class CourseEvaluationViewModelTest {
         every { auth.observeProfile() } returns MutableStateFlow(loggedInProfile())
         everySuspend { courseRepository.getAllCoursesAcrossSemesters() } returns emptyList()
 
-        val vm = CourseEvaluationViewModel(port, courseRepository, auth, settings)
+        val vm = CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, settings)
         advanceMain()
 
         assertEquals("自定义昵称", vm.uiState.value.userNickname)
@@ -142,7 +143,7 @@ class CourseEvaluationViewModelTest {
                 ),
             )
 
-        val vm = CourseEvaluationViewModel(port, courseRepository, auth, settings)
+        val vm = CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, settings)
         advanceMain()
 
         assertEquals(1, vm.uiState.value.myCourses.size)
@@ -156,7 +157,7 @@ class CourseEvaluationViewModelTest {
         everySuspend { courseRepository.getAllCoursesAcrossSemesters() } throws
             RuntimeException("db error")
 
-        val vm = CourseEvaluationViewModel(port, courseRepository, auth, settings)
+        val vm = CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, settings)
         advanceMain()
 
         assertTrue(vm.uiState.value.myCourses.isEmpty())

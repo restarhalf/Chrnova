@@ -4,43 +4,33 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
-import android.os.SystemClock
-import androidx.annotation.RequiresApi
 
+/**
+ * 对齐小爱 WidgetUIUpdateReceiver 注册的 TIME_TICK / SCREEN_ON：
+ * 亮屏和每分钟 tick 都尝试刷新，节流与熄屏判断放在 [WidgetRefreshController] 里。
+ */
 class ScreenStateReceiver : BroadcastReceiver() {
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
-                WidgetRefreshController.cancelMinuteTick(context)
-                WidgetRefreshController.cancelSmallPeriodicTick(context)
+                // 熄屏不刷新；兜底闹钟保留，30 分钟后自然会追上
             }
 
             Intent.ACTION_SCREEN_ON,
-            Intent.ACTION_USER_PRESENT -> {
-                val now = SystemClock.elapsedRealtime()
-                if (now - lastScreenWakeRefreshAtMs < SCREEN_WAKE_REFRESH_THROTTLE_MS) return
-                lastScreenWakeRefreshAtMs = now
-
-                if (WidgetRefreshController.hasAnyPlacedWidget(context)) {
-                    WidgetRefreshController.refreshAndScheduleAsync(context)
-                }
+            Intent.ACTION_USER_PRESENT,
+            Intent.ACTION_TIME_TICK -> {
+                WidgetRefreshController.refreshFromSystemTick(context)
             }
         }
     }
 
     companion object {
-        private const val SCREEN_WAKE_REFRESH_THROTTLE_MS = 2_000L
-
-        @Volatile
-        private var lastScreenWakeRefreshAtMs: Long = 0L
-
         fun intentFilter(): IntentFilter =
             IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_OFF)
                 addAction(Intent.ACTION_SCREEN_ON)
                 addAction(Intent.ACTION_USER_PRESENT)
+                addAction(Intent.ACTION_TIME_TICK)
             }
     }
 }

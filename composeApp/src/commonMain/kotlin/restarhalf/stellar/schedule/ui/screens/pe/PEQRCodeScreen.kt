@@ -36,9 +36,9 @@ import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import top.yukonga.miuix.kmp.basic.Icon

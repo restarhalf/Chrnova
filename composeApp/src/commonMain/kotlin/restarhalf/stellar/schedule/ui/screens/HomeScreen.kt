@@ -28,7 +28,7 @@ import restarhalf.stellar.schedule.ui.model.home.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.components.screen.home.HomeExamSection
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
 import restarhalf.stellar.schedule.ui.icons.Notifications
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.HomeViewModel
 import top.yukonga.miuix.kmp.basic.Badge

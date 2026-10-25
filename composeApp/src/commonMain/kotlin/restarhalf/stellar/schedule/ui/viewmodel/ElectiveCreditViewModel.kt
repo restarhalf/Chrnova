@@ -20,17 +20,17 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetGradesByUserNoUseCase
 
 
 class ElectiveCreditViewModel(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val auth: JwxtAuthPort,
-    private val gradeRepository: GradeRepository,
+    private val getGradesByUserNo: GetGradesByUserNoUseCase,
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val calculateElectiveCredits: CalculateElectiveCreditsUseCase,
 ) : ViewModel() {
@@ -128,7 +128,7 @@ class ElectiveCreditViewModel(
                         try {
                             val userNo = auth.observeProfile().first().userNo
                             if (userNo.isNotBlank()) {
-                                gradeRepository.getAllGradesByUserNo(userNo)
+                                getGradesByUserNo(userNo)
                                     .filter { it.semester == semesterId }
                             } else {
                                 emptyList()

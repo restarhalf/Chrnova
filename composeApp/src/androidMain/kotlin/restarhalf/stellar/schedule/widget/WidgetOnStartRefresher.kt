@@ -1,9 +1,7 @@
 package restarhalf.stellar.schedule.widget
 
 import android.content.Context
-import android.os.Build
 import android.os.SystemClock
-import androidx.annotation.RequiresApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -15,7 +13,6 @@ internal object WidgetOnStartRefresher {
     @Volatile
     private var lastWidgetRefreshAtMs: Long = 0L
 
-    @RequiresApi(Build.VERSION_CODES.S)
     fun refreshIfNeeded(appContext: Context, scope: CoroutineScope) {
         scope.launch {
             val now = SystemClock.elapsedRealtime()
@@ -25,7 +22,7 @@ internal object WidgetOnStartRefresher {
             WidgetUpdater.refreshAll(appContext)
             delay(400L.milliseconds)
             WidgetUpdater.refreshAll(appContext)
-            WidgetRefreshController.scheduleIfNeeded(appContext)
+            WidgetRefreshController.scheduleFallback(appContext)
         }
     }
 }

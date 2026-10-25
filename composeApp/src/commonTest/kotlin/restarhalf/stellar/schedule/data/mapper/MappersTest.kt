@@ -4,29 +4,14 @@ import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
-import restarhalf.stellar.schedule.data.local.Campus as DataCampus
 import restarhalf.stellar.schedule.domain.model.PEDetailData
 import restarhalf.stellar.schedule.domain.model.PESubjectScore
 import restarhalf.stellar.schedule.domain.model.PEYearScore
-import restarhalf.stellar.schedule.domain.model.Campus as DomainCampus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class MappersTest {
-
-
-
-    @Test
-    fun campusRoundTrip() {
-        for (campus in DomainCampus.entries) {
-            assertEquals(campus, campus.toData().toDomain())
-        }
-        assertEquals(DataCampus.Development, DomainCampus.Development.toData())
-        assertEquals(DataCampus.Jinshitan, DomainCampus.Jinshitan.toData())
-    }
-
-
 
     private val courseEntity = CourseEntity(
         id = 7L,

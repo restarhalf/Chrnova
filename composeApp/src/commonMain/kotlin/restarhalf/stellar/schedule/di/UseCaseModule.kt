@@ -16,7 +16,14 @@ import restarhalf.stellar.schedule.ui.model.home.BuildScheduleUiStateUseCase
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.domain.usecase.CourseSelectionUseCase
+import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesAcrossSemestersUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetGradesByUserNoUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
@@ -88,6 +95,13 @@ val useCaseModule = module {
         )
     }
     factory { FetchGradesSimpleUseCase(fetchGrades = get()) }
+    factory { ObserveAllCoursesUseCase(repository = get()) }
+    factory { ObserveCourseByIdUseCase(repository = get()) }
+    factory { GetAllCoursesAcrossSemestersUseCase(repository = get()) }
+    factory { SaveCourseUseCase(repository = get()) }
+    factory { DeleteCourseUseCase(repository = get()) }
+    factory { GetGradesByUserNoUseCase(repository = get()) }
+    factory { ObserveExaminationByIdUseCase(repository = get()) }
     factory { ObserveAllExaminationsUseCase(repository = get(), auth = get()) }
     factory { SaveExaminationUseCase(repository = get()) }
     factory { DeleteExaminationUseCase(repository = get()) }

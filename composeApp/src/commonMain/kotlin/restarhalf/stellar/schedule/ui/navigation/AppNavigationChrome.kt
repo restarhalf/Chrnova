@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.icons.Examination
 import restarhalf.stellar.schedule.ui.icons.Home

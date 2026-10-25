@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,12 +33,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.PEFreeApplyItem
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEFreeApplyViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.freeApplyStatusText
 import restarhalf.stellar.schedule.ui.viewmodel.freeApplyTypeText
@@ -169,9 +169,9 @@ fun PEFreeApplyScreen(
                         }
                     }
                 }
-                items(
-                    uiState.items,
-                    key = { it.applyId.ifBlank { "${it.schoolYear}-${it.freeApplyType}" } }
+                itemsWithUniqueKeys(
+                    items = uiState.items,
+                    keyOf = { it.applyId.ifBlank { "${it.schoolYear}-${it.freeApplyType}" } },
                 ) { item ->
                     FreeApplyRecordCard(
                         item = item,

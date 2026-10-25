@@ -3,11 +3,9 @@ package restarhalf.stellar.schedule.data.impl
 import com.russhwolf.settings.MapSettings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import restarhalf.stellar.schedule.data.local.Campus as DataCampus
-import restarhalf.stellar.schedule.data.local.getCampusTimetable as getDataTimetable
 import restarhalf.stellar.schedule.data.local.TimetableSettings
-import restarhalf.stellar.schedule.data.mapper.toData
 import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.policy.getCampusTimetable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,9 +27,9 @@ class TimetablePortImplTest {
     }
 
     @Test
-    fun campusTimetableDelegatesToLocalConfig() {
+    fun campusTimetableDelegatesToDomainPolicy() {
         for (campus in Campus.entries) {
-            val expected = getDataTimetable(campus.toData())
+            val expected = getCampusTimetable(campus)
             val actual = impl.getCampusTimetable(campus)
             assertEquals(expected.map { it.num }, actual.map { it.num })
             assertEquals(expected.map { it.start }, actual.map { it.start })
@@ -52,11 +50,5 @@ class TimetablePortImplTest {
         impl.setTotalWeeks(18)
         assertEquals(18, impl.getTotalWeeks())
         assertEquals(18, impl.observeTotalWeeks().first())
-    }
-
-    @Test
-    fun campusEnumMirror() {
-
-        assertEquals(Campus.entries.size, DataCampus.entries.size)
     }
 }

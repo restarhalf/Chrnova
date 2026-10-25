@@ -11,7 +11,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.remote.JwxtExaminationItem
+import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver
 import kotlin.time.ExperimentalTime
 
@@ -27,7 +27,7 @@ class ExamReminderScheduler(private val context: Context) {
     @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(ExperimentalTime::class)
     fun scheduleNextReminder(
-        exams: List<JwxtExaminationItem>,
+        exams: List<Examination>,
         nowMs: Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
     ): ScheduleResult {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -69,7 +69,7 @@ class ExamReminderScheduler(private val context: Context) {
     }
 
     @OptIn(ExperimentalTime::class)
-    private fun findNextReminder(exams: List<JwxtExaminationItem>, nowMs: Long): NextExamReminder? {
+    private fun findNextReminder(exams: List<Examination>, nowMs: Long): NextExamReminder? {
         val now = kotlin.time.Instant.fromEpochMilliseconds(nowMs)
             .toLocalDateTime(TimeZone.currentSystemDefault())
 

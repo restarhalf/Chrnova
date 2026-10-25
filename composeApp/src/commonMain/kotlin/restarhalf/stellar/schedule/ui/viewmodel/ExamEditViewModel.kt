@@ -24,16 +24,16 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 
 class ExamEditViewModel(
-    private val courseRepository: CourseRepository,
-    private val examinationRepository: ExaminationRepository,
+    private val observeAllCourses: ObserveAllCoursesUseCase,
+    private val observeExaminationById: ObserveExaminationByIdUseCase,
     private val auth: JwxtAuthPort,
     private val settings: TermSettingsPort,
     private val academic: AcademicPort,
@@ -69,7 +69,7 @@ class ExamEditViewModel(
     )
 
     private val _uiState: StateFlow<ExamEditUiState> =
-        courseRepository.observeAllCourses()
+        observeAllCourses()
             .map { courses ->
                 ExamEditUiState(
                     courseNames = buildCourseNames(courses).toPersistentList(),
@@ -119,7 +119,7 @@ class ExamEditViewModel(
 
     
     fun observeEditingExamination(examinationId: Long?): Flow<Examination?> {
-        return examinationRepository.observeExaminationById(examinationId ?: -1)
+        return observeExaminationById(examinationId ?: -1)
     }
 
     

@@ -11,16 +11,14 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performClick
-import com.russhwolf.settings.ObservableSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.every
 import dev.mokkery.everySuspend
-import dev.mokkery.matcher.any
 import dev.mokkery.mock
-import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.domain.model.Announcement
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
@@ -38,16 +36,15 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AnnouncementListScreenUiTest {
 
-    private val settings = mock<ObservableSettings>(MockMode.autofill) {
-        every { putString(any(), any()) } returns Unit
-        every { putLong(any(), any()) } returns Unit
+    private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
+        every { getCacheTtlMs() } returns 10L * 60L * 1000L
     }
     private val port = mock<AnnouncementPort>()
 
     private fun makeViewModel(): AnnouncementViewModel {
         return AnnouncementViewModel(
-            fetchAnnouncements = FetchAnnouncementsUseCase(port, AnnouncementStore(settings)),
-            markAnnouncementsRead = MarkAnnouncementsReadUseCase(AnnouncementStore(settings)),
+            fetchAnnouncements = FetchAnnouncementsUseCase(port, cache),
+            markAnnouncementsRead = MarkAnnouncementsReadUseCase(cache),
             fetchAdConfig = FetchAdConfigUseCase(port),
             fetchAnnouncement = FetchAnnouncementUseCase(port),
         )

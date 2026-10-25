@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -45,12 +44,13 @@ import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
 import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.appointmentStatusText
 import restarhalf.stellar.schedule.ui.viewmodel.canCancelAppointment
@@ -545,11 +545,11 @@ private fun AppointmentListPage(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(
+        itemsWithUniqueKeys(
             items,
-            key = {
+            keyOf = {
                 it.temporaryId.ifBlank { it.appointmentId }
-                    .ifBlank { "${it.appointmentName}-${it.appointmentDate}" }
+                    .ifBlank { "${it.appointmentName}-${it.appointmentDate}-${it.appointmentTimes}" }
             },
         ) { item ->
             val canAct = if (isMy) canCancelAppointment(item) else canEnterAppointment(item)

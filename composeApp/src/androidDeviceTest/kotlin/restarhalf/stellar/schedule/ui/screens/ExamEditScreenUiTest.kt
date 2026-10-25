@@ -21,6 +21,8 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
@@ -63,8 +65,8 @@ class ExamEditScreenUiTest {
         every { settings.observeCurrentTermId() } returns currentTermFlow
         every { auth.observeProfile() } returns profileFlow
         return ExamEditViewModel(
-            courseRepository = courseRepository,
-            examinationRepository = examinationRepository,
+            observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
+            observeExaminationById = ObserveExaminationByIdUseCase(examinationRepository),
             auth = auth,
             settings = settings,
             academic = academic,

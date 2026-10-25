@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,14 +35,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
+import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
 import restarhalf.stellar.schedule.ui.icons.Appointment
 import restarhalf.stellar.schedule.ui.icons.Free
 import restarhalf.stellar.schedule.ui.icons.QrCode
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -165,7 +165,7 @@ fun PEScoreScreen(
                         }
                     }
                 }
-                items(yearScores, key = { it.schoolYear }) { score ->
+                itemsWithUniqueKeys(yearScores, keyOf = { it.schoolYear }) { score ->
                     Box(
                         modifier = Modifier.animateItem(
                             placementSpec = spring(stiffness = Spring.StiffnessMediumLow)

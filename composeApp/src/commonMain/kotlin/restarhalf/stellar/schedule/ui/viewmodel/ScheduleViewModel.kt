@@ -16,7 +16,6 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentMap
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +26,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.WeeksFormatter
 import restarhalf.stellar.schedule.core.time.AcademicCalendar
 import restarhalf.stellar.schedule.core.time.ClockTime
@@ -36,11 +34,13 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.ui.model.home.BuildScheduleUiStateUseCase
-import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
+import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
 import restarhalf.stellar.schedule.ui.mapper.buildDayRenderData
 import kotlin.time.ExperimentalTime
@@ -49,7 +49,9 @@ import kotlin.time.ExperimentalTime
 class ScheduleViewModel(
     private val settings: DisplaySettingsPort,
     private val termSettings: TermSettingsPort,
-    private val courseRepository: CourseRepository,
+    private val observeAllCourses: ObserveAllCoursesUseCase,
+    private val saveCourse: SaveCourseUseCase,
+    private val deleteCourseUseCase: DeleteCourseUseCase,
     private val buildScheduleUiStateUseCase: BuildScheduleUiStateUseCase,
     private val transCourseWithConflicts: TransCourseWithConflictsUseCase,
     private val refreshCourseRemindersIfEnabledUseCase: RefreshCourseRemindersIfEnabledUseCase,
@@ -146,7 +148,7 @@ class ScheduleViewModel(
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
     
-    val allCourses: StateFlow<ImmutableList<Course>> = courseRepository.observeAllCourses()
+    val allCourses: StateFlow<ImmutableList<Course>> = observeAllCourses()
         .map { it.toPersistentList() }
         .distinctUntilChanged()
         .stateIn(
@@ -423,24 +425,10 @@ class ScheduleViewModel(
     }
 
     
-    suspend fun insertCourse(course: Course): Boolean {
-        return runCatching { withContext(AppIoDispatcher) { courseRepository.insertCourse(course) } }
-            .onFailure { e ->
-                if (e is CancellationException) throw e
-                AppLogger.log("Schedule", "插入课程失败", e)
-            }
-            .isSuccess
-    }
+    suspend fun insertCourse(course: Course): Boolean = saveCourse(course)
 
-    
-    suspend fun deleteCourse(course: Course): Boolean {
-        return runCatching { withContext(AppIoDispatcher) { courseRepository.deleteCourse(course) } }
-            .onFailure { e ->
-                if (e is CancellationException) throw e
-                AppLogger.log("Schedule", "删除课程失败", e)
-            }
-            .isSuccess
-    }
+
+    suspend fun deleteCourse(course: Course): Boolean = deleteCourseUseCase(course)
 
     
     suspend fun saveTransCourse(overrideCourse: Course): Boolean {

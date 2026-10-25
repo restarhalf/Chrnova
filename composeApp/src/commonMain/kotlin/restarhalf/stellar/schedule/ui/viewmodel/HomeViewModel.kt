@@ -23,7 +23,6 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeHeaderUiUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomePeriodRenderRowsUseCase
@@ -31,6 +30,7 @@ import restarhalf.stellar.schedule.ui.model.home.BuildHomePeriodSectionsUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeSurfaceUiUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeTodayScheduleUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
+import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.ui.model.ExamUi
 import kotlin.time.Clock
@@ -39,7 +39,7 @@ import kotlin.time.Instant
 
 
 class HomeViewModel(
-    private val courseRepository: CourseRepository,
+    private val observeAllCourses: ObserveAllCoursesUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
     private val auth: JwxtAuthPort,
     private val isExamNotEnded: IsExamNotEndedUseCase,
@@ -95,7 +95,7 @@ class HomeViewModel(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<HomeUiState> =
-        combine(courseRepository.observeAllCourses(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
+        combine(observeAllCourses(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
             val filteredExams = if (userNo.isNotBlank()) {
                 exams.filter { it.userNo == userNo }
             } else {

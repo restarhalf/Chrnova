@@ -21,14 +21,13 @@ import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
-import restarhalf.stellar.schedule.data.local.getCampusTimetable
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.policy.getCampusTimetable
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import restarhalf.stellar.schedule.data.local.Campus as DataCampus
 
 class CourseReminderPortImpl(
     private val settings: ObservableSettings,
@@ -87,7 +86,7 @@ class CourseReminderPortImpl(
         totalWeeks: Int,
         nowMs: Long,
     ): NextReminder? {
-        val timetable = getCampusTimetable(campus.toData())
+        val timetable = getCampusTimetable(campus)
         val today = Instant.fromEpochMilliseconds(nowMs)
             .toLocalDateTime(TimeZone.currentSystemDefault()).date
 
@@ -185,12 +184,6 @@ class CourseReminderPortImpl(
             AppLogger.log("Reminder", "设置课程提醒失败", it)
         }.getOrDefault(false)
     }
-
-    private fun Campus.toData(): DataCampus =
-        when (this) {
-            Campus.Development -> DataCampus.Development
-            Campus.Jinshitan -> DataCampus.Jinshitan
-        }
 
     private data class NextReminder(
         val triggerAtMs: Long,

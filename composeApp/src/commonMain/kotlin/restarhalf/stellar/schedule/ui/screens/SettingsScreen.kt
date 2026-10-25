@@ -42,11 +42,11 @@ import restarhalf.stellar.schedule.ui.components.RowHeightPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.groupedCardItems
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
-import restarhalf.stellar.schedule.ui.navigation.LocalAppScaffoldPadding
-import restarhalf.stellar.schedule.ui.navigation.appPageContentPadding
-import restarhalf.stellar.schedule.ui.navigation.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.navigation.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
+import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent

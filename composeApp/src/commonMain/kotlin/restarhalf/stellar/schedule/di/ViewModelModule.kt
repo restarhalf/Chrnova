@@ -45,7 +45,10 @@ val viewModelModule = module {
     }
     viewModel {
         CourseEditViewModel(
-            courseRepository = get(),
+            observeAllCourses = get(),
+            observeCourseById = get(),
+            saveCourse = get(),
+            deleteCourseUseCase = get(),
             auth = get(),
         )
     }
@@ -53,7 +56,9 @@ val viewModelModule = module {
         ScheduleViewModel(
             settings = get(),
             termSettings = get(),
-            courseRepository = get(),
+            observeAllCourses = get(),
+            saveCourse = get(),
+            deleteCourseUseCase = get(),
             buildScheduleUiStateUseCase = get(),
             transCourseWithConflicts = get(),
             refreshCourseRemindersIfEnabledUseCase = get(),
@@ -88,8 +93,8 @@ val viewModelModule = module {
     }
     viewModel {
         ExamEditViewModel(
-            courseRepository = get(),
-            examinationRepository = get(),
+            observeAllCourses = get(),
+            observeExaminationById = get(),
             auth = get(),
             settings = get(),
             academic = get(),
@@ -105,7 +110,7 @@ val viewModelModule = module {
     }
     viewModel {
         HomeViewModel(
-            courseRepository = get(),
+            observeAllCourses = get(),
             observeAllExaminations = get(),
             auth = get(),
             isExamNotEnded = get(),
@@ -164,7 +169,7 @@ val viewModelModule = module {
     viewModel {
         CourseEvaluationViewModel(
             port = get(),
-            courseRepository = get(),
+            getAllCoursesAcrossSemesters = get(),
             auth = get(),
             settings = get(),
         )
@@ -174,7 +179,7 @@ val viewModelModule = module {
             authWorkflow = get(),
             academic = get(),
             auth = get(),
-            gradeRepository = get(),
+            getGradesByUserNo = get(),
             fetchSemesterIds = get(),
             calculateElectiveCredits = get(),
         )

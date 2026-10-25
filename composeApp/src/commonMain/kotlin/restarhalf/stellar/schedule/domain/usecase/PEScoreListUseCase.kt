@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
 import restarhalf.stellar.schedule.domain.model.PEYearScore
+import restarhalf.stellar.schedule.domain.policy.distinctYearScores
 import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
@@ -20,7 +21,8 @@ class PEScoreListUseCase(
     
     suspend operator fun invoke(): PEScoreListResponse {
         val response = withSessionRetry(authWorkflow) { gateway.getScoreList() }
-        repository?.replaceScores(response.dataArr)
-        return response
+        val scores = response.dataArr.distinctYearScores()
+        repository?.replaceScores(scores)
+        return if (scores.size == response.dataArr.size) response else response.copy(dataArr = scores)
     }
 }

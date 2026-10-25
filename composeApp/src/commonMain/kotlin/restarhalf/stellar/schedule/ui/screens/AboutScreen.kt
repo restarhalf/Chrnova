@@ -66,7 +66,7 @@ import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialo
 import restarhalf.stellar.schedule.ui.effect.BgEffectBackground
 import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.navigation.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card

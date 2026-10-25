@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.ui.viewmodel
 
-import com.russhwolf.settings.ObservableSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -16,8 +15,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.domain.model.Announcement
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
@@ -36,15 +35,14 @@ import kotlinx.coroutines.delay
 
 class AnnouncementViewModelTest {
 
-    private val settings = mock<ObservableSettings>(MockMode.autofill) {
-        every { putString(any(), any()) } returns Unit
-        every { putLong(any(), any()) } returns Unit
+    private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
+        every { getCacheTtlMs() } returns 10L * 60L * 1000L
     }
     private val port = mock<AnnouncementPort>()
 
     private fun makeViewModel() = AnnouncementViewModel(
-        fetchAnnouncements = FetchAnnouncementsUseCase(port, AnnouncementStore(settings)),
-        markAnnouncementsRead = MarkAnnouncementsReadUseCase(AnnouncementStore(settings)),
+        fetchAnnouncements = FetchAnnouncementsUseCase(port, cache),
+        markAnnouncementsRead = MarkAnnouncementsReadUseCase(cache),
         fetchAdConfig = FetchAdConfigUseCase(port),
         fetchAnnouncement = FetchAnnouncementUseCase(port),
     )

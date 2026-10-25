@@ -4,6 +4,7 @@ import restarhalf.stellar.schedule.domain.model.PEFreeActionResponse
 import restarhalf.stellar.schedule.domain.model.PEFreeApplyDetailResponse
 import restarhalf.stellar.schedule.domain.model.PEFreeApplyListResponse
 import restarhalf.stellar.schedule.domain.model.PEFreeSchoolYearResponse
+import restarhalf.stellar.schedule.domain.policy.distinctFreeApplies
 import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
@@ -12,7 +13,9 @@ class PEFreeApplyUseCase(
     private val authWorkflow: PEAuthWorkflowPort,
 ) {
     suspend fun list(): PEFreeApplyListResponse = withSessionRetry(authWorkflow) {
-        gateway.getFreeApplyList()
+        val response = gateway.getFreeApplyList()
+        val items = response.data.distinctFreeApplies()
+        if (items.size == response.data.size) response else response.copy(data = items)
     }
 
     suspend fun detail(applyId: String): PEFreeApplyDetailResponse = withSessionRetry(authWorkflow) {

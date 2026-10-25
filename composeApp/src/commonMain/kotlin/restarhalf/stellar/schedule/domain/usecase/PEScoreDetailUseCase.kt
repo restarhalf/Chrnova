@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.domain.model.PEDetailData
 import restarhalf.stellar.schedule.domain.model.PEDetailResponse
+import restarhalf.stellar.schedule.domain.policy.distinctSubjectScores
 import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
@@ -18,7 +19,11 @@ class PEScoreDetailUseCase(
 
     suspend operator fun invoke(schoolYear: String): PEDetailResponse {
         val response = withSessionRetry(authWorkflow) { gateway.getScoreDetail(schoolYear) }
-        response.data?.let { repository?.saveDetailData(schoolYear, it) }
-        return response
+        val detail = response.data
+        if (detail == null) return response
+        val subjects = detail.dataArr.distinctSubjectScores()
+        val deduped = if (subjects.size == detail.dataArr.size) detail else detail.copy(dataArr = subjects)
+        repository?.saveDetailData(schoolYear, deduped)
+        return response.copy(data = deduped)
     }
 }

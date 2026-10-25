@@ -14,22 +14,19 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.printToString
-import com.russhwolf.settings.ObservableSettings
 import dev.mokkery.MockMode
-import dev.mokkery.answering.calls
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.every
 import dev.mokkery.everySuspend
-import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import restarhalf.stellar.schedule.data.local.AnnouncementStore
 import restarhalf.stellar.schedule.domain.model.Announcement
+import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
@@ -62,18 +59,14 @@ class AnnouncementDetailScreenUiTest {
     }
 
     
-    private val storage = mutableMapOf<String, Any>()
-    private val settings = mock<ObservableSettings>(MockMode.autofill) {
-        every { putString(any(), any()) } calls { (key: String, value: String) -> storage[key] = value }
-        every { putLong(any(), any()) } calls { (key: String, value: Long) -> storage[key] = value }
-        every { getStringOrNull(any()) } calls { (key: String) -> storage[key] as String? }
-        every { getLong(any(), any()) } calls { (key: String, defaultValue: Long) -> storage[key] as? Long ?: defaultValue }
+    private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
+        every { getCacheTtlMs() } returns 10L * 60L * 1000L
     }
     private val port = mock<AnnouncementPort>()
 
     private fun makeViewModel(): AnnouncementViewModel = AnnouncementViewModel(
-        fetchAnnouncements = FetchAnnouncementsUseCase(port, AnnouncementStore(settings)),
-        markAnnouncementsRead = MarkAnnouncementsReadUseCase(AnnouncementStore(settings)),
+        fetchAnnouncements = FetchAnnouncementsUseCase(port, cache),
+        markAnnouncementsRead = MarkAnnouncementsReadUseCase(cache),
         fetchAdConfig = FetchAdConfigUseCase(port),
         fetchAnnouncement = FetchAnnouncementUseCase(port),
     )

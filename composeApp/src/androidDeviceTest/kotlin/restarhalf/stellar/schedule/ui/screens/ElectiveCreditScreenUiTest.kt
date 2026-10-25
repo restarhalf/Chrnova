@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import restarhalf.stellar.schedule.domain.usecase.CalculateElectiveCreditsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.GetGradesByUserNoUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -61,7 +62,7 @@ class ElectiveCreditScreenUiTest {
         authWorkflow = authWorkflow,
         academic = academic,
         auth = auth,
-        gradeRepository = gradeRepository,
+        getGradesByUserNo = GetGradesByUserNoUseCase(gradeRepository),
         fetchSemesterIds = FetchSemesterIdsUseCase(authWorkflow, academic, settings),
         calculateElectiveCredits = CalculateElectiveCreditsUseCase(),
     )
