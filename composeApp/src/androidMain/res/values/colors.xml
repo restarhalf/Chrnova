@@ -9,23 +9,27 @@
     <color name="white">#FFFFFFFF</color>
 
 
-    <color name="widget_bg">#FFF7F7F7</color>
+    <!-- 卡片底色与行底色取自小爱课程表组件：4×2 底 #F6F8FC，2×2 纯白，行白，进行中 #E7F3FF，即将上课 #FEEFEF -->
+    <color name="widget_bg">#FFF6F8FC</color>
+    <color name="widget_bg_small">#FFFFFFFF</color>
     <color name="widget_divider">#FFFFFFFF</color>
-    <color name="widget_header_text">#7A7D84</color>
-    <color name="widget_empty_text">#8A8D94</color>
-    <color name="widget_time_text">#666A72</color>
-    <color name="widget_time_sub_text">#A0A4AD</color>
-    <color name="widget_title_text">#111318</color>
-    <color name="widget_subtitle_text">#9A9EA6</color>
-    <color name="widget_subtle_text">#B0B4BB</color>
+    <color name="widget_header_text">#80000000</color>
+    <color name="widget_empty_text">#80000000</color>
+    <color name="widget_time_text">#80000000</color>
+    <color name="widget_time_sub_text">#4D000000</color>
+    <color name="widget_title_text">#E6000000</color>
+    <color name="widget_subtitle_text">#4D000000</color>
+    <color name="widget_subtle_text">#4D000000</color>
     <color name="widget_dot">#5B8BFF</color>
-    <color name="widget_status_ongoing">#2B84E0</color>
-    <color name="widget_status_upcoming">#EA5F73</color>
+    <color name="widget_status_ongoing">#FF0D84FF</color>
+    <color name="widget_status_upcoming">#FFF66161</color>
     <color name="widget_status_done">#9AA0A6</color>
     <color name="widget_bar_default">#4D6BFE</color>
-    <color name="widget_row_bg_neutral">#F5F6F8</color>
-    <color name="widget_row_bg_upcoming">#FCECEE</color>
-    <color name="widget_row_bg_ongoing">#EAF3FF</color>
+    <color name="widget_row_bg_neutral">#FFFFFFFF</color>
+    <color name="widget_row_bg_upcoming">#FFFEEFEF</color>
+    <color name="widget_row_bg_ongoing">#FFE7F3FF</color>
+
+    <!-- 通知配色取自小爱 reminder_notification_* 布局 -->
     <color name="notify_title_text">#FF000000</color>
     <color name="notify_desc_text">#FF000000</color>
     <color name="notify_time_text">#FF444444</color>

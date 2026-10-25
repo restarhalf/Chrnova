@@ -31,13 +31,17 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.compose.ui.graphics.Color
 import androidx.glance.unit.ColorProvider
 import restarhalf.stellar.schedule.R
-import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import kotlin.math.min
+
 private val widgetBg = ColorProvider(R.color.widget_bg)
 
-private val cardBg = ColorProvider(R.color.widget_divider)
+/** 小爱 2×2 用纯白底（course_22_widget_bg_color = #ffffff），4×2 才用 #f6f8fc */
+private val widgetBgSmall = ColorProvider(R.color.widget_bg_small)
+
+private val rowBgNeutral = ColorProvider(R.color.widget_row_bg_neutral)
 
 private val widgetHeaderText = ColorProvider(R.color.widget_header_text)
 
@@ -55,11 +59,35 @@ private val widgetStatusUpcoming = ColorProvider(R.color.widget_status_upcoming)
 
 private val widgetStatusOngoing = ColorProvider(R.color.widget_status_ongoing)
 
-private val rowBgNeutral = ColorProvider(R.color.widget_row_bg_neutral)
-
 private val rowBgUpcoming = ColorProvider(R.color.widget_row_bg_upcoming)
 
 private val rowBgOngoing = ColorProvider(R.color.widget_row_bg_ongoing)
+
+/*
+ * 几何与字号取自小爱课程表组件（dimens.xml / styles.xml）：
+ *   组件内边距 14dp，标题栏与列表间距 12dp，行间距 6dp
+ *   组件圆角 16.3dp，行圆角 10.91dp，行左右内边距 9.1dp
+ *   时间列宽 38dp，色条 3.64×29.9dp，色条到课名 10.18dp
+ *   标题栏 14sp 粗体，课名 14sp，副标题 12sp 粗体，时间 12sp 粗体，页脚 10sp 粗体
+ */
+private val WIDGET_RADIUS = 16.3.dp
+private val WIDGET_PADDING_H = 14.dp
+private val WIDGET_PADDING_V = 14.dp
+private val HEADER_GAP = 12.dp
+
+private val ROW_RADIUS = 10.91.dp
+private val ROW_PADDING_H = 9.1.dp
+private val ROW_PADDING_V = 4.dp
+private val ROW_GAP = 6.dp
+
+private val TIME_COL_W = 38.dp
+private val BAR_W = 3.64.dp
+private val BAR_H = 29.9.dp
+private val BAR_TO_TITLE = 10.18.dp
+
+private val DOT_SIZE = 3.64.dp
+private val DOT_GAP = 4.73.dp
+private const val MAX_DOTS = 3
 
 @Composable
 private fun widgetScale(
@@ -96,15 +124,23 @@ internal fun SmallWidgetContent(state: SmallWidgetState) {
     Box(
         modifier =
             GlanceModifier.fillMaxSize()
-                .background(widgetBg)
-                .cornerRadius(scaledDpU(20.dp, scale))
+                .background(widgetBgSmall)
+                .cornerRadius(scaledDpU(WIDGET_RADIUS, scale))
                 .clickable(onClick = openHomeAction())
-                .padding(horizontal = scaledDpW(14.dp, scale), vertical = scaledDpH(20.dp, scale)),
+                .padding(
+                    horizontal = scaledDpW(WIDGET_PADDING_H, scale),
+                    vertical = scaledDpH(WIDGET_PADDING_V, scale),
+                ),
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            HeaderRow(left = state.dayLabel, right = state.weekLabel)
+            HeaderRow(
+                left = state.dayLabel,
+                right = state.weekLabel,
+                scale = scale,
+                showIcon = true,
+            )
 
-            Spacer(modifier = GlanceModifier.height(scaledDpH(12.dp, scale)))
+            Spacer(modifier = GlanceModifier.height(scaledDpH(HEADER_GAP, scale)))
 
             if (state.nextCourse == null) {
                 Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -113,8 +149,8 @@ internal fun SmallWidgetContent(state: SmallWidgetState) {
                         style =
                             TextStyle(
                                 color = widgetEmptyText,
-                                fontSize = scaledSp(15.sp, scale),
-                                fontWeight = FontWeight.Normal,
+                                fontSize = scaledSp(12.sp, scale),
+                                fontWeight = FontWeight.Bold,
                             ),
                     )
                 }
@@ -133,56 +169,27 @@ internal fun SmallWidgetContent(state: SmallWidgetState) {
                             ),
                     )
 
-                    Spacer(modifier = GlanceModifier.height(scaledDpH(7.dp, scale)))
+                    Spacer(modifier = GlanceModifier.height(scaledDpH(8.8.dp, scale)))
 
-                    Text(
-                        text = "◷ ${course.start}-${course.end}",
-                        maxLines = 1,
-                        style =
-                            TextStyle(
-                                color = widgetSubtitleText,
-                                fontSize = scaledSp(13.sp, scale),
-                            ),
+                    IconTextRow(
+                        iconRes = R.drawable.ic_widget_clock,
+                        text = "${course.start}-${course.end}",
+                        scale = scale,
                     )
 
-                    Spacer(modifier = GlanceModifier.height(scaledDpH(4.dp, scale)))
+                    Spacer(modifier = GlanceModifier.height(scaledDpH(3.64.dp, scale)))
 
-                    Text(
-                        text = "⌖ ${course.location}",
-                        maxLines = 1,
-                        style =
-                            TextStyle(
-                                color = widgetSubtitleText,
-                                fontSize = scaledSp(13.sp, scale),
-                            ),
-                    )
-
-                    Spacer(modifier = GlanceModifier.height(scaledDpH(16.dp, scale)))
-
-                    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                        Text(
-                            text = if (course.restCount == 0) "这是最后一节课了哦" else "还有${course.restCount}节课",
-                            style =
-                                TextStyle(
-                                    color = widgetTimeSubText,
-                                    fontSize = scaledSp(10.sp, scale),
-                                ),
+                    if (course.location.isNotBlank()) {
+                        IconTextRow(
+                            iconRes = R.drawable.ic_widget_pin,
+                            text = course.location,
+                            scale = scale,
                         )
-
-                        Spacer(modifier = GlanceModifier.width(scaledDpW(4.dp, scale)))
-                        for (i in 1..course.restCount) {
-                            Spacer(
-                                modifier =
-                                    GlanceModifier.size(scaledDpU(4.dp, scale))
-                                        .background(ColorProvider(R.color.widget_dot))
-                                        .cornerRadius(scaledDpU(10.dp, scale)),
-                            )
-
-                            if (i != course.restCount) {
-                                Spacer(modifier = GlanceModifier.width(scaledDpW(4.dp, scale)))
-                            }
-                        }
                     }
+
+                    Spacer(modifier = GlanceModifier.defaultWeight())
+
+                    FooterRow(restCount = course.restCount, dots = course.dotColors, scale = scale)
                 }
             }
         }
@@ -197,14 +204,23 @@ internal fun LargeWidgetContent(state: LargeWidgetState) {
         modifier =
             GlanceModifier.fillMaxSize()
                 .background(widgetBg)
-                .cornerRadius(scaledDpU(20.dp, scale))
+                .cornerRadius(scaledDpU(WIDGET_RADIUS, scale))
                 .clickable(onClick = openHomeAction())
-                .padding(horizontal = scaledDpW(14.dp, scale), vertical = scaledDpH(20.dp, scale)),
+                .padding(
+                    horizontal = scaledDpW(WIDGET_PADDING_H, scale),
+                    vertical = scaledDpH(WIDGET_PADDING_V, scale),
+                ),
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            HeaderRow(left = state.headerLabel, right = state.weekLabel)
+            // 小爱 renderDayViewHeader 对 2×2 和 4×2 都显示头部图标
+            HeaderRow(
+                left = state.headerLabel,
+                right = state.weekLabel,
+                scale = scale,
+                showIcon = true,
+            )
 
-            Spacer(modifier = GlanceModifier.height(scaledDpH(10.dp, scale)))
+            Spacer(modifier = GlanceModifier.height(scaledDpH(HEADER_GAP, scale)))
 
             if (state.rows.isEmpty()) {
                 Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -213,20 +229,20 @@ internal fun LargeWidgetContent(state: LargeWidgetState) {
                         style =
                             TextStyle(
                                 color = widgetEmptyText,
-                                fontSize = scaledSp(20.sp, scale),
+                                fontSize = scaledSp(12.sp, scale),
+                                fontWeight = FontWeight.Bold,
                             ),
                     )
                 }
             } else {
-                Column(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Vertical.CenterVertically,
-                ) {
+                // 小爱 4×2 布局（time_table_42_widget.xml）只放两行课程，没有页脚；
+                // 多余课程由行内的"还有 N 节课"之外的信息承载，这里同样不放页脚。
+                Column(modifier = GlanceModifier.fillMaxWidth()) {
                     state.rows.forEachIndexed { index, row ->
-                        CourseRow(row)
+                        CourseRow(row, scale)
 
                         if (index != state.rows.lastIndex) {
-                            Spacer(modifier = GlanceModifier.height(scaledDpH(8.dp, scale)))
+                            Spacer(modifier = GlanceModifier.height(scaledDpH(ROW_GAP, scale)))
                         }
                     }
                 }
@@ -236,9 +252,12 @@ internal fun LargeWidgetContent(state: LargeWidgetState) {
 }
 
 @Composable
-private fun HeaderRow(left: String, right: String) {
-    val scale = widgetScale(baseWidthDp = 260f, baseHeightDp = 60f)
-
+private fun HeaderRow(
+    left: String,
+    right: String,
+    scale: WidgetScale,
+    showIcon: Boolean,
+) {
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
         verticalAlignment = Alignment.Vertical.CenterVertically,
@@ -248,26 +267,91 @@ private fun HeaderRow(left: String, right: String) {
             modifier = GlanceModifier.defaultWeight(),
             verticalAlignment = Alignment.Vertical.CenterVertically,
         ) {
-            Image(
-                provider = ImageProvider(R.mipmap.ic_launcher_round),
-                contentDescription = null,
-                modifier = GlanceModifier.size(scaledDpU(18.dp, scale)).cornerRadius(16.dp),
-            )
+            if (showIcon) {
+                Image(
+                    provider = ImageProvider(R.mipmap.ic_launcher_round),
+                    contentDescription = null,
+                    modifier =
+                        GlanceModifier.size(scaledDpU(14.55.dp, scale))
+                            .cornerRadius(scaledDpU(7.dp, scale)),
+                )
 
-            Spacer(modifier = GlanceModifier.width(scaledDpW(6.dp, scale)))
+                Spacer(modifier = GlanceModifier.width(scaledDpW(4.dp, scale)))
+            }
 
             Text(
                 text = left,
                 maxLines = 1,
-                style = TextStyle(color = widgetHeaderText, fontSize = scaledSp(15.sp, scale)),
+                style =
+                    TextStyle(
+                        color = widgetHeaderText,
+                        fontSize = scaledSp(14.sp, scale),
+                        fontWeight = FontWeight.Bold,
+                    ),
             )
         }
 
         Text(
             text = right,
             maxLines = 1,
-            style = TextStyle(color = widgetHeaderText, fontSize = scaledSp(15.sp, scale)),
+            style =
+                TextStyle(
+                    color = widgetHeaderText,
+                    fontSize = scaledSp(14.sp, scale),
+                    fontWeight = FontWeight.Bold,
+                ),
         )
+    }
+}
+
+@Composable
+private fun IconTextRow(iconRes: Int, text: String, scale: WidgetScale) {
+    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+        Image(
+            provider = ImageProvider(iconRes),
+            contentDescription = null,
+            modifier = GlanceModifier.size(scaledDpU(8.73.dp, scale)),
+        )
+
+        Spacer(modifier = GlanceModifier.width(scaledDpW(4.36.dp, scale)))
+
+        Text(
+            text = text,
+            maxLines = 1,
+            style =
+                TextStyle(
+                    color = widgetSubtitleText,
+                    fontSize = scaledSp(13.09.sp, scale),
+                    fontWeight = FontWeight.Bold,
+                ),
+        )
+    }
+}
+
+@Composable
+private fun FooterRow(restCount: Int, dots: List<Color>, scale: WidgetScale) {
+    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+        Text(
+            text = if (restCount <= 0) "没有其他课程" else "还有${restCount}节课",
+            maxLines = 1,
+            style =
+                TextStyle(
+                    color = widgetSubtitleText,
+                    fontSize = scaledSp(10.sp, scale),
+                    fontWeight = FontWeight.Bold,
+                ),
+        )
+
+        repeat(min(dots.size, MAX_DOTS)) { index ->
+            Spacer(modifier = GlanceModifier.width(scaledDpW(DOT_GAP, scale)))
+
+            Spacer(
+                modifier =
+                    GlanceModifier.size(scaledDpU(DOT_SIZE, scale))
+                        .background(ColorProvider(dots[index]))
+                        .cornerRadius(scaledDpU(2.dp, scale)),
+            )
+        }
     }
 }
 
@@ -283,12 +367,10 @@ private fun openHomeAction() =
     )
 
 @Composable
-private fun CourseRow(row: LargeCourseRow) {
-    val scale = widgetScale(baseWidthDp = 260f, baseHeightDp = 180f)
-
+private fun CourseRow(row: LargeCourseRow, scale: WidgetScale) {
     val background =
         when (row.statusType) {
-            StatusType.NONE -> cardBg
+            StatusType.NONE -> rowBgNeutral
             StatusType.UPCOMING -> rowBgUpcoming
             StatusType.ONGOING -> rowBgOngoing
         }
@@ -304,36 +386,44 @@ private fun CourseRow(row: LargeCourseRow) {
         modifier =
             GlanceModifier.fillMaxWidth()
                 .background(background)
-                .cornerRadius(scaledDpU(14.dp, scale))
-                .padding(horizontal = scaledDpW(10.dp, scale), vertical = scaledDpH(7.dp, scale)),
+                .cornerRadius(scaledDpU(ROW_RADIUS, scale))
+                .padding(
+                    horizontal = scaledDpW(ROW_PADDING_H, scale),
+                    vertical = scaledDpH(ROW_PADDING_V, scale),
+                ),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
-        Column(modifier = GlanceModifier.width(scaledDpW(45.dp, scale))) {
+        Column(modifier = GlanceModifier.width(scaledDpW(TIME_COL_W, scale))) {
             Text(
                 text = row.start,
                 style =
                     TextStyle(
                         color = widgetTimeText,
                         fontSize = scaledSp(12.sp, scale),
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Bold,
                     ),
             )
 
             Text(
                 text = row.end,
-                style = TextStyle(color = widgetTimeSubText, fontSize = scaledSp(12.sp, scale)),
+                style =
+                    TextStyle(
+                        color = widgetTimeSubText,
+                        fontSize = scaledSp(12.sp, scale),
+                        fontWeight = FontWeight.Bold,
+                    ),
             )
         }
 
         Spacer(
             modifier =
-                GlanceModifier.width(scaledDpW(4.dp, scale))
-                    .height(scaledDpH(36.dp, scale))
-                    .background(pickCourseSubColor(row.title, false))
-                    .cornerRadius(scaledDpU(6.dp, scale)),
+                GlanceModifier.width(scaledDpW(BAR_W, scale))
+                    .height(scaledDpH(BAR_H, scale))
+                    .background(ColorProvider(row.barColor))
+                    .cornerRadius(scaledDpU(2.dp, scale)),
         )
 
-        Spacer(modifier = GlanceModifier.width(scaledDpW(10.dp, scale)))
+        Spacer(modifier = GlanceModifier.width(scaledDpW(BAR_TO_TITLE, scale)))
 
         Column(modifier = GlanceModifier.defaultWeight()) {
             Text(
@@ -350,7 +440,12 @@ private fun CourseRow(row: LargeCourseRow) {
             Text(
                 text = row.subtitle,
                 maxLines = 1,
-                style = TextStyle(color = widgetSubtitleText, fontSize = scaledSp(11.sp, scale)),
+                style =
+                    TextStyle(
+                        color = widgetSubtitleText,
+                        fontSize = scaledSp(12.sp, scale),
+                        fontWeight = FontWeight.Bold,
+                    ),
             )
         }
 
@@ -363,8 +458,8 @@ private fun CourseRow(row: LargeCourseRow) {
                 style =
                     TextStyle(
                         color = statusColor,
-                        fontSize = scaledSp(13.sp, scale),
-                        fontWeight = FontWeight.Medium,
+                        fontSize = scaledSp(12.sp, scale),
+                        fontWeight = FontWeight.Bold,
                     ),
             )
         }

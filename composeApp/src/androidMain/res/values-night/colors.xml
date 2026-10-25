@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 夜间版：底色压暗，行用略亮的卡片色，状态色保留可辨识度 -->
+    <color name="widget_bg">#FF1C1C1E</color>
+    <color name="widget_bg_small">#FF1C1C1E</color>
+    <color name="widget_divider">#FF2C2C2E</color>
+    <color name="widget_header_text">#B3FFFFFF</color>
+    <color name="widget_empty_text">#B3FFFFFF</color>
+    <color name="widget_time_text">#B3FFFFFF</color>
+    <color name="widget_time_sub_text">#66FFFFFF</color>
+    <color name="widget_title_text">#E6FFFFFF</color>
+    <color name="widget_subtitle_text">#66FFFFFF</color>
+    <color name="widget_subtle_text">#66FFFFFF</color>
+    <color name="widget_dot">#FF6F97FF</color>
+    <color name="widget_status_ongoing">#FF89C4FF</color>
+    <color name="widget_status_upcoming">#FFFF8EA0</color>
+    <color name="widget_status_done">#FF919BAA</color>
+    <color name="widget_bar_default">#FF5F89FF</color>
+    <color name="widget_row_bg_neutral">#FF2A2B2E</color>
+    <color name="widget_row_bg_upcoming">#FF3C2B30</color>
+    <color name="widget_row_bg_ongoing">#FF1F2C3B</color>
 
-    <color name="widget_bg">#1C1C1E</color>
-    <color name="widget_divider">#2C2C2E</color>
-    <color name="widget_header_text">#BAC2CF</color>
-    <color name="widget_empty_text">#9FA8B6</color>
-    <color name="widget_time_text">#B3BCC8</color>
-    <color name="widget_time_sub_text">#8D96A3</color>
-    <color name="widget_title_text">#EDF2FA</color>
-    <color name="widget_subtitle_text">#9EA8B7</color>
-    <color name="widget_subtle_text">#98A2B0</color>
-    <color name="widget_dot">#6F97FF</color>
-    <color name="widget_status_ongoing">#89C4FF</color>
-    <color name="widget_status_upcoming">#FF8EA0</color>
-    <color name="widget_status_done">#919BAA</color>
-    <color name="widget_bar_default">#5F89FF</color>
-    <color name="widget_row_bg_neutral">#2A2B2E</color>
-    <color name="widget_row_bg_upcoming">#3C2B30</color>
-    <color name="widget_row_bg_ongoing">#1F2C3B</color>
     <color name="notify_title_text">#FFEEEEEE</color>
     <color name="notify_desc_text">#FFDDDDDD</color>
     <color name="notify_time_text">#FFBBBBBB</color>
