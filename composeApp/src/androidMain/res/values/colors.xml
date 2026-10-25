@@ -26,4 +26,9 @@
     <color name="widget_row_bg_neutral">#F5F6F8</color>
     <color name="widget_row_bg_upcoming">#FCECEE</color>
     <color name="widget_row_bg_ongoing">#EAF3FF</color>
+    <color name="notify_title_text">#FF000000</color>
+    <color name="notify_desc_text">#FF000000</color>
+    <color name="notify_time_text">#FF444444</color>
+    <color name="notify_time_stamp_text">#FF000000</color>
+    <color name="notify_button_text">#FF888888</color>
 </resources>

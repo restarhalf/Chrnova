@@ -1,16 +1,12 @@
 package restarhalf.stellar.schedule.reminder.receiver
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +20,7 @@ import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.reminder.ExamReminderScheduler
+import restarhalf.stellar.schedule.reminder.NotificationChannels
 
 class ExamReminderReceiver : BroadcastReceiver() {
 
@@ -43,29 +40,12 @@ class ExamReminderReceiver : BroadcastReceiver() {
         val examTime = intent.getStringExtra(ExamReminderScheduler.EXTRA_EXAM_TIME).orEmpty()
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
-            val channel =
-                NotificationChannel(
-                    CHANNEL_ID,
-                    "考试提醒",
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = "考试前推送通知提醒"
-                    enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 240, 120, 240)
-                    setShowBadge(true)
 
-                    val soundUri: Uri = Settings.System.DEFAULT_NOTIFICATION_URI
-                    val attrs =
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                            .build()
-                    setSound(soundUri, attrs)
-                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-                }
-            notificationManager.createNotificationChannel(channel)
-        }
+        // 频道统一由 NotificationChannels 建
+        NotificationChannels.ensureAll(context)
+
+        val notificationId = ("exam_$name$examTime").hashCode()
+        val period = parseExamPeriod(examTime)
 
         val launchIntent =
             Intent(context, MainActivity::class.java).apply {
@@ -74,13 +54,10 @@ class ExamReminderReceiver : BroadcastReceiver() {
         val contentIntent =
             PendingIntent.getActivity(
                 context,
-                name.hashCode(),
+                notificationId,
                 launchIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-
-        val notificationId = ("exam_$name$examTime").hashCode()
-        val period = parseExamPeriod(examTime)
 
         val muteIntent =
             Intent(context, CourseReminderReceiver::class.java).apply {
@@ -97,42 +74,53 @@ class ExamReminderReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+        val title = "考试：$name"
+        val descText = buildString {
+            if (period != null) append("${period.start}-${period.end}")
+            if (place.isNotBlank()) {
+                if (isNotEmpty()) append(" · ")
+                append(place)
+            }
+        }
+
         val smallView =
-            RemoteViews(context.packageName, R.layout.small_notify).apply {
-                val locStr = place.ifBlank { "无地点信息" }
-                setTextViewText(R.id.notification_title, "考试：$name")
-                setTextViewText(R.id.notification_content, "地点:$locStr\n还有15分钟开考")
-                setTextViewText(R.id.btn_mute_small, "考试静音")
-                setOnClickPendingIntent(R.id.btn_mute_small, mutePendingIntent)
+            RemoteViews(context.packageName, R.layout.notify_reminder_small).apply {
+                setTextViewText(R.id.notify_title, title)
+                setTextViewText(R.id.notify_desc, descText)
+                setTextViewText(R.id.notify_button_text, MUTE_BUTTON_LABEL)
+                setOnClickPendingIntent(R.id.notify_button_layout, mutePendingIntent)
+                setOnClickPendingIntent(R.id.notify_root, contentIntent)
             }
 
         val largeView =
-            RemoteViews(context.packageName, R.layout.large_notify).apply {
-                val placeStr = if (place.isNotBlank()) "地点：$place\n" else ""
-                val timeStr = if (examTime.isNotBlank()) "时间：$examTime\n" else ""
-                setTextViewText(R.id.notification_title, "考试提醒：$name")
-                setTextViewText(
-                    R.id.notification_body,
-                    "${placeStr}${timeStr}距离考试开始还有不到15分钟。"
-                )
-                setTextViewText(R.id.btn_mute_large, "考试静音")
-                setOnClickPendingIntent(R.id.btn_mute_large, mutePendingIntent)
+            RemoteViews(context.packageName, R.layout.notify_reminder_large).apply {
+                setTextViewText(R.id.notify_title, CARD_TITLE)
+                setTextViewText(R.id.notify_start_time, period?.start.orEmpty())
+                setTextViewText(R.id.notify_end_time, period?.end.orEmpty())
+                setTextViewText(R.id.notify_detail_title, name)
+                setTextViewText(R.id.notify_detail_desc, place)
+                setTextViewText(R.id.notify_button_text, MUTE_BUTTON_LABEL)
+                setOnClickPendingIntent(R.id.notify_button_layout, mutePendingIntent)
+                setOnClickPendingIntent(R.id.notify_root, contentIntent)
             }
 
+        // 与小爱一致：不用 DecoratedCustomViewStyle，避免系统再叠一层自带标题栏
         val notification =
             Notification.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(name)
-                .setContentText("距离考试还有不到15分钟")
+                .setContentTitle(title)
+                .setContentText(descText)
                 .setCustomContentView(smallView)
                 .setCustomBigContentView(largeView)
                 .setCustomHeadsUpContentView(smallView)
-                .setStyle(Notification.DecoratedCustomViewStyle())
                 .setCategory(Notification.CATEGORY_REMINDER)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentIntent(contentIntent)
                 .setAutoCancel(true)
+                .setTimeoutAfter(EXAM_TIMEOUT_MS)
                 .build()
+        notification.extras.putBoolean("miui.customHeight", true)
+        notification.extras.putBoolean("miui.showAction", true)
 
         notificationManager.notify(notificationId, notification)
 
@@ -162,5 +150,11 @@ class ExamReminderReceiver : BroadcastReceiver() {
 
     companion object {
         const val CHANNEL_ID = "exam_reminder_high"
+
+        private const val EXAM_TIMEOUT_MS = 3 * 60 * 60 * 1000L
+        private const val MUTE_BUTTON_LABEL = "静音"
+
+        /** 展开态大卡的标题（小爱是服务端下发的卡片标题，这里用固定文案代替） */
+        private const val CARD_TITLE = "考试提醒"
     }
 }

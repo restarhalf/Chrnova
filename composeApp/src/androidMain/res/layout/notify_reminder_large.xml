@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  小爱 scheduler_notification_large 去掉顶部 header（「小爱建议」品牌条，第三方无此语义）。
+  左图标 + 时间列（上下两行 12.43sp）+ 2.2×34.88dp 竖线（#3EB9CF 圆角 1.1dp）
+  + 课名 16sp 粗体 / 地点 12.35sp，底部一排 29.1dp 胶囊按钮。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="15dp"
+    android:paddingVertical="13dp">
+
+    <RelativeLayout
+        android:id="@+id/notify_root"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2.2dp">
+
+        <ImageView
+            android:id="@+id/notify_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="1.82dp"
+            android:scaleType="fitXY"
+            android:src="@mipmap/ic_launcher_round" />
+
+        <TextView
+            android:id="@+id/notify_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8.72dp"
+            android:layout_toEndOf="@+id/notify_icon"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/notify_title_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/notify_title"
+            android:layout_marginStart="8.72dp"
+            android:layout_marginTop="14.54dp"
+            android:layout_toEndOf="@+id/notify_icon">
+
+            <LinearLayout
+                android:id="@+id/notify_time_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/notify_start_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="16.5dp"
+                    android:layout_marginTop="2.2dp"
+                    android:textColor="@color/notify_time_text"
+                    android:textSize="12.43sp" />
+
+                <TextView
+                    android:id="@+id/notify_end_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="16.5dp"
+                    android:layout_marginTop="6.55dp"
+                    android:textColor="@color/notify_time_text"
+                    android:textSize="12.43sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/notify_line"
+                android:layout_width="2.2dp"
+                android:layout_height="34.88dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5.95dp"
+                android:layout_toEndOf="@+id/notify_time_layout"
+                android:background="@drawable/notify_vertical_line" />
+
+            <TextView
+                android:id="@+id/notify_detail_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/notify_line"
+                android:layout_marginStart="10dp"
+                android:maxLines="1"
+                android:textColor="@color/notify_title_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notify_detail_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/notify_detail_title"
+                android:layout_toEndOf="@+id/notify_line"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="3.3dp"
+                android:maxLines="1"
+                android:textColor="@color/notify_desc_text"
+                android:textSize="12.35sp" />
+
+            <LinearLayout
+                android:id="@+id/notify_button_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/notify_time_layout"
+                android:layout_marginTop="22.9dp"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:id="@+id/notify_button_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="29.1dp"
+                    android:background="@drawable/notify_button_bg">
+
+                    <TextView
+                        android:id="@+id/notify_button_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:maxLength="4"
+                        android:paddingHorizontal="14.18dp"
+                        android:textColor="@color/notify_button_text"
+                        android:textSize="13.09sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>
