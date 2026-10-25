@@ -31,96 +31,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val result = goAsync()
 
-        if (intent.action == ACTION_MUTE_DEVICE) {
-            try {
-                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val previousMode = audioManager.ringerMode
-                val startTime = intent.getStringExtra(EXTRA_COURSE_START_TIME).orEmpty()
-                val endTime = intent.getStringExtra(EXTRA_COURSE_END_TIME).orEmpty()
-                val notificationId = intent.getIntExtra("notification_id", -1)
-                val now = System.currentTimeMillis()
-                val startAtMs = parseTodayTimeMs(startTime)
-                val endAtMs = parseTodayTimeMs(endTime)
-
-                when {
-                    startAtMs != null && now < startAtMs -> {
-                        scheduleClassMute(
-                            context = context,
-                            notificationId = notificationId,
-                            startAtMs = startAtMs,
-                            endTime = endTime,
-                            restoreMode = previousMode
-                        )
-                        Toast.makeText(context, "已设置上课静音，到点自动开启", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-
-                    endAtMs != null && now in (startAtMs ?: now)..endAtMs -> {
-                        audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-                        scheduleAutoUnmute(
-                            context = context,
-                            notificationId = notificationId,
-                            endTime = endTime,
-                            restoreMode = previousMode
-                        )
-                        Toast.makeText(context, "当前在上课时段，已开启静音", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-
-                    else -> {
-                        Toast.makeText(context, "当前不在上课时段，未开启静音", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
-
-                if (notificationId != -1) {
-                    val notificationManager =
-                        context.getSystemService(NotificationManager::class.java)
-                    notificationManager.cancel(notificationId)
-                }
-            } catch (e: Exception) {
-                AppLogger.log("Reminder", "恢复铃声失败", e)
-            }
-            result.finish()
-            return
-        }
-
-        if (intent.action == ACTION_UNMUTE_DEVICE) {
-            try {
-                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val restoreMode =
-                    intent.getIntExtra(EXTRA_RESTORE_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL)
-                audioManager.ringerMode = restoreMode
-                Toast.makeText(context, "课程已结束，已恢复铃声", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                AppLogger.log("Reminder", "恢复铃声失败", e)
-            }
-            result.finish()
-            return
-        }
-
-        if (intent.action == ACTION_APPLY_CLASS_MUTE) {
-            try {
-                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val endTime = intent.getStringExtra(EXTRA_COURSE_END_TIME).orEmpty()
-                val restoreMode =
-                    intent.getIntExtra(EXTRA_RESTORE_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL)
-                val notificationId = intent.getIntExtra("notification_id", -1)
-                audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-                scheduleAutoUnmute(
-                    context = context,
-                    notificationId = notificationId,
-                    endTime = endTime,
-                    restoreMode = restoreMode
-                )
-                Toast.makeText(context, "已到上课时间，自动开启静音", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                AppLogger.log("Reminder", "上课静音失败", e)
-            }
-            result.finish()
-            return
-        }
-
         val name = intent.getStringExtra("course_name")
         if (name.isNullOrBlank()) {
             result.finish()
@@ -128,7 +38,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
         }
         val location = intent.getStringExtra("course_location") ?: ""
         val time = intent.getStringExtra("course_time") ?: ""
-        val endTime = intent.getStringExtra(EXTRA_COURSE_END_TIME) ?: ""
+        val endTime = intent.getStringExtra("course_end_time") ?: ""
 
         val notificationManager = context.getSystemService(NotificationManager::class.java)
 
@@ -151,15 +61,17 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+        // 用 Activity 而不是广播：MIUI 的 AudioHardening 只允许前台进程改铃声，
+        // 后台广播里调 setRingerMode 会被静默忽略。见 MuteActionActivity。
         val muteIntent =
-            Intent(context, CourseReminderReceiver::class.java).apply {
-                action = ACTION_MUTE_DEVICE
-                putExtra("notification_id", notificationId)
-                putExtra(EXTRA_COURSE_START_TIME, time)
-                putExtra(EXTRA_COURSE_END_TIME, endTime)
-            }
+            MuteActionActivity.muteIntent(
+                context = context,
+                notificationId = notificationId,
+                startTime = time,
+                endTime = endTime,
+            )
         val mutePendingIntent =
-            PendingIntent.getBroadcast(
+            PendingIntent.getActivity(
                 context,
                 notificationId,
                 muteIntent,
@@ -173,15 +85,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 append(location)
             }
         }
-
-        val smallView =
-            RemoteViews(context.packageName, R.layout.notify_reminder_small).apply {
-                setTextViewText(R.id.notify_title, name)
-                setTextViewText(R.id.notify_desc, descText)
-                setTextViewText(R.id.notify_button_text, MUTE_BUTTON_LABEL)
-                setOnClickPendingIntent(R.id.notify_button_layout, mutePendingIntent)
-                setOnClickPendingIntent(R.id.notify_root, contentIntent)
-            }
 
         val largeView =
             RemoteViews(context.packageName, R.layout.notify_reminder_large).apply {
@@ -212,9 +115,10 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(name)
                 .setContentText(descText)
-                .setCustomContentView(smallView)
+                // 收起态和横批都用大卡：时间列 + 竖线 + 课名/地点，信息一眼看全
+                .setCustomContentView(largeView)
                 .setCustomBigContentView(largeView)
-                .setCustomHeadsUpContentView(smallView)
+                .setCustomHeadsUpContentView(largeView)
                 .setCategory(Notification.CATEGORY_ALARM)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentIntent(contentIntent)
@@ -281,67 +185,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
 
     private class Deps : KoinComponent {
         val rescheduleNextReminderIfEnabled: RescheduleNextCourseReminderIfEnabledUseCase by inject()
-    }
-
-    private fun scheduleClassMute(
-        context: Context,
-        notificationId: Int,
-        startAtMs: Long,
-        endTime: String,
-        restoreMode: Int
-    ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val muteIntent =
-            Intent(context, CourseReminderReceiver::class.java).apply {
-                action = ACTION_APPLY_CLASS_MUTE
-                putExtra("notification_id", notificationId)
-                putExtra(EXTRA_COURSE_END_TIME, endTime)
-                putExtra(EXTRA_RESTORE_RINGER_MODE, restoreMode)
-            }
-        val requestCode = notificationId xor MUTE_REQUEST_CODE_MASK
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                requestCode,
-                muteIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startAtMs, pendingIntent)
-    }
-
-    private fun scheduleAutoUnmute(
-        context: Context,
-        notificationId: Int,
-        endTime: String,
-        restoreMode: Int
-    ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val triggerAtMs = parseTodayTimeMs(endTime)
-
-        val unmuteIntent =
-            Intent(context, CourseReminderReceiver::class.java).apply {
-                action = ACTION_UNMUTE_DEVICE
-                putExtra(EXTRA_RESTORE_RINGER_MODE, restoreMode)
-            }
-        val requestCode = notificationId xor UNMUTE_REQUEST_CODE_MASK
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                requestCode,
-                unmuteIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-        val now = System.currentTimeMillis()
-        val safeTrigger =
-            when {
-                triggerAtMs == null -> now + FALLBACK_UNMUTE_DELAY_MS
-                triggerAtMs <= now -> now + 5000L
-                else -> triggerAtMs
-            }
-
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeTrigger, pendingIntent)
     }
 
     /**
@@ -418,16 +261,6 @@ class CourseReminderReceiver : BroadcastReceiver() {
     companion object {
 
         const val CHANNEL_ID = "course_reminder_high"
-        const val ACTION_MUTE_DEVICE = "restarhalf.stellar.schedule.ACTION_MUTE_DEVICE"
-        const val ACTION_APPLY_CLASS_MUTE = "restarhalf.stellar.schedule.ACTION_APPLY_CLASS_MUTE"
-        const val ACTION_UNMUTE_DEVICE = "restarhalf.stellar.schedule.ACTION_UNMUTE_DEVICE"
-
-        private const val EXTRA_COURSE_START_TIME = "course_time"
-        private const val EXTRA_COURSE_END_TIME = "course_end_time"
-        private const val EXTRA_RESTORE_RINGER_MODE = "restore_ringer_mode"
-        private const val FALLBACK_UNMUTE_DELAY_MS = 90 * 60 * 1000L
-        private const val MUTE_REQUEST_CODE_MASK = 0x4D2A
-        private const val UNMUTE_REQUEST_CODE_MASK = 0x1F3A
 
         /** 小爱：距开课时间 + 10 分钟，即下课后自动收起 */
         private const val REMINDER_TIMEOUT_MS = 60 * 60 * 1000L

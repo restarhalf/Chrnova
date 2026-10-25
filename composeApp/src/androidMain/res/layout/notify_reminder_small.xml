@@ -19,11 +19,13 @@
 
         <ImageView
             android:id="@+id/notify_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="1.82dp"
-            android:scaleType="fitXY"
-            android:src="@mipmap/ic_launcher_round" />
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/notify_icon_bg"
+            android:clipToOutline="true"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/notify_title"

@@ -20,9 +20,12 @@
     <color name="widget_row_bg_upcoming">#FF3C2B30</color>
     <color name="widget_row_bg_ongoing">#FF1F2C3B</color>
 
-    <color name="notify_title_text">#FFEEEEEE</color>
-    <color name="notify_desc_text">#FFDDDDDD</color>
-    <color name="notify_time_text">#FFBBBBBB</color>
-    <color name="notify_time_stamp_text">#FFAAAAAA</color>
-    <color name="notify_button_text">#FF999999</color>
+    <!--
+      通知卡片不给夜间版本，颜色只在 values/colors.xml 里定义一份。
+
+      原因：自定义通知布局由 SystemUI 进程 inflate，它按自己的 uiMode 取资源，
+      跟我们 app 的日夜设置不一定一致。之前这里有一份浅色值，
+      结果在浅色卡片上取到了 values-night 的白字，整张卡发灰、几乎看不见。
+      固定成一套深色字，卡片是系统画的浅底，任何 uiMode 下都可读。
+    -->
 </resources>

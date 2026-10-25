@@ -59,15 +59,16 @@ class ExamReminderReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+        // 与课程提醒一致：改铃声必须在前台做，走透明 Activity
         val muteIntent =
-            Intent(context, CourseReminderReceiver::class.java).apply {
-                action = CourseReminderReceiver.ACTION_MUTE_DEVICE
-                putExtra("notification_id", notificationId)
-                putExtra("course_time", period?.start.orEmpty())
-                putExtra("course_end_time", period?.end.orEmpty())
-            }
+            MuteActionActivity.muteIntent(
+                context = context,
+                notificationId = notificationId,
+                startTime = period?.start.orEmpty(),
+                endTime = period?.end.orEmpty(),
+            )
         val mutePendingIntent =
-            PendingIntent.getBroadcast(
+            PendingIntent.getActivity(
                 context,
                 notificationId,
                 muteIntent,

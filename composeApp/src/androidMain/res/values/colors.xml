@@ -29,10 +29,23 @@
     <color name="widget_row_bg_upcoming">#FFFEEFEF</color>
     <color name="widget_row_bg_ongoing">#FFE7F3FF</color>
 
-    <!-- 通知配色取自小爱 reminder_notification_* 布局 -->
-    <color name="notify_title_text">#FF000000</color>
-    <color name="notify_desc_text">#FF000000</color>
-    <color name="notify_time_text">#FF444444</color>
-    <color name="notify_time_stamp_text">#FF000000</color>
-    <color name="notify_button_text">#FF888888</color>
+    <!--
+      通知配色：深色磨砂底 + 浅色字。
+
+      MIUI 的自定义通知卡是半透明磨砂层，底色由 SystemUI 按壁纸画，我们控制不了，
+      实测约 #88868B；系统自己的通知在这张卡上用的就是白字。
+      所以这里按"深底浅字"配色，而不是小爱那种"白卡黑字"——
+      照抄小爱的浅色系会在磨砂底上糊成一片（实测对比度只有 1.0~3.1）。
+
+      这套颜色没有夜间版，只在 values/ 里定义一份：RemoteViews 由 SystemUI 进程
+      inflate，它按自己的 uiMode 取资源，跟 app 的日夜设置不一定一致，
+      分两份反而会出现"浅色卡上取到白字"的错配。
+    -->
+    <color name="notify_title_text">#FFFFFFFF</color>
+    <color name="notify_desc_text">#E6FFFFFF</color>
+    <color name="notify_time_text">#CCFFFFFF</color>
+    <!-- 大卡结束时间：比开始时间淡一档，视觉上形成主次 -->
+    <color name="notify_time_sub_text">#99FFFFFF</color>
+    <color name="notify_time_stamp_text">#FFFFFFFF</color>
+    <color name="notify_button_text">#FFFFFFFF</color>
 </resources>

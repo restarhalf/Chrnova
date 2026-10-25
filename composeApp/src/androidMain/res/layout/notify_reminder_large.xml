@@ -1,88 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  小爱 scheduler_notification_large 去掉顶部 header（「小爱建议」品牌条，第三方无此语义）。
-  左图标 + 时间列（上下两行 12.43sp）+ 2.2×34.88dp 竖线（#3EB9CF 圆角 1.1dp）
-  + 课名 16sp 粗体 / 地点 12.35sp，底部一排 29.1dp 胶囊按钮。
+  展开态大卡，配色与字号取自小爱 scheduler_notification_large。
+
+  结构：标题行（图标 + 卡片标题）
+       主体行（时间列 + 青色竖线 + 课名/地点 + 右侧胶囊按钮）
+
+  两点注意事项：
+  1. 不要用 android.view.View —— RemoteViews 只允许白名单里的类，
+     写 View 会让整张卡 inflate 失败，通知直接发不出来。竖线用 FrameLayout。
+  2. 按钮放在主体行里，不单独占一行，避免底部空出一大块。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notify_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="15dp"
-    android:paddingVertical="13dp">
+    android:paddingHorizontal="17dp"
+    android:paddingTop="15dp"
+    android:paddingBottom="15dp">
 
-    <RelativeLayout
-        android:id="@+id/notify_root"
+    <!-- 标题行：应用图标 + 卡片标题 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="2.2dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/notify_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="1.82dp"
-            android:scaleType="fitXY"
-            android:src="@mipmap/ic_launcher_round" />
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:background="@drawable/notify_icon_bg"
+            android:clipToOutline="true"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/notify_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8.72dp"
-            android:layout_toEndOf="@+id/notify_icon"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/notify_title_text"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
+    </LinearLayout>
 
-        <RelativeLayout
+    <!-- 主体行：时间列 + 竖线 + 课名/地点 + 胶囊按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="13dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/notify_title"
-            android:layout_marginStart="8.72dp"
-            android:layout_marginTop="14.54dp"
-            android:layout_toEndOf="@+id/notify_icon">
-
-            <LinearLayout
-                android:id="@+id/notify_time_layout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/notify_start_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="16.5dp"
-                    android:layout_marginTop="2.2dp"
-                    android:textColor="@color/notify_time_text"
-                    android:textSize="12.43sp" />
-
-                <TextView
-                    android:id="@+id/notify_end_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="16.5dp"
-                    android:layout_marginTop="6.55dp"
-                    android:textColor="@color/notify_time_text"
-                    android:textSize="12.43sp" />
-            </LinearLayout>
+            android:gravity="end"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/notify_line"
-                android:layout_width="2.2dp"
-                android:layout_height="34.88dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="5.95dp"
-                android:layout_toEndOf="@+id/notify_time_layout"
-                android:background="@drawable/notify_vertical_line" />
+                android:id="@+id/notify_start_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:textColor="@color/notify_time_text"
+                android:textSize="12.43sp" />
+
+            <TextView
+                android:id="@+id/notify_end_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:fontFeatureSettings="tnum"
+                android:textColor="@color/notify_time_sub_text"
+                android:textSize="12.43sp" />
+        </LinearLayout>
+
+        <!-- 用 FrameLayout 而不是 View：RemoteViews 只允许白名单里的类，
+             android.view.View 不在其中，写 View 会让整张卡 inflate 失败、通知直接发不出来 -->
+        <FrameLayout
+            android:id="@+id/notify_line"
+            android:layout_width="2.2dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="11dp"
+            android:layout_marginEnd="11dp"
+            android:background="@drawable/notify_vertical_line" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/notify_detail_title"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_toEndOf="@+id/notify_line"
-                android:layout_marginStart="10dp"
+                android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/notify_title_text"
                 android:textSize="16sp"
@@ -90,46 +108,33 @@
 
             <TextView
                 android:id="@+id/notify_detail_desc"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/notify_detail_title"
-                android:layout_toEndOf="@+id/notify_line"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="3.3dp"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/notify_desc_text"
                 android:textSize="12.35sp" />
+        </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/notify_button_list"
-                android:layout_width="match_parent"
+        <FrameLayout
+            android:id="@+id/notify_button_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="29.1dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/notify_button_bg">
+
+            <TextView
+                android:id="@+id/notify_button_text"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/notify_time_layout"
-                android:layout_marginTop="22.9dp"
-                android:orientation="horizontal">
-
-                <FrameLayout
-                    android:id="@+id/notify_button_layout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="29.1dp"
-                    android:background="@drawable/notify_button_bg">
-
-                    <TextView
-                        android:id="@+id/notify_button_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:maxLength="4"
-                        android:paddingHorizontal="14.18dp"
-                        android:textColor="@color/notify_button_text"
-                        android:textSize="13.09sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-            </LinearLayout>
-
-        </RelativeLayout>
-
-    </RelativeLayout>
+                android:layout_gravity="center"
+                android:maxLength="4"
+                android:paddingHorizontal="14.18dp"
+                android:textColor="@color/notify_button_text"
+                android:textSize="13.09sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
 
 </LinearLayout>
