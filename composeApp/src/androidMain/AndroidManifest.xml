@@ -91,10 +91,24 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.miui.home.launcher.action.INSTALL_WIDGET" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_small_widget_info" />
+            <meta-data
+                android:name="miuiWidget"
+                android:value="true" />
+            <meta-data
+                android:name="miuiWidgetRefresh"
+                android:value="exposure" />
+            <meta-data
+                android:name="miuiWidgetRefreshMinInterval"
+                android:value="60000" />
+            <meta-data
+                android:name="miuiWidgetTransitionAnimation"
+                android:value="true" />
         </receiver>
 
         <receiver
@@ -102,10 +116,24 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="miui.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.miui.home.launcher.action.INSTALL_WIDGET" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_large_widget_info" />
+            <meta-data
+                android:name="miuiWidget"
+                android:value="true" />
+            <meta-data
+                android:name="miuiWidgetRefresh"
+                android:value="exposure" />
+            <meta-data
+                android:name="miuiWidgetRefreshMinInterval"
+                android:value="60000" />
+            <meta-data
+                android:name="miuiWidgetTransitionAnimation"
+                android:value="true" />
         </receiver>
 
         <receiver
