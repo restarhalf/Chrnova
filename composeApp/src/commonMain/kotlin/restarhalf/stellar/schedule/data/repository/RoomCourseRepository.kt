@@ -58,6 +58,12 @@ class RoomCourseRepository(
 
     override suspend fun deleteCourse(course: Course) = courseDao.deleteCourse(course.toEntity())
 
+    override suspend fun replaceCourses(toDelete: List<Course>, toInsert: List<Course>) =
+        courseDao.replaceCourses(
+            toDelete = toDelete.map { it.toEntity() },
+            toInsert = toInsert.map { it.toEntity() },
+        )
+
     override suspend fun getAllCoursesOnce(): List<Course> {
         val semesterId = settings.observeActiveScheduleTerm().first()
         return if (semesterId.isNotBlank()) {

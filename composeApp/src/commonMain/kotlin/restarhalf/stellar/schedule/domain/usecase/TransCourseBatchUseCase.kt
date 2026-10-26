@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.policy.familyKey
+import restarhalf.stellar.schedule.domain.policy.isTransOverrideOf
 
 class TransCourseBatchUseCase(
     private val transCourse: TransCourseUseCase,
@@ -49,9 +51,10 @@ class TransCourseBatchUseCase(
         val clearedWeeks = ArrayList<Int>()
 
         // 这门课已有的调课记录覆盖了哪些原周，决定哪些“没改”的周其实是在撤销。
+        val familyKey = originCourse.familyKey()
         val overriddenWeeks =
             allCourses
-                .filter { it.type == 2 && it.originRemoteKey == originCourse.remoteKey }
+                .filter { it.isTransOverrideOf(familyKey) }
                 .flatMap { it.weeks }
                 .toSet()
 

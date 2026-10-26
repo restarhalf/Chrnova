@@ -682,10 +682,9 @@ class CourseEditViewModelTest {
                 weeks = listOf(1),
             )
         everySuspend { courseRepository.getAllCoursesOnce() } returns listOf(origin)
-        everySuspend { courseRepository.insertCourses(any()) } returns listOf(1L)
 
         assertTrue(vm.saveTransBatch(origin, listOf(override)))
-        verifySuspend { courseRepository.insertCourses(listOf(override)) }
+        verifySuspend { courseRepository.replaceCourses(emptyList(), listOf(override)) }
     }
 
 }

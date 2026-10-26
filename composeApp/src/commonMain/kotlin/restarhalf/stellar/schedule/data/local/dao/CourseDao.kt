@@ -62,6 +62,14 @@ interface CourseDao {
     suspend fun getCoursesBySemesterOnce(semesterId: String): List<CourseEntity>
 
     @Transaction
+    suspend fun replaceCourses(toDelete: List<CourseEntity>, toInsert: List<CourseEntity>) {
+        toDelete.forEach { deleteCourse(it) }
+        if (toInsert.isNotEmpty()) {
+            insertCourses(toInsert)
+        }
+    }
+
+    @Transaction
     suspend fun replaceSyncedCourses(courses: List<CourseEntity>, semesterId: String) {
         deleteSyncedCoursesBySemester(semesterId)
         if (courses.isNotEmpty()) {

@@ -47,7 +47,6 @@ class SaveTransCoursesUseCaseTest {
     fun `批量插入所有调课记录`() = runTest {
         val origin = course("高数", weeks = listOf(1, 2), type = 0, remoteKey = "k1")
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin)
-        everySuspend { repository.insertCourses(any()) } returns listOf(1L, 2L)
 
         val overrides =
             listOf(
@@ -56,7 +55,7 @@ class SaveTransCoursesUseCaseTest {
             )
 
         assertTrue(useCase(origin, overrides))
-        verifySuspend { repository.insertCourses(overrides) }
+        verifySuspend { repository.replaceCourses(emptyList(), overrides) }
     }
 
     @Test
@@ -67,16 +66,15 @@ class SaveTransCoursesUseCaseTest {
         val otherCourse = course("英语", weeks = listOf(1), originRemoteKey = "k2", targetWeek = 1, id = 13)
         everySuspend { repository.getAllCoursesOnce() } returns
             listOf(origin, oldWeek1, oldWeek5, otherCourse)
-        everySuspend { repository.insertCourses(any()) } returns listOf(1L)
 
         val overrides =
             listOf(course("高数", weeks = listOf(1), originRemoteKey = "k1", targetWeek = 1))
 
         assertTrue(useCase(origin, overrides))
 
-        verifySuspend { repository.deleteCourse(oldWeek1) }
-        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(oldWeek5) }
-        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(otherCourse) }
+        // 旧记录和插入在同一个事务里完成，不单独调用 deleteCourse
+        verifySuspend { repository.replaceCourses(listOf(oldWeek1), overrides) }
+        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(any()) }
     }
 
     @Test
@@ -86,14 +84,13 @@ class SaveTransCoursesUseCaseTest {
         val oldMove =
             course("高数", weeks = listOf(3), originRemoteKey = "k1", targetWeek = 7, id = 11)
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin, oldMove)
-        everySuspend { repository.insertCourses(any()) } returns listOf(1L)
 
         // 这次第 4 周换到第 7 周
         val overrides =
             listOf(course("高数", weeks = listOf(4), originRemoteKey = "k1", targetWeek = 7))
 
         assertTrue(useCase(origin, overrides))
-        verifySuspend { repository.deleteCourse(oldMove) }
+        verifySuspend { repository.replaceCourses(listOf(oldMove), overrides) }
     }
 
     @Test
@@ -105,14 +102,12 @@ class SaveTransCoursesUseCaseTest {
             course("高数", weeks = listOf(3), originRemoteKey = "k1", targetWeek = 3, id = 12)
         everySuspend { repository.getAllCoursesOnce() } returns
             listOf(origin, oldWeek2, oldWeek3)
-        everySuspend { repository.insertCourses(any()) } returns listOf(1L)
 
         val overrides =
             listOf(course("高数", weeks = listOf(1), originRemoteKey = "k1", targetWeek = 1))
 
         assertTrue(useCase(origin, overrides, clearedWeeks = listOf(2)))
-        verifySuspend { repository.deleteCourse(oldWeek2) }
-        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(oldWeek3) }
+        verifySuspend { repository.replaceCourses(listOf(oldWeek2), overrides) }
     }
 
     @Test
@@ -123,26 +118,40 @@ class SaveTransCoursesUseCaseTest {
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin, oldWeek2)
 
         assertTrue(useCase(origin, emptyList(), clearedWeeks = listOf(2)))
-        verifySuspend { repository.deleteCourse(oldWeek2) }
-        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.insertCourses(any()) }
+        verifySuspend { repository.replaceCourses(listOf(oldWeek2), emptyList()) }
     }
 
     @Test
     fun `空列表直接返回false`() = runTest {
         val origin = course("高数", weeks = listOf(1), type = 0, remoteKey = "k1")
         assertFalse(useCase(origin, emptyList()))
-        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.insertCourses(any()) }
+        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.replaceCourses(any(), any()) }
     }
 
     @Test
-    fun `插入异常返回false`() = runTest {
+    fun `保存异常返回false`() = runTest {
         val origin = course("高数", weeks = listOf(1), type = 0, remoteKey = "k1")
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin)
-        everySuspend { repository.insertCourses(any()) } throws RuntimeException("db down")
+        everySuspend { repository.replaceCourses(any(), any()) } throws RuntimeException("db down")
 
         val overrides =
             listOf(course("高数", weeks = listOf(1), originRemoteKey = "k1", targetWeek = 1))
 
         assertFalse(useCase(origin, overrides))
+    }
+
+    @Test
+    fun `对调课记录再调课时按最初的课归属`() = runTest {
+        val origin = course("高数", weeks = listOf(1, 2), type = 0, remoteKey = "k1")
+        val previousOverride =
+            course("高数", weeks = listOf(2), originRemoteKey = "k1", targetWeek = 2, id = 11)
+        everySuspend { repository.getAllCoursesOnce() } returns
+            listOf(origin, previousOverride)
+
+        val overrides =
+            listOf(course("高数", weeks = listOf(2), originRemoteKey = "k1", targetWeek = 2))
+
+        assertTrue(useCase(previousOverride, overrides))
+        verifySuspend { repository.replaceCourses(listOf(previousOverride), overrides) }
     }
 }

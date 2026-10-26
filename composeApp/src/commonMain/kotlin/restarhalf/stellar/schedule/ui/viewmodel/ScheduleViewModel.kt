@@ -25,7 +25,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
+import restarhalf.stellar.schedule.domain.policy.familyKey
 import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
+import restarhalf.stellar.schedule.domain.policy.isTransOverrideOf
 import restarhalf.stellar.schedule.core.text.WeeksFormatter
 import restarhalf.stellar.schedule.core.time.AcademicCalendar
 import restarhalf.stellar.schedule.core.time.ClockTime
@@ -406,8 +408,9 @@ class ScheduleViewModel(
 
     fun buildTransGroup(courses: List<Course>, course: Course): List<Course> {
         if (course.type != 2) return listOf(course)
-        val key = course.originRemoteKey?.takeIf { it.isNotBlank() } ?: return listOf(course)
-        val group = courses.filter { it.type == 2 && it.originRemoteKey == key }
+        val key = course.familyKey()
+        if (key.isBlank()) return listOf(course)
+        val group = courses.filter { it.isTransOverrideOf(key) }
         return group.ifEmpty { listOf(course) }
     }
 

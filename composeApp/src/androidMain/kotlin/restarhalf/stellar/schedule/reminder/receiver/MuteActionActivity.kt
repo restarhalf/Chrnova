@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
-import android.os.Bundle
+import android.os.Build
 import android.widget.Toast
 import restarhalf.stellar.schedule.core.log.AppLogger
 
@@ -28,7 +28,10 @@ class MuteActionActivity : Activity() {
         }
 
         finish()
-        overridePendingTransition(0, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE,0, 0)
+        else
+            overridePendingTransition(0,0)
     }
 
     private fun restoreRinger() {
