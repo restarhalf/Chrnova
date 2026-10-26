@@ -81,11 +81,12 @@
         </LinearLayout>
 
         <!-- 用 FrameLayout 而不是 View：RemoteViews 只允许白名单里的类，
-             android.view.View 不在其中，写 View 会让整张卡 inflate 失败、通知直接发不出来 -->
+             android.view.View 不在其中，写 View 会让整张卡 inflate 失败、通知直接发不出来。
+             尺寸对齐成绩卡片那根：4dp 宽、约行高 80%，上下端半圆 -->
         <FrameLayout
             android:id="@+id/notify_line"
-            android:layout_width="2.2dp"
-            android:layout_height="match_parent"
+            android:layout_width="4dp"
+            android:layout_height="34.88dp"
             android:layout_marginStart="11dp"
             android:layout_marginEnd="11dp"
             android:background="@drawable/notify_vertical_line" />
