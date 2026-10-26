@@ -91,6 +91,19 @@ fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
             showMessage = deps.showMessage,
         )
     }
+    entry<Screen.TransCourseEdit> { screen ->
+        val courseEditVm: CourseEditViewModel = koinViewModel()
+        CourseEditScreen(
+            vm = courseEditVm,
+            onBack = { navigator.pop() },
+            isEdit = true,
+            onEditChanged = { },
+            courseId = screen.courseId,
+            totalWeeks = deps.totalWeeks,
+            showMessage = deps.showMessage,
+            transMode = true,
+        )
+    }
     entry<Screen.ExamEdit> { screen ->
         val isEdit = remember(screen.examinationId) { screen.examinationId != null }
         val examEditVm: ExamEditViewModel = koinViewModel()

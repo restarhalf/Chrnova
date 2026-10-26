@@ -27,11 +27,16 @@ import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveTransCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseBatchUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -105,7 +110,7 @@ class CourseEditViewModelTest {
         userNo = "20230001",
     )
 
-    private fun makeViewModel(): CourseEditViewModel {
+    private fun makeViewModel(withTrans: Boolean = false): CourseEditViewModel {
         every { courseRepository.observeAllCourses() } returns coursesFlow
         every { auth.observeProfile() } returns profileFlow
         return CourseEditViewModel(
@@ -114,6 +119,17 @@ class CourseEditViewModelTest {
             saveCourse = SaveCourseUseCase(courseRepository),
             deleteCourseUseCase = DeleteCourseUseCase(courseRepository),
             auth = auth,
+            transCourseWithConflicts =
+                if (withTrans) {
+                    TransCourseWithConflictsUseCase(
+                        courseRepository = courseRepository,
+                        transCourse = TransCourseUseCase(),
+                        transCourseBatch = TransCourseBatchUseCase(TransCourseUseCase()),
+                    )
+                } else {
+                    null
+                },
+            saveTransCourses = if (withTrans) SaveTransCoursesUseCase(courseRepository) else null,
         )
     }
 
@@ -525,6 +541,151 @@ class CourseEditViewModelTest {
         advanceMain()
 
         assertEquals(false, callback)
+    }
+
+    @Test
+    fun `buildTransFormState预填原课程并默认全选周次`() = runTest {
+        val vm = makeViewModel()
+        val course =
+            Course(
+                id = 7,
+                name = "实操课",
+                location = "实训楼201",
+                teacher = "王老师",
+                dayOfWeek = 3,
+                startSection = 5,
+                sectionCount = 2,
+                weeks = listOf(1, 2, 4, 6),
+                color = "#00FF00",
+            )
+
+        val state = vm.buildTransFormState(course)
+        assertTrue(state.isReady)
+        assertEquals("实训楼201", state.classRoom)
+        assertEquals(3, state.dayOfWeek)
+        assertEquals(5, state.startSection)
+        assertEquals(6, state.endSection)
+        assertEquals(setOf(1, 2, 4, 6), state.selectedWeeks)
+    }
+
+    @Test
+    fun `buildTransFormState课程为空时未就绪`() = runTest {
+        val vm = makeViewModel()
+        val state = vm.buildTransFormState(null)
+        assertFalse(state.isReady)
+        assertTrue(state.selectedWeeks.isEmpty())
+    }
+
+    @Test
+    fun `buildTransBatch按周生成调课记录`() = runTest {
+        val vm = makeViewModel(withTrans = true)
+        val origin =
+            Course(
+                id = 7,
+                name = "实操课",
+                location = "实训楼201",
+                teacher = "王老师",
+                dayOfWeek = 3,
+                startSection = 5,
+                sectionCount = 2,
+                weeks = listOf(1, 2, 3),
+                color = "#00FF00",
+                remoteKey = "k7",
+            )
+        everySuspend { courseRepository.getAllCoursesOnce() } returns listOf(origin)
+
+        val result =
+            vm.buildTransBatch(
+                originCourse = origin,
+                weeks = setOf(1, 2, 3),
+                classRoom = "实训楼305",
+                dayOfWeek = 5,
+                startSection = 1,
+                endSection = 2,
+            )
+
+        assertNotNull(result)
+        assertEquals(listOf(1, 2, 3), result.overrideCourses.map { it.targetWeek })
+        assertTrue(result.overrideCourses.all { it.location == "实训楼305" })
+        assertTrue(result.overrideCourses.all { it.type == 2 })
+        assertFalse(result.hasConflicts)
+    }
+
+    @Test
+    fun `transMaxWeeks取原课程周数`() {
+        val vm = makeViewModel()
+        val course =
+            Course(
+                name = "实操课",
+                location = "",
+                teacher = "",
+                dayOfWeek = 1,
+                startSection = 1,
+                sectionCount = 2,
+                weeks = listOf(1, 2, 4, 6),
+                color = "#00FF00",
+            )
+        assertEquals(4, vm.transMaxWeeks(course))
+        assertEquals(1, vm.transMaxWeeks(null))
+    }
+
+    @Test
+    fun `toggleTransWeek超过上限不再新增`() {
+        val vm = makeViewModel()
+        val selected = setOf(1, 2, 3, 4)
+
+        assertEquals(setOf(1, 2, 3), vm.toggleTransWeek(selected, 4, maxWeeks = 4))
+        assertEquals(selected, vm.toggleTransWeek(selected, 5, maxWeeks = 4))
+        assertEquals(setOf(1, 2, 3, 5), vm.toggleTransWeek(setOf(1, 2, 3), 5, maxWeeks = 4))
+    }
+
+    @Test
+    fun `buildTransBatch无调课依赖时返回null`() = runTest {
+        val vm = makeViewModel()
+        val course =
+            Course(
+                name = "实操课",
+                location = "",
+                teacher = "",
+                dayOfWeek = 1,
+                startSection = 1,
+                sectionCount = 2,
+                weeks = listOf(1),
+                color = "#00FF00",
+            )
+        assertNull(
+            vm.buildTransBatch(course, setOf(1), "", 2, 1, 2)
+        )
+    }
+
+    @Test
+    fun `saveTransBatch批量写入`() = runTest {
+        val vm = makeViewModel(withTrans = true)
+        val origin =
+            Course(
+                name = "实操课",
+                location = "实训楼201",
+                teacher = "王老师",
+                dayOfWeek = 3,
+                startSection = 5,
+                sectionCount = 2,
+                weeks = listOf(1),
+                color = "#00FF00",
+                remoteKey = "k7",
+            )
+        val override =
+            origin.copy(
+                id = 0,
+                type = 2,
+                originRemoteKey = "k7",
+                targetWeek = 1,
+                weeks = listOf(1),
+            )
+        everySuspend { courseRepository.getAllCoursesOnce() } returns listOf(origin)
+        everySuspend { courseRepository.insertCourses(any()) } returns listOf(1L)
+
+        assertTrue(vm.saveTransBatch(origin, listOf(override)))
+        verifySuspend { courseRepository.insertCourses(listOf(override)) }
     }
 
 }

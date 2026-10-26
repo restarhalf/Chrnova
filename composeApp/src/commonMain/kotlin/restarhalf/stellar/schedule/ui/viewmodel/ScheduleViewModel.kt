@@ -402,6 +402,15 @@ class ScheduleViewModel(
 
     suspend fun deleteCourse(course: Course): Boolean = deleteCourseUseCase(course)
 
+    suspend fun deleteCourses(courses: List<Course>): Boolean = deleteCourseUseCase(courses)
+
+    fun buildTransGroup(courses: List<Course>, course: Course): List<Course> {
+        if (course.type != 2) return listOf(course)
+        val key = course.originRemoteKey ?: return listOf(course)
+        val group = courses.filter { it.type == 2 && it.originRemoteKey == key }
+        return group.ifEmpty { listOf(course) }
+    }
+
     suspend fun saveTransCourse(overrideCourse: Course): Boolean {
         return insertCourse(overrideCourse)
     }

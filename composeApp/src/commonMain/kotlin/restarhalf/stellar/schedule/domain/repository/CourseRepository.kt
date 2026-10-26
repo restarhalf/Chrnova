@@ -11,6 +11,8 @@ interface CourseRepository {
 
     suspend fun insertCourse(course: Course): Long
 
+    suspend fun insertCourses(courses: List<Course>): List<Long>
+
     suspend fun deleteCourse(course: Course)
 
     suspend fun getAllCoursesOnce(): List<Course>

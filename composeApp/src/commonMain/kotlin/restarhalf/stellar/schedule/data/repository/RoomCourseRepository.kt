@@ -53,6 +53,9 @@ class RoomCourseRepository(
     override suspend fun insertCourse(course: Course): Long =
         courseDao.insertCourse(course.toEntity())
 
+    override suspend fun insertCourses(courses: List<Course>): List<Long> =
+        courseDao.insertCourses(courses.map { it.toEntity() })
+
     override suspend fun deleteCourse(course: Course) = courseDao.deleteCourse(course.toEntity())
 
     override suspend fun getAllCoursesOnce(): List<Course> {

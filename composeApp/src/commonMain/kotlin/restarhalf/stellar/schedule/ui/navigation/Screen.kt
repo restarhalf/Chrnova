@@ -49,6 +49,9 @@ sealed interface Screen : NavKey {
     data class ClassEdit(val courseId: Long? = null, val dayOfWeek: Int = 1, val startSection: Int = 1, val selectedWeek: Int = 1) : Screen
 
     @Serializable
+    data class TransCourseEdit(val courseId: Long) : Screen
+
+    @Serializable
     data class ExamEdit(val examinationId: Long? = null) : Screen
 
     @Serializable

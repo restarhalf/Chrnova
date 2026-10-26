@@ -15,4 +15,14 @@ class DeleteCourseUseCase(private val repository: CourseRepository) {
             }
             .isSuccess
     }
+
+    suspend operator fun invoke(courses: List<Course>): Boolean {
+        if (courses.isEmpty()) return false
+        return runCatching { courses.forEach { repository.deleteCourse(it) } }
+            .onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("Course", "批量删除课程失败", e)
+            }
+            .isSuccess
+    }
 }

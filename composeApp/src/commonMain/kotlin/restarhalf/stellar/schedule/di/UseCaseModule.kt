@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveTransCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
@@ -59,6 +60,7 @@ import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCas
 import restarhalf.stellar.schedule.ui.model.home.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseBatchUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -174,7 +176,15 @@ val useCaseModule = module {
         )
     }
     factory { TransCourseUseCase() }
-    factory { TransCourseWithConflictsUseCase(courseRepository = get(), transCourse = get()) }
+    factory { TransCourseBatchUseCase(transCourse = get()) }
+    factory { SaveTransCoursesUseCase(repository = get()) }
+    factory {
+        TransCourseWithConflictsUseCase(
+            courseRepository = get(),
+            transCourse = get(),
+            transCourseBatch = get(),
+        )
+    }
     factory { PELoginUseCase(peAuthWorkflow = get()) }
     factory { PEScoreListUseCase(gateway = get(), authWorkflow = get(), repository = get()) }
     factory { PEScoreDetailUseCase(gateway = get(), authWorkflow = get(), repository = get()) }

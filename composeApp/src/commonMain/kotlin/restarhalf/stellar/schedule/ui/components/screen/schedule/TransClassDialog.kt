@@ -39,7 +39,8 @@ fun TransClassDialog(
     startSection: Int,
     endSection: Int,
     onSectionRangeChange: (Int, Int) -> Unit,
-    onTrans: () -> Unit
+    onTrans: () -> Unit,
+    onWholeCourseTrans: () -> Unit = {},
 ) {
 
     val showWeekdayPicker = remember { mutableStateOf(false) }
@@ -156,6 +157,14 @@ fun TransClassDialog(
                         title = "调课节数",
                         summary = "第${startSection}-${endSection}节",
                         onClick = { showSectionPicker.value = true },
+                    )
+                }
+
+                item {
+                    ArrowPreference(
+                        title = "整门课调整",
+                        summary = "多周一起调，进入编辑页选择周次",
+                        onClick = onWholeCourseTrans,
                     )
                 }
 

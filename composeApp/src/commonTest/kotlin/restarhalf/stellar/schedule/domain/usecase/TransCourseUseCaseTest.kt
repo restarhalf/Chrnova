@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.usecase
 import restarhalf.stellar.schedule.domain.model.Course
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TransCourseUseCaseTest {
@@ -137,6 +138,54 @@ class TransCourseUseCaseTest {
             endSection = 6,
         )
         assertTrue(result.conflicts.isEmpty())
+    }
+
+    @Test
+    fun `调到原时间且教室不变视为空操作`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val result = useCase(
+            allCourses = listOf(origin),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertTrue(result.isNoOp)
+    }
+
+    @Test
+    fun `只换教室不算空操作`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val result = useCase(
+            allCourses = listOf(origin),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "新教室",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertFalse(result.isNoOp)
+    }
+
+    @Test
+    fun `换周不算空操作`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val result = useCase(
+            allCourses = listOf(origin),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 3,
+            newRoom = "",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertFalse(result.isNoOp)
     }
 
     @Test

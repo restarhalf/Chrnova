@@ -105,6 +105,7 @@ fun ScheduleScreen(
     totalWeeks: Int,
     onAddLabCourse: (dayOfWeek: Int, startSection: Int, selectedWeek: Int) -> Unit,
     onEditLabCourse: (Long) -> Unit,
+    onWholeCourseTrans: (Long) -> Unit = {},
     canSaveImage: Boolean = false,
     onSaveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     sharerNickname: String? = null,
@@ -140,6 +141,9 @@ fun ScheduleScreen(
     var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var showWeekPicker by remember { mutableStateOf(false) }
     var showShare by remember { mutableStateOf(false) }
+    var revertChoice by remember {
+        mutableStateOf<Pair<restarhalf.stellar.schedule.domain.model.Course, List<restarhalf.stellar.schedule.domain.model.Course>>?>(null)
+    }
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(pagerState.currentPage) {
@@ -369,6 +373,11 @@ fun ScheduleScreen(
                                     endSection = input.endSection
                                 )
 
+                            if (result.isNoOp) {
+                                showMessage("时间和教室都没变，无需调课")
+                                return@launch
+                            }
+
                             if (result.conflicts.isNotEmpty()) {
                                 vm.dismissTransDialog()
                                 vm.showTransConflict(result.conflicts, result.overrideCourse)
@@ -381,6 +390,11 @@ fun ScheduleScreen(
                                 showMessage("调课保存失败，请重试")
                             }
                         }
+                    },
+                    onWholeCourseTrans = {
+                        val courseId = tc.id
+                        vm.closeTransDialogAndClear()
+                        onWholeCourseTrans(courseId)
                     }
                 )
             }
@@ -520,13 +534,19 @@ fun ScheduleScreen(
                                         vm.closeDetailSheet()
                                     },
                                     onRevertTrans = { id ->
-                                        vm.closeDetailSheet()
-                                        val toDelete = courses.firstOrNull { it.id == id }
-                                        if (toDelete != null) {
-                                            scope.launch {
-                                                val deleted = vm.deleteCourse(toDelete)
-                                                if (!deleted) {
-                                                    showMessage("撤销调课失败，请重试")
+                                        val target = dc.firstOrNull { it.id == id }
+                                            ?: courses.firstOrNull { it.id == id }
+                                        if (target != null) {
+                                            val group = vm.buildTransGroup(courses, target)
+                                            if (group.size > 1) {
+                                                revertChoice = target to group
+                                            } else {
+                                                vm.closeDetailSheet()
+                                                scope.launch {
+                                                    val deleted = vm.deleteCourse(target)
+                                                    if (!deleted) {
+                                                        showMessage("撤销调课失败，请重试")
+                                                    }
                                                 }
                                             }
                                         }
@@ -535,6 +555,63 @@ fun ScheduleScreen(
                         }
 
                         Spacer(Modifier.height(25.dp))
+                    })
+            }
+
+            val choice = revertChoice
+            if (choice != null) {
+                val (target, group) = choice
+                WindowDialog(
+                    show = true,
+                    modifier = Modifier,
+                    title = "撤销调课",
+                    titleColor = DialogDefaults.titleColor(),
+                    summary = "这门课共有 ${group.size} 条调课记录",
+                    summaryColor = DialogDefaults.summaryColor(),
+                    backgroundColor = DialogDefaults.backgroundColor(),
+                    enableWindowDim = true,
+                    onDismissRequest = { revertChoice = null },
+                    onDismissFinished = null,
+                    outsideMargin = DialogDefaults.outsideMargin,
+                    insideMargin = DialogDefaults.insideMargin,
+                    defaultWindowInsetsPadding = true,
+                    content = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColorsPrimary(),
+                                onClick = {
+                                    revertChoice = null
+                                    vm.closeDetailSheet()
+                                    scope.launch {
+                                        val deleted = vm.deleteCourses(group)
+                                        if (!deleted) {
+                                            showMessage("撤销调课失败，请重试")
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(text = "撤销全部", color = colors.onPrimary)
+                            }
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    revertChoice = null
+                                    vm.closeDetailSheet()
+                                    scope.launch {
+                                        val deleted = vm.deleteCourse(target)
+                                        if (!deleted) {
+                                            showMessage("撤销调课失败，请重试")
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(text = "撤销选中")
+                            }
+                        }
                     })
             }
         }) { paddingValues ->

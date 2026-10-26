@@ -72,6 +72,23 @@ class TransCourseWithConflictsUseCaseTest {
     }
 
     @Test
+    fun `单周调到原时间地点标记为空操作`() = kotlinx.coroutines.test.runTest {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        everySuspend { repository.getAllCoursesOnce() } returns listOf(origin)
+
+        val result = useCase(
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertTrue(result.isNoOp)
+    }
+
+    @Test
     fun `无冲突时返回空列表`() = kotlinx.coroutines.test.runTest {
         val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin)

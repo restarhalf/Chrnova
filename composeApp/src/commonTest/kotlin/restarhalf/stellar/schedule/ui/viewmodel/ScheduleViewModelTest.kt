@@ -947,4 +947,50 @@ class ScheduleViewModelTest {
         }
     }
 
+    @Test
+    fun `buildTransGroup按原课程聚合调课记录`() = runTest {
+        val vm = makeViewModel()
+        val week1 = course(name = "实操课", type = 2, targetWeek = 1).copy(originRemoteKey = "k9")
+        val week2 = course(name = "实操课", type = 2, targetWeek = 2).copy(originRemoteKey = "k9")
+        val otherKey = course(name = "实操课", type = 2, targetWeek = 3).copy(originRemoteKey = "k10")
+        val normal = course(name = "实操课")
+
+        val group = vm.buildTransGroup(listOf(week1, week2, otherKey, normal), week2)
+        assertEquals(listOf(week1, week2), group)
+    }
+
+    @Test
+    fun `buildTransGroup普通课只返回自身`() = runTest {
+        val vm = makeViewModel()
+        val normal = course(name = "高数")
+        assertEquals(listOf(normal), vm.buildTransGroup(listOf(normal), normal))
+    }
+
+    @Test
+    fun `buildTransGroup缺少原课程键时只返回自身`() = runTest {
+        val vm = makeViewModel()
+        val orphan = course(name = "高数", type = 2, targetWeek = 2)
+        assertEquals(listOf(orphan), vm.buildTransGroup(listOf(orphan), orphan))
+    }
+
+    @Test
+    fun `deleteCourses批量删除`() = runTest {
+        val vm = makeViewModel()
+        everySuspend { courseRepository.deleteCourse(any()) } returns Unit
+        val list = listOf(
+            course(name = "实操课", type = 2, targetWeek = 1),
+            course(name = "实操课", type = 2, targetWeek = 2),
+        )
+
+        assertTrue(vm.deleteCourses(list))
+        advanceMain()
+        verifySuspend(VerifyMode.exactly(2)) { courseRepository.deleteCourse(any()) }
+    }
+
+    @Test
+    fun `deleteCourses空列表返回false`() = runTest {
+        val vm = makeViewModel()
+        assertFalse(vm.deleteCourses(emptyList()))
+    }
+
 }

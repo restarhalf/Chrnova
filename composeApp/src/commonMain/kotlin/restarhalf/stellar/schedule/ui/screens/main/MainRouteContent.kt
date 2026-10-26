@@ -107,6 +107,9 @@ fun MainRouteContent(
                     onEditLabCourse = { courseId ->
                         navigator.push(Screen.ClassEdit(courseId = courseId))
                     },
+                    onWholeCourseTrans = { courseId ->
+                        navigator.push(Screen.TransCourseEdit(courseId = courseId))
+                    },
                     canSaveImage = canSaveImage,
                     onSaveImage = saveImage,
                     sharerNickname = personalInfo.nickname,

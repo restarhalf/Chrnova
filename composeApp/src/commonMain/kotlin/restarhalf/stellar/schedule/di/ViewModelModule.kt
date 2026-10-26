@@ -50,6 +50,8 @@ val viewModelModule = module {
             saveCourse = get(),
             deleteCourseUseCase = get(),
             auth = get(),
+            transCourseWithConflicts = get(),
+            saveTransCourses = get(),
         )
     }
     viewModel {

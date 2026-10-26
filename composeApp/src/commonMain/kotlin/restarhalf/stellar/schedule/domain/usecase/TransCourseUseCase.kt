@@ -9,6 +9,7 @@ class TransCourseUseCase {
     data class Result(
         val overrideCourse: Course,
         val conflicts: List<Course>,
+        val isNoOp: Boolean = false,
     )
 
     operator fun invoke(
@@ -22,6 +23,9 @@ class TransCourseUseCase {
         endSection: Int,
     ): Result {
 
+        val sectionCount = (endSection - startSection + 1).coerceAtLeast(1)
+        val location = newRoom.ifBlank { originCourse.location }
+
         val overrideCourse =
             originCourse.copy(
                 id = 0,
@@ -29,12 +33,21 @@ class TransCourseUseCase {
                 originRemoteKey = originCourse.remoteKey,
                 remoteKey = originCourse.remoteKey + "#override#" + originWeek + "#" + targetWeek,
                 targetWeek = targetWeek,
-                location = newRoom.ifBlank { originCourse.location },
+                location = location,
                 dayOfWeek = dayOfWeek,
                 startSection = startSection,
-                sectionCount = (endSection - startSection + 1).coerceAtLeast(1),
+                sectionCount = sectionCount,
                 weeks = listOf(originWeek),
             )
+
+        // 只有“原本就有这一周、且时间地点都没变”才算空操作；换到新周次是有效的换周。
+        val isNoOp =
+            originWeek == targetWeek &&
+                originCourse.weeks.contains(originWeek) &&
+                location == originCourse.location &&
+                dayOfWeek == originCourse.dayOfWeek &&
+                startSection == originCourse.startSection &&
+                sectionCount == originCourse.sectionCount
 
         fun overlaps(aStart: Int, aEnd: Int, bStart: Int, bEnd: Int): Boolean {
             return maxOf(aStart, bStart) <= minOf(aEnd, bEnd)
@@ -56,6 +69,6 @@ class TransCourseUseCase {
                 }
                 .toList()
 
-        return Result(overrideCourse = overrideCourse, conflicts = conflicts)
+        return Result(overrideCourse = overrideCourse, conflicts = conflicts, isNoOp = isNoOp)
     }
 }

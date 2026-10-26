@@ -22,6 +22,9 @@ import restarhalf.stellar.schedule.domain.usecase.DeleteCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
+import restarhalf.stellar.schedule.domain.usecase.SaveTransCoursesUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseBatchUseCase
+import restarhalf.stellar.schedule.domain.usecase.TransCourseWithConflictsUseCase
 
 class CourseEditViewModel(
     private val observeAllCourses: ObserveAllCoursesUseCase,
@@ -29,6 +32,8 @@ class CourseEditViewModel(
     private val saveCourse: SaveCourseUseCase,
     private val deleteCourseUseCase: DeleteCourseUseCase,
     private val auth: JwxtAuthPort,
+    private val transCourseWithConflicts: TransCourseWithConflictsUseCase? = null,
+    private val saveTransCourses: SaveTransCoursesUseCase? = null,
 ) : ViewModel() {
 
     private val _saving = MutableStateFlow(false)
@@ -39,6 +44,16 @@ class CourseEditViewModel(
     data class CourseEditUiState(
         val courses: ImmutableList<Course>,
         val courseNames: ImmutableList<String>,
+    )
+
+    @Stable
+    data class TransFormState(
+        val isReady: Boolean,
+        val classRoom: String = "",
+        val dayOfWeek: Int = 1,
+        val startSection: Int = 1,
+        val endSection: Int = 2,
+        val selectedWeeks: Set<Int> = emptySet(),
     )
 
     @Stable
@@ -180,6 +195,12 @@ class CourseEditViewModel(
         )
     }
 
+    fun toggleTransWeek(selectedWeeks: Set<Int>, week: Int, maxWeeks: Int): Set<Int> {
+        if (selectedWeeks.contains(week)) return selectedWeeks - week
+        if (selectedWeeks.size >= maxWeeks) return selectedWeeks
+        return selectedWeeks + week
+    }
+
     fun toggleWeek(selectedWeeks: Set<Int>, week: Int): Set<Int> {
         return if (selectedWeeks.contains(week)) selectedWeeks - week else selectedWeeks + week
     }
@@ -197,6 +218,51 @@ class CourseEditViewModel(
                 _saving.value = false
             }
         }
+    }
+
+    fun transMaxWeeks(course: Course?): Int {
+        return (course?.weeks?.count { it > 0 } ?: 0).coerceAtLeast(1)
+    }
+
+    fun buildTransFormState(course: Course?): TransFormState {
+        if (course == null) {
+            return TransFormState(isReady = false, selectedWeeks = emptySet())
+        }
+        return TransFormState(
+            isReady = true,
+            classRoom = course.location,
+            dayOfWeek = course.dayOfWeek.coerceIn(1, 7),
+            startSection = course.startSection.coerceIn(1, 12),
+            endSection = (course.startSection + course.sectionCount - 1).coerceIn(1, 12),
+            selectedWeeks = course.weeks.filter { it > 0 }.toSet(),
+        )
+    }
+
+    suspend fun buildTransBatch(
+        originCourse: Course,
+        weeks: Set<Int>,
+        classRoom: String,
+        dayOfWeek: Int,
+        startSection: Int,
+        endSection: Int,
+    ): TransCourseBatchUseCase.Result? {
+        val useCase = transCourseWithConflicts ?: return null
+        return useCase.buildBatch(
+            originCourse = originCourse,
+            weeks = weeks,
+            newRoom = classRoom,
+            dayOfWeek = dayOfWeek,
+            startSection = startSection,
+            endSection = endSection,
+        )
+    }
+
+    suspend fun saveTransBatch(
+        originCourse: Course,
+        overrideCourses: List<Course>,
+    ): Boolean {
+        val useCase = saveTransCourses ?: return false
+        return useCase(originCourse = originCourse, overrideCourses = overrideCourses)
     }
 
     fun deleteCourse(course: Course, onResult: (Boolean) -> Unit) {
