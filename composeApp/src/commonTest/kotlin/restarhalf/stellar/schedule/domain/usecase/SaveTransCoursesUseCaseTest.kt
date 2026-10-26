@@ -80,6 +80,54 @@ class SaveTransCoursesUseCaseTest {
     }
 
     @Test
+    fun `换到已被旧记录占用的目标周时删掉旧记录`() = runTest {
+        val origin = course("高数", weeks = listOf(1, 2, 3, 4), type = 0, remoteKey = "k1")
+        // 上次第 3 周换到第 7 周
+        val oldMove =
+            course("高数", weeks = listOf(3), originRemoteKey = "k1", targetWeek = 7, id = 11)
+        everySuspend { repository.getAllCoursesOnce() } returns listOf(origin, oldMove)
+        everySuspend { repository.insertCourses(any()) } returns listOf(1L)
+
+        // 这次第 4 周换到第 7 周
+        val overrides =
+            listOf(course("高数", weeks = listOf(4), originRemoteKey = "k1", targetWeek = 7))
+
+        assertTrue(useCase(origin, overrides))
+        verifySuspend { repository.deleteCourse(oldMove) }
+    }
+
+    @Test
+    fun `取消的周会清掉旧调课记录`() = runTest {
+        val origin = course("高数", weeks = listOf(1, 2, 3), type = 0, remoteKey = "k1")
+        val oldWeek2 =
+            course("高数", weeks = listOf(2), originRemoteKey = "k1", targetWeek = 2, id = 11)
+        val oldWeek3 =
+            course("高数", weeks = listOf(3), originRemoteKey = "k1", targetWeek = 3, id = 12)
+        everySuspend { repository.getAllCoursesOnce() } returns
+            listOf(origin, oldWeek2, oldWeek3)
+        everySuspend { repository.insertCourses(any()) } returns listOf(1L)
+
+        val overrides =
+            listOf(course("高数", weeks = listOf(1), originRemoteKey = "k1", targetWeek = 1))
+
+        assertTrue(useCase(origin, overrides, clearedWeeks = listOf(2)))
+        verifySuspend { repository.deleteCourse(oldWeek2) }
+        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(oldWeek3) }
+    }
+
+    @Test
+    fun `只清周次不插新记录也能成功`() = runTest {
+        val origin = course("高数", weeks = listOf(1, 2), type = 0, remoteKey = "k1")
+        val oldWeek2 =
+            course("高数", weeks = listOf(2), originRemoteKey = "k1", targetWeek = 2, id = 11)
+        everySuspend { repository.getAllCoursesOnce() } returns listOf(origin, oldWeek2)
+
+        assertTrue(useCase(origin, emptyList(), clearedWeeks = listOf(2)))
+        verifySuspend { repository.deleteCourse(oldWeek2) }
+        verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.insertCourses(any()) }
+    }
+
+    @Test
     fun `空列表直接返回false`() = runTest {
         val origin = course("高数", weeks = listOf(1), type = 0, remoteKey = "k1")
         assertFalse(useCase(origin, emptyList()))

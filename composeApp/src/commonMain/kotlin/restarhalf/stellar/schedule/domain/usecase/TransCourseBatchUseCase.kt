@@ -15,11 +15,13 @@ class TransCourseBatchUseCase(
         val overrideCourses: List<Course>,
         val weekConflicts: List<WeekConflict>,
         val noOpWeeks: List<Int> = emptyList(),
+        /** 这些周要回到原课表，保存时清掉它们已有的调课记录。 */
+        val clearedWeeks: List<Int> = emptyList(),
     ) {
         val hasConflicts: Boolean get() = weekConflicts.isNotEmpty()
 
-        /** 有周次真正改了时间、教室或周次；全是空操作时为 false。 */
-        val hasChanges: Boolean get() = overrideCourses.isNotEmpty()
+        /** 有周次真正改了时间、教室、周次，或需要撤掉旧调课；全无变化时为 false。 */
+        val hasChanges: Boolean get() = overrideCourses.isNotEmpty() || clearedWeeks.isNotEmpty()
     }
 
     operator fun invoke(
@@ -44,6 +46,14 @@ class TransCourseBatchUseCase(
         val overrideCourses = ArrayList<Course>(selected.size)
         val weekConflicts = ArrayList<WeekConflict>()
         val noOpWeeks = ArrayList<Int>()
+        val clearedWeeks = ArrayList<Int>()
+
+        // 这门课已有的调课记录覆盖了哪些原周，决定哪些“没改”的周其实是在撤销。
+        val overriddenWeeks =
+            allCourses
+                .filter { it.type == 2 && it.originRemoteKey == originCourse.remoteKey }
+                .flatMap { it.weeks }
+                .toSet()
 
         fun collect(originWeek: Int, targetWeek: Int) {
             val single =
@@ -58,14 +68,18 @@ class TransCourseBatchUseCase(
                     endSection = endSection,
                 )
             if (single.isNoOp) {
-                noOpWeeks.add(originWeek)
+                // 本来就被调走过、现在调回原样，等于撤销这一周的调课。
+                if (originWeek in overriddenWeeks) {
+                    clearedWeeks.add(originWeek)
+                } else {
+                    noOpWeeks.add(originWeek)
+                }
                 return
             }
             overrideCourses.add(single.overrideCourse)
 
-            val others = single.conflicts.filterNot { isSameCourse(it, originCourse) }
-            if (others.isNotEmpty()) {
-                weekConflicts.add(WeekConflict(week = targetWeek, courses = others))
+            if (single.conflicts.isNotEmpty()) {
+                weekConflicts.add(WeekConflict(week = targetWeek, courses = single.conflicts))
             }
         }
 
@@ -75,16 +89,16 @@ class TransCourseBatchUseCase(
         for ((originWeek, targetWeek) in weekMoves) {
             collect(originWeek = originWeek, targetWeek = targetWeek)
         }
+        // 取消、也没换成新周的周次：回到原课表。
+        removedWeeks.drop(weekMoves.size)
+            .filter { it in overriddenWeeks }
+            .forEach { clearedWeeks.add(it) }
 
         return Result(
             overrideCourses = overrideCourses,
             weekConflicts = weekConflicts,
             noOpWeeks = noOpWeeks,
+            clearedWeeks = clearedWeeks.distinct().sorted(),
         )
-    }
-
-    private fun isSameCourse(first: Course, second: Course): Boolean {
-        if (first.id != 0L || second.id != 0L) return first.id == second.id
-        return first.name == second.name && first.teacher == second.teacher
     }
 }

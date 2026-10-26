@@ -260,9 +260,14 @@ class CourseEditViewModel(
     suspend fun saveTransBatch(
         originCourse: Course,
         overrideCourses: List<Course>,
+        clearedWeeks: Collection<Int> = emptyList(),
     ): Boolean {
         val useCase = saveTransCourses ?: return false
-        return useCase(originCourse = originCourse, overrideCourses = overrideCourses)
+        return useCase(
+            originCourse = originCourse,
+            overrideCourses = overrideCourses,
+            clearedWeeks = clearedWeeks,
+        )
     }
 
     fun deleteCourse(course: Course, onResult: (Boolean) -> Unit) {

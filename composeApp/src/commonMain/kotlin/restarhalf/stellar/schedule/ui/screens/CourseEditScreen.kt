@@ -99,6 +99,7 @@ fun CourseEditScreen(
         mutableStateOf(emptyList<TransCourseBatchUseCase.WeekConflict>())
     }
     var pendingOverrides by remember { mutableStateOf(emptyList<Course>()) }
+    var pendingClearedWeeks by remember { mutableStateOf(emptyList<Int>()) }
     val colors = MiuixTheme.colorScheme
 
     LaunchedEffect(
@@ -131,13 +132,13 @@ fun CourseEditScreen(
         selectedWeeks = formState.selectedWeeks
     }
 
-    fun submitTrans(overrides: List<Course>) {
+    fun submitTrans(overrides: List<Course>, clearedWeeks: List<Int> = emptyList()) {
         val origin = editingCourse ?: return
         if (savingTrans) return
         savingTrans = true
         scope.launch {
             try {
-                val saved = vm.saveTransBatch(origin, overrides)
+                val saved = vm.saveTransBatch(origin, overrides, clearedWeeks)
                 if (saved) {
                     showTransConflict = false
                     onBack()
@@ -232,10 +233,15 @@ fun CourseEditScreen(
                                         if (result.hasConflicts) {
                                             conflictWeeks = result.weekConflicts
                                             pendingOverrides = result.overrideCourses
+                                            pendingClearedWeeks = result.clearedWeeks
                                             showTransConflict = true
                                             return@launch
                                         }
-                                        val saved = vm.saveTransBatch(origin, result.overrideCourses)
+                                        val saved = vm.saveTransBatch(
+                                            origin,
+                                            result.overrideCourses,
+                                            result.clearedWeeks,
+                                        )
                                         if (saved) {
                                             onBack()
                                         } else {
@@ -329,6 +335,7 @@ fun CourseEditScreen(
                     onDismissRequest = {
                         showTransConflict = false
                         pendingOverrides = emptyList()
+                        pendingClearedWeeks = emptyList()
                         conflictWeeks = emptyList()
                     }
                 ) {
@@ -361,6 +368,7 @@ fun CourseEditScreen(
                                     onClick = {
                                         showTransConflict = false
                                         pendingOverrides = emptyList()
+                                        pendingClearedWeeks = emptyList()
                                         conflictWeeks = emptyList()
                                     }
                                 ) {
@@ -371,9 +379,11 @@ fun CourseEditScreen(
                                     colors = ButtonDefaults.buttonColorsPrimary(),
                                     onClick = {
                                         val overrides = pendingOverrides
+                                        val cleared = pendingClearedWeeks
                                         pendingOverrides = emptyList()
+                                        pendingClearedWeeks = emptyList()
                                         conflictWeeks = emptyList()
-                                        submitTrans(overrides)
+                                        submitTrans(overrides, cleared)
                                     }
                                 ) {
                                     Text(text = "强制保存", color = colors.onPrimary)

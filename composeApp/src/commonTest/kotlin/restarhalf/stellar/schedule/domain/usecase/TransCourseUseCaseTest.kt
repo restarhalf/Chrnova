@@ -189,6 +189,64 @@ class TransCourseUseCaseTest {
     }
 
     @Test
+    fun `同周只换教室时不和自己冲突`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val result = useCase(
+            allCourses = listOf(origin),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "新教室",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertTrue(result.conflicts.isEmpty())
+    }
+
+    @Test
+    fun `同一门课之前的调课记录不算冲突`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val oldOverride =
+            origin.copy(
+                id = 11,
+                type = 2,
+                originRemoteKey = "k1",
+                remoteKey = "k1#override#2#2",
+                targetWeek = 2,
+                weeks = listOf(2),
+            )
+        val result = useCase(
+            allCourses = listOf(origin, oldOverride),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "新教室",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertTrue(result.conflicts.isEmpty())
+    }
+
+    @Test
+    fun `别的课仍然算冲突`() {
+        val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
+        val other = course("英语", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k2")
+        val result = useCase(
+            allCourses = listOf(origin, other),
+            originCourse = origin,
+            originWeek = 2,
+            targetWeek = 2,
+            newRoom = "新教室",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+        assertEquals(listOf("英语"), result.conflicts.map { it.name })
+    }
+
+    @Test
     fun `冲突检测基于目标周的生效课程`() {
         val origin = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2, remoteKey = "k1")
 

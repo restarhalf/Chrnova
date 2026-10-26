@@ -227,6 +227,82 @@ class TransCourseBatchUseCaseTest {
     }
 
     @Test
+    fun `取消原本调走过的周会清掉旧记录`() {
+        val origin = course(
+            name = "高数",
+            dayOfWeek = 1,
+            startSection = 1,
+            sectionCount = 2,
+            weeks = listOf(1, 2, 3),
+            remoteKey = "k1",
+        )
+        // 上次整门课调到了周三
+        val oldOverrides = listOf(1, 2, 3).map { week ->
+            origin.copy(
+                id = (10 + week).toLong(),
+                type = 2,
+                originRemoteKey = "k1",
+                remoteKey = "k1#override#$week#$week",
+                targetWeek = week,
+                dayOfWeek = 3,
+                startSection = 5,
+                weeks = listOf(week),
+            )
+        }
+
+        val result = useCase(
+            allCourses = listOf(origin) + oldOverrides,
+            originCourse = origin,
+            weeks = listOf(1, 2),
+            newRoom = "旧教室",
+            dayOfWeek = 3,
+            startSection = 5,
+            endSection = 6,
+        )
+
+        assertEquals(listOf(3), result.clearedWeeks)
+        assertTrue(result.hasChanges)
+        assertEquals(listOf(1, 2), result.overrideCourses.map { it.targetWeek })
+    }
+
+    @Test
+    fun `调回原时间时算撤销而不是空操作`() {
+        val origin = course(
+            name = "高数",
+            dayOfWeek = 1,
+            startSection = 1,
+            sectionCount = 2,
+            weeks = listOf(1, 2),
+            remoteKey = "k1",
+        )
+        val oldWeek2 =
+            origin.copy(
+                id = 12,
+                type = 2,
+                originRemoteKey = "k1",
+                remoteKey = "k1#override#2#2",
+                targetWeek = 2,
+                dayOfWeek = 3,
+                startSection = 5,
+                weeks = listOf(2),
+            )
+
+        val result = useCase(
+            allCourses = listOf(origin, oldWeek2),
+            originCourse = origin,
+            weeks = listOf(1, 2),
+            newRoom = "",
+            dayOfWeek = 1,
+            startSection = 1,
+            endSection = 2,
+        )
+
+        assertEquals(listOf(2), result.clearedWeeks)
+        assertTrue(result.overrideCourses.isEmpty())
+        assertTrue(result.hasChanges)
+    }
+
+    @Test
     fun `调课不与自己冲突`() {
         val origin = course(
             name = "高数",

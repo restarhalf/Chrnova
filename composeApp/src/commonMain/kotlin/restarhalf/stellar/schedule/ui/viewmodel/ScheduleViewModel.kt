@@ -406,7 +406,7 @@ class ScheduleViewModel(
 
     fun buildTransGroup(courses: List<Course>, course: Course): List<Course> {
         if (course.type != 2) return listOf(course)
-        val key = course.originRemoteKey ?: return listOf(course)
+        val key = course.originRemoteKey?.takeIf { it.isNotBlank() } ?: return listOf(course)
         val group = courses.filter { it.type == 2 && it.originRemoteKey == key }
         return group.ifEmpty { listOf(course) }
     }

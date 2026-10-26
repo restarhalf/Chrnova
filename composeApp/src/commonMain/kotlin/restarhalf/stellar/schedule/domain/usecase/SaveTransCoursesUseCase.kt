@@ -10,20 +10,30 @@ class SaveTransCoursesUseCase(private val repository: CourseRepository) {
     suspend operator fun invoke(
         originCourse: Course,
         overrideCourses: List<Course>,
+        clearedWeeks: Collection<Int> = emptyList(),
     ): Boolean {
-        if (overrideCourses.isEmpty()) return false
+        if (overrideCourses.isEmpty() && clearedWeeks.isEmpty()) return false
 
         return runCatching {
-            val originKey = originCourse.remoteKey
+            // 原课程本身就是调课记录时，归属键要退回它最初那门课。
+            val originKey =
+                originCourse.originRemoteKey?.takeIf { it.isNotBlank() } ?: originCourse.remoteKey
             if (originKey.isNotBlank()) {
-                val replacedWeeks = overrideCourses.flatMap { it.weeks }.toSet()
+                val replacedOriginWeeks = overrideCourses.flatMap { it.weeks }.toSet() + clearedWeeks
+                // 同一个目标周也要顶掉旧记录，否则换周后会叠出两节课。
+                val replacedTargetWeeks = overrideCourses.map { it.targetWeek }.toSet()
                 repository
                     .getAllCoursesOnce()
                     .filter { it.type == 2 && it.originRemoteKey == originKey }
-                    .filter { old -> old.weeks.any { it in replacedWeeks } }
+                    .filter { old ->
+                        old.weeks.any { it in replacedOriginWeeks } ||
+                            old.targetWeek in replacedTargetWeeks
+                    }
                     .forEach { repository.deleteCourse(it) }
             }
-            repository.insertCourses(overrideCourses)
+            if (overrideCourses.isNotEmpty()) {
+                repository.insertCourses(overrideCourses)
+            }
         }
             .onFailure { e ->
                 if (e is CancellationException) throw e

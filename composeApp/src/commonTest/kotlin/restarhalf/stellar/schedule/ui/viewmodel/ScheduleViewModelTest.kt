@@ -838,7 +838,12 @@ class ScheduleViewModelTest {
     fun `buildTransCourseAndConflicts检测到冲突`() = runTest {
         val vm = makeViewModel()
         val existing = course(
-            name = "大学物理", dayOfWeek = 2, startSection = 1, sectionCount = 2, weeks = listOf(3),
+            name = "大学物理",
+            dayOfWeek = 2,
+            startSection = 1,
+            sectionCount = 2,
+            weeks = listOf(3),
+            remoteKey = "rk-2",
         )
         everySuspend { courseRepository.getAllCoursesOnce() } returns listOf(existing)
 

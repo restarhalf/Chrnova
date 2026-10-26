@@ -56,12 +56,18 @@ class TransCourseUseCase {
         val aStart = overrideCourse.startSection
         val aEnd = overrideCourse.startSection + overrideCourse.sectionCount - 1
 
+        // 原课程如果是调课记录，归属键要退回它最初那门课，才能认出同一组记录。
+        val familyKey =
+            originCourse.originRemoteKey?.takeIf { it.isNotBlank() } ?: originCourse.remoteKey
+
         val effective = effectiveCoursesForWeek(all = allCourses, week = targetWeek)
         val conflicts =
             effective
                 .asSequence()
                 .filter { it.dayOfWeek == overrideCourse.dayOfWeek }
                 .filter { isCourseActiveInWeek(it, targetWeek) }
+                // 自己、以及这门课之前的调课记录都不算冲突。
+                .filterNot { isSameOriginCourse(other = it, origin = originCourse, familyKey = familyKey) }
                 .filter { other ->
                     val bStart = other.startSection
                     val bEnd = other.startSection + other.sectionCount - 1
@@ -70,5 +76,11 @@ class TransCourseUseCase {
                 .toList()
 
         return Result(overrideCourse = overrideCourse, conflicts = conflicts, isNoOp = isNoOp)
+    }
+
+    private fun isSameOriginCourse(other: Course, origin: Course, familyKey: String): Boolean {
+        if (origin.id != 0L && other.id == origin.id) return true
+        if (familyKey.isBlank()) return false
+        return other.remoteKey == familyKey || other.originRemoteKey == familyKey
     }
 }
