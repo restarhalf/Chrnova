@@ -1,13 +1,7 @@
-
-
-
 package restarhalf.stellar.schedule.ui.modifier
-
-
 
 import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.colorControls
-
 
 fun BackdropEffectScope.vibrancy() {
     colorControls(

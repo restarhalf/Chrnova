@@ -10,7 +10,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 
-
 object AcademicCalendar {
     
     @OptIn(ExperimentalTime::class)
@@ -22,7 +21,6 @@ object AcademicCalendar {
         return termStart.minus(dayOfWeek.ordinal, kotlinx.datetime.DateTimeUnit.DAY)
     }
 
-    
     fun getWeekDates(
         week: Int,
         termStartMs: Long,
@@ -42,7 +40,6 @@ object AcademicCalendar {
         }
     }
 
-    
     @OptIn(ExperimentalTime::class)
     fun getTodayIndexInWeek(
         week: Int,
@@ -64,7 +61,6 @@ object AcademicCalendar {
         return null
     }
 
-    
     @OptIn(ExperimentalTime::class)
     fun getCurrentWeekMonday(
         nowMs: Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
@@ -74,7 +70,6 @@ object AcademicCalendar {
         return today.minus(today.dayOfWeek.ordinal, kotlinx.datetime.DateTimeUnit.DAY)
     }
 
-    
     @OptIn(ExperimentalTime::class)
     fun getCurrentWeekDates(
         dayCount: Int = 7,
@@ -94,7 +89,6 @@ object AcademicCalendar {
             .take(dayCount)
     }
 
-    
     @OptIn(ExperimentalTime::class)
     fun getTodayIndexInCurrentWeek(
         nowMs: Long = kotlin.time.Clock.System.now().toEpochMilliseconds()

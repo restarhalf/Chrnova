@@ -21,7 +21,6 @@ import kotlinx.datetime.toLocalDateTime
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 fun formatAnnouncementDate(createdAtSec: Long): String {
     if (createdAtSec <= 0) return ""
     return runCatching {
@@ -35,7 +34,6 @@ fun formatAnnouncementDate(createdAtSec: Long): String {
         "${date.year}/$month/$day"
     }.getOrDefault("")
 }
-
 
 @Composable
 fun AnnouncementBadge(
@@ -58,7 +56,6 @@ fun AnnouncementBadge(
         )
     }
 }
-
 
 @Composable
 fun AnnouncementTitleRow(
@@ -97,7 +94,6 @@ fun AnnouncementTitleRow(
     }
 }
 
-
 @Composable
 fun UnreadBadge(modifier: Modifier = Modifier) {
     val colors = MiuixTheme.colorScheme
@@ -109,4 +105,3 @@ fun UnreadBadge(modifier: Modifier = Modifier) {
                 .background(colors.error),
     )
 }
-

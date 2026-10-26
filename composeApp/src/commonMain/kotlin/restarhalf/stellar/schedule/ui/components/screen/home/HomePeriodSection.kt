@@ -23,9 +23,7 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 private typealias PeriodRowRenderUi = BuildHomePeriodRenderRowsUseCase.RowRenderUi
-
 
 @Composable
 fun HomePeriodSection(

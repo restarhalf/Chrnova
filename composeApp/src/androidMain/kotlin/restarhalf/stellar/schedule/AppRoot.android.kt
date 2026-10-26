@@ -40,7 +40,6 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     }
     setContent {
 
-
         var themeMode by remember { mutableIntStateOf(displaySettings.getThemeMode()) }
         val darkMode =
             when (themeMode) {

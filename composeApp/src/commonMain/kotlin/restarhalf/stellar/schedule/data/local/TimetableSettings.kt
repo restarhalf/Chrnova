@@ -15,10 +15,8 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import kotlin.time.ExperimentalTime
 
-
 class TimetableSettings(private val settings: ObservableSettings) {
 
-    
     fun getCampus(): Campus {
         val raw = settings.getString(KEY_CAMPUS, Campus.Development.name)
         return runCatching { Campus.valueOf(raw) }
@@ -28,7 +26,6 @@ class TimetableSettings(private val settings: ObservableSettings) {
             .getOrElse { Campus.Development }
     }
 
-    
     @OptIn(ExperimentalSettingsApi::class)
     fun observeCampus(): Flow<Campus> {
         return settings.getStringFlow(KEY_CAMPUS, Campus.Development.name)
@@ -41,39 +38,32 @@ class TimetableSettings(private val settings: ObservableSettings) {
             }
     }
 
-    
     fun setCampus(campus: Campus) {
         settings[KEY_CAMPUS] = campus.name
     }
 
-    
     fun getTermStartMs(): Long {
         return settings.getLong(KEY_TERM_START_MS, defaultTermStartMs())
     }
 
-    
     @OptIn(ExperimentalSettingsApi::class)
     fun observeTermStartMs(): Flow<Long> {
         return settings.getLongFlow(KEY_TERM_START_MS, defaultTermStartMs())
     }
 
-    
     fun setTermStartMs(ms: Long) {
         settings[KEY_TERM_START_MS] = ms
     }
 
-    
     fun getTotalWeeks(): Int {
         return settings.getInt(KEY_TOTAL_WEEKS, DEFAULT_TOTAL_WEEKS)
     }
 
-    
     @OptIn(ExperimentalSettingsApi::class)
     fun observeTotalWeeks(): Flow<Int> {
         return settings.getIntFlow(KEY_TOTAL_WEEKS, DEFAULT_TOTAL_WEEKS)
     }
 
-    
     fun setTotalWeeks(weeks: Int) {
         settings[KEY_TOTAL_WEEKS] = weeks
     }
@@ -85,7 +75,6 @@ class TimetableSettings(private val settings: ObservableSettings) {
         private const val KEY_TOTAL_WEEKS = "total_weeks"
         private const val DEFAULT_TOTAL_WEEKS = 20
 
-        
         @OptIn(ExperimentalTime::class)
         fun defaultTermStartMs(): Long {
             val date = LocalDate(2026, 3, 2)

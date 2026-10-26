@@ -8,13 +8,11 @@ import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-
 @OptIn(DelicateCryptographyApi::class, ExperimentalEncodingApi::class)
 class JwxtPasswordEncryptionPortImpl : JwxtPasswordEncryptionPort {
 
     private val json = Json
 
-    
     private val cipher by lazy {
         val keyBytes = LocalSecrets.AES_KEY.encodeToByteArray()
         require(keyBytes.size == 16) { "AES key must be 16 bytes" }
@@ -22,10 +20,9 @@ class JwxtPasswordEncryptionPortImpl : JwxtPasswordEncryptionPort {
             .get(AES.ECB)
             .keyDecoder()
             .decodeFromByteArrayBlocking(AES.Key.Format.RAW, keyBytes)
-            .cipher(padding = true) // PKCS7 padding
+            .cipher(padding = true)
     }
 
-    
     override fun encryptPasswordForLogin(password: String): String {
         val jsonPassword = json.encodeToString(password)
         val cipherBytes = cipher.encryptBlocking(jsonPassword.encodeToByteArray())

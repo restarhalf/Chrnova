@@ -78,7 +78,6 @@ import restarhalf.stellar.schedule.domain.repository.GradeRepository
 private const val USER_AGENT =
     "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-
 private fun HttpClientConfig<*>.installCommonModules(json: Json) {
     install(ContentNegotiation) { json(json) }
     install(HttpCache)
@@ -92,11 +91,9 @@ val portModule = module {
 
     single { Json { ignoreUnknownKeys = true } }
 
-
     single { JwxtAuthStore(get(named("jwxt_auth"))) }
 
     single { PEAuthStore(get(named("pe_auth"))) }
-
 
     single(named("jwxt")) {
         HttpClient {
@@ -111,7 +108,6 @@ val portModule = module {
         }
     }
 
-
     single(named("pe")) {
         HttpClient {
             installCommonModules(get())
@@ -120,7 +116,6 @@ val portModule = module {
             }
         }
     }
-
 
     single<JwxtGateway> {
         JwxtClient(
@@ -131,7 +126,6 @@ val portModule = module {
         )
     }
 
-
     single<PEGateway> {
         PEClient(
             httpClient = get(named("pe")),
@@ -141,21 +135,16 @@ val portModule = module {
         )
     }
 
-
     single<CourseSelectionPort> { JwxtCourseSelectionAdapter(gateway = get()) }
-
 
     single { JwxtSync(get()) }
 
-
     single { TimetableSettings(get(named("timetable_prefs"))) }
-
 
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
     single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
     single<PERepository> { RoomPERepositoryImpl(peYearScoreDao = get(), peDetailDao = get()) }
-
 
     single(named("papers")) {
         HttpClient {
@@ -163,13 +152,11 @@ val portModule = module {
         }
     }
 
-
     single(named("evaluate")) {
         HttpClient {
             installCommonModules(get())
         }
     }
-
 
     single<DisplaySettingsPort> { DisplaySettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<ReminderSettingsPort> { ReminderSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
@@ -223,13 +210,11 @@ val portModule = module {
         )
     }
 
-
     single(named("announcement")) {
         HttpClient {
             installCommonModules(get())
         }
     }
-
 
     single<AnnouncementPort> {
         AnnouncementApi(

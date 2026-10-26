@@ -50,7 +50,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-
 class HomeViewModelTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -77,11 +76,9 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    
     private val termStartMs = LocalDateTime.parse("2026-03-02T00:00")
         .toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
-    
     private val nowMs = LocalDateTime.parse("2026-03-04T10:30:00")
         .toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
@@ -156,14 +153,12 @@ class HomeViewModelTest {
         )
     }
 
-    
     private fun TestScope.subscribeUi(vm: HomeViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    
     private suspend fun awaitState(
         vm: HomeViewModel,
         timeoutMs: Long = 5000,
@@ -177,8 +172,6 @@ class HomeViewModelTest {
         }
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
-
-
 
     @Test
     fun `uiState初值为空`() = runTest {
@@ -230,20 +223,12 @@ class HomeViewModelTest {
         assertEquals(listOf(mine), state.exams)
     }
 
-
-
-
-
     @Test
     fun `getCampusTimetable透传端口`() = runTest {
         val vm = makeViewModel()
         assertEquals(timetableSlots, vm.getCampusTimetable(Campus.Jinshitan))
         verify { timetable.getCampusTimetable(Campus.Jinshitan) }
     }
-
-
-
-
 
     @Test
     fun `buildHomeRenderState完整渲染`() = runTest {
@@ -356,10 +341,6 @@ class HomeViewModelTest {
         assertTrue(morning[0].rowUi.isPastOrEmpty)
     }
 
-
-
-
-
     @Test
     fun `getTodayExams按日期过滤并按开始时间排序`() = runTest {
         val vm = makeViewModel()
@@ -389,10 +370,6 @@ class HomeViewModelTest {
 
         assertEquals(listOf(withTime, noTime), today)
     }
-
-
-
-
 
     @Test
     fun `buildExamUiList横杠时间解析`() = runTest {
@@ -469,6 +446,5 @@ class HomeViewModelTest {
         assertFalse(ui.isStarted)
         assertFalse(ui.isEnded)
     }
-
 
 }

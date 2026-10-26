@@ -45,7 +45,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun AnnouncementListScreen(
     vm: AnnouncementViewModel,
@@ -57,7 +56,6 @@ fun AnnouncementListScreen(
     val pullToRefreshState = rememberPullToRefreshState()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
-
 
     LaunchedEffect(Unit) {
         vm.refresh()
@@ -120,7 +118,6 @@ fun AnnouncementListScreen(
                         ),
                     ),
         ) {
-
 
             AdBanner(
                 config = uiState.adConfig?.let {

@@ -1,9 +1,4 @@
-
-
-
 package restarhalf.stellar.schedule.ui.navigation
-
-
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -130,14 +125,11 @@ private val iosIndicatorSpecular: Highlight = Highlight(
     ),
 )
 
-
 private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
-private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f // |g_xy| > 0.1, ≈ 6° tilt
-
+private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f
 
 private const val GRAVITY_ANGLE_STEP_RAD = (3.0 * PI / 180.0).toFloat()
-
 
 @Composable
 private fun rememberQuantizedGravityAngle(): State<Float> {
@@ -157,7 +149,6 @@ private fun rememberQuantizedGravityAngle(): State<Float> {
         }
     }
 }
-
 
 @Composable
 private fun rememberGravityRotatedHighlight(
@@ -296,7 +287,6 @@ internal fun GlassNavigationBar(
         dampedDrag.animateToValue(index.toFloat())
     }
 
-
     val interactiveHighlight = remember(animationScope, isLtr, dampedDrag) {
         InteractiveHighlight(
             animationScope = animationScope,
@@ -312,7 +302,6 @@ internal fun GlassNavigationBar(
             },
         )
     }
-
 
     val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = -45f)
     val pillHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = 90f)

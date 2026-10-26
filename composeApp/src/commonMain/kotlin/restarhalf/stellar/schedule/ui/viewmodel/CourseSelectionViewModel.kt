@@ -32,13 +32,11 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-
 class CourseSelectionViewModel(
     private val useCase: CourseSelectionUseCase,
     private val servicePort: CourseSelectionServicePort,
 ) : ViewModel() {
 
-    
     @Stable
     data class SelectionTarget(
         val course: JwxtSelectionCourse,
@@ -50,7 +48,6 @@ class CourseSelectionViewModel(
         val key: String get() = "${course.courseId}|${course.noticeId}|${course.kxh}"
     }
 
-    
     @Stable
     data class SelectionLog(
         val time: String,
@@ -60,11 +57,10 @@ class CourseSelectionViewModel(
         enum class LogLevel { INFO, SUCCESS, WARN, ERROR }
     }
 
-    
     @Stable
     data class SnatchConfig(
         val intervalMs: Long = 800L,
-        val maxAttempts: Int = 0,  // 0 = 无限
+        val maxAttempts: Int = 0,
         val refreshSessionOnAuthError: Boolean = true,
     )
 
@@ -83,17 +79,17 @@ class CourseSelectionViewModel(
         val snatching: Boolean = false,
         val snatchConfig: SnatchConfig = SnatchConfig(),
         val sessionReady: Boolean = false,
-        
+
         val courseSearchQuery: String = "",
-        
+
         val backgroundSupported: Boolean = false,
-        
+
         val backgroundRunning: Boolean = false,
-        
+
         val selectedCourses: ImmutableList<JwxtSelectedCourse> = persistentListOf(),
-        
+
         val loadingSelected: Boolean = false,
-        
+
         val checkingTarget: Boolean = false,
     )
 
@@ -124,16 +120,12 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     private var session: CourseSelectionUseCase.SessionContext? = null
 
-    
     private var snatchJob: Job? = null
 
-    
     private var searchJob: Job? = null
 
-    
     fun loadRotations() {
         if (_uiState.value.loading) return
         _uiState.update { it.copy(loading = true, loadingMessage = "正在加载选课轮次...", error = "") }
@@ -160,7 +152,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun selectRotation(rotationId: String) {
         if (_uiState.value.loading) return
         _uiState.update {
@@ -196,7 +187,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun selectClassification(code: String) {
         val ctx = session ?: return
         if (_uiState.value.loading) return
@@ -206,7 +196,6 @@ class CourseSelectionViewModel(
         launchCourseLoad(ctx, code)
     }
 
-    
     fun onCourseSearchQueryChange(query: String) {
         val ctx = session ?: return
         val code = _uiState.value.selectedClassificationCode.ifBlank { return }
@@ -218,7 +207,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun clearSearch() {
         val ctx = session ?: return
         val code = _uiState.value.selectedClassificationCode.ifBlank { return }
@@ -226,7 +214,6 @@ class CourseSelectionViewModel(
         launchCourseLoad(ctx, code)
     }
 
-    
     private fun launchCourseLoad(ctx: CourseSelectionUseCase.SessionContext, code: String) {
         val courseInfo = _uiState.value.courseSearchQuery.trim()
         _uiState.update { it.copy(loading = true, loadingMessage = "正在加载课程列表...", error = "") }
@@ -250,7 +237,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun addTargetWithCheck(course: JwxtSelectionCourse) {
         val classificationCode = _uiState.value.selectedClassificationCode
         if (classificationCode.isBlank()) {
@@ -305,7 +291,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     private fun handleAddCheckFailure(
         course: JwxtSelectionCourse,
         classificationCode: String,
@@ -333,7 +318,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     private fun isCapacityFullMessage(message: String): Boolean {
         val lower = message.lowercase()
         return message.contains("满") ||
@@ -343,14 +327,12 @@ class CourseSelectionViewModel(
             lower.contains("capacity")
     }
 
-    
     fun removeTarget(target: SelectionTarget) {
         _uiState.update { state ->
             state.copy(targets = state.targets.filterNot { it.key == target.key }.toPersistentList())
         }
     }
 
-    
     fun moveTargetUp(index: Int) {
         if (index <= 0) return
         _uiState.update { state ->
@@ -363,7 +345,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun moveTargetDown(index: Int) {
         _uiState.update { state ->
             val list = state.targets.toMutableList()
@@ -375,17 +356,14 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun clearLogs() {
         _uiState.update { it.copy(logs = persistentListOf()) }
     }
 
-    
     fun updateSnatchConfig(config: SnatchConfig) {
         _uiState.update { it.copy(snatchConfig = config) }
     }
 
-    
     fun startSnatch() {
         if (_uiState.value.snatching) return
         val targets = _uiState.value.targets
@@ -404,7 +382,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun startBackgroundSnatch(): Boolean {
         if (!servicePort.isSupported) {
             _uiState.update { it.copy(error = "当前平台不支持后台抢课") }
@@ -436,13 +413,11 @@ class CourseSelectionViewModel(
         return ok
     }
 
-    
     fun stopBackgroundSnatch() {
         if (!servicePort.isSupported) return
         servicePort.stop()
     }
 
-    
     fun stopSnatch() {
 
         if (_uiState.value.backgroundRunning) {
@@ -455,7 +430,6 @@ class CourseSelectionViewModel(
         appendLog(SelectionLog(now(), "已停止抢课", SelectionLog.LogLevel.WARN))
     }
 
-    
     fun loadSelectedCourses() {
         val ctx = session ?: return
         if (_uiState.value.loadingSelected) return
@@ -474,7 +448,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     fun dropSelectedCourse(course: JwxtSelectedCourse) {
         val ctx = session ?: return
         viewModelScope.launch {
@@ -501,7 +474,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     private suspend fun runSnatchLoop(initialCtx: CourseSelectionUseCase.SessionContext) {
         var ctx = initialCtx
         val config = _uiState.value.snatchConfig
@@ -513,7 +485,6 @@ class CourseSelectionViewModel(
                 appendLog(SelectionLog(now(), "已达最大尝试次数 ${config.maxAttempts}，停止", SelectionLog.LogLevel.WARN))
                 break
             }
-
 
             val pending = _uiState.value.targets.filterNot { it.succeeded }
             if (pending.isEmpty()) {
@@ -538,7 +509,6 @@ class CourseSelectionViewModel(
                     val msg = e.message ?: "请求异常"
                     updateTargetMessage(target.key, msg)
                     appendLog(SelectionLog(now(), "${target.course.courseName}：$msg", SelectionLog.LogLevel.ERROR))
-
 
                     if (config.refreshSessionOnAuthError && isAuthError(e)) {
                         appendLog(SelectionLog(now(), "检测到认证失效，刷新会话...", SelectionLog.LogLevel.WARN))
@@ -568,7 +538,6 @@ class CourseSelectionViewModel(
         appendLog(SelectionLog(now(), "抢课循环结束（共 $attempt 次）", SelectionLog.LogLevel.INFO))
     }
 
-    
     private fun handleSnatchResult(
         target: SelectionTarget,
         result: JwxtSelectionOperResult,
@@ -648,7 +617,6 @@ class CourseSelectionViewModel(
         }
     }
 
-    
     private fun isAuthError(e: Throwable): Boolean {
         val msg = e.message.orEmpty()
         return msg.contains("token", ignoreCase = true) ||
@@ -658,7 +626,6 @@ class CourseSelectionViewModel(
             msg.contains("HTTP 401", ignoreCase = true)
     }
 
-    
     private fun now(): String {
         val nowMs = Clock.System.now().toEpochMilliseconds()
         val instant = Instant.fromEpochMilliseconds(nowMs)
@@ -676,7 +643,7 @@ class CourseSelectionViewModel(
 
     private companion object {
         const val MAX_LOG_SIZE = 200
-        
+
         const val SEARCH_DEBOUNCE_MS = 400L
     }
 }

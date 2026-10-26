@@ -45,7 +45,6 @@ class JwxtAuthPortImplTest {
     @Test
     fun setCredentialsStoresSavedCredentials() {
 
-
         impl.setCredentials("2024999999", "secret")
         assertEquals("2024999999" to "secret", store.getCredentials())
         assertNull(store.getUserNo())

@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.usecase
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
-
 class GetAllCoursesAcrossSemestersUseCase(private val repository: CourseRepository) {
 
     suspend operator fun invoke(): List<Course> = repository.getAllCoursesAcrossSemesters()

@@ -11,13 +11,11 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 
-
 class AcademicPortImpl(
     private val gateway: JwxtGateway,
     private val settings: TermSettingsPort,
 ) : AcademicPort {
 
-    
     override suspend fun fetchCurrentTermId(): String {
 
         return try {
@@ -44,7 +42,6 @@ class AcademicPortImpl(
         }
     }
 
-    
     override suspend fun fetchCampuses(): List<RemoteCampus> {
         val campus = gateway.getCampusList()
         if (!campus.isSuccess()) {
@@ -59,13 +56,11 @@ class AcademicPortImpl(
         }
     }
 
-    
     override suspend fun fetchSemesterIds(): List<String> {
         return gateway.getSemesterListFromEndpoint().map { it.semesterId }
             .filter { it.isNotBlank() }.distinct()
     }
 
-    
     override suspend fun fetchExaminations(
         semester: String,
         nameOrNumber: String
@@ -88,7 +83,6 @@ class AcademicPortImpl(
         }
     }
 
-    
     override suspend fun fetchGradeReport(semester: String): TermGradeReport {
         val resp = gateway.fetchTermGradeReport(semester = semester)
         if (!resp.isSuccess()) {
@@ -126,7 +120,6 @@ class AcademicPortImpl(
                 })
     }
 
-    
     override suspend fun fetchGuidanceTeachingCourses(
         kcxz: String,
         kcsx: String,

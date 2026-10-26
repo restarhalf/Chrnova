@@ -42,7 +42,6 @@ class JwxtSelectionResponseTest {
         assertEquals(6, rotations.size)
         assertEquals(2, rotations.count { it.semesterId == "2026-2027-1" })
 
-
         val r = rotations.first { it.rotationId == "D4A1C0BE57CB4A6A9A692A3D5EC9BD95" }
         assertEquals("2026-2027学年秋季学期专业课、公共基础课补退选", r.rotationName)
         assertEquals("2026-2027-1", r.semesterId)
@@ -78,7 +77,7 @@ class JwxtSelectionResponseTest {
         assertEquals("12ms", resp.runTime)
         assertEquals(2, rotations.size)
         assertEquals("TEST123", rotations[0].rotationId)
-        assertEquals("", rotations[0].rotationName) // 默认值兜底
+        assertEquals("", rotations[0].rotationName)
         assertEquals("T2", rotations[1].rotationId)
     }
 
@@ -86,7 +85,6 @@ class JwxtSelectionResponseTest {
     fun `错误响应形态与文案解析`() {
         fun failBody(msg: String, params: String = "[]"): String =
             """{"errorCode":"fail","errorMessage":"$msg","errorMessageParam":$params,"data":"","runTime":""}"""
-
 
         val closed = json.decodeFromString(
             JwxtSelectionResponse.serializer(),
@@ -96,20 +94,17 @@ class JwxtSelectionResponseTest {
         assertTrue(!closed.isSuccess())
         assertEquals("当前未开放选课，具体请查看学校选课通知！！", closed.resolvedMessage())
 
-
         val staleSession = json.decodeFromString(
             JwxtSelectionResponse.serializer(),
             failBody("当前账号已在别处登录，请重新登录进入选课！"),
         )
         assertEquals("当前账号已在别处登录，请重新登录进入选课！", staleSession.resolvedMessage())
 
-
         val sysError = json.decodeFromString(
             JwxtSelectionResponse.serializer(),
             failBody("系统异常，请联系管理员！！"),
         )
         assertEquals("系统异常，请联系管理员！！", sysError.resolvedMessage())
-
 
         val withParams = json.decodeFromString(
             JwxtSelectionResponse.serializer(),

@@ -28,7 +28,6 @@ class FetchExaminationsSimpleUseCaseTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<TermSettingsPort>(MockMode.autofill)
 
-
     private val simple = FetchExaminationsSimpleUseCase(
         FetchExaminationsUseCase(authWorkflow, academic, repository, auth, settings)
     )

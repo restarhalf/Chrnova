@@ -5,9 +5,7 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 
-
 data class WeekCalcResult(val isHoliday: Boolean, val week: Int, val diffDays: Int)
-
 
 object WeekCalculator {
     

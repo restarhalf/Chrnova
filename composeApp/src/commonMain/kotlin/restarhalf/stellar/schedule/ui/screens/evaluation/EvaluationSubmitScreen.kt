@@ -59,7 +59,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val MAX_CONTENT_LENGTH = 500
 
-
 @Composable
 fun EvaluationSubmitScreen(
     vm: CourseEvaluationViewModel,
@@ -85,7 +84,6 @@ fun EvaluationSubmitScreen(
     var anonymous by remember { mutableStateOf(false) }
     var author by remember { mutableStateOf("") }
 
-
     LaunchedEffect(evaluationId) {
         if (evaluationId != null) {
             vm.loadDetail(evaluationId)
@@ -103,13 +101,11 @@ fun EvaluationSubmitScreen(
         }
     }
 
-
     LaunchedEffect(uiState.userNickname, uiState.profileName) {
         if (!isEditMode && author.isEmpty()) {
             author = uiState.userNickname ?: uiState.profileName
         }
     }
-
 
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) {
@@ -374,7 +370,6 @@ fun EvaluationSubmitScreen(
         }
     }
 }
-
 
 private fun ratingHint(rating: Int): String = when (rating) {
     0 -> "点击星星为这门课打分"

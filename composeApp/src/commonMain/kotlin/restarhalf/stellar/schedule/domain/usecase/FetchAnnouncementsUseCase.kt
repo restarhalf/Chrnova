@@ -6,12 +6,11 @@ import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 
-
 class FetchAnnouncementsUseCase(
     private val port: AnnouncementPort,
     private val store: AnnouncementCachePort,
 ) {
-    
+
     suspend operator fun invoke(forceRefresh: Boolean = false): FetchResult {
         val cached = store.getCachedAnnouncements()
         val cacheFresh = cached != null &&
@@ -39,7 +38,7 @@ class FetchAnnouncementsUseCase(
     data class FetchResult(
         val announcements: List<Announcement>,
         val unreadCount: Int,
-        
+
         val lastReadAtMs: Long,
     )
 }

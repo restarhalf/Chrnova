@@ -5,19 +5,12 @@ import android.app.PendingIntent
 import android.content.Context
 import java.util.Calendar
 
-/**
- * 上课静音的闹钟调度。
- *
- * 闹钟目标一律是 [MuteActionActivity] 而不是广播 —— 到点时进程通常在后台，
- * 后台改铃声会被 MIUI 的 AudioHardening 忽略，必须由 Activity 把进程拉到前台。
- */
 internal object MuteAlarmScheduler {
 
     private const val FALLBACK_UNMUTE_DELAY_MS = 90 * 60 * 1000L
     private const val MUTE_REQUEST_CODE_MASK = 0x4D2A
     private const val UNMUTE_REQUEST_CODE_MASK = 0x1F3A
 
-    /** 到开课时间自动静音。 */
     fun scheduleClassMute(
         context: Context,
         notificationId: Int,
@@ -41,7 +34,6 @@ internal object MuteAlarmScheduler {
         alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startAtMs, pendingIntent)
     }
 
-    /** 下课时恢复铃声。 */
     fun scheduleAutoUnmute(
         context: Context,
         notificationId: Int,
@@ -79,7 +71,6 @@ internal object MuteAlarmScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    /** 当天 HH:mm 对应的本地时刻；解析不出来返回 null。 */
     fun parseTodayTimeMs(time: String): Long? {
         val parts = time.split(":")
         if (parts.size != 2) return null

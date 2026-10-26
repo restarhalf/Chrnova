@@ -7,8 +7,6 @@ import kotlin.test.assertTrue
 
 class ReleaseUpdateSupportTest {
 
-
-
     @Test
     fun stripsVPrefix() {
         assertEquals(listOf(1, 2, 3), normalizeVersion("v1.2.3"))
@@ -37,8 +35,6 @@ class ReleaseUpdateSupportTest {
     fun whitespaceIsTrimmed() {
         assertEquals(listOf(2, 0), normalizeVersion(" 2.0 "))
     }
-
-
 
     @Test
     fun newerPatch() {
@@ -76,8 +72,6 @@ class ReleaseUpdateSupportTest {
         assertTrue(isNewerVersion("10.0.0", "9.0.0"))
     }
 
-
-
     @Test
     fun baseUrlWithoutUid() {
         assertEquals("$VERSION_WORKER_URL/version.json", buildVersionWorkerUrl(null))
@@ -102,8 +96,6 @@ class ReleaseUpdateSupportTest {
         assertTrue(url.contains("uid=a%20b%26c"))
     }
 
-
-
     @Test
     fun versionJsonDefaults() {
         val resp = VersionJsonResponse()
@@ -111,8 +103,6 @@ class ReleaseUpdateSupportTest {
         assertEquals(DEFAULT_QUARK_SHARE_URL, resp.url)
         assertEquals("", resp.changelog)
     }
-
-
 
     @Test
     fun defaultKeyIncludesAuthKey() {

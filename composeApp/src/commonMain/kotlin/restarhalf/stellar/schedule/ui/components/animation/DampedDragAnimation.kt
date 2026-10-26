@@ -1,9 +1,4 @@
-
-
-
 package restarhalf.stellar.schedule.ui.components.animation
-
-
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring

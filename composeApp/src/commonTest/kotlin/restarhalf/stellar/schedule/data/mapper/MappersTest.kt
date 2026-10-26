@@ -56,8 +56,6 @@ class MappersTest {
         assertEquals(courseEntity, courseEntity.toDomain().toEntity())
     }
 
-
-
     private val examinationEntity = ExaminationEntity(
         id = 11L,
         courseNumber = "MA101",
@@ -82,8 +80,6 @@ class MappersTest {
         assertEquals("2026-2027-1", entity.semesterId)
         assertEquals(examinationEntity.courseName, entity.courseName)
     }
-
-
 
     private val gradeEntity = GradeEntity(
         courseCode = "CS102",
@@ -116,8 +112,6 @@ class MappersTest {
         assertEquals("操作系统", entity.courseName)
     }
 
-
-
     @Test
     fun peYearScoreRoundTrip() {
         val entity = PEYearScoreEntity(
@@ -129,8 +123,6 @@ class MappersTest {
         )
         assertEquals(entity, entity.toDomain().toEntity())
     }
-
-
 
     @Test
     fun peSubjectScoreRoundTripKeepsNullableFields() {

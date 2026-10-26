@@ -19,7 +19,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class LogScreenUiTest {
 
     private val appInfo = object : AppInfoPort {

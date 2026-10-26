@@ -10,20 +10,15 @@ import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-
 @OptIn(DelicateCryptographyApi::class, ExperimentalEncodingApi::class)
 class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
 
-    
     private val SIGN_KEY = LocalSecrets.SIGN_KEY
 
-    
     private val ATT_AES_KEY = "5d44f502ad947ee7"
 
-    
     private val hasher = CryptographyProvider.Default.get(SHA1).hasher()
 
-    
     private val attCipher by lazy {
         val keyBytes = ATT_AES_KEY.encodeToByteArray()
         require(keyBytes.size == 16) { "PE att AES key must be 16 bytes" }
@@ -34,13 +29,11 @@ class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
             .cipher(padding = true)
     }
 
-    
     override fun encryptPasswordForPELogin(password: String): String {
         val passwordMD5 = CryptographyProvider.Default.get(MD5).hasher().hashBlocking(password.encodeToByteArray())
         return passwordMD5.toHexString().lowercase()
     }
 
-    
     override fun generatePESign(data: Map<String, Any?>): String {
         val signString = buildSignString(data)
         val digest = hasher.hashBlocking(signString.encodeToByteArray())
@@ -52,7 +45,6 @@ class PEPasswordEncryptionPortImpl : PEPasswordEncryptionPort {
         return Base64.encode(attCipher.encryptBlocking(attId.encodeToByteArray()))
     }
 
-    
     private fun buildSignString(data: Map<String, Any?>): String {
         val keys = mutableListOf<String>()
         for ((key, value) in data) {

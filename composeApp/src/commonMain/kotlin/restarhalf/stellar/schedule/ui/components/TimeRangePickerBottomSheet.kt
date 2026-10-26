@@ -9,7 +9,6 @@ import kotlinx.collections.immutable.toPersistentList
 
 private fun padTwo(n: Int): String = if (n < 10) "0$n" else "$n"
 
-
 @Composable
 fun TimeRangePickerBottomSheet(
     show: Boolean,

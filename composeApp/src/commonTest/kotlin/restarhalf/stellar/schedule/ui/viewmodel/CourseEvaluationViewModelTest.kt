@@ -37,7 +37,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-
 class CourseEvaluationViewModelTest {
 
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
@@ -45,7 +44,6 @@ class CourseEvaluationViewModelTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<UserProfilePort>(MockMode.autofill)
 
-    
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
     private val mainDispatcher = UnconfinedTestDispatcher()
@@ -84,7 +82,6 @@ class CourseEvaluationViewModelTest {
         liked = liked,
     )
 
-    
     private fun makeViewModel(): CourseEvaluationViewModel {
         every { settings.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
@@ -92,11 +89,8 @@ class CourseEvaluationViewModelTest {
         return CourseEvaluationViewModel(port, GetAllCoursesAcrossSemestersUseCase(courseRepository), auth, settings)
     }
 
-    
     private fun loggedInProfile() =
         JwxtAuthProfile(name = "小明", userNo = "20230001")
-
-
 
     @Test
     fun `init读取昵称与档案并计算userHash`() = runTest {
@@ -164,10 +158,6 @@ class CourseEvaluationViewModelTest {
         assertNull(vm.uiState.value.error)
     }
 
-
-
-
-
     @Test
     fun `loadEvaluations成功填充列表与total`() = runTest {
         val vm = makeViewModel()
@@ -229,10 +219,6 @@ class CourseEvaluationViewModelTest {
         }
     }
 
-
-
-
-
     @Test
     fun `loadCourseSummaries成功填充聚合列表`() = runTest {
         val vm = makeViewModel()
@@ -285,10 +271,6 @@ class CourseEvaluationViewModelTest {
         assertNull(vm.uiState.value.selectedEvaluation)
     }
 
-
-
-
-
     @Test
     fun `submit未登录守卫不调port`() = runTest {
         val vm = makeViewModel()
@@ -333,10 +315,6 @@ class CourseEvaluationViewModelTest {
         assertEquals("后端拒绝", vm.uiState.value.error)
         assertFalse(vm.uiState.value.submitting)
     }
-
-
-
-
 
     @Test
     fun `delete未登录守卫回调false不调port`() = runTest {
@@ -390,10 +368,6 @@ class CourseEvaluationViewModelTest {
         assertEquals("无权限", vm.uiState.value.error)
     }
 
-
-
-
-
     @Test
     fun `toggleLike未登录守卫不调port`() = runTest {
         val vm = makeViewModel()
@@ -445,10 +419,6 @@ class CourseEvaluationViewModelTest {
 
         assertEquals("点赞失败", vm.uiState.value.error)
     }
-
-
-
-
 
     @Test
     fun `update未登录守卫不调port`() = runTest {
@@ -504,10 +474,6 @@ class CourseEvaluationViewModelTest {
         assertEquals("无权限", vm.uiState.value.error)
         assertFalse(vm.uiState.value.submitting)
     }
-
-
-
-
 
     @Test
     fun `setOnlyMine与onSearchQueryChange更新状态`() = runTest {
@@ -598,16 +564,13 @@ class CourseEvaluationViewModelTest {
         val vm = makeViewModel()
         advanceMain()
 
-
         assertFalse(vm.uiState.value.canDeleteSelected)
 
         everySuspend { port.getEvaluation("e1") } returns evaluation("e1", userHash = "someone-else")
         vm.loadDetail("e1")
         advanceMain()
 
-
         assertFalse(vm.uiState.value.canDeleteSelected)
     }
-
 
 }

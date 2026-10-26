@@ -18,8 +18,6 @@ class PEClientResponseTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-
-
     private val loginSnapshot = """
         {"school_date":"2024","gender":"m","user_name":"张三","classes":"计算机科学与技术244",
         "user_fun":{"action_funs":["/mobile/appointment/deleteRepealAppointment","/sysUser/mobile/findStudent"],
@@ -40,8 +38,6 @@ class PEClientResponseTest {
 
     }
 
-
-
     private val planListSnapshot = """
         {"data_arr":[{"total":52.00,"is_free":0,"school_year":"2025","done":7,"nums":8},
         {"total":50.20,"is_free":0,"school_year":"2024","done":7,"nums":8}],
@@ -61,8 +57,6 @@ class PEClientResponseTest {
 
         assertEquals(50.2, r.dataArr[1].total)
     }
-
-
 
     private val scoreDetailSnapshot = """
         {"data":{"total_grade":"不及格","total_score":52.00,"data_arr":[
@@ -87,7 +81,6 @@ class PEClientResponseTest {
         assertEquals("不及格", r.data.totalGrade)
         assertEquals(3, r.data.dataArr.size)
 
-
         val fhl = r.data.dataArr.first { it.subName == "肺活量" }
         assertEquals("5404", fhl.result)
         assertEquals(100, fhl.score)
@@ -97,7 +90,6 @@ class PEClientResponseTest {
         assertEquals(1, fhl.isJoin)
         assertEquals("1f8cd97c401a4f608313e531f318e324", fhl.subjectId)
 
-
         val ytxs = r.data.dataArr.first { it.subName == "引体向上" }
         assertEquals(0, ytxs.isJoin)
         assertNull(ytxs.result)
@@ -105,8 +97,6 @@ class PEClientResponseTest {
         assertNull(ytxs.grade)
         assertEquals("times", ytxs.unit)
     }
-
-
 
     private val subjectHistorySnapshot = """
         {"data":{"data_list":[
@@ -135,8 +125,6 @@ class PEClientResponseTest {
         assertEquals("2", best.scoreStatus)
         assertEquals("肺活量", best.subName)
     }
-
-
 
     private val profileSnapshot = """
         {"data":{"studentTagCode":"","testCode":"id=2024000000&name=%E5%BC%A0%E4%B8%89","tagCode":"",

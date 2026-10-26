@@ -10,27 +10,22 @@ import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 
-
 @OptIn(ExperimentalSettingsApi::class)
 class TermSettingsPortImpl(
     private val settings: ObservableSettings,
 ) : TermSettingsPort {
 
-
     override fun observeSelectedTerm(): Flow<String> {
         return settings.getStringFlow(SettingsKeys.SELECTED_TERM, "")
     }
-
 
     override fun setSelectedTerm(term: String) {
         settings[SettingsKeys.SELECTED_TERM] = term
     }
 
-
     override fun observeActiveScheduleTerm(): Flow<String> {
         return settings.getStringFlow(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
     }
-
 
     override fun setActiveScheduleTerm(term: String) {
         settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] =
@@ -43,16 +38,13 @@ class TermSettingsPortImpl(
                 )
     }
 
-
     override fun observeCurrentTermId(): Flow<String> {
         return settings.getStringFlow(SettingsKeys.CURRENT_TERM_ID, "")
     }
 
-
     override fun setCurrentTermId(termId: String) {
         settings[SettingsKeys.CURRENT_TERM_ID] = termId
     }
-
 
     override fun observeCachedSemesterIds(): Flow<List<String>> {
         return settings.getStringFlow(SettingsKeys.CACHED_SEMESTER_IDS, "[]")
@@ -65,11 +57,9 @@ class TermSettingsPortImpl(
             }
     }
 
-
     override fun setCachedSemesterIds(semesterIds: List<String>) {
         settings[SettingsKeys.CACHED_SEMESTER_IDS] = Json.encodeToString(semesterIds)
     }
-
 
     override suspend fun shouldAutoSyncAndMark(nowMs: Long): Boolean {
         val lastAutoSyncMs = settings.getLong(SettingsKeys.LAST_AUTO_SYNC_MS, 0L)

@@ -63,7 +63,6 @@ import org.intellij.markdown.ast.findChildOfType
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun AnnouncementMarkdown(
     content: String,
@@ -80,6 +79,8 @@ fun AnnouncementMarkdown(
             inlineCodeBackground = colors.surfaceContainerHighest,
             dividerColor = colors.dividerLine,
             tableBackground = colors.surfaceContainerHigh.copy(alpha = 0.4f),
+            highlightText = colors.onPrimaryContainer,
+            highlightBackground = colors.primaryContainer,
         )
     }
     val mdTypography = remember(textStyles, colors) {
@@ -160,7 +161,6 @@ fun AnnouncementMarkdown(
     )
 }
 
-
 @Composable
 private fun AnnouncementHeading(
     model: MarkdownComponentModel,
@@ -194,7 +194,6 @@ private fun AnnouncementHeading(
     }
 }
 
-
 @Composable
 private fun AnnouncementBlockQuote(
     content: String,
@@ -216,7 +215,6 @@ private fun AnnouncementBlockQuote(
         )
     }
 }
-
 
 @Composable
 private fun AnnouncementCodeBlock(
@@ -242,7 +240,6 @@ private fun AnnouncementCodeBlock(
     }
 }
 
-
 @Composable
 private fun AnnouncementMarkdownImage(
     content: String,
@@ -256,7 +253,6 @@ private fun AnnouncementMarkdownImage(
     var attempt by remember(link) { mutableIntStateOf(0) }
     val platformContext = LocalPlatformContext.current
     val model = remember(link, attempt) {
-
 
         ImageRequest.Builder(platformContext)
             .data(if (attempt > 0) "$link#retry-$attempt" else link)
@@ -307,7 +303,6 @@ private fun AnnouncementMarkdownImage(
     }
 }
 
-
 @Composable
 private fun PlaceholderBox(
     modifier: Modifier = Modifier,
@@ -324,7 +319,6 @@ private fun PlaceholderBox(
         content()
     }
 }
-
 
 @Composable
 private fun AnnouncementCheckBox(
@@ -365,9 +359,6 @@ private fun AnnouncementCheckBox(
     )
 }
 
-
-
-
 private fun ASTNode.findChildOfTypeRecursiveAnnouncement(type: IElementType): ASTNode? {
     children.forEach {
         if (it.type == type) {
@@ -381,7 +372,6 @@ private fun ASTNode.findChildOfTypeRecursiveAnnouncement(type: IElementType): AS
     }
     return null
 }
-
 
 private fun ASTNode.resolveAnnouncementImageLink(
     content: String,
@@ -398,7 +388,6 @@ private fun ASTNode.resolveAnnouncementImageLink(
         ?: return null
     return referenceLinkHandler?.find(label)?.takeIf { it.isNotEmpty() }
 }
-
 
 private fun ASTNode.resolveAnnouncementImageAlt(content: String): String? {
     findChildOfTypeRecursiveAnnouncement(MarkdownElementTypes.LINK_TEXT)?.let {

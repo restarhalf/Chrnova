@@ -38,7 +38,6 @@ import kotlin.math.min
 
 private val widgetBg = ColorProvider(R.color.widget_bg)
 
-/** 小爱 2×2 用纯白底（course_22_widget_bg_color = #ffffff），4×2 才用 #f6f8fc */
 private val widgetBgSmall = ColorProvider(R.color.widget_bg_small)
 
 private val rowBgNeutral = ColorProvider(R.color.widget_row_bg_neutral)
@@ -63,13 +62,6 @@ private val rowBgUpcoming = ColorProvider(R.color.widget_row_bg_upcoming)
 
 private val rowBgOngoing = ColorProvider(R.color.widget_row_bg_ongoing)
 
-/*
- * 几何与字号取自小爱课程表组件（dimens.xml / styles.xml）：
- *   组件内边距 14dp，标题栏与列表间距 12dp，行间距 6dp
- *   组件圆角 16.3dp，行圆角 10.91dp，行左右内边距 9.1dp
- *   时间列宽 38dp，色条 3.64×29.9dp，色条到课名 10.18dp
- *   标题栏 14sp 粗体，课名 14sp，副标题 12sp 粗体，时间 12sp 粗体，页脚 10sp 粗体
- */
 private val WIDGET_RADIUS = 16.3.dp
 private val WIDGET_PADDING_H = 14.dp
 private val WIDGET_PADDING_V = 14.dp
@@ -212,7 +204,7 @@ internal fun LargeWidgetContent(state: LargeWidgetState) {
                 ),
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            // 小爱 renderDayViewHeader 对 2×2 和 4×2 都显示头部图标
+
             HeaderRow(
                 left = state.headerLabel,
                 right = state.weekLabel,
@@ -235,8 +227,7 @@ internal fun LargeWidgetContent(state: LargeWidgetState) {
                     )
                 }
             } else {
-                // 小爱 4×2 布局（time_table_42_widget.xml）只放两行课程，没有页脚；
-                // 多余课程由行内的"还有 N 节课"之外的信息承载，这里同样不放页脚。
+
                 Column(modifier = GlanceModifier.fillMaxWidth()) {
                     state.rows.forEachIndexed { index, row ->
                         CourseRow(row, scale)

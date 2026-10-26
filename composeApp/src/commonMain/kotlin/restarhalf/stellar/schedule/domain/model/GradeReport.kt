@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.model
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
-
 @Immutable
 @Serializable
 data class GradeCourse(
@@ -40,7 +39,6 @@ data class GradeCourse(
     
     val userNo: String = "",
 )
-
 
 @Immutable
 @Serializable

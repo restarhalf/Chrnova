@@ -197,7 +197,6 @@ object AppLogger {
         }
     }
 
-    
     fun toExportText(metadata: Map<String, String> = emptyMap()): String {
         val header = buildString {
             appendLine("=== Chrnova Log Export ===")

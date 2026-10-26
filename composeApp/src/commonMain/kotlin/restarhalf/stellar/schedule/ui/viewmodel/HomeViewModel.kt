@@ -37,7 +37,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-
 class HomeViewModel(
     private val observeAllCourses: ObserveAllCoursesUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
@@ -59,7 +58,6 @@ class HomeViewModel(
         val nowMs: Long,
     )
 
-    
     @Stable
     data class HomeRenderState(
         
@@ -73,7 +71,6 @@ class HomeViewModel(
         
         val nowMinutes: Int,
     )
-
 
     private val _nowMs = flow {
         while (true) {
@@ -110,18 +107,14 @@ class HomeViewModel(
                 initialValue = HomeUiState(courses = persistentListOf(), exams = persistentListOf(), nowMs = Clock.System.now().toEpochMilliseconds()),
             )
 
-    
     val uiState: StateFlow<HomeUiState> = _uiState
 
-    
     fun getCampusTimetable(campus: Campus): List<TimetableSlot> = timetable.getCampusTimetable(campus)
 
-    
     private fun buildClockSnapshot(nowMs: Long): BuildHomeClockSnapshotUseCase.Snapshot {
         return buildHomeClockSnapshotUseCase(nowMs)
     }
 
-    
     private fun buildTodaySchedule(
         courses: List<Course>,
         totalWeeks: Int,
@@ -138,7 +131,6 @@ class HomeViewModel(
         )
     }
 
-    
     private fun buildHeaderUi(
         dateLabel: String,
         courseCount: Int,
@@ -153,7 +145,6 @@ class HomeViewModel(
         )
     }
 
-    
     private fun buildHeaderUi(
         clockSnapshot: BuildHomeClockSnapshotUseCase.Snapshot,
         todaySchedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
@@ -167,7 +158,6 @@ class HomeViewModel(
         )
     }
 
-    
     fun buildHomeRenderState(
         courses: List<Course>,
         campus: Campus,
@@ -206,14 +196,12 @@ class HomeViewModel(
         )
     }
 
-    
     private fun buildSections(
         schedule: BuildHomeTodayScheduleUseCase.HomeTodaySchedule,
     ): List<BuildHomePeriodSectionsUseCase.SectionUi> {
         return buildHomePeriodSectionsUseCase(schedule)
     }
 
-    
     private fun buildSurfaceUi(
         hasBackground: Boolean,
         componentsAlpha: Float,
@@ -224,7 +212,6 @@ class HomeViewModel(
         )
     }
 
-    
     private fun buildPeriodRenderRows(
         items: List<BuildHomeTodayScheduleUseCase.PeriodItem>,
         timetable: List<TimetableSlot>,
@@ -237,7 +224,6 @@ class HomeViewModel(
         )
     }
 
-    
     fun getTodayExams(exams: List<Examination>, nowMs: Long): List<Examination> {
         val todayDate = Instant.fromEpochMilliseconds(nowMs)
             .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
@@ -246,7 +232,6 @@ class HomeViewModel(
             .sortedBy { it.time.substringAfter(" ").ifBlank { "00:00" } }
     }
 
-    
     fun buildExamUiList(exams: List<Examination>, nowMs: Long): List<ExamUi> {
         return exams.map { exam ->
             val isEnded = !isExamNotEnded(exam.time, nowMs)
@@ -267,7 +252,6 @@ class HomeViewModel(
         }
     }
 
-    
     private fun isExamStarted(rawTime: String, nowMs: Long): Boolean {
         val date = DATE_REGEX.find(rawTime)?.groupValues?.getOrNull(1) ?: return false
         val start = TIME_REGEX.find(rawTime)?.groupValues?.getOrNull(1) ?: return false

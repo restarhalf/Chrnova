@@ -4,7 +4,6 @@ import kotlinx.serialization.SerializationException
 import restarhalf.stellar.schedule.domain.error.PETokenExpiredException
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-
 internal suspend fun <T> withSessionRetry(
     peAuthWorkflow: PEAuthWorkflowPort,
     fetch: suspend () -> T,

@@ -31,7 +31,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PapersUploadScreenUiTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
@@ -55,12 +54,10 @@ class PapersUploadScreenUiTest {
         }
     }
 
-    /** 分组标题与卡片标题同为「选择文件」，只有卡片带点击动作。 */
     private fun androidx.compose.ui.test.ComposeUiTest.clickFilePicker() {
         onNode(hasText("选择文件") and hasClickAction()).performClick()
     }
 
-    /** 表单里两个 TextField 自上而下是「标题」「文件夹」，索引 1 即文件夹。 */
     private fun androidx.compose.ui.test.ComposeUiTest.fillFolder(value: String) {
         onAllNodes(hasSetTextAction())[1].performTextReplacement(value)
     }
@@ -99,10 +96,10 @@ class PapersUploadScreenUiTest {
         onNodeWithText("已选择文件").assertIsDisplayed()
         waitText("高数期末.pdf")
         onNodeWithText("高数期末.pdf").assertIsDisplayed()
-        // 标题自动取文件名去掉扩展名
+
         waitText("高数期末")
         onAllNodesWithText("高数期末")[0].assertIsDisplayed()
-        // 文件夹还空着，按钮仍禁用
+
         onNodeWithText("上传").assertIsNotEnabled()
     }
 

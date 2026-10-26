@@ -16,12 +16,10 @@ import restarhalf.stellar.schedule.core.error.toUserFacingMessage
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 
-
 class JwxtLoginViewModel(
     private val jwxtLoginUseCase: JwxtLoginUseCase,
 ) : ViewModel() {
 
-    
     @Immutable
     data class JwxtLoginUiState(
         val userNo: String = "",
@@ -35,17 +33,14 @@ class JwxtLoginViewModel(
 
     private val loginMutex = Mutex()
 
-    
     fun onUserNoChange(value: String) {
         _uiState.update { it.copy(userNo = value, error = "") }
     }
 
-    
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, error = "") }
     }
 
-    
     fun submitLogin(onSuccess: () -> Unit) {
         viewModelScope.launch {
             loginMutex.withLock {

@@ -98,8 +98,6 @@ class PEScreenUiTest {
         }
     }
 
-
-
     @Test
     fun 未登录显示登录入口() = runUltronUiTest {
         setContent {
@@ -137,10 +135,6 @@ class PEScreenUiTest {
         onNode(hasContentDescription("二维码")).assertIsDisplayed()
     }
 
-
-
-
-
     @Test
     fun 登录页渲染与空凭据门禁() = runUltronUiTest {
         val vm = makeLoginViewModel()
@@ -173,10 +167,6 @@ class PEScreenUiTest {
         waitUntil(timeoutMillis = 3_000) { successCalls == 1 }
     }
 
-
-
-
-
     @Test
     fun 二维码页渲染学生信息() = runUltronUiTest {
         ensureKoin()
@@ -196,10 +186,6 @@ class PEScreenUiTest {
         onNodeWithText("2023001").assertIsDisplayed()
         onNodeWithText("张三").assertIsDisplayed()
     }
-
-
-
-
 
     @Test
     fun 详情页渲染总分与科目并回调点击() = runUltronUiTest {
@@ -283,6 +269,5 @@ class PEScreenUiTest {
         onNodeWithText("第一场").assertIsDisplayed()
         onNodeWithText("2025-10-01").assertIsDisplayed()
     }
-
 
 }

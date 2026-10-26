@@ -5,7 +5,6 @@ import androidx.compose.ui.Modifier
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun GradeDetailsDialog(show: Boolean, onDismissRequest: () -> Unit, title: String, summary: String) {
     WindowDialog(

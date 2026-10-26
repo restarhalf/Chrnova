@@ -10,14 +10,12 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
-
 class SyncPortImpl(
     private val jwxtSync: JwxtSync,
     private val courseRepository: CourseRepository,
     private val auth: JwxtAuthPort,
 ) : SyncPort {
 
-    
     private fun JwxtTimeParser.ParsedCourse.toDomain(): Course {
         return Course(
             name = name,
@@ -36,7 +34,6 @@ class SyncPortImpl(
         )
     }
 
-    
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
         val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e

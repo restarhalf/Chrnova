@@ -11,7 +11,6 @@ fun isCourseActiveInWeek(course: Course, week: Int): Boolean {
     }
 }
 
-
 fun buildCourseNames(courses: List<Course>): List<String> {
     return courses.filter { it.type == 0 }.map { it.name }.distinct()
 }
@@ -32,5 +31,3 @@ fun effectiveCoursesForWeek(all: List<Course>, week: Int): List<Course> {
 
     return withoutCoveredOriginals.filterNot { it.type == 2 && it.targetWeek != week }
 }
-
-

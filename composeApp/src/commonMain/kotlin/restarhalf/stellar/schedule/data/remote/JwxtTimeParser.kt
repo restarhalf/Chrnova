@@ -1,9 +1,7 @@
 package restarhalf.stellar.schedule.data.remote
 
-
 object JwxtTimeParser {
 
-    
     data class ParsedCourse(
         val name: String,
         val location: String,
@@ -19,7 +17,6 @@ object JwxtTimeParser {
         val targetWeek: Int = 0,
     )
 
-    
     data class Slot(
         val dayOfWeek: Int,
         val startSection: Int,
@@ -27,7 +24,6 @@ object JwxtTimeParser {
         val weeks: List<Int>
     )
 
-    
     fun parseToCourses(item: JwxtCurriculumItem, color: String = "#E6E6FA"): List<ParsedCourse> {
         val slot = parseSlot(item) ?: return emptyList()
         return listOf(
@@ -46,7 +42,6 @@ object JwxtTimeParser {
         )
     }
 
-    
     private fun parseSlot(item: JwxtCurriculumItem): Slot? {
         val dayOfWeek = parseDayOfWeek(item.classTime) ?: return null
         val (startSection, sectionCount) = parseSections(item.classTime) ?: return null
@@ -60,7 +55,6 @@ object JwxtTimeParser {
         )
     }
 
-    
     private fun parseDayOfWeek(classTime: String): Int? {
         val trimmed = classTime.trim()
         if (trimmed.isBlank()) return null
@@ -69,7 +63,6 @@ object JwxtTimeParser {
         return day.takeIf { it in 1..7 }
     }
 
-    
     private fun parseSections(classTime: String): Pair<Int, Int>? {
         val trimmed = classTime.trim()
         if (trimmed.length < 5) return null
@@ -84,7 +77,6 @@ object JwxtTimeParser {
         return startSection to sectionNumbers.size
     }
 
-    
     private fun parseWeeks(item: JwxtCurriculumItem): List<Int> {
 
         val details = item.classWeekDetails.trim()
@@ -94,13 +86,11 @@ object JwxtTimeParser {
             if (weekNumbers.isNotEmpty()) return weekNumbers.distinct().sorted()
         }
 
-
         val expression = item.classWeek.trim()
         if (expression.isBlank()) return emptyList()
         return expandWeekExpression(expression)
     }
 
-    
     private fun expandWeekExpression(expression: String): List<Int> {
         val cleaned = expression.replace("，", ",").replace("、", ",")
         val weekSet = linkedSetOf<Int>()

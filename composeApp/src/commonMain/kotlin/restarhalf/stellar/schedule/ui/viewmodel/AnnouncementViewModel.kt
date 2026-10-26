@@ -51,7 +51,6 @@ class AnnouncementViewModel(
         loadAdConfig()
     }
 
-    
     private fun loadAdConfig() {
         viewModelScope.launch {
             runCatching { fetchAdConfig() }
@@ -88,13 +87,11 @@ class AnnouncementViewModel(
         }
     }
 
-    
     fun refresh() {
         load(forceRefresh = true)
         loadAdConfig()
     }
 
-    
     fun markAnnouncementRead(announcement: Announcement) {
         val targetMs = announcement.lastChangeAtMs
         markAnnouncementsRead(announcement)
@@ -107,7 +104,6 @@ class AnnouncementViewModel(
         }
     }
 
-    
     fun selectAnnouncement(id: String) {
         val local = _uiState.value.announcements.firstOrNull { a -> a.id == id }
         if (local != null) {

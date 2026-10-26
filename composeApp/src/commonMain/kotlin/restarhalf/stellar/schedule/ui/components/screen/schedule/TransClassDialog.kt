@@ -26,7 +26,6 @@ import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun TransClassDialog(
     show: Boolean,

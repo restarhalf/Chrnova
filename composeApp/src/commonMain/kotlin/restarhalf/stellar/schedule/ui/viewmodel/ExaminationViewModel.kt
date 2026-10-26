@@ -33,7 +33,6 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class ExaminationViewModel(
     private val isExamNotEnded: IsExamNotEndedUseCase,
     observeAllExaminations: ObserveAllExaminationsUseCase,
@@ -42,7 +41,6 @@ class ExaminationViewModel(
     private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
 
-    
     @Stable
     data class ExaminationUiState(
         val loading: Boolean,
@@ -94,17 +92,14 @@ class ExaminationViewModel(
                     ),
             )
 
-    
     val uiState: StateFlow<ExaminationUiState> = _uiState
 
     private var loader: (suspend () -> List<Examination>)? = null
 
-    
     fun bindLoader(loader: suspend () -> List<Examination>) {
         this.loader = loader
     }
 
-    
     fun buildScreenUi(
         items: List<Examination>,
         loading: Boolean,
@@ -112,7 +107,7 @@ class ExaminationViewModel(
         nowMs: Long,
     ): ExaminationScreenUi {
         val sorted = items.sortedBy { it.time.substringBefore(" ").ifBlank { "9999-99-99" } }
-        // idKey 依赖自增主键，正常不会撞；这里仍兜一层，避免数据源异常时 LazyColumn 崩溃
+
         val uniqueIdKeys = sorted.uniqueKeys { "${it.id}-${it.courseNumber}-${it.zwh}-${it.time}" }
         val cards = sorted.mapIndexed { index, exam ->
             buildExamCardUi(exam, isExamNotEnded(exam.time, nowMs).not(), uniqueIdKeys[index])
@@ -126,7 +121,6 @@ class ExaminationViewModel(
         return ExaminationScreenUi(cards = cards.toPersistentList(), statusText = statusText)
     }
 
-    
     fun load() {
         val loader = this.loader ?: return
         if (_loading.value) return
@@ -145,7 +139,6 @@ class ExaminationViewModel(
         }
     }
 
-    
     fun refreshExamReminder() {
         viewModelScope.launch {
             runCatching {
@@ -159,7 +152,6 @@ class ExaminationViewModel(
         }
     }
 
-    
     private fun buildExamCardUi(
         exam: Examination,
         isEnded: Boolean = false,

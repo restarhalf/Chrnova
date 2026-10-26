@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.Text
 
-
 @Composable
 fun TitleSlider(
     title: String,

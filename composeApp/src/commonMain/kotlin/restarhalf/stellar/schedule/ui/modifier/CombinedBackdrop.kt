@@ -1,9 +1,4 @@
-
-
-
 package restarhalf.stellar.schedule.ui.modifier
-
-
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -13,7 +8,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
 import top.yukonga.miuix.kmp.blur.Backdrop
-
 
 @Stable
 class CombinedBackdrop(

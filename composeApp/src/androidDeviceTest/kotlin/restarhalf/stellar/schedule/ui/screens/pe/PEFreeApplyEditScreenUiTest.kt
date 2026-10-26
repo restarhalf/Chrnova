@@ -32,7 +32,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PEFreeApplyEditScreenUiTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)
@@ -105,7 +104,7 @@ class PEFreeApplyEditScreenUiTest {
     @Test
     fun 缺少学号时提交给出错误提示() = runUltronUiTest {
         stubYears()
-        // 先建 VM（makeViewModel 会给出学号），再覆盖成缺失学号
+
         val vm = makeViewModel()
         every { peAuth.getStdNumber() } returns null
         setContent {
@@ -189,7 +188,6 @@ class PEFreeApplyEditScreenUiTest {
         onNodeWithText("上传附件").performClick()
         waitText("诊断证明.pdf")
 
-        // 申请类型下拉在浮层里，点击定位不稳；直接经 VM 选中，UI 侧只验证提交链路
         runOnIdle { vm.selectApplyType("free", "免测") }
         waitText("免测")
 
@@ -224,7 +222,7 @@ class PEFreeApplyEditScreenUiTest {
             }
         }
         waitText("提交申请")
-        // 未提交/未上传时两个按钮都可用，校验逻辑由点击后的错误提示承担
+
         onNodeWithText("提交申请").assertIsEnabled()
         onNodeWithText("取消").assertIsEnabled()
     }

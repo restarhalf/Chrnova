@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.core.text
 
-
 object WeeksFormatter {
     
     fun format(weeks: List<Int>): String {
@@ -14,7 +13,6 @@ object WeeksFormatter {
             var endWeek = startWeek
             var count = 1
             var step = 0
-
 
             if (index + 1 < sorted.size) {
                 val nextWeek = sorted[index + 1]
@@ -31,7 +29,6 @@ object WeeksFormatter {
                         nextIndex++
                     }
 
-
                     if (step == 2 && count >= 3) {
                         val type = if (startWeek % 2 == 0) "(双周)" else "(单周)"
                         result.add("${startWeek}-${endWeek}周$type")
@@ -45,7 +42,6 @@ object WeeksFormatter {
                     }
                 }
             }
-
 
             if (startWeek == endWeek) {
                 result.add("${startWeek}周")

@@ -25,7 +25,6 @@ import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.usecase.PEFreeApplyUseCase
 import restarhalf.stellar.schedule.ui.image.isImageAttachment
 
-
 class PEFreeApplyViewModel(
     private val useCase: PEFreeApplyUseCase,
     private val peAuth: PEAuthPort,
@@ -52,9 +51,9 @@ class PEFreeApplyViewModel(
         val detailLoading: Boolean = false,
         val detail: PEFreeApplyItem? = null,
         val detailError: String? = null,
-        
+
         val detailAttPreviews: Map<String, ByteArray> = emptyMap(),
-        
+
         val detailAttLoading: Set<String> = emptySet(),
     )
 
@@ -112,7 +111,6 @@ class PEFreeApplyViewModel(
         }
     }
 
-    
     fun loadDetail(applyId: String) {
         if (applyId.isBlank()) {
             _uiState.update {
@@ -156,10 +154,8 @@ class PEFreeApplyViewModel(
         }
     }
 
-    
     fun attPreviewUrl(attId: String): String = useCase.attPreviewUrl(attId)
 
-    
     fun loadAttPreview(attId: String) {
         if (attId.isBlank()) return
         val state = _uiState.value
@@ -184,7 +180,6 @@ class PEFreeApplyViewModel(
         }
     }
 
-    
     fun prepareApplyForm() {
         val year = _uiState.value.let { s ->
             s.schoolYears.firstOrNull { it.code == s.nowSchoolYear }
@@ -316,7 +311,6 @@ class PEFreeApplyViewModel(
         }
     }
 }
-
 
 val FreeApplyTypes: List<PECodeItem>
     get() = listOf(

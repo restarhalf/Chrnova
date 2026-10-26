@@ -54,7 +54,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import kotlin.time.Clock
 
-
 class HomeScreenUiTest {
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -72,7 +71,6 @@ class HomeScreenUiTest {
 
     private val tz = TimeZone.currentSystemDefault()
 
-    
     private val termStartMs: Long = run {
         val today = Clock.System.now().toLocalDateTime(tz).date
         val monday = LocalDate.fromEpochDays(
@@ -81,7 +79,6 @@ class HomeScreenUiTest {
         monday.atStartOfDayIn(tz).toEpochMilliseconds()
     }
 
-    
     private val todayDow: Int =
         Clock.System.now().toLocalDateTime(tz).dayOfWeek.isoDayNumber
 

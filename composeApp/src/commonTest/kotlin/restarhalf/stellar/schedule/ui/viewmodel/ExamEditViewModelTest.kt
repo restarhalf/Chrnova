@@ -140,8 +140,6 @@ class ExamEditViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-
-
     @Test
     fun `uiState初值为空列表`() = runTest {
         val vm = makeViewModel()
@@ -185,10 +183,6 @@ class ExamEditViewModelTest {
 
         assertEquals("2026-2", vm.currentTerm.value)
     }
-
-
-
-
 
     @Test
     fun `buildEditingFormState新建返回空白表单`() {
@@ -369,10 +363,6 @@ class ExamEditViewModelTest {
         verify(VerifyMode.exactly(1)) { examinationRepository.observeExaminationById(-1) }
     }
 
-
-
-
-
     @Test
     fun `saveExamination成功且学期取选中学期`() = runTest {
         val vm = makeViewModel()
@@ -489,6 +479,5 @@ class ExamEditViewModelTest {
 
         assertEquals(false, callback)
     }
-
 
 }

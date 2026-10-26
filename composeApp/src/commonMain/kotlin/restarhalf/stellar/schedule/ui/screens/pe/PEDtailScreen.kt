@@ -53,7 +53,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun PEDetailScreen(
     vm: PEViewModel,
@@ -286,4 +285,3 @@ fun PEDetailScreen(
         }
     }
 }
-

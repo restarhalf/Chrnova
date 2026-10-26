@@ -31,7 +31,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PEFreeApplyScreenUiTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)
@@ -133,7 +132,7 @@ class PEFreeApplyScreenUiTest {
     @Test
     fun 重复申请记录不再崩溃且逐条渲染() = runUltronUiTest {
         tokenFlow.value = "tok"
-        // 后台把同一条记录返回两次：去重后应只剩一条；即便去重被绕过，key 兜底也不能崩
+
         stubLoggedInData(
             listOf(
                 PEFreeApplyItem(
@@ -181,7 +180,6 @@ class PEFreeApplyScreenUiTest {
         }
         waitText("暂无申请记录")
 
-        // 先渲染空列表，再让数据到达：key 列表与 items 若不同步，这里会 index 0 越界
         listFlow.value = listOf(
             PEFreeApplyItem(applyId = "ap1", schoolYear = "2025-2026", freeApplyType = "free", applyStatus = "2"),
         )

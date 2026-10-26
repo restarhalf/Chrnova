@@ -63,7 +63,6 @@ fun AdBanner(
             AdSurface()
         }
 
-
         Box(
             modifier =
                 Modifier

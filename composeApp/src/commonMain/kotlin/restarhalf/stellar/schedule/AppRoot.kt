@@ -31,7 +31,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 @Composable
 fun AppRoot(
     pictureSelectorHost: @Composable (
@@ -58,7 +57,6 @@ fun AppRoot(
     onThemeModeChange: (Int) -> Unit = {},
 ) {
 
-
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
             .components { add(coil3.network.ktor3.KtorNetworkFetcherFactory()) }
@@ -72,7 +70,6 @@ fun AppRoot(
     val appInfo: AppInfoPort = koinInject()
     val displaySettings: DisplaySettingsPort = koinInject()
     val deviceSettings: DeviceSettingsPort = koinInject()
-
 
     var appState by remember {
         mutableStateOf(
@@ -96,7 +93,6 @@ fun AppRoot(
             }
     }
 
-
     val currentOnThemeModeChange by rememberUpdatedState(onThemeModeChange)
     LaunchedEffect(Unit) {
         snapshotFlow { appState.themeMode }.collect { currentOnThemeModeChange(it) }
@@ -105,7 +101,6 @@ fun AppRoot(
     val runSync = remember(vm) {
         suspend { vm.runSync() }
     }
-
 
     var pendingUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }

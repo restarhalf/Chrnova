@@ -20,7 +20,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class BackgroundViewModelTest {
 
     private val port = mock<BackgroundSettingsPort>(MockMode.autofill)
@@ -44,7 +43,6 @@ class BackgroundViewModelTest {
         return BackgroundViewModel(port)
     }
 
-    
     private fun TestScope.subscribeUi(vm: BackgroundViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher()) { vm.uiState.collect {} }
         advanceMain()

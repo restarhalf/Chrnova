@@ -16,13 +16,10 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseColor
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.theme.pickCourseTitleColor
 
-
 private data class CourseVisual(val cardColor: Color, val titleColor: Color, val subColor: Color)
-
 
 @Stable
 data class DayRenderData(val items: ImmutableList<CourseRenderItem> = persistentListOf())
-
 
 @Stable
 data class CourseRenderItem(
@@ -30,28 +27,27 @@ data class CourseRenderItem(
     val overlaps: ImmutableList<Course> = persistentListOf(),
 )
 
-
 @Stable
 data class CourseCardModel(
-    
+
     val name: String,
-    
+
     val location: String,
-    
+
     val teacher: String,
-    
+
     val topOffsetY: Dp,
-    
+
     val height: Dp,
-    
+
     val badgeCount: Int?,
-    
+
     val color: Color,
-    
+
     val titleColor: Color,
-    
+
     val subTextColor: Color,
-    
+
     val cardAlpha: Float,
 )
 

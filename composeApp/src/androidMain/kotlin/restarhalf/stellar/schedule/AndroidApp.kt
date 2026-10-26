@@ -41,4 +41,3 @@ class AndroidApp : Application() {
 
     private fun isMainProcess(): Boolean = packageName == getProcessName()
 }
-

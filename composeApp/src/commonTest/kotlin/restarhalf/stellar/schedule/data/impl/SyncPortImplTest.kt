@@ -73,7 +73,6 @@ class SyncPortImplTest {
     fun syncStampsSemesterAndUserNo() = runTest {
         val result = impl.sync(semesterId = "2026-2027-1", campusId = "CAMPUS-1", week = "all")
 
-
         assertEquals(
             mapOf("xnxq01id" to "2026-2027-1", "kbjcmsid" to "CAMPUS-1", "week" to "all"),
             capturedFields.single(),

@@ -5,17 +5,14 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 class BuildHomeClockSnapshotUseCase {
 
-    
     data class Snapshot(
         val dayOfWeekMon1: Int,
         val nowMinutes: Int,
         val dateLabel: String,
     )
 
-    
     @OptIn(ExperimentalTime::class)
     operator fun invoke(nowMs: Long): Snapshot {
         val dateTime =

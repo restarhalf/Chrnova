@@ -56,7 +56,6 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun PEFreeApplyEditScreen(
     vm: PEFreeApplyViewModel,

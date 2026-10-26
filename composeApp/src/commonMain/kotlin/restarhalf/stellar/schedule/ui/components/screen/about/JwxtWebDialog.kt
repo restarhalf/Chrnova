@@ -13,7 +13,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun JwxtWebDialog(show: Boolean, onDismissRequest: () -> Unit, onPc: () -> Unit, onMobile: () -> Unit) {
     WindowDialog(

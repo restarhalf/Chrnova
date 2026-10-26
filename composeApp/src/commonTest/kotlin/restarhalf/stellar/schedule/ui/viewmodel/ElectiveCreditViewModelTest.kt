@@ -152,7 +152,7 @@ class ElectiveCreditViewModelTest {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = "2023001"))
         everySuspend { gradeRepository.getAllGradesByUserNo("2023001") } returns listOf(
             grade(code = "X2B002", credit = 1.5),
-            grade(code = "X2B003", semester = "2025-2", credit = 1.0), // 其他学期，应被过滤
+            grade(code = "X2B003", semester = "2025-2", credit = 1.0),
         )
         everySuspend { academic.fetchGuidanceTeachingCourses(any(), any(), any()) } returns emptyList()
         val vm = makeViewModel()

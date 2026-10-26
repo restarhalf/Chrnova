@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.usecase
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 
-
 class JwxtLoginUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
 ) {

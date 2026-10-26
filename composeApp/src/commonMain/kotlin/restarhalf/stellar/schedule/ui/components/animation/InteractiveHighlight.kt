@@ -1,9 +1,4 @@
-
-
-
 package restarhalf.stellar.schedule.ui.components.animation
-
-
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
@@ -34,8 +29,6 @@ internal class InteractiveHighlight(
     private val pressProgressAnimation = Animatable(0f, 0.001f)
     private val positionAnimation = Animatable(Offset.Zero, Offset.VectorConverter, Offset.VisibilityThreshold)
     private var startPosition = Offset.Zero
-
-
 
     private val spotShader: RuntimeShader? =
         if (isRuntimeShaderSupported()) RuntimeShader(SPOT_SHADER) else null
@@ -96,7 +89,6 @@ internal class InteractiveHighlight(
         }
     }
 
-
     private fun release() {
         animationScope.launch {
             launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
@@ -104,7 +96,6 @@ internal class InteractiveHighlight(
         }
     }
 }
-
 
 private const val SPOT_SHADER = """
     layout(color) uniform half4 color;

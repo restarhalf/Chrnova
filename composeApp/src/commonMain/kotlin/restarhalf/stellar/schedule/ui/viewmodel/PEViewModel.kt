@@ -31,7 +31,6 @@ import restarhalf.stellar.schedule.domain.usecase.PEScoreListUseCase
 import restarhalf.stellar.schedule.domain.usecase.PESubjectScoreHistoryUseCase
 import restarhalf.stellar.schedule.domain.usecase.PEAuthProfileUseCase
 
-
 class PEViewModel(
     private val peScoreListUseCase: PEScoreListUseCase,
     private val peScoreDetailUseCase: PEScoreDetailUseCase,
@@ -41,7 +40,6 @@ class PEViewModel(
     private val peAuthWorkflow: PEAuthWorkflowPort,
 ) : ViewModel() {
 
-    
     @Stable
     data class PeUiState(
         val yearScores: ImmutableList<PEYearScore> = persistentListOf(),
@@ -54,7 +52,6 @@ class PEViewModel(
         val loadedDetail: Boolean = false,
     )
 
-    
     @Stable
     data class SubjectHistoryUiState(
         val subjectId: String = "",
@@ -68,10 +65,8 @@ class PEViewModel(
 
     private val _uiState = MutableStateFlow(PeUiState())
 
-    
     val uiState: StateFlow<PeUiState> = _uiState
 
-    
     val isLoggedIn: StateFlow<Boolean> = peAuth.observeToken()
         .map { token -> token.isNotBlank() }
         .catch { e ->
@@ -134,7 +129,6 @@ class PEViewModel(
         }
     }
 
-    
     fun observeCachedDetailData(schoolYear: String) {
         viewModelScope.launch {
             try {
@@ -158,7 +152,6 @@ class PEViewModel(
         }
     }
 
-    
     fun buildStatusText(isDetail: Boolean = false): String? {
         val state = uiState.value
         return when {
@@ -187,7 +180,6 @@ class PEViewModel(
         }
     }
 
-    
     fun loadScoreList() {
         viewModelScope.launch {
             loadMutex.withLock {
@@ -209,7 +201,6 @@ class PEViewModel(
         }
     }
 
-    
     fun loadScoreDetail(schoolYear: String) {
         viewModelScope.launch {
             loadMutex.withLock {
@@ -226,7 +217,6 @@ class PEViewModel(
         }
     }
 
-    
     fun buildSubjectHistoryStatusText(): String? {
         val state = uiState.value
         val history = state.subjectHistory ?: return null
@@ -237,7 +227,6 @@ class PEViewModel(
         }
     }
 
-    
     fun loadSubjectHistory(
         schoolYear: String,
         subjectId: String,
@@ -290,7 +279,6 @@ class PEViewModel(
         }
     }
 
-    
     fun loadProfile() {
         viewModelScope.launch {
             withAuthRetry(
@@ -301,7 +289,6 @@ class PEViewModel(
         }
     }
 
-    
     fun logout() {
         peAuthWorkflow.logout()
         _uiState.value = PeUiState()

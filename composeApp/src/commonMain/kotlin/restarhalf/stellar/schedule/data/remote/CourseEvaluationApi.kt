@@ -25,7 +25,6 @@ import restarhalf.stellar.schedule.domain.model.LikeResult
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class CourseEvaluationApi(
     private val httpClient: HttpClient,
     private val baseUrl: String,
@@ -136,7 +135,6 @@ class CourseEvaluationApi(
         return response.body()
     }
 }
-
 
 @kotlinx.serialization.Serializable
 private data class CourseSummariesResponse(

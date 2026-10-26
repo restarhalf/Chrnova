@@ -42,13 +42,11 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.shader.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 private data class TabSpec(
     val screen: Screen,
     val icon: ImageVector,
     val label: String,
 )
-
 
 private val appTabSpecs =
     listOf(
@@ -58,7 +56,6 @@ private val appTabSpecs =
         TabSpec(screen = Screen.PEScore, icon = PE, label = "体测"),
         TabSpec(screen = Screen.Settings, icon = Settings, label = "设置"),
     )
-
 
 @Composable
 fun AppBottomBar(
@@ -70,7 +67,6 @@ fun AppBottomBar(
     val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
 
     val blurActive = isRuntimeShaderSupported() && backdrop != null
-
 
     AnimatedVisibility(
         visible = chromeState.showNavigationChrome,
@@ -123,7 +119,6 @@ fun AppBottomBar(
                 }
             }
 
-
             1 -> {
                 val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
                 val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
@@ -161,7 +156,6 @@ fun AppBottomBar(
                 }
             }
 
-
             else -> {
                 GlassNavigationBar(
                     items = appTabSpecs.map { tab ->
@@ -179,7 +173,6 @@ fun AppBottomBar(
         }
     }
 }
-
 
 @Composable
 fun AppScaffoldBody(

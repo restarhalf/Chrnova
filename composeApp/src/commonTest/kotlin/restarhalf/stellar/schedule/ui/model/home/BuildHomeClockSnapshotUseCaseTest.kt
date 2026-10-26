@@ -22,7 +22,7 @@ class BuildHomeClockSnapshotUseCaseTest {
     @Test
     fun `星期日快照字段正确`() {
 
-        val nowMs = 1_786_368_000_000L // 2026-09-06T15:30+08:00 附近，具体由动态推导校验
+        val nowMs = 1_786_368_000_000L
         val snapshot = useCase(nowMs)
         val dt = Instant.fromEpochMilliseconds(nowMs).toLocalDateTime(TimeZone.currentSystemDefault())
         assertEquals(dt.date.dayOfWeek.ordinal + 1, snapshot.dayOfWeekMon1)
@@ -32,7 +32,7 @@ class BuildHomeClockSnapshotUseCaseTest {
 
     @Test
     fun `周一返回1且日期标签格式正确`() {
-        val ms = 1_786_454_400_000L // 以动态推导为准
+        val ms = 1_786_454_400_000L
         val snapshot = useCase(ms)
         assertEquals(labelFor(ms), snapshot.dateLabel)
         val dt = kotlin.time.Instant.fromEpochMilliseconds(ms).toLocalDateTime(TimeZone.currentSystemDefault())
@@ -42,7 +42,7 @@ class BuildHomeClockSnapshotUseCaseTest {
 
     @Test
     fun `午夜零点分钟数为0`() {
-        val ms = 1_786_400_640_000L // 动态推导校验
+        val ms = 1_786_400_640_000L
         val dt = Instant.fromEpochMilliseconds(ms).toLocalDateTime(TimeZone.currentSystemDefault())
         val snapshot = useCase(ms)
         assertEquals(dt.hour * 60 + dt.minute, snapshot.nowMinutes)

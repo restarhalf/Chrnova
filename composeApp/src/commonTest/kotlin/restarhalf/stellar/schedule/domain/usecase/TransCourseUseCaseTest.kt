@@ -45,7 +45,7 @@ class TransCourseUseCaseTest {
         )
         val o = result.overrideCourse
         assertEquals(0, o.id)
-        assertEquals(2, o.type) // 调课类型
+        assertEquals(2, o.type)
         assertEquals("k1", o.originRemoteKey)
         assertEquals("k1#override#2#4", o.remoteKey)
         assertEquals(4, o.targetWeek)
@@ -53,7 +53,7 @@ class TransCourseUseCaseTest {
         assertEquals(3, o.dayOfWeek)
         assertEquals(5, o.startSection)
         assertEquals(2, o.sectionCount)
-        assertEquals(listOf(2), o.weeks) // 调课记录标注原始周次
+        assertEquals(listOf(2), o.weeks)
     }
 
     @Test

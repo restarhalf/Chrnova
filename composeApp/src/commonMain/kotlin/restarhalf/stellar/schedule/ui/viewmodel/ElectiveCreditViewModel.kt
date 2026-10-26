@@ -25,7 +25,6 @@ import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.GetGradesByUserNoUseCase
 
-
 class ElectiveCreditViewModel(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,

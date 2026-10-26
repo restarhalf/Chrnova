@@ -32,7 +32,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class EvaluationScreenUiTest {
 
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
@@ -61,7 +60,6 @@ class EvaluationScreenUiTest {
         likes = 3,
     )
 
-    
     private fun createVm(courses: List<Course> = emptyList()): CourseEvaluationViewModel {
         every { userProfile.getUserNickname() } returns null
         every { auth.observeProfile() } returns profileFlow
@@ -80,8 +78,6 @@ class EvaluationScreenUiTest {
             onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
         }
     }
-
-
 
     @Test
     fun 列表渲染课程卡片与统计() = runUltronUiTest {
@@ -169,10 +165,6 @@ class EvaluationScreenUiTest {
         }
     }
 
-
-
-
-
     @Test
     fun 详情页渲染评价信息() = runUltronUiTest {
         everySuspend { port.getEvaluation("e1") } returns sampleEvaluation
@@ -191,7 +183,6 @@ class EvaluationScreenUiTest {
 
     @Test
     fun 写评价页渲染表单分组() = runUltronUiTest {
-
 
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
@@ -221,6 +212,5 @@ class EvaluationScreenUiTest {
         onAllNodesWithText("署名")[0].assertIsDisplayed()
         onAllNodesWithText("选择课程")[0].assertIsDisplayed()
     }
-
 
 }

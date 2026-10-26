@@ -11,7 +11,6 @@ import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 选课纵切路由：选课、补选、学分统计。 */
 fun NavEntryBuilder.courseSelectionEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
     entry<Screen.ElectiveCredit> {

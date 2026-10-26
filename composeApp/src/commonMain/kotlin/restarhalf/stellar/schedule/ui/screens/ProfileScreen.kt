@@ -203,7 +203,6 @@ fun ProfileScreen(
                 )
             }
 
-
             item {
                 if (isLoggedIn) {
                     SmallTitle(text = "教务系统")
@@ -251,7 +250,6 @@ fun ProfileScreen(
                     }
                 }
             }
-
 
             item {
                 if (isPeLoggedIn) {

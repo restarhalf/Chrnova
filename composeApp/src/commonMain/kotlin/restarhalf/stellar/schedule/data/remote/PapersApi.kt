@@ -64,7 +64,6 @@ class PapersApi(
             json.decodeFromString(Paper.serializer(), body)
         }
 
-    
     override suspend fun downloadPaper(id: String): String =
         withContext(AppIoDispatcher) {
             if (id.isBlank()) throw IllegalStateException("缺少试卷标识")
@@ -90,7 +89,6 @@ class PapersApi(
             }
         }
 
-    
     private fun resolveDownloadUrl(url: String): String = when {
         url.startsWith("http://") || url.startsWith("https://") -> url
         url.startsWith("/") -> baseUrl.trimEnd('/') + url

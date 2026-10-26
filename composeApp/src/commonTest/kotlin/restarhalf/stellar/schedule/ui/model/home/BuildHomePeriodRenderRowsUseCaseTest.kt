@@ -67,7 +67,7 @@ class BuildHomePeriodRenderRowsUseCaseTest {
     fun `相同节次范围的时间范围只查询一次`() {
         val items = listOf(
             PeriodItem(1, 1, null),
-            PeriodItem(1, 1, null), // 与上一条相同范围，验证缓存路径不抛错
+            PeriodItem(1, 1, null),
         )
         val rows = useCase(items, timetable, nowMinutes = 500)
         assertEquals(2, rows.size)
@@ -78,6 +78,6 @@ class BuildHomePeriodRenderRowsUseCaseTest {
     fun `时间表越界显示占位符`() {
         val rows = useCase(listOf(PeriodItem(9, 12, null)), emptyList(), nowMinutes = 500)
         assertEquals("--" to "--", rows[0].timeRange)
-        assertNull(rows[0].status) // 无课 → status null（hasCourse=false）
+        assertNull(rows[0].status)
     }
 }

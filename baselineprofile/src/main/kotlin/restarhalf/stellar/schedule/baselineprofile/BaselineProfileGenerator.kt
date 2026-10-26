@@ -13,12 +13,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * 在真机/模拟器上收集 Baseline Profile，覆盖冷启动、首次向导与底栏高频路径。
- *
- * 生成命令（需已连接设备）：
- * `./gradlew :androidApp:generateReleaseBaselineProfile`
- */
 @RunWith(AndroidJUnit4::class)
 class BaselineProfileGenerator {
 
@@ -39,7 +33,6 @@ class BaselineProfileGenerator {
             dismissBlockingDialogs()
             device.waitForIdle(1_000)
 
-            // 首页：列表合成 + 公告入口
             visitTab(TAB_HOME) {
                 scrollVertically()
                 if (clickIfPresent(By.desc("公告"))) {
@@ -51,7 +44,6 @@ class BaselineProfileGenerator {
                 scrollVertically()
             }
 
-            // 课表：滚动 + 切周 + 周次选择器
             visitTab(TAB_SCHEDULE) {
                 scrollVertically()
                 swipeHorizontally()
@@ -59,7 +51,6 @@ class BaselineProfileGenerator {
                 scrollVertically()
             }
 
-            // 考务：考试/成绩双 Tab + 选修学分
             visitTab(TAB_EMS) {
                 scrollVertically()
                 clickIfPresent(By.text("考试"))
@@ -76,7 +67,6 @@ class BaselineProfileGenerator {
                 }
             }
 
-            // 体测
             visitTab(TAB_PE) {
                 scrollVertically()
                 clickIfPresent(By.desc("二维码"))
@@ -85,7 +75,6 @@ class BaselineProfileGenerator {
                 scrollVertically()
             }
 
-            // 设置：长列表滚动（账号/外观/关于等）
             visitTab(TAB_SETTINGS) {
                 scrollVertically()
                 scrollVertically()
@@ -96,7 +85,6 @@ class BaselineProfileGenerator {
                 }
             }
 
-            // 再横滑一遍主 Pager，覆盖手势切 Tab 路径
             swipeThroughMainPager()
             clickIfPresent(By.text(TAB_HOME))
             device.waitForIdle(400)
@@ -104,7 +92,7 @@ class BaselineProfileGenerator {
         }
 
     private fun MacrobenchmarkScope.skipOnboardingIfNeeded() {
-        // 首次启动：欢迎 → 隐私 → 教务登录(跳过) → 体测登录(跳过) → Star → 进入软件
+
         repeat(10) {
             val progressed =
                 clickIfPresent(By.desc("继续")) or
@@ -118,7 +106,7 @@ class BaselineProfileGenerator {
     }
 
     private fun MacrobenchmarkScope.dismissBlockingDialogs() {
-        // 更新弹窗 / 权限等阻塞层，有则点掉
+
         clickIfPresent(By.text("稍后"))
         clickIfPresent(By.text("关闭"))
         device.waitForIdle(300)
@@ -178,13 +166,13 @@ class BaselineProfileGenerator {
                 device.waitForIdle(600)
             }
         } else {
-            // 顶栏标题区域打开周次选择
+
             runCatching {
                 device.click(device.displayWidth / 2, (device.displayHeight * 0.08f).toInt())
                 device.waitForIdle(600)
             }
         }
-        // 点一个周次再关掉
+
         clickIfPresent(By.text("2"))
         clickIfPresent(By.text("1"))
         device.waitForIdle(400)
@@ -204,7 +192,7 @@ class BaselineProfileGenerator {
             dismissBlockingDialogs()
             scrollVertically()
         }
-        // 滑回首页方向
+
         repeat(4) {
             runCatching {
                 device.swipe(w / 5, y, w * 4 / 5, y, 20)

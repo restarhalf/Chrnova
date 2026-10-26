@@ -27,7 +27,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class CropScreenUiTest {
 
     private val port = mock<PictureSelectorPort>(MockMode.autofill)
@@ -45,7 +44,6 @@ class CropScreenUiTest {
         }
     }
 
-    /** 裁剪确认按钮在拿到 viewport 之前是禁用的，等它真正可点再点。 */
     private fun androidx.compose.ui.test.ComposeUiTest.waitEnabled(
         description: String,
         timeoutMs: Long = 5_000,

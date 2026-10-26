@@ -131,4 +131,3 @@ fun PrivacyScreen(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-

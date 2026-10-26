@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.domain.model
 
-
 object SettingsKeys {
     
     const val PREFS_NAME = "schedule_settings"
@@ -41,13 +40,10 @@ object SettingsKeys {
     
     const val STAR_VERIFIED = "star_verified"
 
-    
     const val CACHED_SEMESTER_IDS = "cached_semester_ids"
 
-    
     const val CURRENT_TERM_ID = "current_term_id"
 
-    
     const val USER_AVATAR_URI = "user_avatar_uri"
     
     const val USER_NICKNAME = "user_nickname"

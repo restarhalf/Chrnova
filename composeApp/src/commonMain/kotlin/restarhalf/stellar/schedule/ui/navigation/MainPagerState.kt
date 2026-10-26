@@ -21,27 +21,22 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-
 val RootTabs: List<Screen> =
     listOf(
-        Screen.Home,        // 首页
-        Screen.Schedule,    // 课程表
-        Screen.EMS,         // 考试与成绩
-        Screen.PEScore,     // 体育成绩
-        Screen.Settings,    // 设置
+        Screen.Home,
+        Screen.Schedule,
+        Screen.EMS,
+        Screen.PEScore,
+        Screen.Settings,
     )
-
 
 fun Screen.rootTabIndex(): Int = RootTabs.indexOf(this).takeIf { it >= 0 } ?: 0
 
-
 fun rootTabAt(index: Int): Screen = RootTabs.getOrNull(index) ?: Screen.Home
-
 
 val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {
     error("No MainPagerState provided!")
 }
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Stable
@@ -53,22 +48,18 @@ class MainPagerState(
     var selectedPage by mutableIntStateOf(pagerState.currentPage)
         private set
 
-    
     var isNavigating by mutableStateOf(false)
         private set
 
     private var navJob: Job? = null
 
-    
     val currentScreen: Screen
         get() = rootTabAt(selectedPage)
 
-    
     fun animateTo(screen: Screen) {
         animateToPage(screen.rootTabIndex())
     }
 
-    
     fun animateToPage(targetIndex: Int) {
         if (targetIndex == selectedPage) return
 
@@ -91,7 +82,6 @@ class MainPagerState(
                             targetIndex - pagerState.currentPage - pagerState.currentPageOffsetFraction
                         val scrollPixels = currentDistanceInPages * pageSize
 
-
                         var previousValue = 0f
                         animate(
                             initialValue = 0f,
@@ -101,7 +91,6 @@ class MainPagerState(
                             previousValue += scrollBy(currentValue - previousValue)
                         }
                     }
-
 
                     if (pagerState.currentPage != targetIndex) {
                         pagerState.scrollToPage(targetIndex)
@@ -117,14 +106,12 @@ class MainPagerState(
             }
     }
 
-    
     fun syncPage() {
         if (!isNavigating && selectedPage != pagerState.currentPage) {
             selectedPage = pagerState.currentPage
         }
     }
 }
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

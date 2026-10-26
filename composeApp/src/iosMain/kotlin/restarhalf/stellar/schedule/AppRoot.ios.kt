@@ -383,4 +383,3 @@ private fun ByteArray.toUIImageForPhotoSave(): UIImage? {
 
     return image
 }
-

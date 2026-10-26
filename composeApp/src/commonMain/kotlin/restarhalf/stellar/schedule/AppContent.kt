@@ -66,7 +66,6 @@ import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Clock
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppContent(
@@ -262,7 +261,6 @@ fun AppContent(
         }
     }
 }
-
 
 private fun deriveImageFileName(url: String): String {
     val tail = url.substringAfterLast('/', "")

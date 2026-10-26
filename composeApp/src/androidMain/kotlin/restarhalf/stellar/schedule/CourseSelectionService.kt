@@ -35,7 +35,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-
 class CourseSelectionService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -83,7 +82,6 @@ class CourseSelectionService : Service() {
         emitLog("后台抢课已停止", ServiceLogEntry.LEVEL_WARN)
     }
 
-    
     private suspend fun runSnatchLoop(cfg: SnatchServiceConfig) {
         val koin = GlobalContext.getOrNull() ?: run {
             emitLog("Koin 未初始化，停止", ServiceLogEntry.LEVEL_ERROR)
@@ -138,7 +136,6 @@ class CourseSelectionService : Service() {
                         if (e is CancellationException) throw e
                         AppLogger.log("CourseSelectionService", "抢课请求异常", e)
                         emitLog("${target.courseName}：${e.message ?: "请求异常"}", ServiceLogEntry.LEVEL_ERROR)
-
 
                         if (cfg.refreshSessionOnAuthError && isAuthError(e)) {
                             emitLog("认证失效，刷新会话...", ServiceLogEntry.LEVEL_WARN)
@@ -252,14 +249,11 @@ class CourseSelectionService : Service() {
         const val CHANNEL_ID = "course_selection_snatch"
         const val NOTIFICATION_ID = 0xC0EE
 
-        
         @Volatile
         var pendingConfig: SnatchServiceConfig? = null
 
-        
         val runningFlow = MutableStateFlow(false)
 
-        
         val latestLogFlow = MutableStateFlow(ServiceLogEntry(""))
     }
 }

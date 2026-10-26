@@ -35,7 +35,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 
-
 @Composable
 fun CourseDetailItem(
     modifier: Modifier = Modifier,

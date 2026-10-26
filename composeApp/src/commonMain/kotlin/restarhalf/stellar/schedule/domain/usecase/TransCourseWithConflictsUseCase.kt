@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.usecase
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
-
 class TransCourseWithConflictsUseCase(
     private val courseRepository: CourseRepository,
     private val transCourse: TransCourseUseCase,
@@ -14,7 +13,6 @@ class TransCourseWithConflictsUseCase(
         val conflicts: List<Course>,
     )
 
-    
     suspend operator fun invoke(
         allCourses: List<Course>,
         originCourse: Course,
@@ -39,7 +37,6 @@ class TransCourseWithConflictsUseCase(
         return Result(overrideCourse = result.overrideCourse, conflicts = result.conflicts)
     }
 
-    
     suspend operator fun invoke(
         originCourse: Course,
         originWeek: Int,

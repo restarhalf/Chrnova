@@ -64,7 +64,6 @@ fun PersonalInfoEditCard(
                 }
             }
 
-
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -86,7 +85,6 @@ fun PersonalInfoEditCard(
         }
     }
 
-
     if (showNicknameDialog) {
         NicknameEditDialog(
             initialNickname = nickname ?: "",
@@ -97,7 +95,6 @@ fun PersonalInfoEditCard(
             }
         )
     }
-
 
     if (showClearAvatarDialog) {
         WindowDialog(

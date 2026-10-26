@@ -73,7 +73,6 @@ val alphaVersionName = "${releaseVersionName}($commitHashCode)"
 val resolvedVersionName = githubTagName ?: alphaVersionName
 val resolvedVersionCode = releaseVersionCode
 
-
 android {
     signingConfigs {
         getByName("debug") {
@@ -113,8 +112,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
-
 
     lint {
         checkReleaseBuilds = true
@@ -156,4 +153,3 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     baselineProfile(project(":baselineprofile"))
 }
-

@@ -23,7 +23,6 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveCourseByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 
-
 class CourseEditViewModel(
     private val observeAllCourses: ObserveAllCoursesUseCase,
     private val observeCourseById: ObserveCourseByIdUseCase,
@@ -32,20 +31,16 @@ class CourseEditViewModel(
     private val auth: JwxtAuthPort,
 ) : ViewModel() {
 
-    
     private val _saving = MutableStateFlow(false)
 
-    
     val isSaving: StateFlow<Boolean> = _saving.asStateFlow()
 
-    
     @Stable
     data class CourseEditUiState(
         val courses: ImmutableList<Course>,
         val courseNames: ImmutableList<String>,
     )
 
-    
     @Stable
     data class EditingFormState(
         val isEdit: Boolean,
@@ -69,10 +64,8 @@ class CourseEditViewModel(
                 initialValue = CourseEditUiState(courses = persistentListOf(), courseNames = persistentListOf()),
             )
 
-    
     val uiState: StateFlow<CourseEditUiState> = _uiState
 
-    
     private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
@@ -81,10 +74,8 @@ class CourseEditViewModel(
             initialValue = "",
         )
 
-    
     fun weekdayText(dayOfWeek: Int): String = ClockTime.weekdayText(dayOfWeek)
 
-    
     fun buildDisabledWeeks(
         courses: List<Course>,
         dayOfWeek: Int,
@@ -103,7 +94,6 @@ class CourseEditViewModel(
         return result
     }
 
-    
     fun buildLabCourseToSave(
         selectedName: String,
         selectedWeeks: Set<Int>,
@@ -149,12 +139,10 @@ class CourseEditViewModel(
         )
     }
 
-    
     fun observeEditingCourse(courseId: Long?): Flow<Course?> {
         return observeCourseById(courseId ?: -1)
     }
 
-    
     fun buildEditingFormState(
         courseId: Long?,
         editingCourse: Course?,
@@ -177,7 +165,6 @@ class CourseEditViewModel(
             )
         }
 
-
         val selectedIndex = courseNames.indexOf(editingCourse.name).takeIf { it >= 0 } ?: 0
         return EditingFormState(
             isEdit = true,
@@ -193,17 +180,14 @@ class CourseEditViewModel(
         )
     }
 
-    
     fun toggleWeek(selectedWeeks: Set<Int>, week: Int): Set<Int> {
         return if (selectedWeeks.contains(week)) selectedWeeks - week else selectedWeeks + week
     }
 
-    
     fun sectionSummary(startSection: Int, endSection: Int): String {
         return "第${startSection}-${endSection}节"
     }
 
-    
     fun saveLabCourse(course: Course, onResult: (Boolean) -> Unit) {
         if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
@@ -215,14 +199,12 @@ class CourseEditViewModel(
         }
     }
 
-    
     fun deleteCourse(course: Course, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             onResult(deleteCourseUseCase(course))
         }
     }
 
-    
     private fun overlapsInDayAndSection(
         other: Course,
         dayOfWeek: Int,

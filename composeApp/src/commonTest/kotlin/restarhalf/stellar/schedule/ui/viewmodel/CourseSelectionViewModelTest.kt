@@ -65,8 +65,6 @@ class CourseSelectionViewModelTest {
         Dispatchers.resetMain()
     }
 
-
-
     private fun selectionCourse(
         courseId: String = "k1",
         noticeId: String = "n1",
@@ -131,10 +129,6 @@ class CourseSelectionViewModelTest {
         advanceMain()
     }
 
-
-
-
-
     @Test
     fun `init收集后台服务running状态`() = runTest {
         val vm = makeViewModel()
@@ -155,7 +149,7 @@ class CourseSelectionViewModelTest {
         advanceMain()
 
         latestLogFlow.value = ServiceLogEntry("服务已启动", ServiceLogEntry.LEVEL_SUCCESS)
-        latestLogFlow.value = ServiceLogEntry("", ServiceLogEntry.LEVEL_ERROR) // 空消息被忽略
+        latestLogFlow.value = ServiceLogEntry("", ServiceLogEntry.LEVEL_ERROR)
         advanceMain()
 
         val logs = vm.uiState.value.logs
@@ -171,10 +165,6 @@ class CourseSelectionViewModelTest {
 
         assertTrue(vm.uiState.value.backgroundSupported)
     }
-
-
-
-
 
     @Test
     fun `loadRotations成功填充并自动选中首轮`() = runTest {
@@ -233,10 +223,6 @@ class CourseSelectionViewModelTest {
         assertEquals("轮次不存在", vm.uiState.value.error)
     }
 
-
-
-
-
     @Test
     fun `selectClassification加载课程列表`() = runTest {
         val vm = makeViewModel()
@@ -263,7 +249,6 @@ class CourseSelectionViewModelTest {
             coursesResponse()
         vm.selectClassification("c1")
         advanceMain()
-
 
         vm.onCourseSearchQueryChange("高")
         vm.onCourseSearchQueryChange("高数")
@@ -293,10 +278,6 @@ class CourseSelectionViewModelTest {
             port.fetchCourses(any(), "c1", any(), any(), "")
         }
     }
-
-
-
-
 
     @Test
     fun `addTarget无分类时提示先选分类`() = runTest {
@@ -361,15 +342,11 @@ class CourseSelectionViewModelTest {
 
         vm.addTargetWithCheck(selectionCourse())
         advanceMain()
-        vm.addTargetWithCheck(selectionCourse()) // 同 key
+        vm.addTargetWithCheck(selectionCourse())
         advanceMain()
 
         assertEquals(1, vm.uiState.value.targets.size)
     }
-
-
-
-
 
     @Test
     fun `removeTarget按键移除`() = runTest {
@@ -405,7 +382,6 @@ class CourseSelectionViewModelTest {
         vm.moveTargetDown(0)
         assertEquals("k2|n2|01", vm.uiState.value.targets[1].key)
 
-
         vm.moveTargetUp(0)
         vm.moveTargetDown(1)
         assertEquals("k1|n1|01", vm.uiState.value.targets[0].key)
@@ -426,10 +402,6 @@ class CourseSelectionViewModelTest {
         vm.updateSnatchConfig(config)
         assertEquals(config, vm.uiState.value.snatchConfig)
     }
-
-
-
-
 
     @Test
     fun `startSnatch无目标提示`() = runTest {
@@ -490,15 +462,11 @@ class CourseSelectionViewModelTest {
         advanceMain()
 
         vm.startSnatch()
-        vm.stopSnatch() // 循环挂起中直接取消，不 advanceUntilIdle 避免无限循环
+        vm.stopSnatch()
 
         assertFalse(vm.uiState.value.snatching)
         assertTrue(vm.uiState.value.logs.any { it.message.contains("已停止抢课") })
     }
-
-
-
-
 
     @Test
     fun `startBackgroundSnatch平台不支持返回false`() = runTest {
@@ -557,10 +525,6 @@ class CourseSelectionViewModelTest {
         verify(VerifyMode.exactly(1)) { servicePort.stop() }
     }
 
-
-
-
-
     @Test
     fun `dropSelectedCourse成功从列表移除`() = runTest {
         val vm = makeViewModel()
@@ -593,10 +557,6 @@ class CourseSelectionViewModelTest {
         assertTrue(vm.uiState.value.logs.any { it.message.contains("退课失败") && it.message.contains("不在退课时间内") })
     }
 
-
-
-
-
     @Test
     fun `loadSelectedCourses失败仅复位加载状态`() = runTest {
         val vm = makeViewModel()
@@ -606,10 +566,8 @@ class CourseSelectionViewModelTest {
         vm.selectRotation("r1")
         advanceMain()
 
-
         assertTrue(vm.uiState.value.selectedCourses.isEmpty())
         assertTrue(vm.uiState.value.sessionReady)
     }
-
 
 }

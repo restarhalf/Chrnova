@@ -52,7 +52,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun EvaluationDetailScreen(
     vm: CourseEvaluationViewModel,
@@ -243,7 +242,6 @@ fun EvaluationDetailScreen(
         }
     }
 }
-
 
 private fun formatDate(epochSeconds: Long): String {
     if (epochSeconds <= 0) return "—"

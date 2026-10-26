@@ -41,7 +41,5 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      # 守卫只读源码，不需要 SIGN_KEY / AES_KEY：这两个密钥在任务执行期才解析，
-      # 而 verifyLayering 不依赖 generateLocalSecrets。
       - name: Verify layering
         run: ./gradlew :composeApp:verifyLayering --stacktrace

@@ -9,7 +9,6 @@ import restarhalf.stellar.schedule.ui.screens.papers.PapersUploadScreen
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 资料（Papers）路由：列表、详情、上传。 */
 fun NavEntryBuilder.papersEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
     entry<Screen.Papers> {

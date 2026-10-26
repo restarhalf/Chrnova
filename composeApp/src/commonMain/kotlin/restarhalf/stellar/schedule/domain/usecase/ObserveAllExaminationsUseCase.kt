@@ -9,7 +9,6 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
-
 class ObserveAllExaminationsUseCase(
     private val repository: ExaminationRepository,
     private val auth: JwxtAuthPort,

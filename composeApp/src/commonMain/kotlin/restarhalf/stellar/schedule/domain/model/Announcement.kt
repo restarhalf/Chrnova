@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 data class Announcement(
     val id: String = "",
@@ -20,6 +19,5 @@ data class Announcement(
 ) {
     val isImportant: Boolean get() = priority == 1
 
-    
     val lastChangeAtMs: Long get() = maxOf(createdAt, updatedAt) * 1000L
 }

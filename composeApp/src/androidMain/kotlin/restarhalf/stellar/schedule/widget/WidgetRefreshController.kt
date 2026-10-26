@@ -15,29 +15,16 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.log.AppLogger
 
-/**
- * 组件刷新调度，对齐小爱课程表的非 MIUI 路径（ua1.c.registerUpdateHelper）：
- *
- *   1. 前台时段靠 TIME_TICK / SCREEN_ON 这类系统广播驱动，同一分钟内只刷一次；
- *   2. 再用 setRepeating 每 30 分钟兜底一次，保证熄屏或广播被拦截时也能追上；
- *   3. 全程不用精确闹钟，所以不依赖 SCHEDULE_EXACT_ALARM。
- *
- * 小爱在检测到 MIUI 组件能力时只走系统曝光刷新、不挂闹钟；但 miuiWidget 元数据
- * 是 MIUI 桌面的白名单能力，第三方包声明后组件会从选择器里消失，所以这里一律走
- * 兜底闹钟这条路。
- */
 internal object WidgetRefreshController {
     const val ACTION_WIDGET_FALLBACK_TICK =
         "restarhalf.stellar.schedule.action.WIDGET_FALLBACK_TICK"
 
     val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    /** 兜底刷新周期，取自小爱 setRepeating 的 1800000L */
     private const val FALLBACK_PERIOD_MS = 30L * 60_000L
 
     private const val FALLBACK_REQUEST_CODE = 10086
 
-    /** 同一分钟内的重复 tick 直接丢弃，对齐小爱 isCurrentMinuteOrSet */
     @Volatile
     private var lastHandledMinute: Long = -1L
 
@@ -54,11 +41,6 @@ internal object WidgetRefreshController {
         }
     }
 
-    /**
-     * 系统广播驱动的一次刷新。返回 true 表示这次真的刷了。
-     *
-     * 对齐小爱 WidgetUIUpdateReceiver：熄屏时不动，同一分钟内只处理一次。
-     */
     fun refreshFromSystemTick(context: Context): Boolean {
         if (!hasAnyPlacedWidget(context)) return false
 
@@ -88,7 +70,6 @@ internal object WidgetRefreshController {
         return largeIds.isNotEmpty()
     }
 
-    /** 没有组件时撤掉闹钟，避免空跑唤醒设备 */
     fun scheduleFallback(context: Context) {
         if (!hasAnyPlacedWidget(context)) {
             cancelFallback(context)

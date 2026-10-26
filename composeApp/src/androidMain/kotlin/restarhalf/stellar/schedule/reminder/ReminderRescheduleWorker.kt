@@ -50,7 +50,7 @@ object ReminderWorkScheduler {
 
     private fun createConstraints(): Constraints =
         Constraints.Builder()
-            .setRequiresBatteryNotLow(true) // 低电量时不执行，省电
+            .setRequiresBatteryNotLow(true)
             .build()
 
     private fun computeInitialDelayMs(targetHour: Int = 5, targetMinute: Int = 10): Long {
@@ -78,7 +78,6 @@ object ReminderWorkScheduler {
 
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(UNIQUE_WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request)
-
 
         enqueuePeriodicCheck(context)
     }

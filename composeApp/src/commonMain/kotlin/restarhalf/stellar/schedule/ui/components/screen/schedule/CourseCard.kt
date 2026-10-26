@@ -26,7 +26,6 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
 
-
 @Composable
 fun CourseCard(model: CourseCardModel, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
 

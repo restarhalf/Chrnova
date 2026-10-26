@@ -53,7 +53,7 @@ class BuildHomeTodayScheduleUseCaseTest {
             totalWeeks = 20,
             termStartMs = termStartMs,
             todayDayOfWeekMon1 = 1,
-            nowMs = termStartMs + 10 * dayMs, // 第2周
+            nowMs = termStartMs + 10 * dayMs,
         )
         assertEquals(2, schedule.activeWeek)
         assertEquals(listOf("高等数学"), schedule.todayCourses.map { it.name })
@@ -82,7 +82,7 @@ class BuildHomeTodayScheduleUseCaseTest {
             totalWeeks = 20,
             termStartMs = termStartMs,
             todayDayOfWeekMon1 = 1,
-            nowMs = termStartMs + 140 * dayMs, // 第21周 > 20
+            nowMs = termStartMs + 140 * dayMs,
         )
         assertNull(schedule.activeWeek)
         assertTrue(schedule.todayCourses.isEmpty())
@@ -95,7 +95,7 @@ class BuildHomeTodayScheduleUseCaseTest {
             totalWeeks = 20,
             termStartMs = termStartMs,
             todayDayOfWeekMon1 = 1,
-            nowMs = termStartMs + 10 * dayMs, // 第2周，课只在第3周
+            nowMs = termStartMs + 10 * dayMs,
         )
         assertTrue(schedule.todayCourses.isEmpty())
         assertFalse(schedule.hasFirstClass)
@@ -143,8 +143,8 @@ class BuildHomeTodayScheduleUseCaseTest {
 
     @Test
     fun `空洞时段填充空闲条目`() {
-        val first = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2) // 1-2
-        val fourth = course("英语", dayOfWeek = 1, startSection = 4, sectionCount = 1) // 4
+        val first = course("高数", dayOfWeek = 1, startSection = 1, sectionCount = 2)
+        val fourth = course("英语", dayOfWeek = 1, startSection = 4, sectionCount = 1)
         val schedule = useCase(
             courses = listOf(first, fourth),
             totalWeeks = 20,

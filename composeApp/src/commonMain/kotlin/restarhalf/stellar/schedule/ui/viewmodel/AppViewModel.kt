@@ -27,7 +27,6 @@ import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 
-
 class AppViewModel(
     private val auth: JwxtAuthPort,
     private val timetable: TimetablePort,
@@ -54,7 +53,6 @@ class AppViewModel(
         }
     }
 
-    
     @Immutable
     data class AppUiState(
         val campus: Campus,
@@ -81,22 +79,18 @@ class AppViewModel(
                     ),
             )
 
-    
     val uiState: StateFlow<AppUiState> = _uiState
 
     private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
 
-    
     val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
 
-    
     fun acknowledgeSyncResult() {
         if (_syncUiState.value is SyncUiState.Error) {
             _syncUiState.value = SyncUiState.Idle
         }
     }
 
-    
     suspend fun runSync() {
         _syncUiState.value = SyncUiState.Loading
         _syncUiState.value =
@@ -116,27 +110,22 @@ class AppViewModel(
                 )
     }
 
-    
     fun logout() {
         auth.clear()
     }
 
-    
     fun onCampusChanged(campus: Campus) {
         timetable.setCampus(campus)
     }
 
-    
     fun onTermStartMsChanged(ms: Long) {
         timetable.setTermStartMs(ms)
     }
 
-    
     fun onTotalWeeksChanged(weeks: Int) {
         timetable.setTotalWeeks(weeks)
     }
 
-    
     suspend fun fetchExaminationArrangements(
         semester: String = "",
         nameOrNumber: String = ""
@@ -144,12 +133,10 @@ class AppViewModel(
         return fetchExaminations(semester = semester, nameOrNumber = nameOrNumber)
     }
 
-    
     suspend fun fetchGradeReport(semester: String = ""): TermGradeReport {
         return fetchGrades(semester = semester)
     }
 
-    
     suspend fun login(
         userNo: String,
         password: String,

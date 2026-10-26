@@ -82,7 +82,6 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CourseSelectionScreen(
@@ -256,7 +255,6 @@ fun CourseSelectionScreen(
     }
 }
 
-
 private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiState): String? {
     return when {
         uiState.backgroundRunning -> "后台抢课运行中，可关闭应用或锁屏"
@@ -268,7 +266,6 @@ private fun buildStatusText(uiState: CourseSelectionViewModel.CourseSelectionUiS
     }
 }
 
-
 @Composable
 private fun rememberItemEnterAnimation(): Animatable<Float, *> {
     val anim = remember { Animatable(0f) }
@@ -277,7 +274,6 @@ private fun rememberItemEnterAnimation(): Animatable<Float, *> {
     }
     return anim
 }
-
 
 @Composable
 private fun AccentBar(
@@ -292,8 +288,6 @@ private fun AccentBar(
             .fillMaxHeight(0.8f),
     )
 }
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -341,7 +335,6 @@ private fun SelectTab(
             }
         }
 
-
         if (uiState.classifications.isNotEmpty()) {
             item {
                 SmallTitle(text = "选课分类")
@@ -359,7 +352,6 @@ private fun SelectTab(
             }
         }
 
-
         if (uiState.selectedClassificationCode.isNotBlank()) {
             item {
                 SmallTitle(text = "搜索课程")
@@ -373,7 +365,6 @@ private fun SelectTab(
                 }
             }
         }
-
 
         if (uiState.courses.isNotEmpty()) {
             item {
@@ -398,8 +389,6 @@ private fun SelectTab(
         }
     }
 }
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -453,7 +442,6 @@ private fun TargetTab(
             }
         }
 
-
         item {
             SmallTitle(text = "抢课配置")
             AppCard {
@@ -469,8 +457,6 @@ private fun TargetTab(
         }
     }
 }
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -558,8 +544,6 @@ private fun SelectedTab(
     }
 }
 
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LogTab(
@@ -625,8 +609,6 @@ private fun LogTab(
     }
 }
 
-
-
 @Composable
 private fun EmptyHint(text: String) {
     Box(
@@ -642,7 +624,6 @@ private fun EmptyHint(text: String) {
         )
     }
 }
-
 
 @Composable
 private fun CourseCard(
@@ -742,7 +723,6 @@ private fun CourseCard(
     }
 }
 
-
 @Composable
 private fun AddTargetChip(
     added: Boolean,
@@ -778,7 +758,6 @@ private fun AddTargetChip(
         }
     }
 }
-
 
 @Composable
 private fun TargetCard(
@@ -877,7 +856,6 @@ private fun TargetCard(
                     }
                 }
 
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -903,7 +881,6 @@ private fun TargetCard(
                     }
                 }
 
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -916,7 +893,6 @@ private fun TargetCard(
         }
     }
 }
-
 
 @Composable
 private fun SelectedCourseCard(
@@ -1015,7 +991,6 @@ private fun SelectedCourseCard(
     }
 }
 
-
 @Composable
 private fun ActionChip(
     text: String,
@@ -1044,7 +1019,6 @@ private fun ActionChip(
         Text(text = text, style = MiuixTheme.textStyles.footnote1, color = fg)
     }
 }
-
 
 @Composable
 private fun SearchSection(
@@ -1094,7 +1068,6 @@ private fun SearchSection(
     }
 }
 
-
 @Composable
 private fun SnatchConfigSection(
     config: CourseSelectionViewModel.SnatchConfig,
@@ -1143,7 +1116,6 @@ private fun SnatchConfigSection(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = "最大尝试次数",
@@ -1171,7 +1143,6 @@ private fun SnatchConfigSection(
         }
     }
 }
-
 
 @Composable
 private fun LogItem(log: SelectionLog) {
@@ -1218,10 +1189,8 @@ private fun LogItem(log: SelectionLog) {
     }
 }
 
-
 private fun JwxtSelectionCourse.creditText(): String =
     if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"
-
 
 private fun JwxtSelectedCourse.creditText(): String =
     if (credit.isBlank()) "学分 -" else "学分 ${credit.trim()}"

@@ -13,7 +13,6 @@ import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 
-
 class RunSyncUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
@@ -23,7 +22,6 @@ class RunSyncUseCase(
     private val reminderScheduler: ReminderSchedulerPort,
 ) {
 
-    
     suspend operator fun invoke(): SyncResult {
         authWorkflow.ensureLoggedIn()
 
@@ -66,7 +64,6 @@ class RunSyncUseCase(
         return result
     }
 
-    
     private suspend fun syncWithRetry(
         semesterId: String,
         campus: RemoteCampus,
@@ -97,7 +94,6 @@ class RunSyncUseCase(
         return result.copy(campusName = campus.name)
     }
 
-    
     private suspend fun doSync(
         semesterId: String,
         campus: RemoteCampus,
@@ -120,7 +116,6 @@ class RunSyncUseCase(
         }
     }
 
-    
     private fun matchLocalCampus(remoteName: String): Campus? {
         val name = remoteName.trim()
         return when {
@@ -130,7 +125,6 @@ class RunSyncUseCase(
         }
     }
 
-    
     private fun isCampusNameMatch(local: Campus, remoteName: String): Boolean {
         val name = remoteName.trim()
         return when (local) {

@@ -9,8 +9,6 @@ class PEPasswordEncryptionPortImplTest {
 
     private val impl = PEPasswordEncryptionPortImpl()
 
-
-
     @Test
     fun md5KnownVectorHello() {
         assertEquals("5d41402abc4b2a76b9719d911017c592", impl.encryptPasswordForPELogin("hello"))
@@ -27,11 +25,8 @@ class PEPasswordEncryptionPortImplTest {
         assertEquals("96e79218965eb72c92a549dd5a330112", impl.encryptPasswordForPELogin("111111"))
     }
 
-
-
     @Test
     fun signCapturedGoldenFromRealRequest() {
-
 
         val sign = impl.generatePESign(
             mapOf(
@@ -107,8 +102,6 @@ class PEPasswordEncryptionPortImplTest {
         val data = mapOf("username" to "u", "password" to "p", "sys_id" to "iscpMobile")
         assertEquals(impl.generatePESign(data), impl.generatePESign(data))
     }
-
-
 
     @Test
     fun encryptPeAttIdMatchesCapturedGolden() {

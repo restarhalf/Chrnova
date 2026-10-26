@@ -14,14 +14,12 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
-
 class RoomCourseRepository(
     private val courseDao: CourseDao,
     private val settings: TermSettingsPort,
     private val auth: JwxtAuthPort,
 ) : CourseRepository {
 
-    
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun observeAllCourses(): Flow<List<Course>> =
         combine(
@@ -44,7 +42,6 @@ class RoomCourseRepository(
             }.map { list -> list.map { it.toDomain() } }
         }
 
-    
     override fun observeCourseById(id: Long): Flow<Course?> =
         combine(
             courseDao.getCourseById(id).map { it?.toDomain() },
@@ -53,14 +50,11 @@ class RoomCourseRepository(
             course?.takeIf { semesterId.isBlank() || it.semesterId == semesterId }
         }
 
-    
     override suspend fun insertCourse(course: Course): Long =
         courseDao.insertCourse(course.toEntity())
 
-    
     override suspend fun deleteCourse(course: Course) = courseDao.deleteCourse(course.toEntity())
 
-    
     override suspend fun getAllCoursesOnce(): List<Course> {
         val semesterId = settings.observeActiveScheduleTerm().first()
         return if (semesterId.isNotBlank()) {
@@ -70,12 +64,10 @@ class RoomCourseRepository(
         }
     }
 
-    
     override suspend fun getAllCoursesAcrossSemesters(): List<Course> {
         return courseDao.getAllCoursesOnce().map { it.toDomain() }
     }
 
-    
     override suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String) {
         courseDao.replaceSyncedCourses(courses.map { it.toEntity() }, semesterId)
 
@@ -85,13 +77,11 @@ class RoomCourseRepository(
         }
     }
 
-    
     override suspend fun clearAllCourses() {
         courseDao.deleteAll()
         settings.setActiveScheduleTerm("")
     }
 
-    
     override suspend fun bindUnboundCourses(userNo: String) {
         courseDao.bindUnboundCourses(userNo)
     }

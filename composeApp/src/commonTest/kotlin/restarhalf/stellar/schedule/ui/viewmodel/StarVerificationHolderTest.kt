@@ -23,7 +23,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-
 class StarVerificationHolderTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
@@ -65,7 +64,7 @@ class StarVerificationHolderTest {
         assertTrue(holder.state.value.showDialog)
 
         holder.onUsernameChange(TextFieldValue("someone"))
-        holder.verify() // 未 stub verifyStar → 不重要，先改输入再关
+        holder.verify()
         holder.dismissDialog()
 
         val state = holder.state.value

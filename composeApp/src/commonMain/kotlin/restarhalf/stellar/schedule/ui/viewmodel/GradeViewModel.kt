@@ -28,13 +28,11 @@ import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import kotlin.math.roundToInt
 
-
 class GradeViewModel(
     observeAllGrades: ObserveAllGradesUseCase,
     private val settings: TermSettingsPort,
 ) : ViewModel() {
 
-    
     @Immutable
     data class GradeUiState(
         val loading: Boolean,
@@ -47,7 +45,6 @@ class GradeViewModel(
     private val _error = MutableStateFlow("")
 
     private val _summary = MutableStateFlow(TermGradeReport())
-
 
     private var cachedGradesRef: List<GradeCourse>? = null
     private var cachedSortedSemesters: List<String>? = null
@@ -105,17 +102,14 @@ class GradeViewModel(
                     ),
             )
 
-    
     val uiState: StateFlow<GradeUiState> = _uiState
 
     private var loader: (suspend () -> TermGradeReport)? = null
 
-    
     fun bindLoader(loader: suspend () -> TermGradeReport) {
         this.loader = loader
     }
 
-    
     fun buildScreenUi(
         report: TermGradeReport,
         loading: Boolean,
@@ -142,10 +136,8 @@ class GradeViewModel(
         return GradeScreenUi(cards = dedupedCards.toPersistentList(), summary = summary, statusText = statusText)
     }
 
-    
     fun buildGradeTitle(grade: GradeCourse): String = grade.courseName.ifBlank { "未命名课程" }
 
-    
     private fun buildGradeSubtitle(grade: GradeCourse): String {
         return listOf(
             grade.courseCode.takeIf { it.isNotBlank() },
@@ -155,7 +147,6 @@ class GradeViewModel(
             .ifBlank { grade.passStatus.ifBlank { "暂无补充信息" } }
     }
 
-    
     fun buildGradeDetailsSummary(grade: GradeCourse): String {
         return buildString {
             appendLine("课程号：${grade.courseCode.ifBlank { "暂无" }}")
@@ -175,12 +166,10 @@ class GradeViewModel(
             .trim()
     }
 
-    
     private fun buildGradeScoreText(grade: GradeCourse): String {
         return grade.score.ifBlank { grade.gradeLevel.ifBlank { grade.passStatus.ifBlank { "--" } } }
     }
 
-    
     private fun buildGradeJdText(grade: GradeCourse): String {
         return "绩点：${DecimalFormatter.format(grade.gradePoint, 1)}"
     }
@@ -198,7 +187,6 @@ class GradeViewModel(
         )
     }
 
-    
     fun load() {
         val loader = this.loader ?: return
         if (_loading.value) return
@@ -219,7 +207,6 @@ class GradeViewModel(
         }
     }
 
-    
     private fun Double.displayOrDash(): String {
         return if (this <= 0.0) "0" else formatDouble(this)
     }

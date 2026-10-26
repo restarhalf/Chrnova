@@ -116,7 +116,6 @@ class PapersViewModel(
         }
     }
 
-    
     fun consumeDownloadUrl() {
         _uiState.update { it.copy(downloadUrl = null) }
     }

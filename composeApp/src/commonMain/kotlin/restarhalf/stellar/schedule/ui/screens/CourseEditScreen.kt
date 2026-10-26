@@ -48,7 +48,6 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun CourseEditScreen(
     vm: CourseEditViewModel,
@@ -106,7 +105,6 @@ fun CourseEditScreen(
         endSection = formState.endSection
         selectedWeeks = formState.selectedWeeks
     }
-
 
     LaunchedEffect(selectedIndex, inputCourseName.value, changeToSelect.value, courseNames.size) {
         if (courseId != null) return@LaunchedEffect

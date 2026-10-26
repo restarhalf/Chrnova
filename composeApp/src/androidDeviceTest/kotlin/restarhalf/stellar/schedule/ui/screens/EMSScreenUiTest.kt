@@ -104,7 +104,6 @@ class EMSScreenUiTest {
                     examVm = makeExamViewModel(),
                     gradeVm = makeGradeViewModel(),
 
-
                     onLoadExaminations = {
                         val list = listOf(
                             Examination(

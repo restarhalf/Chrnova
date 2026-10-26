@@ -57,7 +57,6 @@ class AnnouncementImageViewerScreenUiTest {
     fun `禁止保存时不显示保存按钮`() = runUltronUiTest {
         setContentFor(canSaveImage = false)
 
-
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithContentDescription("关闭").fetchSemanticsNodes().isNotEmpty()
         }

@@ -3,25 +3,18 @@ package restarhalf.stellar.schedule.domain.port
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import kotlinx.coroutines.flow.StateFlow
 
-
 interface CourseSelectionServicePort {
 
-    
     val isSupported: Boolean
 
-    
     val running: StateFlow<Boolean>
 
-    
     val latestLog: StateFlow<ServiceLogEntry>
 
-    
     fun start(config: SnatchServiceConfig): Boolean
 
-    
     fun stop()
 }
-
 
 data class SnatchServiceConfig(
     val rotationId: String,
@@ -32,7 +25,6 @@ data class SnatchServiceConfig(
     val maxAttempts: Int,
     val refreshSessionOnAuthError: Boolean,
 )
-
 
 data class ServiceLogEntry(
     val message: String,
@@ -45,7 +37,6 @@ data class ServiceLogEntry(
         const val LEVEL_ERROR = 3
     }
 }
-
 
 data class SnatchTarget(
     val key: String,

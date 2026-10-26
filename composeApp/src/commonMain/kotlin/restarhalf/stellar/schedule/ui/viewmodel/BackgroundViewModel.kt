@@ -9,12 +9,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 
-
 class BackgroundViewModel(
     private val backgroundSettings: BackgroundSettingsPort,
 ) : ViewModel() {
 
-    
     @Immutable
     data class BackgroundUiState(
         val backgroundImageUri: String?,
@@ -50,25 +48,20 @@ class BackgroundViewModel(
                 },
             )
 
-    
     val uiState: StateFlow<BackgroundUiState> = _uiState
 
-    
     fun onBackgroundImageUriChanged(uri: String?) {
         backgroundSettings.setBackgroundImageUri(uri)
     }
 
-    
     fun onBackgroundAlphaChanged(value: Float) {
         backgroundSettings.setBackgroundAlpha(value)
     }
 
-    
     fun onBackgroundBlurChanged(value: Float) {
         backgroundSettings.setBackgroundBlur(value)
     }
 
-    
     fun onComponentsAlphaChanged(value: Float) {
         backgroundSettings.setComponentsAlpha(value)
     }

@@ -59,8 +59,6 @@ class RoomCourseRepositoryTest {
 
     private val repo = RoomCourseRepository(dao, settings, auth)
 
-
-
     @Test
     fun observeAllBothBlankUsesAllCourses() = runTest {
         val names = repo.observeAllCourses().first().map { it.name }
@@ -96,8 +94,6 @@ class RoomCourseRepositoryTest {
         assertTrue(course is Course)
     }
 
-
-
     @Test
     fun observeCourseByIdFilteredByActiveSemester() = runTest {
         val fixed = CourseEntity(
@@ -107,7 +103,6 @@ class RoomCourseRepositoryTest {
         )
         every { dao.getCourseById(5L) } returns MutableStateFlow(fixed)
 
-
         assertEquals("定课", repo.observeCourseById(5L).first()?.name)
 
         termFlow.value = "S1"
@@ -116,8 +111,6 @@ class RoomCourseRepositoryTest {
         termFlow.value = "S2"
         assertEquals(null, repo.observeCourseById(5L).first())
     }
-
-
 
     @Test
     fun insertCourseMapsToEntityAndReturnsId() = runTest {

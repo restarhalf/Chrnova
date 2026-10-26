@@ -36,7 +36,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class WelcomeScreenUiTest {
 
     private val deviceSettings = mock<DeviceSettingsPort>(MockMode.autofill)
@@ -53,7 +52,6 @@ class WelcomeScreenUiTest {
         stopKoin()
     }
 
-    /** WelcomeScreen 内部 koinInject / koinViewModel 依赖整套启动页依赖。 */
     private fun startKoinForTest() {
         stopKoin()
         startKoin {
@@ -92,7 +90,7 @@ class WelcomeScreenUiTest {
         waitText("欢迎使用")
         onNodeWithText("欢迎使用").assertIsDisplayed()
         onNodeWithText("Chrnova测试").assertIsDisplayed()
-        // 首页不显示返回按钮
+
         assertEquals(0, onAllNodes(hasContentDescription("back")).fetchSemanticsNodes().size)
     }
 
@@ -108,7 +106,7 @@ class WelcomeScreenUiTest {
                 )
             }
         }
-        // 「继续」是图标的内容描述，不是文本
+
         waitUntil(timeoutMillis = 5_000) {
             onAllNodes(hasContentDescription("继续")).fetchSemanticsNodes().isNotEmpty()
         }

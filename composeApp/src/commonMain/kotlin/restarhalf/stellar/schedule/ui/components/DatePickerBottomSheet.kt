@@ -14,7 +14,6 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
-
 private fun daysInMonth(year: Int, month: Int): Int {
     val firstDay = LocalDate(year, month, 1)
     val nextMonthFirstDay =
@@ -25,7 +24,6 @@ private fun daysInMonth(year: Int, month: Int): Int {
         }
     return firstDay.daysUntil(nextMonthFirstDay)
 }
-
 
 @OptIn(ExperimentalTime::class)
 @Composable

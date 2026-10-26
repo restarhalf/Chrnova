@@ -49,7 +49,6 @@ class JwxtGradeResponseTest {
         val items = resp.data!!.first().achievement
         assertEquals(5, items.size)
 
-
         val english = items.first { it.courseName == "大学英语4" }
         assertEquals("D0001-4", english.courseCode)
         assertEquals("80", english.score)
@@ -66,16 +65,13 @@ class JwxtGradeResponseTest {
         assertEquals("", english.repeatSemester)
         assertEquals("", english.markFlag)
 
-
         val coa = items.first { it.courseName == "计算机组成原理" }
         assertEquals(3.5, coa.credit)
         assertEquals("70", coa.score)
 
-
         val studio = items.first { it.courseName == "工作室课题2" }
         assertEquals(2.4, studio.gradePoint)
         assertEquals("任选", studio.curriculumAttributes)
-
 
         val dbCourse = items.first { it.courseName == "数据库与信息管理课程设计" }
         assertEquals(4.5, dbCourse.gradePoint)

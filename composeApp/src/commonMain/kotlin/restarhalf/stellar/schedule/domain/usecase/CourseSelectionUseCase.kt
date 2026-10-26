@@ -12,12 +12,10 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.JwxtSelectionDropResult
 import kotlin.runCatching
 
-
 class CourseSelectionUseCase(
     private val gateway: CourseSelectionPort,
     private val authWorkflow: JwxtAuthWorkflowPort,
 ) {
-
 
     data class SessionContext(
         val rotationId: String,
@@ -27,12 +25,10 @@ class CourseSelectionUseCase(
         val extraRules: Map<String, String>,
     )
 
-
     suspend fun loadRotations(): List<JwxtSelectionRotation> {
         authWorkflow.ensureLoggedIn()
         return gateway.fetchRotations()
     }
-
 
     suspend fun initSession(rotationId: String): SessionContext {
         authWorkflow.ensureLoggedIn()
@@ -44,7 +40,6 @@ class CourseSelectionUseCase(
             extraRules = session.extraRules,
         )
     }
-
 
     suspend fun loadCourses(
         ctx: SessionContext,
@@ -59,7 +54,6 @@ class CourseSelectionUseCase(
             courseInformation = courseInformation,
         )
     }
-
 
     suspend fun submitOnce(
         ctx: SessionContext,
@@ -88,7 +82,6 @@ class CourseSelectionUseCase(
                 "needcf: yxcfbs=${result.yxcfbs}, cfbs=${result.cfbs}, xkkcid=${result.xkkcid}, yxjx0404id=$relatedNoticeId, msg=${result.message}",
             )
 
-
             val courses = runCatching {
                 loadCourses(ctx, classificationCode)
             }.getOrElse { e ->
@@ -104,7 +97,6 @@ class CourseSelectionUseCase(
                 )
                 return result
             }
-
 
             val prevNoticeId = currentCourse.noticeId
             val prevSplit = currentCourse.splitIdentification
@@ -124,7 +116,6 @@ class CourseSelectionUseCase(
         return result
     }
 
-
     suspend fun drop(ctx: SessionContext, noticeId: String): JwxtSelectionDropResult {
         return gateway.dropSelection(
             rotationId = ctx.rotationId,
@@ -134,11 +125,9 @@ class CourseSelectionUseCase(
         )
     }
 
-
     suspend fun loadSelectedCourses(ctx: SessionContext): List<JwxtSelectedCourse> {
         return gateway.fetchSelectedCourses(rotationId = ctx.rotationId)
     }
-
 
     suspend fun refreshSession(rotationId: String): SessionContext {
         authWorkflow.refreshSession()

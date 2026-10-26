@@ -43,7 +43,6 @@ import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 class SettingsViewModel(
     private val auth: JwxtAuthPort,
     private val authWorkflow: JwxtAuthWorkflowPort,
@@ -66,7 +65,7 @@ class SettingsViewModel(
         settings = deviceSettings,
         scope = viewModelScope,
     )
-    
+
     @Immutable
     private data class SettingsPrefsState(
         val showNonCurrentWeek: Boolean,
@@ -79,14 +78,12 @@ class SettingsViewModel(
         val logEnabled: Boolean,
     )
 
-    
     @Immutable
     private data class SettingsAuthState(
         val authToken: String,
         val profile: JwxtAuthProfile,
     )
 
-    
     @Stable
     data class SettingsUiState(
         val showNonCurrentWeek: Boolean,
@@ -193,10 +190,8 @@ class SettingsViewModel(
                     ),
             )
 
-    
     val uiState: StateFlow<SettingsUiState> = _uiState
 
-    
     fun refreshAuth() {
         if (uiState.value.authToken.isBlank()) return
 
@@ -211,7 +206,6 @@ class SettingsViewModel(
         }
     }
 
-    
     fun refreshRemoteTerms() {
         if (uiState.value.authToken.isBlank()) {
             _remoteTermItems.value = persistentListOf()
@@ -232,7 +226,6 @@ class SettingsViewModel(
         }
     }
 
-    
     fun buildTermSelectionUi(
         authToken: String,
         remoteTermItems: List<String>,
@@ -248,7 +241,6 @@ class SettingsViewModel(
         return TermSelectionUi(items = items, selectedIndex = index)
     }
 
-    
     fun buildAccountUi(authToken: String, profile: JwxtAuthProfile): AccountUi {
         val loggedIn =
             authToken.isNotBlank() && (profile.name.isNotBlank() || profile.userNo.isNotBlank())
@@ -269,7 +261,6 @@ class SettingsViewModel(
         )
     }
 
-    
     fun buildScreenUi(
         syncUiState: SyncUiState,
         campus: Campus,
@@ -298,18 +289,15 @@ class SettingsViewModel(
         )
     }
 
-    
     fun selectedTermValueFromIndex(items: List<String>, index: Int): String {
         val value = items.getOrNull(index).orEmpty()
         return if (value == "当前学期") "" else value
     }
 
-    
     fun campusFromIndex(index: Int): Campus {
         return if (index == 0) Campus.Development else Campus.Jinshitan
     }
 
-    
     fun onSelectedTermChanged(value: String) {
         viewModelScope.launch {
             termSettings.setSelectedTerm(value)
@@ -323,27 +311,22 @@ class SettingsViewModel(
         }
     }
 
-    
     fun onThemeModeChanged(mode: Int) {
         displaySettings.setThemeMode(mode)
     }
 
-    
     fun onFloatingBarChanged(mode: Int) {
         displaySettings.setFloatingBar(mode)
     }
 
-    
     fun onShowNonCurrentWeekChanged(show: Boolean) {
         displaySettings.setShowNonCurrentWeek(show)
     }
 
-    
     fun onScheduleRowHeightChanged(heightDp: Int) {
         displaySettings.setScheduleRowHeight(heightDp)
     }
 
-    
     fun onReminderEnabledChanged(enabled: Boolean) {
         reminderSettings.setCourseReminderEnabled(enabled)
         if (!enabled) {
@@ -355,7 +338,6 @@ class SettingsViewModel(
         }
     }
 
-    
     fun onExamReminderEnabledChanged(enabled: Boolean) {
         reminderSettings.setExamReminderEnabled(enabled)
         if (!enabled) {
@@ -371,7 +353,6 @@ class SettingsViewModel(
         logSettings.setLogEnabled(enabled)
     }
 
-    
     fun triggerSync(block: suspend () -> Unit) {
         viewModelScope.launch {
             runCatching { block() }
@@ -382,7 +363,6 @@ class SettingsViewModel(
         }
     }
 
-    
     fun scheduleCourseReminder(campus: Campus, termStartMs: Long, totalWeeks: Int) {
         viewModelScope.launch {
             val result =
@@ -404,7 +384,6 @@ class SettingsViewModel(
         }
     }
 
-    
     fun scheduleExamReminder(selectedTerm: String) {
         viewModelScope.launch {
             val result =
@@ -421,7 +400,6 @@ class SettingsViewModel(
         }
     }
 
-    
     @OptIn(ExperimentalTime::class)
     private fun formatDateYmd(ms: Long): String {
         val date =
@@ -431,7 +409,6 @@ class SettingsViewModel(
         return "${date.year}/$month/$day"
     }
 
-    
     @Immutable
     data class PersonalInfoUiState(
         val avatarUri: String? = null,
@@ -442,7 +419,6 @@ class SettingsViewModel(
     private val _personalInfoUiState = MutableStateFlow(PersonalInfoUiState())
     val personalInfoUiState: StateFlow<PersonalInfoUiState> = _personalInfoUiState
 
-    
     fun loadPersonalInfo() {
         viewModelScope.launch {
             val avatarUri = userProfile.getUserAvatarUri()

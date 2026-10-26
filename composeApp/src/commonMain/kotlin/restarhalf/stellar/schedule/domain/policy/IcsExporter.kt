@@ -13,10 +13,8 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 object IcsExporter {
 
-    
     @OptIn(ExperimentalTime::class)
     fun export(
         courses: List<Course>,
@@ -77,7 +75,6 @@ object IcsExporter {
         return escapeText(parts.joinToString(" / "))
     }
 
-    
     private fun escapeText(value: String): String {
         return value
             .replace("\\", "\\\\")

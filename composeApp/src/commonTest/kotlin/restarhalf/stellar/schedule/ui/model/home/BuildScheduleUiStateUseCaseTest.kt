@@ -41,12 +41,12 @@ class BuildScheduleUiStateUseCaseTest {
             campus = Campus.Jinshitan,
             totalWeeks = 20,
             termStartMs = termStartMs,
-            nowMs = termStartMs + 10 * dayMs, // 第2周
+            nowMs = termStartMs + 10 * dayMs,
         )
         assertFalse(state.detectedWeekInfo.isHoliday)
         assertEquals(2, state.detectedWeekInfo.week)
         assertFalse(state.includeWeek0)
-        assertEquals(1, state.pagerInitialPage) // week-1
+        assertEquals(1, state.pagerInitialPage)
         assertEquals(20, state.pagerPageCount)
         assertEquals(2, state.timetable.size)
         verify(VerifyMode.exactly(1)) { timetable.getCampusTimetable(any()) }
@@ -64,7 +64,7 @@ class BuildScheduleUiStateUseCaseTest {
         assertTrue(state.detectedWeekInfo.isHoliday)
         assertTrue(state.includeWeek0)
         assertEquals(0, state.pagerInitialPage)
-        assertEquals(21, state.pagerPageCount) // totalWeeks + 1
+        assertEquals(21, state.pagerPageCount)
     }
 
     @Test

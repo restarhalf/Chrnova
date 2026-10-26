@@ -7,7 +7,6 @@ import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementImageView
 import restarhalf.stellar.schedule.ui.screens.announcement.AnnouncementListScreen
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 公告与图片查看路由。 */
 fun NavEntryBuilder.announcementEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
     entry<Screen.AnnouncementList> {

@@ -3,7 +3,6 @@
 -dontwarn javax.annotation.**
 -dontwarn androidx.compose.**
 
-# Room KMP + bundled SQLite.
 -keep class restarhalf.stellar.schedule.data.local.AppDatabase { *; }
 -keep class restarhalf.stellar.schedule.data.local.AppDatabase_Impl { *; }
 -keep class restarhalf.stellar.schedule.data.local.AppDatabaseConstructor { *; }
@@ -22,7 +21,6 @@
 -keep class restarhalf.stellar.schedule.widget.WidgetRefreshReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.** { *; }
 
-# kotlinx.serialization.
 -keep class **$$serializer { *; }
 -keepclassmembers class * {
     *** Companion;
@@ -31,10 +29,8 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Coil image loading on Android.
 -keep class coil3.** { *; }
 
-# Strip low-value android.util.Log calls.
 -assumenosideeffects class android.util.Log {
     public static int v(...);
     public static int d(...);

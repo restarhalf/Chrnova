@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 
-
 class FetchGradesSimpleUseCase(
     private val fetchGrades: FetchGradesUseCase,
 ) {

@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 体育（PE）相关路由：成绩详情、科目历史、二维码、体测预约、免测申请。 */
 fun NavEntryBuilder.peEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
     entry<Screen.PEDetail> { screen ->

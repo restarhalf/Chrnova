@@ -85,7 +85,6 @@ fun PESubjectHistoryScreen(
         }
     }
 
-
     val history = uiState.subjectHistory?.takeIf { it.subjectId == subjectId }
 
     val currentSourceId = currentResult

@@ -33,7 +33,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class CourseEnrollScreenUiTest {
 
     private val port = mock<CourseSelectionPort>(MockMode.autofill)
@@ -98,7 +97,7 @@ class CourseEnrollScreenUiTest {
         }
         waitText("可选")
         onNodeWithText("可选").assertIsDisplayed()
-        // 进入轮次后会拉取已选课程，标签计数从 0 变 1
+
         waitText("已选(1)")
         onNodeWithText("已选(1)").assertIsDisplayed()
         onAllNodesWithText("选课轮次")[0].assertIsDisplayed()
@@ -177,7 +176,6 @@ class CourseEnrollScreenUiTest {
         onNodeWithText("退课").performClick()
         waitText("确认退课")
 
-        // 弹窗内的「退课」与卡片上的「退课」同名，弹窗后加入树，取最后一个
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithText("退课").fetchSemanticsNodes().size >= 2
         }

@@ -50,7 +50,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-
 class SettingsViewModelTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
@@ -68,9 +67,7 @@ class SettingsViewModelTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
 
-    
     private val mainDispatcher = UnconfinedTestDispatcher()
-
 
     private val showFlow = MutableStateFlow(true)
     private val reminderFlow = MutableStateFlow(false)
@@ -133,14 +130,12 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    
     private fun TestScope.subscribeUi(vm: SettingsViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             vm.uiState.collect {}
         }
     }
 
-    
     private suspend fun awaitState(
         vm: SettingsViewModel,
         timeoutMs: Long = 5000,

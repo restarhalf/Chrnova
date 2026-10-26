@@ -55,7 +55,6 @@ import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun PEScoreScreen(
     vm: PEViewModel,

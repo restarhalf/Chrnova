@@ -45,12 +45,9 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 private val StarFilledColor = Color(0xFFFFB300)
 
-
 private val StatusPillHeight = 28.dp
-
 
 @Composable
 private fun StarRatingDisplay(
@@ -72,7 +69,6 @@ private fun StarRatingDisplay(
         }
     }
 }
-
 
 @Composable
 private fun HalfStarRatingDisplay(
@@ -113,7 +109,6 @@ private fun HalfStarRatingDisplay(
         }
     }
 }
-
 
 @Composable
 fun StarRatingInput(
@@ -163,7 +158,6 @@ fun StarRatingInput(
     }
 }
 
-
 @Composable
 private fun LikeButton(
     liked: Boolean,
@@ -205,7 +199,6 @@ private fun LikeButton(
     }
 }
 
-
 @Composable
 fun EvaluationStatusPill(
     text: String?,
@@ -234,7 +227,6 @@ fun EvaluationStatusPill(
     }
 }
 
-
 @Composable
 private fun EvaluationTag(
     text: String,
@@ -256,7 +248,6 @@ private fun EvaluationTag(
         )
     }
 }
-
 
 @Composable
 fun EvaluationListItem(
@@ -316,7 +307,6 @@ fun EvaluationListItem(
                     )
                 }
 
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -340,7 +330,6 @@ fun EvaluationListItem(
                     StarRatingDisplay(rating = evaluation.rating, starSize = 13)
                 }
 
-
                 if (evaluation.content.isNotBlank()) {
                     Text(
                         text = evaluation.content,
@@ -352,7 +341,6 @@ fun EvaluationListItem(
                 }
 
                 HorizontalDivider()
-
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -376,7 +364,6 @@ fun EvaluationListItem(
         }
     }
 }
-
 
 @Composable
 fun CourseSummaryCard(
@@ -422,7 +409,6 @@ fun CourseSummaryCard(
                     }
                 }
             }
-
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -497,7 +483,6 @@ fun CourseSummaryCard(
         }
     }
 }
-
 
 @Composable
 fun CourseHeroCard(
@@ -578,7 +563,6 @@ fun CourseHeroCard(
     }
 }
 
-
 @Composable
 fun EvaluationDetailHero(
     evaluation: Evaluation,
@@ -653,7 +637,6 @@ fun EvaluationDetailHero(
         }
     }
 }
-
 
 private fun formatLatestTime(epochSeconds: Long): String {
     if (epochSeconds <= 0) return "—"

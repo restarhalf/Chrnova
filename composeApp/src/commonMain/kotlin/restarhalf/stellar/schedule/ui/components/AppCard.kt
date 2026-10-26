@@ -9,9 +9,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 val LocalComponentsAlpha = compositionLocalOf { 1f }
-
 
 @Composable
 fun AppCard(

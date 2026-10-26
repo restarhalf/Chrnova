@@ -8,26 +8,13 @@ import android.os.Bundle
 import android.widget.Toast
 import restarhalf.stellar.schedule.core.log.AppLogger
 
-/**
- * 改系统铃声的中转 Activity。
- *
- * 为什么不用 BroadcastReceiver：MIUI/HyperOS 的 AudioHardening 只允许前台进程改铃声，
- * 后台调 AudioManager.setRingerMode 会被直接忽略（dumpsys audio 里留下
- * "AudioHardening volume control ... ignored, level: partial"）。
- * 通知点击和闹钟到点都可能在后台，所以统一走这个透明 Activity —— 它一被拉起就在前台。
- *
- * 动作放在 onResume 而不是 onCreate：onCreate 阶段进程还没被提到前台，
- * 实测仍会被加固策略按后台处理；到 onResume 时 Activity 已经在屏幕上，才算真前台。
- *
- * 这是纯副作用页面：不渲染任何内容，处理完立刻 finish。
- */
 class MuteActionActivity : Activity() {
 
     private var handled = false
 
     override fun onResume() {
         super.onResume()
-        // onResume 可能因为从后台切回来再次触发，动作只做一次
+
         if (handled) return
         handled = true
 
@@ -44,7 +31,6 @@ class MuteActionActivity : Activity() {
         overridePendingTransition(0, 0)
     }
 
-    /** 到点恢复铃声。 */
     private fun restoreRinger() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val restoreMode =
@@ -53,7 +39,6 @@ class MuteActionActivity : Activity() {
         toast("课程已结束，已恢复铃声")
     }
 
-    /** 点静音按钮：还没上课就排一个到点闹钟，正在上课就立刻静音并排恢复闹钟。 */
     private fun handleMute() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val previousMode = audioManager.ringerMode
@@ -65,7 +50,7 @@ class MuteActionActivity : Activity() {
         val endAtMs = MuteAlarmScheduler.parseTodayTimeMs(endTime)
 
         when {
-            // 闹钟在开课时触发时，now 必然已经 >= startAt，落到下面的分支
+
             startAtMs != null && now < startAtMs -> {
                 MuteAlarmScheduler.scheduleClassMute(
                     context = this,
@@ -104,7 +89,6 @@ class MuteActionActivity : Activity() {
         private const val EXTRA_MODE = "mute_mode"
         private const val MODE_UNMUTE = "unmute"
 
-        /** 通知里静音按钮的点击目标。 */
         fun muteIntent(
             context: Context,
             notificationId: Int,
@@ -118,7 +102,6 @@ class MuteActionActivity : Activity() {
                 putExtra(EXTRA_COURSE_END_TIME, endTime)
             }
 
-        /** 到点自动静音的闹钟目标。 */
         fun applyMuteIntent(
             context: Context,
             notificationId: Int,
@@ -127,7 +110,6 @@ class MuteActionActivity : Activity() {
         ): Intent =
             muteIntent(context, notificationId, startTime, endTime)
 
-        /** 下课恢复铃声的闹钟目标。 */
         fun unmuteIntent(context: Context, restoreMode: Int): Intent =
             Intent(context, MuteActionActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

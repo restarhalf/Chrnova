@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.BackgroundSettingsPort
 
-
 @OptIn(ExperimentalSettingsApi::class)
 class BackgroundSettingsPortImpl(
     private val settings: ObservableSettings,
@@ -18,12 +17,10 @@ class BackgroundSettingsPortImpl(
     override fun getBackgroundImageUri(): String? =
         settings.getStringOrNull(SettingsKeys.BACKGROUND_IMAGE_URI)
 
-    
     override fun observeBackgroundImageUri(): Flow<String?> {
         return settings.getStringOrNullFlow(SettingsKeys.BACKGROUND_IMAGE_URI)
     }
 
-    
     override fun setBackgroundImageUri(uri: String?) {
         settings[SettingsKeys.BACKGROUND_IMAGE_URI] = uri
     }
@@ -31,12 +28,10 @@ class BackgroundSettingsPortImpl(
     override fun getBackgroundAlpha(): Float =
         settings.getFloat(SettingsKeys.BACKGROUND_ALPHA, 1f)
 
-    
     override fun observeBackgroundAlpha(): Flow<Float> {
         return settings.getFloatFlow(SettingsKeys.BACKGROUND_ALPHA, 1f)
     }
 
-    
     override fun setBackgroundAlpha(value: Float) {
         settings[SettingsKeys.BACKGROUND_ALPHA] = value
     }
@@ -44,12 +39,10 @@ class BackgroundSettingsPortImpl(
     override fun getBackgroundBlur(): Float =
         settings.getFloat(SettingsKeys.BACKGROUND_BLUR, 0f)
 
-    
     override fun observeBackgroundBlur(): Flow<Float> {
         return settings.getFloatFlow(SettingsKeys.BACKGROUND_BLUR, 0f)
     }
 
-    
     override fun setBackgroundBlur(value: Float) {
         settings[SettingsKeys.BACKGROUND_BLUR] = value
     }
@@ -57,12 +50,10 @@ class BackgroundSettingsPortImpl(
     override fun getComponentsAlpha(): Float =
         settings.getFloat(SettingsKeys.COMPONENTS_ALPHA, 1f)
 
-    
     override fun observeComponentsAlpha(): Flow<Float> {
         return settings.getFloatFlow(SettingsKeys.COMPONENTS_ALPHA, 1f)
     }
 
-    
     override fun setComponentsAlpha(value: Float) {
         settings[SettingsKeys.COMPONENTS_ALPHA] = value
     }

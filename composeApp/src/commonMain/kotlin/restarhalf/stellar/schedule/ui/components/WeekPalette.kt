@@ -20,7 +20,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun WeekPalette(
     modifier: Modifier = Modifier,
@@ -40,7 +39,6 @@ fun WeekPalette(
     val selectedText = MiuixTheme.colorScheme.onPrimary
     val unselectedText = Color.Unspecified.copy(0.8f)
     val notEnableText = MiuixTheme.colorScheme.onSecondary.copy(0.4f)
-
 
     val rows = (1..weeks).toList().chunked(columns)
     Column(

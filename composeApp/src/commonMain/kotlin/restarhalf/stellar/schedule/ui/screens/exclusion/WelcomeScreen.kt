@@ -104,7 +104,7 @@ fun WelcomeScreen(
                 }
             }
         }
-        
+
         HorizontalPager(
             modifier = Modifier
                 .widthIn(max = 480.dp)

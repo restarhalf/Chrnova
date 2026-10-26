@@ -6,7 +6,6 @@ import kotlinx.datetime.toInstant
 import restarhalf.stellar.schedule.core.log.AppLogger
 import kotlin.time.ExperimentalTime
 
-
 class IsExamNotEndedUseCase {
     
     @OptIn(ExperimentalTime::class)

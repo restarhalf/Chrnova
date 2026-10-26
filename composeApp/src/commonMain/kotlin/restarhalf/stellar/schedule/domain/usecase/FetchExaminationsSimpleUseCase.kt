@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.Examination
 
-
 class FetchExaminationsSimpleUseCase(
     private val fetchExaminations: FetchExaminationsUseCase,
 ) {

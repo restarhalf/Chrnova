@@ -3,34 +3,26 @@ package restarhalf.stellar.schedule.data.remote
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
 
-
 class PEAuthStore(private val settings: ObservableSettings) {
 
-    
     internal fun getSettings(): ObservableSettings = settings
 
-    
     fun getToken(): String? = settings.getStringOrNull(KEY_TOKEN)?.takeIf { it.isNotBlank() }
 
-    
     fun setToken(token: String?) {
         settings[KEY_TOKEN] = token
     }
 
-    
     fun getUserId(): String? = settings.getStringOrNull(KEY_USER_ID)?.takeIf { it.isNotBlank() }
 
-    
     fun setUserId(userId: String?) {
         settings[KEY_USER_ID] = userId
     }
 
-    
     fun clear() {
         settings.clear()
     }
 
-    
     fun clearSession() {
         settings.remove(KEY_TOKEN)
         settings.remove(KEY_USER_ID)
@@ -39,33 +31,27 @@ class PEAuthStore(private val settings: ObservableSettings) {
         settings.remove(KEY_TEST_CODE)
     }
 
-    
     fun getLastUsername(): String? =
         settings.getStringOrNull(KEY_LAST_USERNAME)?.takeIf { it.isNotBlank() }
 
-    
     fun setLastUsername(username: String?) {
         settings[KEY_LAST_USERNAME] = username
     }
 
-    
     fun setProfile(stuName: String?, stdNumber: String?, testCode: String?) {
         settings[KEY_STU_NAME] = stuName
         settings[KEY_STD_NUMBER] = stdNumber
         settings[KEY_TEST_CODE] = testCode
     }
 
-    
     fun getStdNumber(): String? =
         settings.getStringOrNull(KEY_STD_NUMBER)?.takeIf { it.isNotBlank() }
 
-    
     fun setCredentials(username: String, password: String) {
         settings[KEY_SAVED_USERNAME] = username
         settings[KEY_SAVED_PASSWORD] = password
     }
 
-    
     fun getCredentials(): Pair<String, String>? {
         val username =
             settings.getStringOrNull(KEY_SAVED_USERNAME)?.takeIf { it.isNotBlank() } ?: return null

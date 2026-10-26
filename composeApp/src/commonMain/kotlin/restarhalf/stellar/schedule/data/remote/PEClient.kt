@@ -38,7 +38,6 @@ import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.port.PEPasswordEncryptionPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class PEClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },
@@ -47,7 +46,6 @@ class PEClient(
 ) : PEGateway {
     private val baseUrl = "http://39.100.89.70/service"
 
-    
     private suspend fun executeWithAuth(
         url: String,
         requestBody: kotlinx.serialization.json.JsonElement,
@@ -60,7 +58,6 @@ class PEClient(
             header("Referer", "$baseUrl/mobile/")
             setBody(requestBody)
         }
-
 
         when (response.headers["abnormal"]?.uppercase()) {
             "NOFUN" -> throw IllegalStateException("您没有操作权限")
@@ -78,7 +75,6 @@ class PEClient(
         response.bodyAsText()
     }
 
-    
     private inline fun <reified T> parseAndVerify(
         body: String,
         deserializer: kotlinx.serialization.KSerializer<T>,
@@ -106,7 +102,6 @@ class PEClient(
         return parsed
     }
 
-    
     private fun peFailException(message: String): Exception {
         val msg = message.trim()
         val tokenLike = listOf("登录超时", "登录已过期", "会话过期", "重新登录", "未登录", "token失效", "令牌")
@@ -355,7 +350,6 @@ class PEClient(
         return parseActionOrThrow(body)
     }
 
-    
     private fun parseActionOrThrow(body: String): PEAppointmentActionResponse {
         val parsed = json.decodeFromString(PEAppointmentActionResponse.serializer(), body)
         if (parsed.status != "PASS") {
@@ -405,7 +399,6 @@ class PEClient(
         return parseAndVerify(body, PEFreeSchoolYearResponse.serializer())
     }
 
-    
     override suspend fun submitFreeApply(
         stdNumber: String,
         schoolYear: String,
@@ -439,7 +432,6 @@ class PEClient(
         return parseFreeActionOrThrow(body)
     }
 
-    
     override suspend fun uploadPeFile(
         fileName: String,
         mimeType: String,
@@ -494,7 +486,6 @@ class PEClient(
         parsed
     }
 
-    
     override suspend fun downloadPeFile(attId: String): ByteArray = withContext(AppIoDispatcher) {
         if (attId.isBlank()) throw IllegalStateException("缺少附件标识")
         val token = authStore.getToken() ?: throw PETokenExpiredException("请先登录体测系统")

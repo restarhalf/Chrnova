@@ -32,7 +32,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
-
 @RunWith(AndroidJUnit4::class)
 class AnnouncementListScreenUiTest {
 
@@ -49,8 +48,6 @@ class AnnouncementListScreenUiTest {
             fetchAnnouncement = FetchAnnouncementUseCase(port),
         )
     }
-
-
 
     private fun androidx.compose.ui.test.ComposeUiTest.setContentFor(
         vm: AnnouncementViewModel,

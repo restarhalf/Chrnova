@@ -562,7 +562,6 @@ private fun CropOverlay(
         val cornerStroke = 3.5.dp.toPx()
         val cornerColor = Color.White.copy(alpha = 0.92f + 0.08f * gridAlpha)
 
-
         drawLine(cornerColor, Offset(cropLeft, cropTop), Offset(cropLeft + cornerLen, cropTop), cornerStroke, StrokeCap.Round)
         drawLine(cornerColor, Offset(cropLeft, cropTop), Offset(cropLeft, cropTop + cornerLen), cornerStroke, StrokeCap.Round)
         drawLine(

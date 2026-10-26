@@ -34,7 +34,7 @@ class UniqueKeysTest {
 
     @Test
     fun `业务 id 自带分隔符时不会与后缀撞车`() {
-        // 若用 '#' 作分隔符，真实 id "g1#2" 会和 "g1" 的第 2 次出现撞车
+
         val keys = listOf("g1", "g1", "g1\u00002").uniqueKeys { it }
 
         assertEquals(3, keys.toSet().size)

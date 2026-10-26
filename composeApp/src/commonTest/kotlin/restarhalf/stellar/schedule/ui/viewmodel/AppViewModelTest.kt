@@ -161,26 +161,18 @@ class AppViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-
-
     @Test
     fun `init未登录时bindUnboundData静默完成`() = runTest {
         val vm = makeViewModel()
         advanceMain()
 
-
         verifySuspend(VerifyMode.not) { courseRepository.bindUnboundCourses(any()) }
         verifySuspend(VerifyMode.not) { examRepository.bindUnboundExaminations(any()) }
     }
 
-
-
-
-
     @Test
     fun `uiState初值来自timetable同步方法`() = runTest {
         val vm = makeViewModel()
-
 
         val state = vm.uiState.value
         assertEquals(Campus.Jinshitan, state.campus)
@@ -210,10 +202,6 @@ class AppViewModelTest {
         val state = awaitState(vm) { it.termStartMs == 2000L }
         assertEquals(16, state.totalWeeks)
     }
-
-
-
-
 
     @Test
     fun `runSync成功携带插入数与校区名`() = runTest {
@@ -270,10 +258,6 @@ class AppViewModelTest {
         assertEquals(SyncUiState.Success(5, "金石滩校区"), vm.syncUiState.value)
     }
 
-
-
-
-
     @Test
     fun `logout清除认证信息`() = runTest {
         val vm = makeViewModel()
@@ -312,10 +296,6 @@ class AppViewModelTest {
         verify(VerifyMode.exactly(1)) { timetable.setTotalWeeks(18) }
     }
 
-
-
-
-
     @Test
     fun `login透传参数到authWorkflow`() = runTest {
         val vm = makeViewModel()
@@ -350,6 +330,5 @@ class AppViewModelTest {
             vm.login(userNo = "2023001", password = "pwd")
         }
     }
-
 
 }

@@ -8,18 +8,15 @@ import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 
-
 @OptIn(ExperimentalSettingsApi::class)
 class JwxtAuthPortImpl(
     private val authStore: JwxtAuthStore,
 ) : JwxtAuthPort {
 
-    
     override fun observeToken(): Flow<String> {
         return authStore.getSettings().getStringFlow(JwxtAuthStore.KEY_TOKEN, "")
     }
 
-    
     override fun observeProfile(): Flow<JwxtAuthProfile> {
         val settings = authStore.getSettings()
         return combine(
@@ -34,12 +31,10 @@ class JwxtAuthPortImpl(
         }
     }
 
-    
     override fun setCredentials(userNo: String, password: String) {
         authStore.setCredentials(userNo, password)
     }
 
-    
     override fun clear() {
         authStore.clear()
     }

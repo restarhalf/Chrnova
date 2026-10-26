@@ -7,7 +7,6 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
-
 class BindUnboundDataUseCase(
     private val auth: JwxtAuthPort,
     private val courseRepository: CourseRepository,
@@ -24,7 +23,6 @@ class BindUnboundDataUseCase(
         fixInvalidSemesterIds()
     }
 
-    
     private suspend fun fixInvalidSemesterIds() {
         try {
             val currentSemesterId = academic.fetchCurrentTermId()

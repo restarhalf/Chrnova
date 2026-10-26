@@ -32,8 +32,6 @@ class AcademicPortImplTest {
     private val settings = TermSettingsPortImpl(MapSettings())
     private val impl = AcademicPortImpl(gateway, settings)
 
-
-
     @Test
     fun fetchCurrentTermIdSuccessCaches() = runTest {
         everySuspend { gateway.getCurrentTerm() } returns
@@ -66,8 +64,6 @@ class AcademicPortImplTest {
         assertFailsWith<IllegalStateException> { impl.fetchCurrentTermId() }
     }
 
-
-
     @Test
     fun fetchCampusesMapsDefaultFlag() = runTest {
         everySuspend { gateway.getCampusList() } returns JwxtCampusResponse(
@@ -93,8 +89,6 @@ class AcademicPortImplTest {
         assertTrue(error.message!!.contains("campus err"))
     }
 
-
-
     @Test
     fun fetchSemesterIdsDedupAndFilterBlank() = runTest {
         everySuspend { gateway.getSemesterListFromEndpoint() } returns listOf(
@@ -105,8 +99,6 @@ class AcademicPortImplTest {
         )
         assertEquals(listOf("S1", "S2"), impl.fetchSemesterIds())
     }
-
-
 
     @Test
     fun fetchExaminationsMapsFields() = runTest {
@@ -143,8 +135,6 @@ class AcademicPortImplTest {
         val error = assertFailsWith<IllegalStateException> { impl.fetchExaminations("S1", "") }
         assertTrue(error.message!!.contains("exam err"))
     }
-
-
 
     @Test
     fun teachingWeekTotalCountsData() = runTest {

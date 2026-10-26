@@ -71,7 +71,6 @@ import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CourseEnrollScreen(
@@ -193,8 +192,6 @@ private fun buildEnrollStatusText(uiState: CourseEnrollViewModel.UiState): Strin
     }
 }
 
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AvailableTab(
@@ -303,8 +300,6 @@ private fun AvailableTab(
     }
 }
 
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EnrolledTab(
@@ -401,8 +396,6 @@ private fun EnrolledTab(
         }
     }
 }
-
-
 
 @Composable
 private fun EmptyHint(text: String) {

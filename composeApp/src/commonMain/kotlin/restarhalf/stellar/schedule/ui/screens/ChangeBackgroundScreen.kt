@@ -33,7 +33,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChangeBackgroundScreen(
@@ -61,7 +60,6 @@ fun ChangeBackgroundScreen(
             )
         }
     }
-
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -114,7 +112,6 @@ fun ChangeBackgroundScreen(
             }
 
             item { Spacer(Modifier.height(12.dp)) }
-
 
             item { SmallTitle(text = "效果调节") }
             item {

@@ -59,7 +59,6 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 @OptIn(ExperimentalTime::class)
 @Composable
 fun SettingsScreen(
@@ -339,12 +338,6 @@ fun SettingsScreen(
                         )
                     })
 
-
-
-
-
-
-
                     add(CardItem("courseEnroll") {
                         ArrowPreference(
                             title = "选课",
@@ -396,7 +389,6 @@ fun SettingsScreen(
                     })
                 }
             )
-
 
             item {
                 SmallTitle(text = "外观")

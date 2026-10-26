@@ -12,9 +12,9 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:ignore="RequestInstallPackagesPolicy" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- 上课静音要改系统铃声模式：setRingerMode 需要该权限，缺了会被系统静默忽略 -->
+
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <!-- 免打扰访问权，用户需在系统设置里手动授予（见 DndAccess） -->
+
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -51,7 +51,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 静音要改系统铃声，MIUI 只允许前台进程改，所以走透明 Activity 而不是广播 -->
         <activity
             android:name="restarhalf.stellar.schedule.reminder.receiver.MuteActionActivity"
             android:excludeFromRecents="true"

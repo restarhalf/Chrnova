@@ -22,7 +22,6 @@ import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 @Database(
     entities = [
         CourseEntity::class,
@@ -39,7 +38,6 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    
     abstract fun courseDao(): CourseDao
     
     abstract fun examinationDao(): ExaminationDao
@@ -55,11 +53,9 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
-
 
 private val migration2To3 = object : Migration(2, 3) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -67,13 +63,11 @@ private val migration2To3 = object : Migration(2, 3) {
     }
 }
 
-
 private val migration3To4 = object : Migration(3, 4) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN remoteKey TEXT NOT NULL DEFAULT ''")
     }
 }
-
 
 private val migration4To5 = object : Migration(4, 5) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -81,20 +75,17 @@ private val migration4To5 = object : Migration(4, 5) {
     }
 }
 
-
 private val migration5To6 = object : Migration(5, 6) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN targetWeek INTEGER NOT NULL DEFAULT 0")
     }
 }
 
-
 private val migration6To7 = object : Migration(6, 7) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN semesterId TEXT NOT NULL DEFAULT ''")
     }
 }
-
 
 private val migration7To8 = object : Migration(7, 8) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -107,7 +98,6 @@ private val migration7To8 = object : Migration(7, 8) {
     }
 }
 
-
 private val migration8To9 = object : Migration(8, 9) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -116,7 +106,6 @@ private val migration8To9 = object : Migration(8, 9) {
     }
 }
 
-
 private val migration9To10 = object : Migration(9, 10) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
@@ -124,7 +113,6 @@ private val migration9To10 = object : Migration(9, 10) {
         )
     }
 }
-
 
 private val migration10To11 = object : Migration(10, 11) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -137,13 +125,11 @@ private val migration10To11 = object : Migration(10, 11) {
     }
 }
 
-
 private val migration11To12 = object : Migration(11, 12) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE examinations ADD COLUMN source TEXT NOT NULL DEFAULT 'sync'")
     }
 }
-
 
 private val migration12To13 = object : Migration(12, 13) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -151,13 +137,11 @@ private val migration12To13 = object : Migration(12, 13) {
     }
 }
 
-
 private val migration13To14 = object : Migration(13, 14) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE courses ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
     }
 }
-
 
 private val migration14To15 = object : Migration(14, 15) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -169,7 +153,6 @@ private val migration14To15 = object : Migration(14, 15) {
     }
 }
 
-
 private val migration15To16 = object : Migration(15, 16) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE grades ADD COLUMN userNo TEXT NOT NULL DEFAULT ''")
@@ -177,13 +160,11 @@ private val migration15To16 = object : Migration(15, 16) {
     }
 }
 
-
 private val migration16To17 = object : Migration(16, 17) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_courses_userNo_semesterId ON courses(userNo, semesterId)")
     }
 }
-
 
 private val migration17To18 = object : Migration(17, 18) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -191,20 +172,17 @@ private val migration17To18 = object : Migration(17, 18) {
     }
 }
 
-
 private val migration18To19 = object : Migration(18, 19) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS index_grades_userNo_semester ON grades(userNo, semester)")
     }
 }
 
-
 private val migration19To20 = object : Migration(19, 20) {
     override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP TABLE IF EXISTS pe_student_info")
     }
 }
-
 
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder

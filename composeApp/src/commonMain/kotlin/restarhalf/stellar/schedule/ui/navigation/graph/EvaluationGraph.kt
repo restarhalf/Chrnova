@@ -10,7 +10,6 @@ import restarhalf.stellar.schedule.ui.screens.evaluation.EvaluationSubmitScreen
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 课程评价路由：列表、课程、详情、提交。 */
 fun NavEntryBuilder.evaluationEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
     entry<Screen.Evaluation> {

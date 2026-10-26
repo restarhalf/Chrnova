@@ -299,7 +299,5 @@ val QrCode: ImageVector
         }.build().also { _qrCode = it }
     }
 
-
-
 @Suppress("ObjectPropertyName")
 private var _qrCode: ImageVector? = null

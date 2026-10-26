@@ -32,7 +32,6 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-
 class AnnouncementViewModelTest {
 
     private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
@@ -47,12 +46,10 @@ class AnnouncementViewModelTest {
         fetchAnnouncement = FetchAnnouncementUseCase(port),
     )
 
-    
     private fun installTestMain(testScheduler: kotlinx.coroutines.test.TestCoroutineScheduler) {
         Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
     }
 
-    
     private suspend fun awaitState(
         vm: AnnouncementViewModel,
         timeoutMs: Long = 5_000,
@@ -67,7 +64,6 @@ class AnnouncementViewModelTest {
         return state
     }
 
-    
     private suspend fun awaitSettled(vm: AnnouncementViewModel): AnnouncementViewModel.AnnouncementUiState =
         awaitState(vm) { (it.loaded && !it.loading) || it.error != null }
 

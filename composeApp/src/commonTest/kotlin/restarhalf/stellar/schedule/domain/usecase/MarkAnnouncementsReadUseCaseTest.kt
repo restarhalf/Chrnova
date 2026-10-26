@@ -11,7 +11,6 @@ import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 import kotlin.test.Test
 
-
 class MarkAnnouncementsReadUseCaseTest {
 
     private val store = mock<AnnouncementCachePort>(MockMode.autofill)
@@ -19,7 +18,7 @@ class MarkAnnouncementsReadUseCaseTest {
 
     @Test
     fun `标记已读推进最后阅读时间到内容变化时间`() {
-        every { store.getLastReadAtMs() } returns 0L // 从未阅读
+        every { store.getLastReadAtMs() } returns 0L
         val announcement = Announcement(id = "a", createdAt = 500L, updatedAt = 700L)
 
         useCase(announcement)
@@ -29,7 +28,7 @@ class MarkAnnouncementsReadUseCaseTest {
 
     @Test
     fun `阅读时间不会后退`() {
-        every { store.getLastReadAtMs() } returns 999_999L // 已读到更晚
+        every { store.getLastReadAtMs() } returns 999_999L
         val announcement = Announcement(id = "a", createdAt = 500L, updatedAt = 0L)
 
         useCase(announcement)

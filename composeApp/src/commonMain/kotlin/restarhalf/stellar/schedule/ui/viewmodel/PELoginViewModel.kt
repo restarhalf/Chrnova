@@ -14,10 +14,6 @@ import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 
-
-
-
-
 class PELoginViewModel(
     private val peLoginUseCase: PELoginUseCase,
 ) : ViewModel() {
@@ -33,17 +29,14 @@ class PELoginViewModel(
 
     private val loginMutex = Mutex()
 
-    
     fun onUsernameChange(value: String) {
         _uiState.update { it.copy(username = value, error = null) }
     }
 
-    
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, error = null) }
     }
 
-    
     fun submitLogin(onSuccess: () -> Unit) {
         viewModelScope.launch {
             loginMutex.withLock {

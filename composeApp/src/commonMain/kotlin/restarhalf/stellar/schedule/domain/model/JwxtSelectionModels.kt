@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 @Immutable
 @Serializable
 data class JwxtSelectionRotation(
@@ -12,9 +11,9 @@ data class JwxtSelectionRotation(
     @SerialName("rotationname") val rotationName: String = "",
     @SerialName("semesterid") val semesterId: String = "",
     @SerialName("xqmc") val xqmc: String = "",
-    
+
     @SerialName("xkkssj") val startTime: String = "",
-    
+
     @SerialName("xkjzsj") val endTime: String = "",
     @SerialName("courseselectiontime") val courseselectiontime: String = "",
     @SerialName("courseselectioncontrol") val courseselectioncontrol: String = "",
@@ -27,7 +26,6 @@ data class JwxtSelectionRotation(
     @SerialName("xkbs") val xkbs: String = "",
 )
 
-
 @Immutable
 @Serializable
 data class JwxtSelectionInitData(
@@ -39,10 +37,9 @@ data class JwxtSelectionInitData(
     @SerialName("compulsoryGrades") val compulsoryGrades: Boolean = false,
     @SerialName("selectionGrades") val selectionGrades: Boolean = false,
     @SerialName("departmentCurriculum") val departmentCurriculum: Boolean = false,
-    
+
     @SerialName("courseQualification") val courseQualification: String = "",
 )
-
 
 @Immutable
 @Serializable
@@ -51,7 +48,6 @@ data class JwxtSelectionClassification(
     @SerialName("classificationName") val classificationName: String = "",
 )
 
-
 @Immutable
 @Serializable
 data class JwxtSelectionCourse(
@@ -59,7 +55,7 @@ data class JwxtSelectionCourse(
     @SerialName("courseNumber") val courseNumber: String = "",
     @SerialName("courseId") val courseId: String = "",
     @SerialName("noticeId") val noticeId: String = "",
-    
+
     @SerialName("kxh") val kxh: String = "",
     @SerialName("classTeacher") val classTeacher: String = "",
     @SerialName("classPlace") val classPlace: String = "",
@@ -69,7 +65,7 @@ data class JwxtSelectionCourse(
     @SerialName("groupName") val groupName: String = "",
     @SerialName("splitIdentification") val splitIdentification: String = "",
 ) {
-    
+
     fun cleanPlace(): String = classPlace
         .replace("&nbsp;", " ")
         .replace("<br>", " / ")
@@ -80,7 +76,6 @@ data class JwxtSelectionCourse(
         .replace("<br>", " / ")
         .trim()
 }
-
 
 @Immutable
 @Serializable
@@ -95,7 +90,7 @@ data class JwxtSelectedCourse(
     @SerialName("period") val period: String = "",
     @SerialName("credit") val credit: String = "",
     @SerialName("groupName") val groupName: String = "",
-    
+
     @SerialName("isCanTk") val isCanTk: String = "0",
     @SerialName("kclb") val kclb: String = "",
 ) {
@@ -111,7 +106,6 @@ data class JwxtSelectedCourse(
 
     val canDrop: Boolean get() = isCanTk == "1"
 }
-
 
 sealed class JwxtSelectionOperResult {
     data class Success(val message: String, val relatedCourses: List<JwxtSelectionCourse> = emptyList()) :

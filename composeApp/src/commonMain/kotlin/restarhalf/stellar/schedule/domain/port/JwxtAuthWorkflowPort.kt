@@ -1,11 +1,9 @@
 package restarhalf.stellar.schedule.domain.port
 
-
 interface JwxtAuthWorkflowPort {
     
     suspend fun ensureLoggedIn()
 
-    
     suspend fun login(
         userNo: String,
         password: String,
@@ -13,7 +11,6 @@ interface JwxtAuthWorkflowPort {
         codeVal: String = "",
         p: String? = null,
     )
-
 
     suspend fun refreshSession()
 }

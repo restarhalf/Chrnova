@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.domain.model
 
-
 data class RemoteCampus(
     
     val id: String,

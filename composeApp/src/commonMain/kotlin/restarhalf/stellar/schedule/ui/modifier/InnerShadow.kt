@@ -1,9 +1,4 @@
-
-
-
 package restarhalf.stellar.schedule.ui.modifier
-
-
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable

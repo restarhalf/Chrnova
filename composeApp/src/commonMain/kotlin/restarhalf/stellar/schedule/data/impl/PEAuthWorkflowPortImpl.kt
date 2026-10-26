@@ -7,14 +7,12 @@ import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.repository.PERepository
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-
 class PEAuthWorkflowPortImpl(
     private val gateway: PEGateway,
     private val authStore: PEAuthStore,
     private val repository: PERepository,
 ) : PEAuthWorkflowPort {
 
-    
     override suspend fun ensureLoggedIn() {
         val token = authStore.getToken().orEmpty()
         if (token.isNotBlank()) return
@@ -24,7 +22,6 @@ class PEAuthWorkflowPortImpl(
         login(username = username, password = password)
     }
 
-    
     override suspend fun login(
         username: String,
         password: String,
@@ -44,7 +41,6 @@ class PEAuthWorkflowPortImpl(
             throw IllegalStateException("登录成功但未获取到 Token")
         }
 
-
         val newUsername = username.trim()
         if (oldUsername.isNotBlank() && newUsername.isNotBlank() && oldUsername != newUsername) {
             repository.clearAll()
@@ -54,12 +50,10 @@ class PEAuthWorkflowPortImpl(
         authStore.setCredentials(username, password)
     }
 
-    
     override fun logout() {
         authStore.clearSession()
     }
 
-    
     override suspend fun refreshSession() {
         val (username, password) = authStore.getCredentials() ?: return
         val oldToken = authStore.getToken()

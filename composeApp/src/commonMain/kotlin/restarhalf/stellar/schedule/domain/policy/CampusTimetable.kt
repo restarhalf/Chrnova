@@ -3,8 +3,6 @@ package restarhalf.stellar.schedule.domain.policy
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 
-// 校区作息表是纯领域知识（与存储无关），供 UI、提醒、桌面小组件共用。
-
 private val DEVELOPMENT_TIMETABLE =
     listOf(
         TimetableSlot(1, "8:00", "8:45"),

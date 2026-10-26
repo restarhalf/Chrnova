@@ -62,7 +62,6 @@ fun PEQRCodeScreen(
     val name = peAuthProfile?.stuName ?: jwxtAuthProfile?.name
     val colors = MiuixTheme.colorScheme
 
-
     val screenTuner: ScreenTunerPort = koinInject()
     DisposableEffect(Unit) {
         screenTuner.enterScanPresentation()

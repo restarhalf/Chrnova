@@ -57,4 +57,3 @@ fun filterNonOverlapping(courses: List<Course>): List<Course> {
     }
     return result
 }
-

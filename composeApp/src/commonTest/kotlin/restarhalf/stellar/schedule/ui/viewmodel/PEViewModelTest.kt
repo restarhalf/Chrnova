@@ -44,14 +44,12 @@ import kotlin.time.Clock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 
-
 class PEViewModelTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)
     private val peAuth = mock<PEAuthPort>(MockMode.autofill)
     private val peAuthWorkflow = mock<PEAuthWorkflowPort>(MockMode.autofill)
 
-    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private val tokenFlow = MutableStateFlow("")

@@ -13,7 +13,6 @@ import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementPort
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class AnnouncementApi(
     private val httpClient: HttpClient,
     private val baseUrl: String,

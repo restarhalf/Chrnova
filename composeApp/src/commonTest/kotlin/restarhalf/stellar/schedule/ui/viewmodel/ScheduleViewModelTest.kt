@@ -171,8 +171,6 @@ class ScheduleViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-
-
     @Test
     fun `uiState初值为默认配置`() = runTest {
         val vm = makeViewModel()
@@ -269,10 +267,6 @@ class ScheduleViewModelTest {
         assertTrue(state.detailSheetUiState.show)
     }
 
-
-
-
-
     @Test
     fun `openTransDialog填充字段`() = runTest {
         val vm = makeViewModel()
@@ -311,7 +305,6 @@ class ScheduleViewModelTest {
         val vm = makeViewModel()
         subscribeUi(vm)
         awaitState(vm) { true }
-
 
         val c1 = course(dayOfWeek = 99, startSection = 11, sectionCount = 3)
         vm.openTransDialog(c1, currentWeek = 2)
@@ -439,10 +432,6 @@ class ScheduleViewModelTest {
         assertEquals(4, input.endSection)
     }
 
-
-
-
-
     @Test
     fun `showTransConflict显示冲突与待覆盖课程`() = runTest {
         val vm = makeViewModel()
@@ -481,7 +470,7 @@ class ScheduleViewModelTest {
         val c1 = course()
         vm.openTransDialog(c1, currentWeek = 2)
         awaitState(vm) { it.transDialogUiState.show }
-        vm.dismissTransDialog() // 先隐藏对话框（数据保留）
+        vm.dismissTransDialog()
         awaitState(vm) { !it.transDialogUiState.show }
         vm.showTransConflict(listOf(course(name = "大学物理")), c1)
         awaitState(vm) { it.transConflictUiState.show }
@@ -538,10 +527,6 @@ class ScheduleViewModelTest {
         assertNull(vm.consumePendingOverride())
     }
 
-
-
-
-
     @Test
     fun `pageToWeek与weekToPage双向转换`() = runTest {
         val vm = makeViewModel()
@@ -552,10 +537,6 @@ class ScheduleViewModelTest {
         assertEquals(3, vm.pageToWeek(page = 2, includeWeek0 = false))
         assertEquals(2, vm.weekToPage(week = 3, includeWeek0 = false))
     }
-
-
-
-
 
     @Test
     fun `buildScheduleUiState学期中第3周`() = runTest {
@@ -609,10 +590,6 @@ class ScheduleViewModelTest {
         assertEquals(3, state.pagerPageCount)
     }
 
-
-
-
-
     @Test
     fun `buildWeekHeaderUi正常周`() = runTest {
         val vm = makeViewModel()
@@ -665,10 +642,6 @@ class ScheduleViewModelTest {
         assertEquals(5, header.dates.size)
     }
 
-
-
-
-
     @Test
     fun `buildPageRenderUi按天分组并区分当前与非当前周`() = runTest {
         val vm = makeViewModel()
@@ -680,7 +653,7 @@ class ScheduleViewModelTest {
 
         val render = vm.buildPageRenderUi(
             courses = listOf(current, otherDay, nonCurrent),
-            page = 1, // includeWeek0=false → actualWeek=2
+            page = 1,
             includeWeek0 = false,
             dayCount = 5,
             showNonCurrentWeek = true,
@@ -699,8 +672,8 @@ class ScheduleViewModelTest {
 
         assertEquals(2, day1.size)
         val currentModel = day1.first { it.model.name == "高等数学" }.model
-        assertEquals(12.dp, currentModel.topOffsetY) // yForSection(1)=10 + inset 2
-        assertEquals(124.dp, currentModel.height) // heightForSections(2)=128 - inset*2 4
+        assertEquals(12.dp, currentModel.topOffsetY)
+        assertEquals(124.dp, currentModel.height)
 
         val mutedModel = day1.first { it.model.name == "有机化学" }.model
         assertEquals(muted, mutedModel.color)
@@ -732,10 +705,6 @@ class ScheduleViewModelTest {
         )
         assertTrue(render.dayRenderData.values.all { it.items.isEmpty() })
     }
-
-
-
-
 
     @Test
     fun `buildCourseDetailUi普通课无标签`() = runTest {
@@ -837,10 +806,6 @@ class ScheduleViewModelTest {
         assertEquals("2周   |   第1-2 节(-----)", detail.weekLine)
     }
 
-
-
-
-
     @Test
     fun `buildTransCourseAndConflicts无冲突`() = runTest {
         val vm = makeViewModel()
@@ -891,10 +856,6 @@ class ScheduleViewModelTest {
         assertEquals(listOf(existing), result.conflicts)
         assertEquals("五教505", result.overrideCourse.location)
     }
-
-
-
-
 
     @Test
     fun `insertCourse成功返回true`() = runTest {
@@ -948,10 +909,6 @@ class ScheduleViewModelTest {
         verifySuspend(VerifyMode.exactly(1)) { courseRepository.insertCourse(any()) }
     }
 
-
-
-
-
     @Test
     fun `shouldAutoSync透传端口结果`() = runTest {
         val vm = makeViewModel()
@@ -989,6 +946,5 @@ class ScheduleViewModelTest {
             courseReminder.scheduleNextReminder(listOf(c1), Campus.Jinshitan, termStartMs, 20)
         }
     }
-
 
 }

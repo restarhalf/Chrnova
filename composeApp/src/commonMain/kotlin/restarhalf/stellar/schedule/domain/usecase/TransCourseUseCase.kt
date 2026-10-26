@@ -4,16 +4,13 @@ import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Course
 
-
 class TransCourseUseCase {
 
-    
     data class Result(
         val overrideCourse: Course,
         val conflicts: List<Course>,
     )
 
-    
     operator fun invoke(
         allCourses: List<Course>,
         originCourse: Course,
@@ -25,11 +22,10 @@ class TransCourseUseCase {
         endSection: Int,
     ): Result {
 
-
         val overrideCourse =
             originCourse.copy(
                 id = 0,
-                type = 2,  // 调课类型
+                type = 2,
                 originRemoteKey = originCourse.remoteKey,
                 remoteKey = originCourse.remoteKey + "#override#" + originWeek + "#" + targetWeek,
                 targetWeek = targetWeek,
@@ -40,14 +36,12 @@ class TransCourseUseCase {
                 weeks = listOf(originWeek),
             )
 
-        
         fun overlaps(aStart: Int, aEnd: Int, bStart: Int, bEnd: Int): Boolean {
             return maxOf(aStart, bStart) <= minOf(aEnd, bEnd)
         }
 
         val aStart = overrideCourse.startSection
         val aEnd = overrideCourse.startSection + overrideCourse.sectionCount - 1
-
 
         val effective = effectiveCoursesForWeek(all = allCourses, week = targetWeek)
         val conflicts =
@@ -65,5 +59,3 @@ class TransCourseUseCase {
         return Result(overrideCourse = overrideCourse, conflicts = conflicts)
     }
 }
-
-

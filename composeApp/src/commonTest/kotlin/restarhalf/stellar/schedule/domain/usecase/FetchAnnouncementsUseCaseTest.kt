@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.Clock
 
-
 class FetchAnnouncementsUseCaseTest {
 
     private val store = mock<AnnouncementCachePort>(MockMode.autofill) {
@@ -76,7 +75,7 @@ class FetchAnnouncementsUseCaseTest {
     @Test
     fun `网络失败时降级返回缓存`() = runTest {
         cached(Announcement(id = "1", title = "降级缓存", createdAt = 1000L))
-        cacheWrittenAt(0L) // 过期，强制走网络
+        cacheWrittenAt(0L)
         everySuspend { port.listAnnouncements() } throws RuntimeException("网络异常")
 
         val result = useCase()

@@ -2371,6 +2371,5 @@ val AppIcon: ImageVector
         }.build().also { _appicon = it }
     }
 
-
 @Suppress("ObjectPropertyName")
 private var _appicon: ImageVector? = null

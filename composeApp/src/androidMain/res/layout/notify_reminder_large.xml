@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  展开态大卡，配色与字号取自小爱 scheduler_notification_large。
 
-  结构：标题行（图标 + 卡片标题）
-       主体行（时间列 + 青色竖线 + 课名/地点 + 右侧胶囊按钮）
-
-  两点注意事项：
-  1. 不要用 android.view.View —— RemoteViews 只允许白名单里的类，
-     写 View 会让整张卡 inflate 失败，通知直接发不出来。竖线用 FrameLayout。
-  2. 按钮放在主体行里，不单独占一行，避免底部空出一大块。
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/notify_root"
     android:layout_width="match_parent"
@@ -19,7 +9,6 @@
     android:paddingTop="15dp"
     android:paddingBottom="15dp">
 
-    <!-- 标题行：应用图标 + 卡片标题 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -48,7 +37,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- 主体行：时间列 + 竖线 + 课名/地点 + 胶囊按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -80,9 +68,6 @@
                 android:textSize="12.43sp" />
         </LinearLayout>
 
-        <!-- 用 FrameLayout 而不是 View：RemoteViews 只允许白名单里的类，
-             android.view.View 不在其中，写 View 会让整张卡 inflate 失败、通知直接发不出来。
-             尺寸对齐成绩卡片那根：4dp 宽、约行高 80%，上下端半圆 -->
         <FrameLayout
             android:id="@+id/notify_line"
             android:layout_width="4dp"

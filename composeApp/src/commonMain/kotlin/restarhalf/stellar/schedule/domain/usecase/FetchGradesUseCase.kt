@@ -11,7 +11,6 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-
 class FetchGradesUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
@@ -19,15 +18,14 @@ class FetchGradesUseCase(
     private val repository: GradeRepository,
     private val auth: JwxtAuthPort,
 ) {
-    
+
     suspend operator fun invoke(semester: String = ""): TermGradeReport {
-        
+
         suspend fun resolveSemester(): String {
             val selectedTerm = semester.ifBlank { settings.observeSelectedTerm().first() }
             return selectedTerm.ifBlank { academic.fetchCurrentTermId() }
         }
 
-        
         suspend fun resolvePreviousSemesterOrNull(current: String): String? {
             val all = academic.fetchSemesterIds().filter { it.isNotBlank() }.distinct()
             if (all.isEmpty()) return null
@@ -38,7 +36,6 @@ class FetchGradesUseCase(
             return sorted.getOrNull(idx + 1)?.takeIf { it != current }
         }
 
-        
         suspend fun fetchWithFallback(resolvedSemester: String): TermGradeReport {
             val current = academic.fetchGradeReport(semester = resolvedSemester)
             if (current.achievements.isNotEmpty()) return current
@@ -48,7 +45,6 @@ class FetchGradesUseCase(
         }
 
         authWorkflow.ensureLoggedIn()
-
 
         val report = try {
             val resolvedSemester = resolveSemester()
@@ -61,7 +57,6 @@ class FetchGradesUseCase(
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
         }
-
 
         if (report.achievements.isNotEmpty()) {
             val userNo = try {

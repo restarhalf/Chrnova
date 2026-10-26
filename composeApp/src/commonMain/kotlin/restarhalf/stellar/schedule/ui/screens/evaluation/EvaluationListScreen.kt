@@ -53,7 +53,6 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EvaluationListScreen(
@@ -160,7 +159,6 @@ fun EvaluationListScreen(
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AllEvaluationsPage(
@@ -223,7 +221,6 @@ private fun AllEvaluationsPage(
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MyEvaluationsPage(
@@ -234,7 +231,6 @@ private fun MyEvaluationsPage(
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
-
 
     LaunchedEffect(Unit) {
         if (!uiState.onlyMine) vm.setOnlyMine(true)

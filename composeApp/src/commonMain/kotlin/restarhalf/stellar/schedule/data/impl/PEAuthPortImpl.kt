@@ -8,18 +8,15 @@ import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 
-
 @OptIn(ExperimentalSettingsApi::class)
 class PEAuthPortImpl(
     private val authStore: PEAuthStore,
 ) : PEAuthPort {
 
-    
     override fun observeToken(): Flow<String> {
         return authStore.getSettings().getStringFlow(PEAuthStore.KEY_TOKEN, "")
     }
 
-    
     override fun observeProfile(): Flow<PEAuthProfile> {
         val settings = authStore.getSettings()
         return combine(
@@ -33,7 +30,6 @@ class PEAuthPortImpl(
         }
     }
 
-    
     override fun setProfile(profile: PEAuthProfile) {
         authStore.setProfile(
             stuName = profile.stuName,
@@ -42,12 +38,10 @@ class PEAuthPortImpl(
         )
     }
 
-    
     override fun setCredentials(username: String, password: String) {
         authStore.setCredentials(username, password)
     }
 
-    
     override fun clear() {
         authStore.clear()
     }

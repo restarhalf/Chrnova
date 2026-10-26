@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  时间列与课名之间的竖线：#3EB9CF。
 
-  与成绩卡片里那根保持一致 —— GradeItemCard 用的是 4dp 宽 + CircleShape 裁剪，
-  上下端是半圆。这里半径取宽度的一半（2dp），在方形上等效于 CircleShape。
--->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <corners android:radius="2dp" />

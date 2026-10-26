@@ -19,7 +19,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class ProfileScreenUiTest {
 
     private val settingsPort = mock<UserProfilePort>(MockMode.autofill)

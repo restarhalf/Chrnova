@@ -49,7 +49,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class SettingsScreenUiTest {
 
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)

@@ -109,4 +109,3 @@ fun WelcomeEnterScreen(pagerState: PagerState) {
         Spacer(modifier = Modifier.height(120.dp))
     }
 }
-

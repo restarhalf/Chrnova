@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.core.error
 
 import kotlinx.coroutines.CancellationException
 
-
 enum class UserFacingErrorKind(
     
     val fallbackMessage: String,
@@ -68,7 +67,6 @@ enum class UserFacingErrorKind(
     ;
 }
 
-
 fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
 
     extractBusinessMessageOrNull()?.let { return it }
@@ -78,7 +76,6 @@ fun Throwable.toUserFacingMessage(kind: UserFacingErrorKind): String {
     if (this is CancellationException || hints.contains("cancellation")) {
         return "操作已取消"
     }
-
 
     if (kind.usesLoginState() && isLoginStateHint(hints) && !isPermissionHint(hints)) {
         return "登录已过期，请刷新重试"
@@ -104,7 +101,6 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
         val message = current?.message?.normalizeForDisplay().orEmpty()
         if (message.isNotBlank() && isUserFacingMessage(message)) {
 
-
             if (isPermissionHint(message.lowercase())) {
                 return message
             }
@@ -116,7 +112,6 @@ private fun Throwable.extractBusinessMessageOrNull(): String? {
     }
     return null
 }
-
 
 private fun isUserFacingMessage(message: String): Boolean {
     if (message.length > 60) return false
@@ -166,7 +161,6 @@ private fun isTimeoutHint(hints: String): Boolean = TIMEOUT_HINTS.any(hints::con
 private fun isNetworkHint(hints: String): Boolean = NETWORK_HINTS.any(hints::contains)
 
 private fun isInvalidDataHint(hints: String): Boolean = INVALID_DATA_HINTS.any(hints::contains)
-
 
 private val TECHNICAL_MESSAGE_HINTS =
     listOf(

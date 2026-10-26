@@ -9,7 +9,6 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-
 class ObserveAllGradesUseCase(
     private val repository: GradeRepository,
     private val auth: JwxtAuthPort,

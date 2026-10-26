@@ -96,10 +96,8 @@ private data class Session(
 
 internal object WidgetDataRepository {
 
-    /** 小爱 isShowNextClass：1 <= 距开课分钟数 < 11，即 1~10 分钟 */
     private const val UPCOMING_WINDOW_MINUTES = 10
 
-    /** 4×2 组件一屏放两行；其余课程用页脚"还有 N 节课"概括 */
     private const val MAX_ROWS = 2
 
     @OptIn(ExperimentalTime::class)
@@ -299,13 +297,6 @@ internal object WidgetDataRepository {
             emptyText = emptyTextOf(today, thisWeekLaterHasCourse),
         )
 
-    /**
-     * 空态文案对齐小爱课程表的 CourseViewStyle / WeekCourseViewStyle：
-     *   HOLIDAY    -> 假期快乐~!
-     *   COURSE_END -> 恭喜！本周课程已通关~
-     *   EMPTY      -> 今明两天无课
-     *   今日已上完 -> 今日课程已上完
-     */
     private fun emptyTextOf(today: DayCourses, thisWeekLaterHasCourse: Boolean): String =
         when {
             today.isHoliday -> "假期快乐~!"
@@ -328,7 +319,6 @@ internal object WidgetDataRepository {
             )
         }
 
-        // 小爱：isShowNextClass 判定 1 <= 分钟数 < 11，即只在开课前 1~10 分钟提示
         val upcoming =
             todaySessions.firstOrNull {
                 val diff = it.startMin - nowMinutes

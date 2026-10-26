@@ -1,9 +1,7 @@
 package restarhalf.stellar.schedule.core.time
 
-
 object SemesterUtils {
 
-    
     fun parseSemesterKey(semesterId: String): Triple<Int, Int, Int>? {
         val parts = semesterId.trim().split("-")
         if (parts.size < 3) return null
@@ -13,7 +11,6 @@ object SemesterUtils {
         return Triple(y1, y2, t)
     }
 
-    
     val comparator: Comparator<String> = Comparator { a, b ->
         val ka = parseSemesterKey(a)
         val kb = parseSemesterKey(b)

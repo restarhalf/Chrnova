@@ -33,7 +33,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class ExclusionScreenUiTest {
 
     private val settings = mock<ObservableSettings>(MockMode.autofill) {
@@ -68,8 +67,6 @@ class ExclusionScreenUiTest {
             onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
         }
     }
-
-
 
     @Test
     fun 隐私政策页渲染标题与按钮() = runUltronUiTest {
@@ -114,7 +111,6 @@ class ExclusionScreenUiTest {
         })
         waitText("同意")
 
-
         onNodeWithText("同意").performTouchInput {
             down(androidx.compose.ui.geometry.Offset(centerX, top + 8.dp.toPx()))
             up()
@@ -124,10 +120,6 @@ class ExclusionScreenUiTest {
             onAllNodesWithText("PAGE_2").fetchSemanticsNodes().isNotEmpty()
         }
     }
-
-
-
-
 
     @Test
     fun 星标页渲染文案() = runUltronUiTest {
@@ -170,10 +162,6 @@ class ExclusionScreenUiTest {
         waitUntil(timeoutMillis = 2_000) { nextClicked }
     }
 
-
-
-
-
     @Test
     fun 欢迎页渲染应用名并前进到隐私页() = runUltronUiTest {
         startKoinForTest()
@@ -201,6 +189,5 @@ class ExclusionScreenUiTest {
 
         verify { deviceSettings.setConfirmPrivacy(true) }
     }
-
 
 }

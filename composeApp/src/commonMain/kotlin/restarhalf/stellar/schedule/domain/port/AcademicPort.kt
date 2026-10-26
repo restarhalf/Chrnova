@@ -5,7 +5,6 @@ import restarhalf.stellar.schedule.domain.model.GuidanceTeachingCourse
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 
-
 interface AcademicPort {
     
     suspend fun fetchCurrentTermId(): String
@@ -18,13 +17,11 @@ interface AcademicPort {
     
     suspend fun fetchGradeReport(semester: String): TermGradeReport
 
-    
     suspend fun fetchGuidanceTeachingCourses(
         kcxz: String,
         kcsx: String = "",
         kcmc: String = ""
     ): List<GuidanceTeachingCourse>
 
-    
     suspend fun fetchTeachingWeekTotal(): Int
 }

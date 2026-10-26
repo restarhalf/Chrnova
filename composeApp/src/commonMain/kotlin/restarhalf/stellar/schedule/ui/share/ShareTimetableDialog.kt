@@ -37,7 +37,6 @@ import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import kotlin.time.Clock
 
-
 @Composable
 fun ShareTimetableDialog(
     show: Boolean,
@@ -157,7 +156,6 @@ fun ShareTimetableDialog(
         },
     )
 }
-
 
 @Composable
 private fun ScaleToFitBox(

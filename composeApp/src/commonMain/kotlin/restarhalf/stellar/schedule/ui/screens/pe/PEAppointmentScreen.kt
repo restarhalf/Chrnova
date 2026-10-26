@@ -71,7 +71,6 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun PEAppointmentScreen(
     vm: PEAppointmentViewModel,

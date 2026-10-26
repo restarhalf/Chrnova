@@ -45,7 +45,6 @@ import restarhalf.stellar.schedule.ui.mapper.DayRenderData
 import restarhalf.stellar.schedule.ui.mapper.buildDayRenderData
 import kotlin.time.ExperimentalTime
 
-
 class ScheduleViewModel(
     private val settings: DisplaySettingsPort,
     private val termSettings: TermSettingsPort,
@@ -57,7 +56,6 @@ class ScheduleViewModel(
     private val refreshCourseRemindersIfEnabledUseCase: RefreshCourseRemindersIfEnabledUseCase,
 ) : ViewModel() {
 
-    
     @Immutable
     data class ScheduleUiState(
         val showNonCurrentWeek: Boolean,
@@ -67,7 +65,6 @@ class ScheduleViewModel(
         val detailSheetUiState: DetailSheetUiState,
     )
 
-    
     @Immutable
     data class TransDialogUiState(
         val show: Boolean = false,
@@ -80,7 +77,6 @@ class ScheduleViewModel(
         val endSection: Int = 2,
     )
 
-    
     @Stable
     data class TransConflictUiState(
         val show: Boolean = false,
@@ -88,14 +84,12 @@ class ScheduleViewModel(
         val pendingOverride: Course? = null,
     )
 
-    
     @Stable
     data class DetailSheetUiState(
         val show: Boolean = false,
         val courses: ImmutableList<Course> = persistentListOf(),
     )
 
-    
     @Immutable
     data class TransOperationInput(
         val course: Course,
@@ -144,10 +138,8 @@ class ScheduleViewModel(
                     ),
             )
 
-    
     val uiState: StateFlow<ScheduleUiState> = _uiState
 
-    
     val allCourses: StateFlow<ImmutableList<Course>> = observeAllCourses()
         .map { it.toPersistentList() }
         .distinctUntilChanged()
@@ -157,7 +149,6 @@ class ScheduleViewModel(
             initialValue = persistentListOf()
         )
 
-    
     suspend fun buildTransCourseAndConflicts(
         originCourse: Course,
         originWeek: Int,
@@ -180,7 +171,6 @@ class ScheduleViewModel(
         }
     }
 
-    
     @OptIn(ExperimentalTime::class)
     fun buildScheduleUiState(
         campus: Campus,
@@ -196,17 +186,14 @@ class ScheduleViewModel(
         )
     }
 
-    
     fun pageToWeek(page: Int, includeWeek0: Boolean): Int {
         return buildScheduleUiStateUseCase.pageToWeek(page = page, includeWeek0 = includeWeek0)
     }
 
-    
     fun weekToPage(week: Int, includeWeek0: Boolean): Int {
         return buildScheduleUiStateUseCase.weekToPage(week = week, includeWeek0 = includeWeek0)
     }
 
-    
     fun buildWeekHeaderUi(
         currentWeek: Int,
         detectedDiffDays: Int,
@@ -235,7 +222,6 @@ class ScheduleViewModel(
         return WeekHeaderUi(days = WEEKDAYS.toPersistentList(), dates = dates.toPersistentList(), todayIndex = todayIndex)
     }
 
-    
     fun buildPageRenderUi(
         courses: List<Course>,
         page: Int,
@@ -272,18 +258,15 @@ class ScheduleViewModel(
         return PageRenderUi(actualWeek = actualWeek, dayRenderData = dayRenderData.toPersistentMap())
     }
 
-    
     fun openDetailSheet(courses: List<Course>) {
         _detailSheetUiState.value =
             DetailSheetUiState(show = courses.isNotEmpty(), courses = courses.toPersistentList())
     }
 
-    
     fun closeDetailSheet() {
         _detailSheetUiState.value = DetailSheetUiState()
     }
 
-    
     fun openTransDialog(course: Course, currentWeek: Int) {
         val safeWeek = currentWeek.coerceAtLeast(1)
         _transDialogUiState.value =
@@ -299,12 +282,10 @@ class ScheduleViewModel(
             )
     }
 
-    
     fun dismissTransDialog() {
         _transDialogUiState.value = _transDialogUiState.value.copy(show = false)
     }
 
-    
     fun closeTransDialogAndClear() {
         _transDialogUiState.value = TransDialogUiState()
     }
@@ -330,7 +311,6 @@ class ScheduleViewModel(
             )
     }
 
-    
     fun buildTransOperationInput(): TransOperationInput? {
         val state = _transDialogUiState.value
         val course = state.course ?: return null
@@ -345,7 +325,6 @@ class ScheduleViewModel(
         )
     }
 
-    
     fun showTransConflict(conflicts: List<Course>, pendingOverride: Course) {
         _transConflictUiState.value =
             TransConflictUiState(
@@ -355,7 +334,6 @@ class ScheduleViewModel(
             )
     }
 
-    
     fun dismissTransConflict(reopenTransDialog: Boolean) {
         _transConflictUiState.value = _transConflictUiState.value.copy(show = false)
         if (reopenTransDialog && _transDialogUiState.value.course != null) {
@@ -363,19 +341,16 @@ class ScheduleViewModel(
         }
     }
 
-    
     fun clearTransConflict() {
         _transConflictUiState.value = TransConflictUiState()
     }
 
-    
     fun consumePendingOverride(): Course? {
         val pending = _transConflictUiState.value.pendingOverride
         _transConflictUiState.value = TransConflictUiState()
         return pending
     }
 
-    
     private fun buildCourseWeekText(course: Course): String {
         val weekText = WeeksFormatter.format(course.weeks)
         if (course.type != 2 || course.targetWeek <= 0) return weekText
@@ -388,7 +363,6 @@ class ScheduleViewModel(
         }
     }
 
-    
     fun buildCourseDetailUi(
         course: Course,
         currentWeek: Int,
@@ -424,18 +398,14 @@ class ScheduleViewModel(
         )
     }
 
-    
     suspend fun insertCourse(course: Course): Boolean = saveCourse(course)
-
 
     suspend fun deleteCourse(course: Course): Boolean = deleteCourseUseCase(course)
 
-    
     suspend fun saveTransCourse(overrideCourse: Course): Boolean {
         return insertCourse(overrideCourse)
     }
 
-    
     @OptIn(ExperimentalTime::class)
     suspend fun shouldAutoSync(): Boolean {
         return withContext(AppIoDispatcher) {
@@ -445,7 +415,6 @@ class ScheduleViewModel(
         }
     }
 
-    
     suspend fun refreshCourseRemindersIfEnabled(
         campus: Campus,
         termStartMs: Long,

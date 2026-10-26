@@ -53,12 +53,10 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 val ShareCardWidth: Dp = 380.dp
 
 private val ShareLabelWidth = 36.dp
 private val ShareFooterHeight = 80.dp
-
 
 object ShareTimetableGeometry {
     val rowHeight = 60.dp
@@ -80,13 +78,11 @@ object ShareTimetableGeometry {
     val gridHeight: Dp get() = rowHeight * 12 + rowGap * 11 + restHeight * 2
 }
 
-
 fun shareCardHeight(showSharer: Boolean): Dp {
     val top = if (showSharer) 14.dp + 48.dp + 10.dp + 16.dp + 14.dp else 16.dp + 22.dp + 16.dp
     val gridBlock = 8.dp + 50.dp + 6.dp + ShareTimetableGeometry.gridHeight + 8.dp
     return top + gridBlock + ShareFooterHeight + 4.dp
 }
-
 
 @Composable
 fun ShareTimetableCard(
@@ -195,7 +191,6 @@ fun ShareTimetableCard(
                 )
             }
 
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -245,7 +240,6 @@ fun ShareTimetableCard(
                     }
                 }
             }
-
 
             Row(
                 modifier = Modifier
@@ -356,7 +350,6 @@ private fun ShareSectionLabels(
         }
     }
 }
-
 
 @Composable
 fun ShareCaptureBox(

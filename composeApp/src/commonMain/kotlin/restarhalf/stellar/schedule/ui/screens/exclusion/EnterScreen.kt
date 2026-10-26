@@ -41,7 +41,7 @@ fun EnterScreen(
     val go = remember { mutableStateOf(false) }
     val colors = MiuixTheme.colorScheme
     val easing = CubicBezierEasing(.42f, 0f, 0.26f, .85f)
-    
+
     val animatedY = animateDpAsState(
         targetValue = if (go.value) (-30).dp else 0.dp,
         animationSpec = tween(durationMillis = 1150, easing = easing),
@@ -52,11 +52,11 @@ fun EnterScreen(
         animationSpec = tween(durationMillis = 1150, easing = easing),
         label = "enterPagerAlpha"
     )
-    
+
     LaunchedEffect(pagerState.currentPage) {
         go.value = pagerState.currentPage >= 3
     }
-    
+
     Column {
         Column(
             modifier = Modifier
@@ -85,7 +85,7 @@ fun EnterScreen(
                 modifier = Modifier.padding(top = 20.dp)
             )
         }
-        
+
         Button(
             modifier = Modifier
                 .fillMaxWidth()

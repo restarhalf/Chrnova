@@ -2,10 +2,8 @@ package restarhalf.stellar.schedule.ui.model.home
 
 import restarhalf.stellar.schedule.core.time.ClockTime
 
-
 class ResolveCourseStatusUseCase {
 
-    
     operator fun invoke(
         hasCourse: Boolean,
         startTime: String,

@@ -6,13 +6,12 @@ import restarhalf.stellar.schedule.domain.model.PEAuthProfile
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
-
 class PEAuthProfileUseCase(
     private val gateway: PEGateway,
     private val auth: PEAuthPort,
     private val authWorkflow: PEAuthWorkflowPort,
 ) {
-    
+
     suspend operator fun invoke(): PEAuthProfileResponse {
         val response = withSessionRetry(authWorkflow) { gateway.getProfile() }
         response.data?.let {

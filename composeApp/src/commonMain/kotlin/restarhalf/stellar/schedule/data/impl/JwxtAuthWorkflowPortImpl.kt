@@ -9,14 +9,12 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class JwxtAuthWorkflowPortImpl(
     private val gateway: JwxtGateway,
     private val authStore: JwxtAuthStore,
     private val courseRepository: CourseRepository,
 ) : JwxtAuthWorkflowPort {
 
-    
     override suspend fun ensureLoggedIn() {
         val token = authStore.getToken().orEmpty()
         if (token.isNotBlank()) return
@@ -26,7 +24,6 @@ class JwxtAuthWorkflowPortImpl(
         login(userNo = userNo, password = password)
     }
 
-    
     override suspend fun login(
         userNo: String,
         password: String,
@@ -52,14 +49,12 @@ class JwxtAuthWorkflowPortImpl(
             throw IllegalStateException("登录成功但未获取到 Token")
         }
 
-
         val newUserNo = resp.data?.userNo.orEmpty().trim().ifBlank { userNo.trim() }
         if (oldUserNo.isNotBlank() && newUserNo.isNotBlank() && oldUserNo != newUserNo) {
             withContext(AppIoDispatcher) { courseRepository.clearAllCourses() }
         }
 
         authStore.setLastUserNo(newUserNo)
-
 
         authStore.setProfile(
             name = resp.data?.name,
@@ -70,7 +65,6 @@ class JwxtAuthWorkflowPortImpl(
 
         authStore.setCredentials(userNo, password)
     }
-
 
     override suspend fun refreshSession() {
         val (userNo, password) = authStore.getCredentials() ?: return

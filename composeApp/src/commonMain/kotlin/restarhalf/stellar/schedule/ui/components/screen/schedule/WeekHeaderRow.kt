@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun WeekHeaderRow(
     ui: WeekHeaderUi,
@@ -50,7 +49,6 @@ fun WeekHeaderRow(
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
-
 
                 Box(
                     modifier =

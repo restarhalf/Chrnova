@@ -19,7 +19,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PEAppointmentWebScreenUiTest {
 
     private val peAuth = mock<PEAuthPort>(MockMode.autofill)
@@ -69,7 +68,7 @@ class PEAppointmentWebScreenUiTest {
             }
         }
         waitText("体测预约")
-        // 已登录走 WebView 分支，提示卡片不再出现
+
         assertEquals(0, onAllNodesWithText(loginHint).fetchSemanticsNodes().size)
     }
 

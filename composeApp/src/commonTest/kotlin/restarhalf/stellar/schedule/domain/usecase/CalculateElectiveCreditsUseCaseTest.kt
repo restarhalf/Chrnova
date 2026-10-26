@@ -37,7 +37,7 @@ class CalculateElectiveCreditsUseCaseTest {
             innovationGuidanceCourses = emptyList(),
             professionalGuidanceCourses = emptyList(),
         )
-        assertEquals(8, result.size) // X1-X5 五类 + 创新创业选修 + 专业选修 + 挂科
+        assertEquals(8, result.size)
         val x1 = result.first { it.code == "X1" }
         assertEquals(3.5, x1.credits)
         assertEquals(2, x1.courses.size)

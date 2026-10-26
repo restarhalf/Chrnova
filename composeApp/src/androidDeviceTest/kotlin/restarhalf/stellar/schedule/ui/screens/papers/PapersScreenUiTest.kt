@@ -25,7 +25,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PapersScreenUiTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
@@ -39,7 +38,6 @@ class PapersScreenUiTest {
 
     private fun createVm() = PapersViewModel(papersPort, settings, VerifyGitHubStarUseCase(papersPort, settings))
 
-    
     private fun stubVerified(papers: List<Paper>, folders: List<String>) {
         every { settings.getStarVerified() } returns true
         everySuspend { papersPort.listPapers() } returns papers
@@ -52,8 +50,6 @@ class PapersScreenUiTest {
         }
     }
 
-
-
     @Test
     fun 未验证时列表不加载() = runUltronUiTest {
         every { settings.getStarVerified() } returns false
@@ -65,7 +61,6 @@ class PapersScreenUiTest {
             }
         }
         waitText("试卷共享")
-
 
         Thread.sleep(500)
         assertEquals(0, onAllNodesWithText("高等数学").fetchSemanticsNodes().size)
@@ -133,11 +128,6 @@ class PapersScreenUiTest {
         onNodeWithText("暂无试卷").assertIsDisplayed()
     }
 
-
-
-
-
-    
     @Test
     fun 详情页渲染试卷信息并透传代理下载链接() = runUltronUiTest {
         everySuspend { papersPort.getPaper("p1") } returns Paper(id = "p1", title = "高数期末.pdf", folder = "高等数学")
@@ -160,12 +150,10 @@ class PapersScreenUiTest {
         onNodeWithText("下载").assertIsDisplayed()
         waitForIdle()
 
-
         onNodeWithText("下载").performSemanticsAction(SemanticsActions.OnClick)
         waitUntil(timeoutMillis = 3_000) { downloads.isNotEmpty() }
         assertEquals("https://chrnova.paper.example/file/p1", downloads[0].first)
         assertEquals("高数期末.pdf", downloads[0].second)
     }
-
 
 }

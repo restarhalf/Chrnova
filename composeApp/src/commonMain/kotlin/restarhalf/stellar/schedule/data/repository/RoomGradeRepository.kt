@@ -8,7 +8,6 @@ import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 
-
 class RoomGradeRepository(
     private val gradeDao: GradeDao
 ) : GradeRepository {

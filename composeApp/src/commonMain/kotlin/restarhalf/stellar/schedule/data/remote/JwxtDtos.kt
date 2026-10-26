@@ -9,9 +9,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
-
-
-
 @Serializable
 data class JwxtLoginResponse(
     @SerialName("code") val code: Int = -1,
@@ -21,7 +18,6 @@ data class JwxtLoginResponse(
 ) {
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
-
 
 @Serializable
 data class JwxtLoginData(
@@ -36,7 +32,6 @@ data class JwxtLoginData(
     @SerialName("iscsh") val isFirstLogin: String? = null
 )
 
-
 @Serializable
 data class JwxtApiResponse<T>(
     @SerialName("code") val code: String = "",
@@ -49,16 +44,13 @@ data class JwxtApiResponse<T>(
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
 
-
 @Serializable
 data class JwxtCurrentTermItem(
     @SerialName("semesterId") val semesterId: String = "",
     @SerialName("semesterName") val semesterName: String = ""
 )
 
-
 typealias JwxtCurrentTermResponse = JwxtApiResponse<List<JwxtCurrentTermItem>>
-
 
 @Serializable
 data class JwxtSemesterItem(
@@ -74,7 +66,6 @@ data class JwxtSemesterItem(
     fun isCurrent(): Boolean = isCurrentTerm == "1"
 }
 
-
 @Serializable
 data class JwxtSemesterListItem(
     @SerialName("semesterId") val semesterId: String = "",
@@ -84,10 +75,8 @@ data class JwxtSemesterListItem(
     fun isCurrent(): Boolean = nowXq == "1"
 }
 
-
 @Serializable
 data class JwxtTeachingWeekItem(@SerialName("week") val week: String = "")
-
 
 @Serializable
 data class JwxtTeachingWeekResponse(
@@ -100,7 +89,6 @@ data class JwxtTeachingWeekResponse(
     fun isSuccess(): Boolean = code == "1"
 }
 
-
 @Serializable
 data class JwxtCampusItem(
     @SerialName("mrms") val isDefault: String = "",
@@ -110,7 +98,6 @@ data class JwxtCampusItem(
     fun isDefaultCampus(): Boolean = isDefault == "1"
 }
 
-
 @Serializable
 data class JwxtCampusResponse(
     @SerialName("msg") val msg: String = "",
@@ -119,7 +106,6 @@ data class JwxtCampusResponse(
 ) {
     fun isSuccess(): Boolean = code == 1
 }
-
 
 @Serializable
 data class JwxtCurriculumResponse(
@@ -133,7 +119,6 @@ data class JwxtCurriculumResponse(
     fun isSuccess(): Boolean = code == "1"
 }
 
-
 private object WeekAsStringSerializer : KSerializer<String> {
     override val descriptor = buildClassSerialDescriptor("WeekAsString")
 
@@ -145,7 +130,6 @@ private object WeekAsStringSerializer : KSerializer<String> {
     }
 }
 
-
 @Serializable
 data class JwxtCurriculumDayBlock(
     @SerialName("date") val date: List<JwxtDateItem> = emptyList(),
@@ -154,7 +138,6 @@ data class JwxtCurriculumDayBlock(
     @SerialName("weekday") val weekday: String = ""
 )
 
-
 @Serializable
 data class JwxtDateItem(
     @SerialName("xqmc") val xqmc: String = "",
@@ -162,7 +145,6 @@ data class JwxtDateItem(
     @SerialName("zc") val zc: String = "",
     @SerialName("xqid") val xqid: Int = 0
 )
-
 
 @Serializable
 data class JwxtCurriculumItem(
@@ -189,13 +171,11 @@ data class JwxtCurriculumItem(
     @SerialName("coursesNote") val coursesNote: Int = 0
 )
 
-
 @Serializable
 data class JwxtJcDataItem(
     @SerialName("XJMC") val xjmc: String = "",
     @SerialName("DJMC") val djmc: String = ""
 )
-
 
 @Serializable
 data class JwxtNkbItem(
@@ -208,8 +188,6 @@ data class JwxtNkbItem(
     @SerialName("sjzcbz") val sjzcbz: String = ""
 )
 
-
-
 @Serializable
 data class JwxtExaminationItem(
     @SerialName("courseName") val courseName: String = "",
@@ -219,7 +197,6 @@ data class JwxtExaminationItem(
     @SerialName("zwh") val zwh: String = "",
     @SerialName("time") val time: String = ""
 )
-
 
 @Serializable
 data class JwxtExaminationResponse(
@@ -232,8 +209,6 @@ data class JwxtExaminationResponse(
 
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
-
-
 
 @Serializable
 data class JwxtGradeAchievementItem(
@@ -254,7 +229,6 @@ data class JwxtGradeAchievementItem(
     @SerialName("cj0708id") val gradeId: String = "",
 )
 
-
 @Serializable
 data class JwxtTermGradeDataItem(
     @SerialName("studentID") val studentId: String = "",
@@ -268,9 +242,7 @@ data class JwxtTermGradeDataItem(
     @SerialName("pjxfjd") val averageCreditGradePoint: String = "",
 )
 
-
 typealias JwxtTermGradeResponse = JwxtApiResponse<List<JwxtTermGradeDataItem>>
-
 
 @Serializable
 data class JwxtGuidanceTeachingItem(
@@ -287,14 +259,12 @@ data class JwxtGuidanceTeachingItem(
     @SerialName("evaluationMode") val evaluationMode: String = ""
 )
 
-
 @Serializable
 data class ClassHourClassification(
     @SerialName("xsflid") val xsflid: String = "",
     @SerialName("name") val name: String = "",
     @SerialName("classHour") val classHour: String = ""
 )
-
 
 @Serializable
 data class JwxtGuidanceTeachingResponse(
@@ -308,10 +278,6 @@ data class JwxtGuidanceTeachingResponse(
     fun messageOrEmpty(): String = msg.ifBlank { msgAlt }
 }
 
-
-
-
-
 @Serializable
 data class JwxtSelectionResponse(
     @SerialName("errorCode") val errorCode: String = "",
@@ -323,12 +289,10 @@ data class JwxtSelectionResponse(
 ) {
     fun isSuccess(): Boolean = errorCode == "success"
 
-    
     fun isNeedConfirm(): Boolean = errorCode == "success_needcf"
 
     fun isFail(): Boolean = errorCode == "fail"
 
-    
     fun resolvedMessage(): String {
         var msg = errorMessage
         errorMessageParam.forEachIndexed { index, param ->
@@ -337,4 +301,3 @@ data class JwxtSelectionResponse(
         return msg
     }
 }
-

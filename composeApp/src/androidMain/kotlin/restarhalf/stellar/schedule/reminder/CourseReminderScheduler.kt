@@ -120,7 +120,7 @@ class CourseReminderScheduler(
                     totalWeeks = totalWeeks,
                     termStartMs = termStartMs,
                     nowMs = targetDayStartMs + (12 * 60 * 60 * 1000L)
-                ) // 12:00
+                )
             if (weekInfo.isHoliday) continue
 
             val week = weekInfo.week

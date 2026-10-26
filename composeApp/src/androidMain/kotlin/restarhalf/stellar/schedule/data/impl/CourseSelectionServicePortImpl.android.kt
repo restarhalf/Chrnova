@@ -11,7 +11,6 @@ import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
 import restarhalf.stellar.schedule.domain.port.SnatchServiceConfig
 
-
 class CourseSelectionServicePortImpl(
     private val context: Context,
 ) : CourseSelectionServicePort {

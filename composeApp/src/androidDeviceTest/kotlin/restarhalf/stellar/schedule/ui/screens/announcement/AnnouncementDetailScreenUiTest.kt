@@ -39,14 +39,11 @@ import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import java.io.File
 import java.io.FileOutputStream
 
-
 @RunWith(AndroidJUnit4::class)
 class AnnouncementDetailScreenUiTest {
 
-    
     private lateinit var imagePath: String
 
-    
     @Before
     fun setUpImage() {
         val dir = InstrumentationRegistry.getInstrumentation().targetContext.filesDir
@@ -58,7 +55,6 @@ class AnnouncementDetailScreenUiTest {
         imagePath = file.absolutePath
     }
 
-    
     private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
         every { getCacheTtlMs() } returns 10L * 60L * 1000L
     }
@@ -175,7 +171,6 @@ class AnnouncementDetailScreenUiTest {
         setContentFor(vm, "d-5") { clicked.add(it) }
 
         waitText("带图公告")
-
 
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithContentDescription("示例图").fetchSemanticsNodes().isNotEmpty()

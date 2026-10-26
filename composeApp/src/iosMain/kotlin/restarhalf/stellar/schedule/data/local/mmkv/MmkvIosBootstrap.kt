@@ -22,7 +22,6 @@ object MmkvIosBootstrap {
         val kv = MMKV.mmkvWithID(name)
         if (kv.containsKey(MmkvStores.MIGRATION_FLAG)) return
 
-
         val defaults = NSUserDefaults(suiteName = name)
         val dict = defaults.dictionaryRepresentation()
         var copied = 0

@@ -138,12 +138,9 @@ class CourseEditViewModelTest {
         error("等待 uiState 超时，当前: ${vm.uiState.value}")
     }
 
-
-
     @Test
     fun `uiState初值为空列表`() = runTest {
         val vm = makeViewModel()
-
 
         assertTrue(vm.uiState.value.courses.isEmpty())
         assertTrue(vm.uiState.value.courseNames.isEmpty())
@@ -157,7 +154,7 @@ class CourseEditViewModelTest {
         coursesFlow.value = listOf(
             syncedCourse("高等数学"),
             syncedCourse("大学物理"),
-            labCourse(), // type=1 实验课不出现在名称列表
+            labCourse(),
         )
 
         val state = awaitState(vm) { it.courseNames.isNotEmpty() }
@@ -179,10 +176,6 @@ class CourseEditViewModelTest {
         assertEquals(listOf("高等数学"), state.courseNames)
     }
 
-
-
-
-
     @Test
     fun `weekdayText转换中文`() {
         val vm = makeViewModel()
@@ -202,7 +195,6 @@ class CourseEditViewModelTest {
     @Test
     fun `buildDisabledWeeks聚合时间重叠课程的周次`() {
         val vm = makeViewModel()
-
 
         val conflicting = labCourse(id = 9, dayOfWeek = 1, startSection = 5, weeks = listOf(3, 4))
 
@@ -288,8 +280,8 @@ class CourseEditViewModelTest {
 
         assertEquals("张老师", saved?.teacher)
         assertEquals(5, saved?.startSection)
-        assertEquals(2, saved?.sectionCount) // end - start + 1
-        assertEquals(listOf(3, 5), saved?.weeks) // 排序
+        assertEquals(2, saved?.sectionCount)
+        assertEquals(listOf(3, 5), saved?.weeks)
         assertEquals(1, saved?.type)
         assertEquals(0, saved?.id)
 
@@ -324,8 +316,8 @@ class CourseEditViewModelTest {
 
         assertEquals(7, saved?.id)
         assertEquals("#ABCDEF", saved?.color)
-        assertEquals("20230001", saved?.userNo) // 保留 existing 的 userNo
-        assertEquals("2026-1", saved?.semesterId) // 保留 existing 的学期
+        assertEquals("20230001", saved?.userNo)
+        assertEquals("2026-1", saved?.semesterId)
 
         assertEquals("李实验", saved?.teacher)
     }
@@ -334,7 +326,6 @@ class CourseEditViewModelTest {
     fun `buildLabCourseToSave学期回退到首个有学期的同步课`() {
         val vm = makeViewModel()
         val otherCourse = syncedCourse(name = "高等数学", semesterId = "2025-2")
-
 
         val saved = vm.buildLabCourseToSave(
             selectedName = "陌生课程", selectedWeeks = setOf(1),
@@ -351,7 +342,6 @@ class CourseEditViewModelTest {
         val vm = makeViewModel()
         val noSemester = syncedCourse(name = "陌生课程", semesterId = "")
         val withSemester = syncedCourse(name = "高等数学", semesterId = "2025-2")
-
 
         val saved = vm.buildLabCourseToSave(
             selectedName = "陌生课程", selectedWeeks = setOf(1),
@@ -400,7 +390,6 @@ class CourseEditViewModelTest {
         assertEquals(5, form.endSection)
         assertEquals(setOf(2), form.selectedWeeks)
 
-
         val bounded = vm.buildEditingFormState(
             courseId = null, editingCourse = null, courseNames = emptyList(),
             initialDayOfWeek = 99, initialStartSection = 0, initialSelectedWeek = -1,
@@ -422,12 +411,12 @@ class CourseEditViewModelTest {
         )
 
         assertTrue(form.isEdit)
-        assertEquals(1, form.selectedIndex) // 物理实验在名称列表中的索引
+        assertEquals(1, form.selectedIndex)
         assertEquals("实验楼", form.classRoom)
         assertEquals("李实验", form.teacher)
         assertEquals(4, form.dayOfWeek)
         assertEquals(7, form.startSection)
-        assertEquals(8, form.endSection) // start + count - 1
+        assertEquals(8, form.endSection)
         assertEquals(setOf(3, 5), form.selectedWeeks)
     }
 
@@ -461,10 +450,6 @@ class CourseEditViewModelTest {
 
         assertEquals("第3-4节", vm.sectionSummary(3, 4))
     }
-
-
-
-
 
     @Test
     fun `saveLabCourse成功回调true`() = runTest {
@@ -541,6 +526,5 @@ class CourseEditViewModelTest {
 
         assertEquals(false, callback)
     }
-
 
 }

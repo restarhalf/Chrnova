@@ -63,7 +63,6 @@ class FetchSemesterIdsUseCaseTest {
         everySuspend { academic.fetchSemesterIds() } throws RuntimeException("no session")
         every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
 
-
         assertEquals(emptyList(), useCase())
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
     }
@@ -73,7 +72,6 @@ class FetchSemesterIdsUseCaseTest {
         everySuspend { academic.fetchSemesterIds() } throws RuntimeException("no session")
         everySuspend { authWorkflow.refreshSession() } throws RuntimeException("refresh failed")
         every { settings.observeCachedSemesterIds() } returns flowOf(emptyList())
-
 
         assertFailsWith<RuntimeException> { useCase() }
     }

@@ -33,7 +33,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class EvaluationCourseScreenUiTest {
 
     private val port = mock<CourseEvaluationPort>(MockMode.autofill)
@@ -97,7 +96,6 @@ class EvaluationCourseScreenUiTest {
         }
         waitText("讲得不错，作业量适中")
 
-        // 顶栏标题与卡片标题都是课程名
         onAllNodesWithText("高等数学")[0].assertIsDisplayed()
         onAllNodesWithText("张三")[0].assertIsDisplayed()
         onNodeWithText("4.5").assertIsDisplayed()
@@ -192,7 +190,7 @@ class EvaluationCourseScreenUiTest {
 
     @Test
     fun 加载失败显示错误提示() = runUltronUiTest {
-        // 两个并发请求都失败，避免成功的那一路把 error 清掉
+
         everySuspend { port.listCourseSummaries() } throws IllegalStateException("网络异常")
         everySuspend { port.listEvaluations(any(), any(), any(), any()) } throws
             IllegalStateException("网络异常")

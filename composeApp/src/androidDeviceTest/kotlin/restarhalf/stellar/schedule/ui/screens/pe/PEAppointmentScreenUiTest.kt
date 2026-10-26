@@ -39,7 +39,6 @@ import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
-
 class PEAppointmentScreenUiTest {
 
     private val peGateway = mock<PEGateway>(MockMode.autofill)

@@ -24,7 +24,6 @@ class JwxtCampusResponseTest {
         assertEquals(1, r.code)
         assertEquals(2, r.data.size)
 
-
         assertTrue(r.data[0].isDefaultCampus())
         assertEquals("开发区校区", r.data[0].kbjcmsmc)
         assertEquals("16FD8C2BE55E15F9E0630100007FF6B5", r.data[0].kbjcmsid)

@@ -146,7 +146,6 @@ fun ScheduleScreen(
         selectedEmptyCell = null
     }
 
-
     LaunchedEffect(syncUiState) {
         if (syncUiState is SyncUiState.Error) {
             showMessage("课表同步失败：${syncUiState.message}")
@@ -196,7 +195,6 @@ fun ScheduleScreen(
             totalWeeks = totalWeeks
         )
     }
-
 
     fun animateToWeek(targetWeek: Int) {
         scope.launch {
@@ -582,7 +580,6 @@ fun ScheduleScreen(
                     )
                 }
 
-
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
@@ -644,7 +641,6 @@ fun ScheduleScreen(
                                     .fillMaxWidth()
                                     .height(totalHeight)
                             ) {
-
 
                                 Canvas(modifier = Modifier.fillMaxSize()) {
                                     val sectionHeight = rowHeight.toPx()
@@ -869,4 +865,3 @@ private fun ScheduleDayContent(
         }
     }
 }
-

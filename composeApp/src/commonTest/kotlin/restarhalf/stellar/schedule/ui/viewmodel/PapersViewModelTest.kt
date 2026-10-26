@@ -22,13 +22,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
-
 class PapersViewModelTest {
 
     private val papersPort = mock<PapersPort>(MockMode.autofill)
     private val settings = mock<DeviceSettingsPort>(MockMode.autofill)
 
-    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun makeViewModel() = PapersViewModel(

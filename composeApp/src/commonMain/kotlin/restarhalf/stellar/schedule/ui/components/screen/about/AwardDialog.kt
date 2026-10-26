@@ -15,7 +15,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.window.WindowDialog
 
-
 @Composable
 fun AwardDialog(show: Boolean, onDismissRequest: () -> Unit, onWxpay: () -> Unit, onAlipay: () -> Unit) {
     WindowDialog(

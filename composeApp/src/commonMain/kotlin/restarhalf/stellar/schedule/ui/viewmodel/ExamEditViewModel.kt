@@ -30,7 +30,6 @@ import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class ExamEditViewModel(
     private val observeAllCourses: ObserveAllCoursesUseCase,
     private val observeExaminationById: ObserveExaminationByIdUseCase,
@@ -41,20 +40,16 @@ class ExamEditViewModel(
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
 ) : ViewModel() {
 
-    
     private val _saving = MutableStateFlow(false)
 
-    
     val isSaving: StateFlow<Boolean> = _saving.asStateFlow()
 
-    
     @Stable
     data class ExamEditUiState(
         val courseNames: ImmutableList<String>,
         val courses: ImmutableList<Course>,
     )
 
-    
     @Immutable
     data class EditingFormState(
         val isEdit: Boolean,
@@ -82,10 +77,8 @@ class ExamEditViewModel(
                 initialValue = ExamEditUiState(courseNames = persistentListOf(), courses = persistentListOf()),
             )
 
-    
     val uiState: StateFlow<ExamEditUiState> = _uiState
 
-    
     val selectedTerm: StateFlow<String> = settings.observeSelectedTerm()
         .stateIn(
             scope = viewModelScope,
@@ -93,7 +86,6 @@ class ExamEditViewModel(
             initialValue = "",
         )
 
-    
     val currentTerm: StateFlow<String> = settings.observeCurrentTermId()
         .stateIn(
             scope = viewModelScope,
@@ -101,7 +93,6 @@ class ExamEditViewModel(
             initialValue = ""
         )
 
-    
     private val userNo: StateFlow<String> = auth.observeProfile()
         .map { it.userNo }
         .stateIn(
@@ -110,19 +101,16 @@ class ExamEditViewModel(
             initialValue = "",
         )
 
-    
     private fun findCourseNumber(courses: List<Course>, courseName: String): String {
         val course = courses.firstOrNull { it.name == courseName && it.type == 0 }
         return course?.remoteKey?.ifBlank { null }
             ?: "EXAM_${courseName.hashCode().toUInt()}"
     }
 
-    
     fun observeEditingExamination(examinationId: Long?): Flow<Examination?> {
         return observeExaminationById(examinationId ?: -1)
     }
 
-    
     fun buildEditingFormState(
         examinationId: Long?,
         editingExamination: Examination?,
@@ -159,7 +147,6 @@ class ExamEditViewModel(
         )
     }
 
-    
     fun buildExaminationToSave(
         courseName: String,
         datePart: String,
@@ -196,7 +183,6 @@ class ExamEditViewModel(
         )
     }
 
-    
     fun saveExamination(examination: Examination, onResult: (Boolean) -> Unit) {
         if (!_saving.compareAndSet(false, true)) return
         viewModelScope.launch {
@@ -215,7 +201,6 @@ class ExamEditViewModel(
         }
     }
 
-    
     private suspend fun resolveSemesterId(): String {
         val selected = selectedTerm.value
         if (selected.isNotBlank()) return selected
@@ -229,7 +214,6 @@ class ExamEditViewModel(
         }
     }
 
-    
     fun deleteExamination(id: Long, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val deleted = runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }

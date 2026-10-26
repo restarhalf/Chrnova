@@ -6,7 +6,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-
 internal suspend fun HttpResponse.extractServerErrorMessage(
     json: Json,
     fieldPriority: List<String> = listOf("msg", "Msg", "message"),

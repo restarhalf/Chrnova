@@ -25,7 +25,6 @@ import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class JwxtClient(
     private val httpClient: HttpClient,
     private val json: Json = Json { ignoreUnknownKeys = true },
@@ -239,11 +238,6 @@ class JwxtClient(
         return null
     }
 
-
-
-
-
-    
     private suspend fun postSelectionRaw(
         endpoint: String,
         params: Map<String, String>,
@@ -388,7 +382,6 @@ class JwxtClient(
         return json.decodeFromString(JwxtSelectionResponse.serializer(), body)
     }
 
-    
     private fun parseSelectionOperResult(resp: JwxtSelectionResponse): JwxtSelectionOperResult {
         val msg = resp.resolvedMessage()
         val data = resp.data
@@ -419,7 +412,6 @@ class JwxtClient(
         }
     }
 
-    
     private fun parseRelatedCourses(data: JsonElement?): List<JwxtSelectionCourse> {
         if (data == null) return emptyList()
         return when (data) {

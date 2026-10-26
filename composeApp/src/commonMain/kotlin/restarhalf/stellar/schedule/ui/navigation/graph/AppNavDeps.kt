@@ -7,10 +7,6 @@ import restarhalf.stellar.schedule.papers.PickedAttachment
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 
-/**
- * 导航图所需的宿主依赖：平台回调、全局 ViewModel 与少量派生状态。
- * 由 [restarhalf.stellar.schedule.AppContent] 组装，逐个传给各图的 entry 注册函数。
- */
 class AppNavDeps(
     val navigator: AppNavigator,
     val appUpdate: AppUpdatePort,

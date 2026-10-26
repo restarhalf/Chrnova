@@ -72,7 +72,6 @@ import androidx.compose.foundation.lazy.items as lazyItems
 private val PhotoShape = RoundedCornerShape(10.dp)
 private val AlbumCoverShape = RoundedCornerShape(12.dp)
 
-
 private data class SelectorPage(
     val tab: PictureSelectorTab,
     val album: MediaAlbum?,
@@ -115,7 +114,6 @@ fun PictureSelectorSheet(
             state.refresh()
         }
     }
-
 
     val goBackOrDismiss: () -> Unit = {
         when {
@@ -274,7 +272,6 @@ fun PictureSelectorSheet(
                             }
                         }
                     }
-
 
                     AnimatedVisibility(
                         visible = inAlbumDetail,

@@ -36,7 +36,6 @@ class JwxtCurriculumResponseTest {
         assertEquals("当前周次未查询到课表！", r.msg)
         assertEquals("1", r.nowWeek)
 
-
         assertEquals(1, r.data.size)
         val block = r.data.first()
         assertEquals(7, block.date.size)
@@ -48,12 +47,10 @@ class JwxtCurriculumResponseTest {
         assertEquals("3", block.week)
         assertEquals("一", block.weekday)
 
-
         assertEquals(6, r.jcDataList.size)
         assertEquals("01,02", r.jcDataList.first().xjmc)
         assertEquals("第一大节", r.jcDataList.first().djmc)
         assertEquals("11,12", r.jcDataList.last().xjmc)
-
 
         assertEquals(2, r.nkbList.size)
         assertEquals("Y0003-5", r.nkbList[0].kch)

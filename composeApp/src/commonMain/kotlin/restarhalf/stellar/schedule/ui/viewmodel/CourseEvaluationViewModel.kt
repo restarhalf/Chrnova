@@ -22,7 +22,6 @@ import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.usecase.GetAllCoursesAcrossSemestersUseCase
 
-
 class CourseEvaluationViewModel(
     private val port: CourseEvaluationPort,
     private val getAllCoursesAcrossSemesters: GetAllCoursesAcrossSemestersUseCase,
@@ -99,7 +98,6 @@ class CourseEvaluationViewModel(
             }
         }
 
-        
         val canDeleteSelected: Boolean
             get() = selectedEvaluation != null &&
                 userHash.isNotBlank() &&
@@ -168,13 +166,11 @@ class CourseEvaluationViewModel(
         }
     }
 
-    
     fun loadEvaluations(course: String, teacher: String?) {
         updateState { it.copy(selectedCourse = course, selectedTeacher = teacher) }
         loadEvaluations()
     }
 
-    
     fun loadCourseSummaries() {
         viewModelScope.launch {
             updateState { it.copy(loading = true, error = null) }
@@ -229,7 +225,6 @@ class CourseEvaluationViewModel(
         }
     }
 
-    
     fun deleteEvaluation(id: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {
@@ -285,7 +280,6 @@ class CourseEvaluationViewModel(
         updateState { it.copy(onlyMine = onlyMine) }
     }
 
-    
     fun updateEvaluation(id: String, req: EvaluationUpdateRequest) {
         viewModelScope.launch {
             if (_uiState.value.userNo.isBlank()) {

@@ -8,7 +8,6 @@ import restarhalf.stellar.schedule.domain.port.CourseSelectionPort
 import restarhalf.stellar.schedule.domain.port.JwxtSelectionDropResult
 import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
 
-
 class JwxtCourseSelectionAdapter(
     private val gateway: JwxtGateway,
 ) : CourseSelectionPort {

@@ -22,22 +22,19 @@ import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class AboutViewModel(
     private val checkAppUpdate: CheckAppUpdateUseCase,
 ) : ViewModel() {
-    
+
     sealed interface AboutUiEvent {
-        
+
         data class OpenUri(val uri: String) : AboutUiEvent
 
-        
         data class JoinQqGroup(val key: String) : AboutUiEvent
 
-        
         data object WxPayAwardRequested : AboutUiEvent
     }
-    
+
     @Immutable
     data class AboutUiState(
         val updateChecking: Boolean,
@@ -45,7 +42,6 @@ class AboutViewModel(
         val pendingUpdate: AppUpdateInfo?,
     )
 
-    
     private val _events = MutableSharedFlow<AboutUiEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<AboutUiEvent> = _events
 
@@ -69,10 +65,8 @@ class AboutViewModel(
                 initialValue = AboutUiState(updateChecking = false, updateSummary = "检查", pendingUpdate = null),
             )
 
-    
     val uiState: StateFlow<AboutUiState> = _uiState
 
-    
     fun buildScreenUi(
         isInPreview: Boolean,
         versionName: String,
@@ -88,12 +82,10 @@ class AboutViewModel(
         )
     }
 
-    
     fun clearPendingUpdate() {
         _pendingUpdate.value = null
     }
 
-    
     fun checkUpdate(currentVersionName: String) {
         if (_updateChecking.value) return
 
@@ -126,32 +118,26 @@ class AboutViewModel(
         }
     }
 
-    
     private fun requestJoinQqGroup(key: String) {
         _events.tryEmit(AboutUiEvent.JoinQqGroup(key))
     }
 
-    
     fun requestJoinDefaultQqGroup() {
         requestJoinQqGroup(DEFAULT_QQ_GROUP_KEY)
     }
 
-    
     fun requestOpenJwxtPc() {
         _events.tryEmit(AboutUiEvent.OpenUri("http://jwxt.dlnu.edu.cn/jsxsd/"))
     }
 
-    
     fun requestOpenJwxtMobile() {
         _events.tryEmit(AboutUiEvent.OpenUri("http://jwyd.dlnu.edu.cn/sjd/#/login"))
     }
 
-    
     fun requestOpenGithub() {
         _events.tryEmit(AboutUiEvent.OpenUri("https://github.com/restarhalf/Chrnova"))
     }
 
-    
     fun requestOpenAlipayAward() {
         _events.tryEmit(
             AboutUiEvent.OpenUri(
@@ -160,7 +146,6 @@ class AboutViewModel(
         )
     }
 
-    
     fun requestWxPayAward() {
         _events.tryEmit(AboutUiEvent.WxPayAwardRequested)
     }

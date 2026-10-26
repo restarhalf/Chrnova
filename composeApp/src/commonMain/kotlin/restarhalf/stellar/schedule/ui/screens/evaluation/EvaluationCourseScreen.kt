@@ -39,7 +39,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun EvaluationCourseScreen(
     vm: CourseEvaluationViewModel,

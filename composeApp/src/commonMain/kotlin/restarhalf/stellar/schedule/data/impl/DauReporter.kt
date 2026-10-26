@@ -17,10 +17,8 @@ import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 @Serializable
 private data class DauPingBody(val aid: String)
 
-
 internal object DauReporter {
 
-    
     suspend fun pingTodayIfDue(
         deviceSettings: DeviceSettingsPort,
         client: HttpClient = updateHttpClient,

@@ -12,11 +12,9 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
 
-
 internal object JwxtSelectionParser {
 
     private val json = Json { ignoreUnknownKeys = true }
-
 
     fun <T> parseList(
         data: JsonElement?,
@@ -31,7 +29,6 @@ internal object JwxtSelectionParser {
             emptyList()
         }
     }
-
 
     fun parseSessionContext(data: JsonElement?): JwxtSelectionSession {
         val obj = data as? JsonObject
@@ -68,7 +65,6 @@ internal object JwxtSelectionParser {
             extraRules = extraRules,
         )
     }
-
 
     fun requireSuccess(resp: JwxtSelectionResponse, fallbackMessage: String) {
         if (!resp.isSuccess()) {

@@ -24,7 +24,6 @@ import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
-/** 其余页面：背景、关于、课程/考试编辑、日志、个人资料、教务登录。 */
 fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
 

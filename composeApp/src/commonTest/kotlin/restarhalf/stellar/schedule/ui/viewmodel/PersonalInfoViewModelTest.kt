@@ -18,7 +18,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class PersonalInfoViewModelTest {
 
     private var avatarState: String? = null
@@ -26,7 +25,6 @@ class PersonalInfoViewModelTest {
 
     private val settingsPort = mock<UserProfilePort>(MockMode.autofill)
 
-    
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private fun advanceMain() = mainDispatcher.scheduler.advanceUntilIdle()
@@ -41,7 +39,6 @@ class PersonalInfoViewModelTest {
         Dispatchers.resetMain()
     }
 
-    
     private fun makeViewModel(): PersonalInfoViewModel {
         every { settingsPort.getUserAvatarUri() } calls { avatarState }
         every { settingsPort.getUserNickname() } calls { nicknameState }

@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.core.update
 
 import androidx.compose.runtime.Immutable
 
-
 @Immutable
 data class AppUpdateInfo(
     

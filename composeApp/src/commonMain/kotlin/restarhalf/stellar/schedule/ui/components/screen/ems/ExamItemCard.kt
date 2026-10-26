@@ -33,7 +33,6 @@ import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun ExamItemCard(
     modifier: Modifier = Modifier,

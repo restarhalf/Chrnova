@@ -37,7 +37,6 @@ import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 
-/** `Screen.Main` 的内容：5 个根 tab 的横向分页宿主。 */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainRouteContent(

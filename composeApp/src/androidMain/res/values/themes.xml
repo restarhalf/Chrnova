@@ -2,7 +2,6 @@
 
     <style name="Theme.Schedule" parent="android:Theme.Material.Light.NoActionBar" />
 
-    <!-- MuteActionActivity 专用：完全透明的纯副作用页面，不画任何东西也不做动画 -->
     <style name="Theme.Schedule.Transparent" parent="android:Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>

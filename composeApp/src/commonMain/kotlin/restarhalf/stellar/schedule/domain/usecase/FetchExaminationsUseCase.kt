@@ -11,7 +11,6 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
-
 class FetchExaminationsUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
@@ -59,7 +58,6 @@ class FetchExaminationsUseCase(
         return boundExams
     }
 
-    
     private suspend fun resolveSemester(semester: String): String {
         if (semester.isNotBlank()) return semester
         val selectedTerm = settings.observeSelectedTerm().first()
@@ -67,7 +65,6 @@ class FetchExaminationsUseCase(
         return academic.fetchCurrentTermId()
     }
 
-    
     private suspend fun resolveNameOrNumber(nameOrNumber: String): String {
         if (nameOrNumber.isNotBlank()) return nameOrNumber
         return try {

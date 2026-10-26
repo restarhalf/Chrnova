@@ -58,7 +58,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun ElectiveCreditScreen(
     vm: ElectiveCreditViewModel,
@@ -176,7 +175,6 @@ fun ElectiveCreditScreen(
     }
 }
 
-
 @Composable
 private fun CategoryCard(
     category: CalculateElectiveCreditsUseCase.CreditCategory,
@@ -229,7 +227,6 @@ private fun CategoryCard(
                 }
             }
 
-
             AnimatedVisibility(
                 visible = expanded && category.courses.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
@@ -252,7 +249,6 @@ private fun CategoryCard(
     }
 }
 
-
 private fun buildGradeCardUi(grade: GradeCourse): GradeCardUi {
     return GradeCardUi(
         idKey = grade.gradeId.ifBlank { grade.courseCode + grade.courseName },
@@ -269,7 +265,6 @@ private fun buildGradeCardUi(grade: GradeCourse): GradeCardUi {
     )
 }
 
-
 private fun formatCredits(credits: Double): String {
     return if (credits % 1.0 == 0.0) {
         credits.toInt().toString()
@@ -277,7 +272,6 @@ private fun formatCredits(credits: Double): String {
         DecimalFormatter.format(credits, 1)
     }
 }
-
 
 private fun buildGradeDetailsSummary(grade: GradeCourse): String {
     return buildString {

@@ -39,7 +39,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
@@ -176,7 +175,6 @@ fun HomeScreen(
                 }
             }
 
-
             Box(
                 modifier =
                     Modifier
@@ -192,7 +190,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @Composable
 private fun HomeNotificationButton(
@@ -220,4 +217,3 @@ private fun HomeNotificationButton(
         )
     }
 }
-

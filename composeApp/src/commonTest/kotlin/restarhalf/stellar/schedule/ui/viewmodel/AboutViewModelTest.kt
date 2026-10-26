@@ -154,7 +154,6 @@ class AboutViewModelTest {
         awaitState(vm) { it.pendingUpdate != null }
         vm.clearPendingUpdate()
 
-        // uiState 是 combine(...).stateIn 的缓存值，清空后需等一次调度才反映，不能同步读
         val cleared = awaitState(vm) { it.pendingUpdate == null }
         assertNull(cleared.pendingUpdate)
     }

@@ -8,10 +8,8 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
-
 class JwxtSync(private val gateway: JwxtGateway) {
 
-    
     suspend fun fetchCourses(
         semesterId: String,
         campusId: String,
@@ -36,7 +34,6 @@ class JwxtSync(private val gateway: JwxtGateway) {
             }
         }
 
-    
     suspend fun fetchTermStartDate(
         semesterId: String,
         campusId: String,

@@ -7,13 +7,12 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 
-
 class FetchSemesterIdsUseCase(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val academic: AcademicPort,
     private val settings: TermSettingsPort,
 ) {
-    
+
     suspend operator fun invoke(): List<String> {
 
         return try {
