@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import kotlin.concurrent.Volatile
 import kotlin.math.absoluteValue
 
 typealias CourseColor = Triple<Color, Color, Color>
@@ -77,18 +78,24 @@ fun getCoursePaletteIndex(courseName: String): Int {
     return courseName.hashCode().absoluteValue % courseColorPaletteLight.size
 }
 
+// 小组件在后台线程也会取色，因此缓存改成写时复制：读侧永远看到完整不可变快照，
+// 并发写最多丢一条缓存，不会破坏表结构。
 private const val COLOR_CACHE_MAX = 128
-private val colorCache = LinkedHashMap<Pair<String, Boolean>, CourseColor>(128, 0.75f)
+@Volatile
+private var colorCache: Map<Pair<String, Boolean>, CourseColor> = emptyMap()
 
 private fun getCachedColors(courseName: String, darkMode: Boolean): CourseColor {
     val key = courseName to darkMode
     colorCache[key]?.let { return it }
-    if (colorCache.size >= COLOR_CACHE_MAX) {
-        val eldest = colorCache.entries.iterator().next()
-        colorCache.remove(eldest.key)
-    }
     val palette = if (darkMode) courseColorPaletteDark else courseColorPaletteLight
-    return palette[getCoursePaletteIndex(courseName)].also { colorCache[key] = it }
+    val colors = palette[getCoursePaletteIndex(courseName)]
+    val next = LinkedHashMap(colorCache)
+    if (next.size >= COLOR_CACHE_MAX) {
+        next.remove(next.keys.first())
+    }
+    next[key] = colors
+    colorCache = next
+    return colors
 }
 
 fun pickCourseColor(courseName: String, darkMode: Boolean): Color {

@@ -23,6 +23,7 @@ import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
 import restarhalf.stellar.schedule.domain.port.ScheduleSnapshotPort
+import restarhalf.stellar.schedule.ui.theme.pickCourseTitleColor
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -41,6 +42,8 @@ internal data class SmallNextCourse(
     val location: String,
     val restCount: Int,
     val dotColors: List<Color>,
+    val statusText: String?,
+    val statusType: StatusType,
 )
 
 @Immutable
@@ -96,12 +99,16 @@ private data class Session(
 
 internal object WidgetDataRepository {
 
-    private const val UPCOMING_WINDOW_MINUTES = 10
+    /** 上课前多少分钟内显示"N分钟后"倒计时（与 16 分钟前的上课提醒对齐） */
+    private const val UPCOMING_WINDOW_MINUTES = 15
 
     private const val MAX_ROWS = 2
 
     @OptIn(ExperimentalTime::class)
-    suspend fun load(snapshotPort: ScheduleSnapshotPort): WidgetSnapshot =
+    suspend fun load(
+        snapshotPort: ScheduleSnapshotPort,
+        darkMode: Boolean = false,
+    ): WidgetSnapshot =
         withContext(Dispatchers.IO) {
             val snapshot = snapshotPort.load()
             val filteredCourses = snapshot.courses
@@ -113,7 +120,8 @@ internal object WidgetDataRepository {
                 Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val nowMinutes = now.hour * 60 + now.minute
 
-            val today = loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 0)
+            val today =
+                loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 0, darkMode)
             val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
 
             if (todayRemaining.isNotEmpty()) {
@@ -124,7 +132,7 @@ internal object WidgetDataRepository {
             }
 
             val tomorrow =
-                loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 1)
+                loadDayCourses(filteredCourses, timetable, totalWeeks, termStartMs, now, 1, darkMode)
             if (tomorrow.sessions.isNotEmpty()) {
                 return@withContext WidgetSnapshot(
                     small = buildSmallFromTomorrow(tomorrow),
@@ -143,7 +151,8 @@ internal object WidgetDataRepository {
                             totalWeeks,
                             termStartMs,
                             now,
-                            offset
+                            offset,
+                            darkMode,
                         )
                     }
                 } else {
@@ -166,6 +175,7 @@ internal object WidgetDataRepository {
         termStartMs: Long,
         now: LocalDateTime,
         dayOffset: Int,
+        darkMode: Boolean,
     ): DayCourses {
         val dayDate = now.date.plus(dayOffset, DateTimeUnit.DAY)
         val dayCalMs = dayDate.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
@@ -191,7 +201,7 @@ internal object WidgetDataRepository {
                 effective
                     .asSequence()
                     .filter { it.dayOfWeek == weekday && isCourseActiveInWeek(it, week) }
-                    .mapNotNull { course -> toSession(course, timetable) }
+                    .mapNotNull { course -> toSession(course, timetable, darkMode) }
                     .sortedBy { it.startMin }
                     .toList()
             }
@@ -208,6 +218,7 @@ internal object WidgetDataRepository {
     private fun buildSmallFromToday(today: DayCourses, nowMinutes: Int): SmallWidgetState {
         val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
         val first = todayRemaining.first()
+        val status = pickFocusStatus(first, nowMinutes)
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
             weekLabel = weekLabelOf(today),
@@ -219,6 +230,8 @@ internal object WidgetDataRepository {
                     location = first.location,
                     restCount = (todayRemaining.size - 1).coerceAtLeast(0),
                     dotColors = todayRemaining.drop(1).map { it.barColor },
+                    statusText = status?.text,
+                    statusType = status?.type ?: StatusType.NONE,
                 ),
             emptyText = ""
         )
@@ -237,6 +250,8 @@ internal object WidgetDataRepository {
                     location = first.location,
                     restCount = (tomorrow.sessions.size - 1).coerceAtLeast(0),
                     dotColors = tomorrow.sessions.drop(1).map { it.barColor },
+                    statusText = null,
+                    statusType = StatusType.NONE,
                 ),
             emptyText = ""
         )
@@ -323,6 +338,7 @@ internal object WidgetDataRepository {
     private fun toSession(
         course: Course,
         timetable: List<TimetableSlot>,
+        darkMode: Boolean,
     ): Session? {
         val startSection = course.startSection
         val endSection = course.startSection + course.sectionCount - 1
@@ -341,9 +357,23 @@ internal object WidgetDataRepository {
             title = course.name,
             location = course.location,
             teacher = course.teacher,
-            barColor = parseCourseColor(course.color) ?: Color(0xFF5F89FF)
+            barColor = resolveBarColor(course, darkMode)
         )
     }
+
+    /**
+     * 色条取课表页同一套调色板：同步下来的课程 color 全都是同一个 `#E6E6FA`，
+     * 直接读它会导致所有课程一个颜色。调色板里只有用户手动指定的颜色才优先。
+     */
+    private fun resolveBarColor(course: Course, darkMode: Boolean): Color {
+        if (course.color.isNotBlank() && !isSyncPlaceholderColor(course.color)) {
+            parseCourseColor(course.color)?.let { return it }
+        }
+        return pickCourseTitleColor(course.name, darkMode)
+    }
+
+    private fun isSyncPlaceholderColor(raw: String): Boolean =
+        raw.equals(Course.SYNC_PLACEHOLDER_COLOR, ignoreCase = true)
 
     private fun Session.toLargeRow(statusType: StatusType, statusText: String?): LargeCourseRow {
         val parts = mutableListOf("第${startSection}-${endSection}节")

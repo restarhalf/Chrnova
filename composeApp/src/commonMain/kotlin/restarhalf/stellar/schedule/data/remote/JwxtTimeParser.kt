@@ -1,5 +1,7 @@
 package restarhalf.stellar.schedule.data.remote
 
+import restarhalf.stellar.schedule.domain.model.Course
+
 object JwxtTimeParser {
 
     data class ParsedCourse(
@@ -24,7 +26,10 @@ object JwxtTimeParser {
         val weeks: List<Int>
     )
 
-    fun parseToCourses(item: JwxtCurriculumItem, color: String = "#E6E6FA"): List<ParsedCourse> {
+    fun parseToCourses(
+        item: JwxtCurriculumItem,
+        color: String = Course.SYNC_PLACEHOLDER_COLOR,
+    ): List<ParsedCourse> {
         val slot = parseSlot(item) ?: return emptyList()
         return listOf(
             ParsedCourse(

@@ -36,4 +36,9 @@ data class Course(
     val targetWeek: Int = 0,
     
     val userNo: String = "",
-)
+) {
+    companion object {
+        /** 同步课程未指定颜色时写入的占位色；渲染时应改用课程名调色板 */
+        const val SYNC_PLACEHOLDER_COLOR = "#E6E6FA"
+    }
+}
