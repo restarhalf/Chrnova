@@ -1,24 +1,15 @@
 package restarhalf.stellar.schedule.reminder.receiver
 
 import android.app.Activity
-import android.app.Notification
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Build
 import android.widget.Toast
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
-import restarhalf.stellar.schedule.reminder.NotificationChannels
 
-class MuteActionActivity : Activity(), KoinComponent {
-
-    private val reminderSettings: ReminderSettingsPort by inject()
+class MuteActionActivity : Activity() {
 
     private var handled = false
 
@@ -31,7 +22,6 @@ class MuteActionActivity : Activity(), KoinComponent {
         try {
             when (intent.getStringExtra(EXTRA_MODE)) {
                 MODE_UNMUTE -> restoreRinger()
-                MODE_DISABLE_NOTICE -> disableMuteNotice()
                 else -> handleMute()
             }
         } catch (e: Exception) {
@@ -51,7 +41,6 @@ class MuteActionActivity : Activity(), KoinComponent {
             intent.getIntExtra(EXTRA_RESTORE_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL)
         audioManager.ringerMode = restoreMode
         toast("课程已结束，已恢复铃声")
-        postMuteStateNotice(muted = false)
     }
 
     private fun handleMute() {
@@ -88,7 +77,6 @@ class MuteActionActivity : Activity(), KoinComponent {
                         restoreMode = previousMode,
                     )
                     toast("当前在上课时段，已开启静音")
-                    postMuteStateNotice(muted = true, endTime = endTime)
                     true
                 }
 
@@ -103,50 +91,6 @@ class MuteActionActivity : Activity(), KoinComponent {
         }
     }
 
-    private fun postMuteStateNotice(muted: Boolean, endTime: String = "") {
-        if (!reminderSettings.isMuteStatusNoticeEnabled()) return
-
-        NotificationChannels.ensureAll(this)
-
-        val title = if (muted) "上课啦，静音已开启" else "下课啦，静音已关闭"
-        val text =
-            if (muted && endTime.isNotBlank()) "$endTime 自动恢复铃声" else "休息一下吧"
-
-        val builder =
-            Notification.Builder(this, NotificationChannels.MUTE_STATUS_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setCategory(Notification.CATEGORY_STATUS)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setAutoCancel(true)
-                .setTimeoutAfter(MUTE_NOTICE_TIMEOUT_MS)
-
-        if (muted) {
-            val optOut =
-                PendingIntent.getActivity(
-                    this,
-                    MUTE_NOTICE_ID,
-                    Intent(this, MuteActionActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra(EXTRA_MODE, MODE_DISABLE_NOTICE)
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                )
-            builder.addAction(Notification.Action.Builder(null, "不再提醒", optOut).build())
-        }
-
-        runCatching {
-            getSystemService(NotificationManager::class.java)?.notify(MUTE_NOTICE_ID, builder.build())
-        }.onFailure { AppLogger.log("Reminder", "静音状态通知发送失败", it) }
-    }
-
-    private fun disableMuteNotice() {
-        reminderSettings.setMuteStatusNoticeEnabled(false)
-        getSystemService(NotificationManager::class.java)?.cancel(MUTE_NOTICE_ID)
-        toast("已关闭静音状态提醒")
-    }
-
     private fun toast(text: String) {
         Toast.makeText(applicationContext, text, Toast.LENGTH_SHORT).show()
     }
@@ -158,10 +102,6 @@ class MuteActionActivity : Activity(), KoinComponent {
         private const val EXTRA_RESTORE_RINGER_MODE = "restore_ringer_mode"
         private const val EXTRA_MODE = "mute_mode"
         private const val MODE_UNMUTE = "unmute"
-        private const val MODE_DISABLE_NOTICE = "disable_notice"
-
-        private const val MUTE_NOTICE_ID = 0x4D55
-        private const val MUTE_NOTICE_TIMEOUT_MS = 30 * 60 * 1000L
 
         fun muteIntent(
             context: Context,

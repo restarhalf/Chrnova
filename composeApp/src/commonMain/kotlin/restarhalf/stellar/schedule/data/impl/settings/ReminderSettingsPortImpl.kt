@@ -28,11 +28,4 @@ class ReminderSettingsPortImpl(
     override fun setExamReminderEnabled(enabled: Boolean) {
         settings[SettingsKeys.EXAM_REMINDER_ENABLED] = enabled
     }
-
-    override fun isMuteStatusNoticeEnabled(): Boolean =
-        settings.getBoolean(SettingsKeys.MUTE_STATUS_NOTICE_ENABLED, true)
-
-    override fun setMuteStatusNoticeEnabled(enabled: Boolean) {
-        settings[SettingsKeys.MUTE_STATUS_NOTICE_ENABLED] = enabled
-    }
 }

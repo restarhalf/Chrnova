@@ -11,8 +11,6 @@ object SettingsKeys {
     const val REMINDER_ENABLED = "calendar_enabled"
     
     const val EXAM_REMINDER_ENABLED = "exam_calendar_enabled"
-
-    const val MUTE_STATUS_NOTICE_ENABLED = "mute_status_notice_enabled"
     
     const val THEME_MODE = "theme_mode"
     
