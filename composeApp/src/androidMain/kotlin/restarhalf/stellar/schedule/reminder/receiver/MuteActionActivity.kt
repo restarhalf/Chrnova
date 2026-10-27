@@ -9,13 +9,16 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Build
 import android.widget.Toast
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.data.local.mmkv.MmkvSettingsFactory
-import restarhalf.stellar.schedule.domain.model.SettingsKeys
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.reminder.NotificationChannels
 
-class MuteActionActivity : Activity() {
+class MuteActionActivity : Activity(), KoinComponent {
+
+    private val reminderSettings: ReminderSettingsPort by inject()
 
     private var handled = false
 
@@ -101,8 +104,7 @@ class MuteActionActivity : Activity() {
     }
 
     private fun postMuteStateNotice(muted: Boolean, endTime: String = "") {
-        val settings = MmkvSettingsFactory().create(SettingsKeys.PREFS_NAME)
-        if (!settings.getBoolean(SettingsKeys.MUTE_STATUS_NOTICE_ENABLED, true)) return
+        if (!reminderSettings.isMuteStatusNoticeEnabled()) return
 
         NotificationChannels.ensureAll(this)
 
@@ -140,8 +142,7 @@ class MuteActionActivity : Activity() {
     }
 
     private fun disableMuteNotice() {
-        MmkvSettingsFactory().create(SettingsKeys.PREFS_NAME)
-            .putBoolean(SettingsKeys.MUTE_STATUS_NOTICE_ENABLED, false)
+        reminderSettings.setMuteStatusNoticeEnabled(false)
         getSystemService(NotificationManager::class.java)?.cancel(MUTE_NOTICE_ID)
         toast("已关闭静音状态提醒")
     }

@@ -11,4 +11,8 @@ interface ReminderSettingsPort {
     fun observeExamReminderEnabled(): Flow<Boolean>
 
     fun setExamReminderEnabled(enabled: Boolean)
+
+    fun isMuteStatusNoticeEnabled(): Boolean
+
+    fun setMuteStatusNoticeEnabled(enabled: Boolean)
 }
