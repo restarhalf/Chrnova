@@ -19,6 +19,29 @@ object NotificationChannels {
         val manager = context.getSystemService(NotificationManager::class.java)
         ensureCourseReminder(manager)
         ensureExamReminder(manager)
+        ensureMuteStatus(manager)
+    }
+
+    const val MUTE_STATUS_CHANNEL_ID = "mute_status_low"
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun ensureMuteStatus(manager: NotificationManager) {
+        if (manager.getNotificationChannel(MUTE_STATUS_CHANNEL_ID) != null) return
+
+        val channel =
+            NotificationChannel(
+                MUTE_STATUS_CHANNEL_ID,
+                "静音状态",
+                NotificationManager.IMPORTANCE_LOW
+            )
+                .apply {
+                    description = "上课静音开启与恢复的提示"
+                    setShowBadge(false)
+                    enableVibration(false)
+                    setSound(null, null)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                }
+        manager.createNotificationChannel(channel)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

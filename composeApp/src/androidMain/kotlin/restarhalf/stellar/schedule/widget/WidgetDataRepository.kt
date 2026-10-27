@@ -78,7 +78,7 @@ private data class DayCourses(
     val sessions: List<Session>,
 )
 
-private data class FocusStatus(val id: Long, val type: StatusType, val text: String)
+private data class FocusStatus(val type: StatusType, val text: String)
 
 private data class Session(
     val id: Long,
@@ -256,16 +256,10 @@ internal object WidgetDataRepository {
 
     private fun buildLargeFromToday(today: DayCourses, nowMinutes: Int): LargeWidgetState {
         val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
-        val focus = pickFocusStatus(today.sessions, nowMinutes)
         val rows =
             todayRemaining.take(MAX_ROWS).map { session ->
-                val status =
-                    if (focus != null && session.id == focus.id) {
-                        focus.type to focus.text
-                    } else {
-                        StatusType.NONE to null
-                    }
-                session.toLargeRow(status.first, status.second)
+                val status = pickFocusStatus(session, nowMinutes)
+                session.toLargeRow(status?.type ?: StatusType.NONE, status?.text)
             }
 
         return LargeWidgetState(
@@ -308,27 +302,19 @@ internal object WidgetDataRepository {
     private fun weekLabelOf(day: DayCourses): String =
         if (day.isHoliday) "假期中" else "第${day.week}周"
 
-    private fun pickFocusStatus(todaySessions: List<Session>, nowMinutes: Int): FocusStatus? {
-        val inProgress =
-            todaySessions.firstOrNull { nowMinutes >= it.startMin && nowMinutes < it.endMin }
-        if (inProgress != null) {
+    private fun pickFocusStatus(session: Session, nowMinutes: Int): FocusStatus? {
+        if (nowMinutes >= session.startMin && nowMinutes < session.endMin) {
             return FocusStatus(
-                id = inProgress.id,
                 type = StatusType.ONGOING,
-                text = "${(inProgress.endMin - nowMinutes).coerceAtLeast(0)}分钟结束"
+                text = "${(session.endMin - nowMinutes).coerceAtLeast(0)}分钟结束"
             )
         }
 
-        val upcoming =
-            todaySessions.firstOrNull {
-                val diff = it.startMin - nowMinutes
-                nowMinutes < it.startMin && diff in 1..UPCOMING_WINDOW_MINUTES
-            }
-        if (upcoming != null) {
+        val ahead = session.startMin - nowMinutes
+        if (nowMinutes < session.startMin && ahead in 1..UPCOMING_WINDOW_MINUTES) {
             return FocusStatus(
-                id = upcoming.id,
                 type = StatusType.UPCOMING,
-                text = "${(upcoming.startMin - nowMinutes).coerceAtLeast(0)}分钟后"
+                text = "${ahead.coerceAtLeast(0)}分钟后"
             )
         }
         return null

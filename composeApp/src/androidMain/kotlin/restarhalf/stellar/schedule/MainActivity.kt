@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import org.koin.android.ext.android.inject
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.widget.WidgetOnStartRefresher
+import restarhalf.stellar.schedule.widget.WidgetRefreshController
 
 class MainActivity : ComponentActivity() {
 
@@ -19,5 +20,10 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         WidgetOnStartRefresher.refreshIfNeeded(applicationContext, lifecycleScope)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        WidgetRefreshController.refreshAsync(applicationContext)
     }
 }

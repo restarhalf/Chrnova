@@ -44,7 +44,12 @@ class CourseReminderReceiver : BroadcastReceiver() {
 
         NotificationChannels.ensureAll(context)
 
-        val notificationId = reminderNotificationId(nowMs = System.currentTimeMillis(), time = time)
+        val notificationId =
+            reminderNotificationId(
+                nowMs = System.currentTimeMillis(),
+                name = name,
+                time = time,
+            )
 
         val launchIntent =
             Intent(context, MainActivity::class.java).apply {
@@ -112,7 +117,7 @@ class CourseReminderReceiver : BroadcastReceiver() {
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentIntent(contentIntent)
                 .setAutoCancel(true)
-                .setTimeoutAfter(REMINDER_TIMEOUT_MS)
+                .setTimeoutAfter(reminderTimeoutMs(time))
                 .addAction(muteAction)
                 .build()
         notification.extras.putBoolean("miui.customHeight", true)
@@ -171,13 +176,11 @@ class CourseReminderReceiver : BroadcastReceiver() {
         val rescheduleNextReminderIfEnabled: RescheduleNextCourseReminderIfEnabledUseCase by inject()
     }
 
-    private fun reminderNotificationId(nowMs: Long, time: String): Int {
+    private fun reminderNotificationId(nowMs: Long, name: String, time: String): Int {
         val calendar =
             Calendar.getInstance().apply { timeInMillis = nowMs }
-        val dayKey =
-            calendar.get(Calendar.YEAR) * 1000 +
-                calendar.get(Calendar.DAY_OF_YEAR)
-        return (dayKey * 100 + (time.filter { it.isDigit() }.toIntOrNull() ?: 0)) and 0x7FFFFFFF
+        return "$name|$time|${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.DAY_OF_YEAR)}"
+            .hashCode() and 0x7FFFFFFF
     }
 
     private fun clockStage(time: String, endTime: String, nowMs: Long): ClockStage {
@@ -206,6 +209,12 @@ class CourseReminderReceiver : BroadcastReceiver() {
         val timerType: Int get() = if (timerWhenMs > 0L) TIMER_TYPE_COUNT_DOWN_RUN else 0
     }
 
+    private fun reminderTimeoutMs(time: String): Long {
+        val startAt = parseTodayTimeMs(time) ?: return REMINDER_TIMEOUT_FALLBACK_MS
+        return (startAt + TIMEOUT_AFTER_CLASS_START_MS - System.currentTimeMillis())
+            .coerceAtLeast(MIN_TIMEOUT_MS)
+    }
+
     private fun parseTodayTimeMs(time: String): Long? {
         val parts = time.split(":")
         if (parts.size != 2) return null
@@ -226,7 +235,9 @@ class CourseReminderReceiver : BroadcastReceiver() {
 
         const val CHANNEL_ID = "course_reminder_high"
 
-        private const val REMINDER_TIMEOUT_MS = 60 * 60 * 1000L
+        private const val TIMEOUT_AFTER_CLASS_START_MS = 10 * 60 * 1000L
+        private const val REMINDER_TIMEOUT_FALLBACK_MS = 60 * 60 * 1000L
+        private const val MIN_TIMEOUT_MS = 5 * 60 * 1000L
         private const val MUTE_BUTTON_LABEL = "静音"
 
         private const val ISLAND_MUTE_LABEL = "上课静音"
