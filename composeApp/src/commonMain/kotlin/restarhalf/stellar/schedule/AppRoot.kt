@@ -13,6 +13,7 @@ import androidx.compose.runtime.snapshotFlow
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.core.log.AppLogger
@@ -21,6 +22,7 @@ import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
@@ -45,6 +47,7 @@ fun AppRoot(
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
     ) -> Unit = { _, _ -> },
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    ensureExactAlarmPermission: () -> Unit = {},
     openUri: (String) -> Boolean = { false },
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
@@ -70,6 +73,16 @@ fun AppRoot(
     val appInfo: AppInfoPort = koinInject()
     val displaySettings: DisplaySettingsPort = koinInject()
     val deviceSettings: DeviceSettingsPort = koinInject()
+    val reminderSettings: ReminderSettingsPort = koinInject()
+
+    // 提醒开着却没给精确闹钟授权，闹钟会被系统塞进模糊窗口、到点不响。
+    // 启动时补一次申请，用户从旧版本升上来也能修好。
+    LaunchedEffect(Unit) {
+        val enabled =
+            reminderSettings.observeCourseReminderEnabled().first() ||
+                reminderSettings.observeExamReminderEnabled().first()
+        if (enabled) ensureExactAlarmPermission()
+    }
 
     var appState by remember {
         mutableStateOf(

@@ -1,13 +1,16 @@
 package restarhalf.stellar.schedule
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -76,6 +79,13 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                 }
             }
 
+        // SCHEDULE_EXACT_ALARM 走的是「特殊权限」，不是运行时权限，
+        // 必须弹系统设置页让用户开。不开的话 setExact 会被降级成
+        // setAndAllowWhileIdle，闹钟被塞进最长 1 小时的模糊窗口，
+        // 表现就是「排上了但到点不响」。
+        val exactAlarmLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+
         AppRoot(
             onThemeModeChange = { themeMode = it },
             pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
@@ -105,6 +115,11 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                 } else {
                     pendingNotificationGrant = onGranted
                     notificationPermissionLauncher.launch(permsArray)
+                }
+            },
+            ensureExactAlarmPermission = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    requestExactAlarmIfNeeded(exactAlarmLauncher)
                 }
             },
             openUri = { uri ->
@@ -186,5 +201,29 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
             },
             exitApp = { finishAffinity() },
         )
+    }
+}
+
+/**
+ * 没开精确闹钟权限就跳系统设置页。
+ *
+ * 跳过或没开成也不阻断流程——闹钟仍然会排，只是走 setAndAllowWhileIdle，
+ * 到点时间可能被推迟（实测有 40 多分钟的窗口）。
+ */
+@RequiresApi(Build.VERSION_CODES.S)
+private fun ComponentActivity.requestExactAlarmIfNeeded(
+    launcher: androidx.activity.result.ActivityResultLauncher<Intent>,
+) {
+    val alarmManager = getSystemService(AlarmManager::class.java) ?: return
+    if (alarmManager.canScheduleExactAlarms()) return
+
+    runCatching {
+        launcher.launch(
+            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                data = Uri.parse("package:$packageName")
+            }
+        )
+    }.onFailure {
+        AppLogger.log("App", "申请精确闹钟权限失败", it)
     }
 }
