@@ -150,42 +150,16 @@ internal fun SmallWidgetContent(state: SmallWidgetState) {
                 val course = state.nextCourse
 
                 Column(modifier = GlanceModifier.fillMaxSize()) {
-                    Row(
-                        modifier = GlanceModifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Vertical.CenterVertically,
-                    ) {
-                        Text(
-                            text = course.title,
-                            maxLines = 1,
-                            modifier = GlanceModifier.defaultWeight(),
-                            style =
-                                TextStyle(
-                                    color = widgetTitleText,
-                                    fontSize = scaledSp(15.sp, scale),
-                                    fontWeight = FontWeight.Medium,
-                                ),
-                        )
-
-                        if (!course.statusText.isNullOrBlank()) {
-                            Spacer(modifier = GlanceModifier.width(scaledDpW(6.dp, scale)))
-
-                            Text(
-                                text = course.statusText,
-                                maxLines = 1,
-                                style =
-                                    TextStyle(
-                                        color =
-                                            when (course.statusType) {
-                                                StatusType.UPCOMING -> widgetStatusUpcoming
-                                                StatusType.ONGOING -> widgetStatusOngoing
-                                                StatusType.NONE -> widgetSubtitleText
-                                            },
-                                        fontSize = scaledSp(12.sp, scale),
-                                        fontWeight = FontWeight.Bold,
-                                    ),
-                            )
-                        }
-                    }
+                    Text(
+                        text = course.title,
+                        maxLines = 1,
+                        style =
+                            TextStyle(
+                                color = widgetTitleText,
+                                fontSize = scaledSp(15.sp, scale),
+                                fontWeight = FontWeight.Medium,
+                            ),
+                    )
 
                     Spacer(modifier = GlanceModifier.height(scaledDpH(8.8.dp, scale)))
 

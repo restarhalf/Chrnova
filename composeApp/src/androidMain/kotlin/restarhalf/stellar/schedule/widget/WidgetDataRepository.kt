@@ -42,8 +42,6 @@ internal data class SmallNextCourse(
     val location: String,
     val restCount: Int,
     val dotColors: List<Color>,
-    val statusText: String?,
-    val statusType: StatusType,
 )
 
 @Immutable
@@ -218,7 +216,6 @@ internal object WidgetDataRepository {
     private fun buildSmallFromToday(today: DayCourses, nowMinutes: Int): SmallWidgetState {
         val todayRemaining = today.sessions.filter { it.endMin > nowMinutes }
         val first = todayRemaining.first()
-        val status = pickFocusStatus(first, nowMinutes)
         return SmallWidgetState(
             dayLabel = weekdayLabel(today.weekday),
             weekLabel = weekLabelOf(today),
@@ -230,8 +227,6 @@ internal object WidgetDataRepository {
                     location = first.location,
                     restCount = (todayRemaining.size - 1).coerceAtLeast(0),
                     dotColors = todayRemaining.drop(1).map { it.barColor },
-                    statusText = status?.text,
-                    statusType = status?.type ?: StatusType.NONE,
                 ),
             emptyText = ""
         )
@@ -250,8 +245,6 @@ internal object WidgetDataRepository {
                     location = first.location,
                     restCount = (tomorrow.sessions.size - 1).coerceAtLeast(0),
                     dotColors = tomorrow.sessions.drop(1).map { it.barColor },
-                    statusText = null,
-                    statusType = StatusType.NONE,
                 ),
             emptyText = ""
         )
