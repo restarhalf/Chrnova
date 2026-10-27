@@ -11,11 +11,14 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,12 +32,15 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -57,8 +63,21 @@ class SettingsViewModel(
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
+    private val rescheduleAllReminders: RescheduleAllRemindersUseCase,
+    private val courseReminderPort: CourseReminderPort,
+    private val examReminderPort: ExamReminderPort,
     verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
+
+    private val _rescheduling = MutableStateFlow(false)
+    val rescheduling: StateFlow<Boolean> = _rescheduling
+
+    /** 「重新排提醒」下面的那行小字：当前实际挂着的下一条提醒 */
+    private val _nextReminderSummary = MutableStateFlow("")
+    val nextReminderSummary: StateFlow<String> = _nextReminderSummary
+
+    private val _rescheduleMessages = MutableSharedFlow<String>(extraBufferCapacity = 8)
+    val rescheduleMessages: SharedFlow<String> = _rescheduleMessages
 
     val starVerification = StarVerificationHolder(
         verifyGitHubStar = verifyGitHubStar,
@@ -334,7 +353,10 @@ class SettingsViewModel(
                 withContext(AppIoDispatcher) {
                     runCatching { cancelAllCourseReminders() }
                 }
+                refreshNextReminderSummary()
             }
+        } else {
+            refreshNextReminderSummary()
         }
     }
 
@@ -345,7 +367,10 @@ class SettingsViewModel(
                 withContext(AppIoDispatcher) {
                     runCatching { cancelAllExamReminders() }
                 }
+                refreshNextReminderSummary()
             }
+        } else {
+            refreshNextReminderSummary()
         }
     }
 
@@ -399,6 +424,119 @@ class SettingsViewModel(
             }
         }
     }
+
+    /** 一键重排：清掉现有闹钟，按当前课表与考试重新算一遍 */
+    fun onRescheduleAllRemindersClicked() {
+        if (_rescheduling.value) return
+        _rescheduling.value = true
+        viewModelScope.launch {
+            val report =
+                withContext(AppIoDispatcher) {
+                    runCatching { rescheduleAllReminders() }
+                        .onFailure {
+                            if (it is CancellationException) throw it
+                            AppLogger.log("Reminder", "一键重排失败", it)
+                        }
+                        .getOrNull()
+                }
+            _rescheduling.value = false
+            refreshNextReminderSummary()
+            _rescheduleMessages.emit(describeReschedule(report))
+        }
+    }
+
+    /** 重新读一次两条链上实际挂着的闹钟，更新「重新排提醒」下面的小字 */
+    fun refreshNextReminderSummary() {
+        viewModelScope.launch {
+            val summary =
+                withContext(AppIoDispatcher) {
+                    val courseEnabled = reminderSettings.observeCourseReminderEnabled().first()
+                    val examEnabled = reminderSettings.observeExamReminderEnabled().first()
+                    buildNextReminderSummary(
+                        courseEnabled = courseEnabled,
+                        courseNextAtMs =
+                            if (courseEnabled) {
+                                runCatching { courseReminderPort.nextScheduledAtMs() }.getOrNull()
+                            } else {
+                                null
+                            },
+                        examEnabled = examEnabled,
+                        examNextAtMs =
+                            if (examEnabled) {
+                                runCatching { examReminderPort.nextScheduledAtMs() }.getOrNull()
+                            } else {
+                                null
+                            },
+                    )
+                }
+            _nextReminderSummary.value = summary
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun buildNextReminderSummary(
+        courseEnabled: Boolean,
+        courseNextAtMs: Long?,
+        examEnabled: Boolean,
+        examNextAtMs: Long?,
+    ): String {
+        if (!courseEnabled && !examEnabled) return "提醒都关着"
+
+        val lines = mutableListOf<String>()
+        if (courseEnabled) {
+            lines += "课程 " + describeNext(courseNextAtMs)
+        }
+        if (examEnabled) {
+            lines += "考试 " + describeNext(examNextAtMs)
+        }
+        return lines.joinToString(" · ")
+    }
+
+    private fun describeNext(triggerAtMs: Long?): String =
+        if (triggerAtMs == null) "未排上" else describeResult(triggerAtMs).removePrefix("下次 ")
+
+    @OptIn(ExperimentalTime::class)
+    private fun describeReschedule(report: RescheduleAllRemindersUseCase.Report?): String {
+        if (report == null) return "重排失败，请稍后重试"
+        if (!report.courseEnabled && !report.examEnabled) return "提醒都关着，没有需要重排的项目"
+
+        val lines = mutableListOf<String>()
+        if (report.courseEnabled) {
+            lines += "课程提醒：" + describeResult(report.courseResult)
+        }
+        if (report.examEnabled) {
+            lines +=
+                "考试提醒：" +
+                    if (report.examFetchFailed) "拉取考试安排失败" else describeResult(report.examResult)
+        }
+        return lines.joinToString("\n")
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun describeResult(triggerAtMs: Long?): String {
+        if (triggerAtMs == null) return "调度失败"
+        val dateTime =
+            Instant.fromEpochMilliseconds(triggerAtMs)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+        val month = dateTime.month.ordinal + 1
+        val minute = dateTime.minute.toString().padStart(2, '0')
+        val hour = dateTime.hour.toString().padStart(2, '0')
+        return "下次 $month/${dateTime.day} $hour:$minute"
+    }
+
+    private fun describeResult(result: CourseReminderPort.ScheduleResult?): String =
+        when (result) {
+            is CourseReminderPort.ScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
+            CourseReminderPort.ScheduleResult.NoUpcoming -> "近期没有课"
+            CourseReminderPort.ScheduleResult.Failed, null -> "调度失败"
+        }
+
+    private fun describeResult(result: ExamReminderPort.ScheduleResult?): String =
+        when (result) {
+            is ExamReminderPort.ScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
+            ExamReminderPort.ScheduleResult.NoUpcoming -> "近期没有考试"
+            ExamReminderPort.ScheduleResult.Failed, null -> "调度失败"
+        }
 
     @OptIn(ExperimentalTime::class)
     private fun formatDateYmd(ms: Long): String {

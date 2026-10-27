@@ -39,8 +39,10 @@ import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
@@ -125,9 +127,31 @@ class SettingsScreenUiTest {
                 courseRepository, courseReminder,
             ),
             scheduleNextExamReminder = ScheduleNextExamReminderUseCase(
-                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, termSettings),
+                CollectReminderExaminationsUseCase(
+                    FetchExaminationsUseCase(
+                        authWorkflow, academic, examRepository, auth, termSettings,
+                    ),
+                    examRepository,
+                ),
                 examReminder,
             ),
+            rescheduleAllReminders = RescheduleAllRemindersUseCase(
+                settings = reminderSettings,
+                courseRepository = courseRepository,
+                timetable = timetable,
+                courseReminder = courseReminder,
+                examReminder = examReminder,
+                collectReminderExaminations = CollectReminderExaminationsUseCase(
+                    FetchExaminationsUseCase(
+                        authWorkflow, academic, examRepository, auth, termSettings,
+                    ),
+                    examRepository,
+                ),
+                cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+                cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
+            ),
+            courseReminderPort = courseReminder,
+            examReminderPort = examReminder,
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, deviceSettings),
         )
     }
@@ -135,6 +159,67 @@ class SettingsScreenUiTest {
     private fun androidx.compose.ui.test.ComposeUiTest.waitText(text: String, timeoutMs: Long = 10_000) {
         waitUntil(timeoutMillis = timeoutMs) {
             onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.settingsContent() {
+        ensureKoin()
+        setContent {
+            MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
+                SettingsScreen(
+                    vm = makeViewModel(),
+                    syncUiState = SyncUiState.Idle,
+                    campus = Campus.Jinshitan,
+                    termStartMs = 1_775_000_000_000L,
+                    totalWeeks = 20,
+                    onSync = {},
+                    onLogout = {},
+                    onLogin = {},
+                    onCampusChange = {},
+                    onTermStartChange = {},
+                    onTotalWeeksChange = {},
+                    onChangeBackground = {},
+                    onAbout = {},
+                    onPaper = {},
+                )
+            }
+        }
+    }
+
+    @Test
+    fun 重新排提醒显示当前挂着的下次提醒() = runUltronUiTest {
+        // 课程/考试提醒都开着，分别有下次时间
+        reminderFlow.value = true
+        examReminderFlow.value = true
+        every { courseReminder.nextScheduledAtMs() } returns 1_793_080_000_000L
+        every { examReminder.nextScheduledAtMs() } returns null
+
+        settingsContent()
+        waitText("重新排提醒")
+
+        // 摘要应该拼成「课程 <时间> · 考试 未排上」，而不是还写着通用文案
+        waitUntil(timeoutMillis = 10_000) {
+            onAllNodesWithText("按当前课表和考试，重算下一条提醒时间")
+                .fetchSemanticsNodes()
+                .isEmpty() &&
+                onAllNodesWithText("考试 未排上", substring = true)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+        }
+    }
+
+    @Test
+    fun 提醒都关着时摘要说明没有可重排项() = runUltronUiTest {
+        reminderFlow.value = false
+        examReminderFlow.value = false
+
+        settingsContent()
+        waitText("重新排提醒")
+
+        waitUntil(timeoutMillis = 10_000) {
+            onAllNodesWithText("提醒都关着", substring = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
         }
     }
 

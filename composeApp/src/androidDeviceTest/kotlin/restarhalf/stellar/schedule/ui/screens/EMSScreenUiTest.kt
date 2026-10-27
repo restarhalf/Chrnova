@@ -31,6 +31,7 @@ import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
@@ -68,12 +69,15 @@ class EMSScreenUiTest {
             settings = settings,
             rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
                 settings = reminderSettings,
-                fetchExaminations = FetchExaminationsUseCase(
-                    authWorkflow = authWorkflow,
-                    academic = academic,
+                collectReminderExaminations = CollectReminderExaminationsUseCase(
+                    fetchExaminations = FetchExaminationsUseCase(
+                        authWorkflow = authWorkflow,
+                        academic = academic,
+                        repository = examinationRepository,
+                        auth = auth,
+                        settings = settings,
+                    ),
                     repository = examinationRepository,
-                    auth = auth,
-                    settings = settings,
                 ),
                 examReminder = examReminder,
             ),

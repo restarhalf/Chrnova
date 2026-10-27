@@ -45,7 +45,7 @@ private val androidPlatformModule = module {
     single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
 
     single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
-    single { ExamReminderScheduler(androidContext()) }
+    single { ExamReminderScheduler(androidContext(), get(named("reminder_codes"))) }
 
     single { MmkvSettingsFactory() }
 

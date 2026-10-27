@@ -71,6 +71,16 @@ class CourseReminderPortImpl(
 
     override fun hasScheduledAlarm(): Boolean = settings.getBoolean(KEY_COURSE_SCHEDULED, false)
 
+    @OptIn(ExperimentalTime::class)
+    override fun nextScheduledAtMs(): Long? {
+        if (!settings.getBoolean(KEY_COURSE_SCHEDULED, false)) return null
+        val triggerAtMs = settings.getLong(KEY_COURSE_TRIGGER, 0L)
+        val nowMs = Clock.System.now().toEpochMilliseconds()
+        // 通知响过之后预存值会留在原地，过期就当没挂
+        if (triggerAtMs <= 0L || triggerAtMs <= nowMs) return null
+        return triggerAtMs
+    }
+
     override fun cancelAll() {
         UNUserNotificationCenter.currentNotificationCenter()
             .removePendingNotificationRequestsWithIdentifiers(listOf(COURSE_REMINDER_ID))

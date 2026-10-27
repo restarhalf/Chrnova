@@ -14,6 +14,9 @@ interface ExaminationDao {
     @Query("SELECT * FROM examinations")
     fun observeAllExaminations(): Flow<List<ExaminationEntity>>
 
+    @Query("SELECT * FROM examinations")
+    suspend fun getAllExaminationsOnce(): List<ExaminationEntity>
+
     @Query("SELECT * FROM examinations WHERE userNo = :userNo")
     fun observeExaminationsByUserNo(userNo: String): Flow<List<ExaminationEntity>>
 

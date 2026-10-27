@@ -23,11 +23,17 @@ import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
@@ -49,6 +55,9 @@ class ExamEditViewModelTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val settings = mock<TermSettingsPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
 
     private val coursesFlow = MutableStateFlow<List<Course>>(emptyList())
     private val selectedTermFlow = MutableStateFlow("")
@@ -116,6 +125,20 @@ class ExamEditViewModelTest {
             academic = academic,
             saveExaminationUseCase = SaveExaminationUseCase(examinationRepository),
             deleteExaminationUseCase = DeleteExaminationUseCase(examinationRepository),
+            rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
+                settings = reminderSettings,
+                collectReminderExaminations = CollectReminderExaminationsUseCase(
+                    fetchExaminations = FetchExaminationsUseCase(
+                        authWorkflow = authWorkflow,
+                        academic = academic,
+                        repository = examinationRepository,
+                        auth = auth,
+                        settings = settings,
+                    ),
+                    repository = examinationRepository,
+                ),
+                examReminder = examReminder,
+            ),
         )
     }
 

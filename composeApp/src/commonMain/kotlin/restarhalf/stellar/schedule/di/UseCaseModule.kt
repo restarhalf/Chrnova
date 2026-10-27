@@ -26,6 +26,7 @@ import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveCourseUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveTransCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchAnnouncementUseCase
@@ -52,6 +53,7 @@ import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCas
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsAnyReminderEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnabledUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
@@ -135,7 +137,30 @@ val useCaseModule = module {
         )
     }
     factory { ScheduleNextCourseReminderUseCase(courseRepository = get(), courseReminder = get()) }
-    factory { ScheduleNextExamReminderUseCase(fetchExaminations = get(), examReminder = get()) }
+    factory {
+        CollectReminderExaminationsUseCase(
+            fetchExaminations = get(),
+            repository = get(),
+        )
+    }
+    factory {
+        ScheduleNextExamReminderUseCase(
+            collectReminderExaminations = get(),
+            examReminder = get(),
+        )
+    }
+    factory {
+        RescheduleAllRemindersUseCase(
+            settings = get(),
+            courseRepository = get(),
+            timetable = get(),
+            courseReminder = get(),
+            examReminder = get(),
+            collectReminderExaminations = get(),
+            cancelAllCourseReminders = get(),
+            cancelAllExamReminders = get(),
+        )
+    }
     factory { CancelAllCourseRemindersUseCase(courseReminder = get()) }
     factory { CancelAllExamRemindersUseCase(examReminder = get()) }
     factory { IsAnyReminderEnabledUseCase(settings = get()) }
@@ -150,7 +175,7 @@ val useCaseModule = module {
     factory {
         RescheduleNextExamReminderIfEnabledUseCase(
             settings = get(),
-            fetchExaminations = get(),
+            collectReminderExaminations = get(),
             examReminder = get(),
         )
     }
@@ -161,8 +186,7 @@ val useCaseModule = module {
             timetable = get(),
             courseReminder = get(),
             examReminder = get(),
-            academic = get(),
-            authWorkflow = get(),
+            collectReminderExaminations = get(),
         )
     }
     factory { IsExamNotEndedUseCase() }

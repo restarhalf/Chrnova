@@ -1,13 +1,8 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
-import restarhalf.stellar.schedule.core.error.isNetworkError
-import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.domain.model.Examination
-import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
-import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -18,8 +13,7 @@ class RescheduleRemindersUseCase(
     private val timetable: TimetablePort,
     private val courseReminder: CourseReminderPort,
     private val examReminder: ExamReminderPort,
-    private val academic: AcademicPort,
-    private val authWorkflow: JwxtAuthWorkflowPort,
+    private val collectReminderExaminations: CollectReminderExaminationsUseCase,
 ) {
 
     sealed class Result {
@@ -63,7 +57,7 @@ class RescheduleRemindersUseCase(
 
         if (examReminderEnabled) {
             if (!examReminder.hasScheduledAlarm()) {
-                val exams = fetchExamsWithReloginRetry()
+                val exams = collectReminderExaminations(semester = "", nameOrNumber = "").exams
                 when (examReminder.scheduleNextReminder(exams)) {
                     is ExamReminderPort.ScheduleResult.Scheduled -> Unit
                     is ExamReminderPort.ScheduleResult.NoUpcoming -> Unit
@@ -78,16 +72,5 @@ class RescheduleRemindersUseCase(
             examFailed -> Result.ExamReminderFailed
             else -> Result.Success
         }
-    }
-
-    private suspend fun fetchExamsWithReloginRetry(): List<Examination> {
-        authWorkflow.ensureLoggedIn()
-        return runCatching { academic.fetchExaminations(semester = "", nameOrNumber = "") }
-            .onFailure { AppLogger.log("Reminder", "获取考试失败", it) }
-            .getOrElse {
-                if (it.isNetworkError()) throw it
-                authWorkflow.refreshSession()
-                academic.fetchExaminations(semester = "", nameOrNumber = "")
-            }
     }
 }

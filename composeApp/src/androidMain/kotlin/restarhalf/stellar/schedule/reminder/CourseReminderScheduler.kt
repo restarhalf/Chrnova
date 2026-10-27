@@ -195,6 +195,7 @@ class CourseReminderScheduler(
         }
 
         settings.remove(KEY_CODES)
+        settings.remove(KEY_NEXT_TRIGGER)
     }
 
     private fun encodeCodes(codes: Set<String>): String = codes.joinToString(",")
@@ -284,9 +285,14 @@ class CourseReminderScheduler(
     }
 
     fun getNextTriggerTime(): Long? {
-        return if (settings.hasKey(KEY_NEXT_TRIGGER)) settings.getLong(
-            KEY_NEXT_TRIGGER,
-            0
-        ) else null
+        val triggerAtMs =
+            if (settings.hasKey(KEY_NEXT_TRIGGER)) {
+                settings.getLong(KEY_NEXT_TRIGGER, 0L)
+            } else {
+                return null
+            }
+        // 闹钟响过之后预存值会留在原地，过期就当没挂
+        if (triggerAtMs <= 0L || triggerAtMs <= System.currentTimeMillis()) return null
+        return triggerAtMs
     }
 }

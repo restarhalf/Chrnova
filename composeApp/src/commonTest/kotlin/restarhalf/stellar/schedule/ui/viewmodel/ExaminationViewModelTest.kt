@@ -31,6 +31,7 @@ import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.IsExamNotEndedUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -74,12 +75,15 @@ class ExaminationViewModelTest {
             settings = settings,
             rescheduleNextExamReminderIfEnabled = RescheduleNextExamReminderIfEnabledUseCase(
                 settings = reminderSettings,
-                fetchExaminations = FetchExaminationsUseCase(
-                    authWorkflow = authWorkflow,
-                    academic = academic,
+                collectReminderExaminations = CollectReminderExaminationsUseCase(
+                    fetchExaminations = FetchExaminationsUseCase(
+                        authWorkflow = authWorkflow,
+                        academic = academic,
+                        repository = examinationRepository,
+                        auth = auth,
+                        settings = settings,
+                    ),
                     repository = examinationRepository,
-                    auth = auth,
-                    settings = settings,
                 ),
                 examReminder = examReminder,
             ),

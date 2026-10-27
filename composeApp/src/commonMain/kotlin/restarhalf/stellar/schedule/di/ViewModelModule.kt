@@ -81,6 +81,9 @@ val viewModelModule = module {
             fetchSemesterIds = get(),
             scheduleNextCourseReminder = get(),
             scheduleNextExamReminder = get(),
+            rescheduleAllReminders = get(),
+            courseReminderPort = get(),
+            examReminderPort = get(),
             verifyGitHubStar = get(),
         )
     }
@@ -102,6 +105,7 @@ val viewModelModule = module {
             academic = get(),
             saveExaminationUseCase = get(),
             deleteExaminationUseCase = get(),
+            rescheduleNextExamReminderIfEnabled = get(),
         )
     }
     viewModel {

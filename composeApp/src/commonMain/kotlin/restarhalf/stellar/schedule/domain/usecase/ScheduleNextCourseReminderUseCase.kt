@@ -12,9 +12,9 @@ class ScheduleNextCourseReminderUseCase(
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
-    ) {
+    ): CourseReminderPort.ScheduleResult {
         val courses = courseRepository.getAllCoursesOnce()
-        courseReminder.scheduleNextReminder(
+        return courseReminder.scheduleNextReminder(
             courses = courses,
             campus = campus,
             termStartMs = termStartMs,

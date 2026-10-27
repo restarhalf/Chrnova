@@ -18,6 +18,10 @@ class RoomExaminationRepository(
         }
     }
 
+    override suspend fun getAllExaminationsOnce(): List<Examination> {
+        return examinationDao.getAllExaminationsOnce().map { it.toDomain() }
+    }
+
     override fun observeExaminationsByUserNo(userNo: String): Flow<List<Examination>> {
         return examinationDao.observeExaminationsByUserNo(userNo).map { entities ->
             entities.map { it.toDomain() }

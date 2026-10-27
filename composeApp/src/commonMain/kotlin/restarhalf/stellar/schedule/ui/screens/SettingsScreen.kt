@@ -106,10 +106,17 @@ fun SettingsScreen(
     val showRowHeightPicker = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val starVerificationState by vm.starVerification.state.collectAsStateWithLifecycle()
+    val rescheduling by vm.rescheduling.collectAsStateWithLifecycle()
+    val nextReminderSummary by vm.nextReminderSummary.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.refreshAuth()
         vm.refreshRemoteTerms()
+        vm.refreshNextReminderSummary()
+    }
+
+    LaunchedEffect(Unit) {
+        vm.rescheduleMessages.collect { showMessage(it) }
     }
 
     val termSelectionUi =
@@ -449,6 +456,19 @@ fun SettingsScreen(
                             title = "手动刷新课表",
                             summary = screenUi.syncSummary,
                             onClick = { vm.triggerSync { onSync() } })
+                    })
+                    add(CardItem("rescheduleReminders") {
+                        ArrowPreference(
+                            title = "重新排提醒",
+                            summary =
+                                when {
+                                    rescheduling -> "重排中..."
+                                    nextReminderSummary.isNotBlank() -> nextReminderSummary
+                                    else -> "按当前课表和考试，重算下一条提醒时间"
+                                },
+                            onClick = {
+                                if (!rescheduling) vm.onRescheduleAllRemindersClicked()
+                            })
                     })
                     add(CardItem("courseReminder") {
                         SwitchPreference(

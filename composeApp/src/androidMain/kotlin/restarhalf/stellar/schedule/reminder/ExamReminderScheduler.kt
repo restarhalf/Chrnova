@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.set
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -15,7 +17,10 @@ import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver
 import kotlin.time.ExperimentalTime
 
-class ExamReminderScheduler(private val context: Context) {
+class ExamReminderScheduler(
+    private val context: Context,
+    private val settings: ObservableSettings,
+) {
 
     data class NextExamReminder(
         val triggerAtMs: Long,
@@ -62,6 +67,7 @@ class ExamReminderScheduler(private val context: Context) {
             )
 
         return if (success) {
+            settings[KEY_NEXT_TRIGGER] = next.triggerAtMs
             ScheduleResult.Scheduled(next.triggerAtMs)
         } else {
             ScheduleResult.Failed
@@ -125,11 +131,27 @@ class ExamReminderScheduler(private val context: Context) {
             alarmManager.cancel(pendingIntent)
             pendingIntent.cancel()
         }
+
+        settings.remove(KEY_NEXT_TRIGGER)
+    }
+
+    fun getNextTriggerTime(): Long? {
+        val triggerAtMs =
+            if (settings.hasKey(KEY_NEXT_TRIGGER)) {
+                settings.getLong(KEY_NEXT_TRIGGER, 0L)
+            } else {
+                return null
+            }
+        // 闹钟响过之后预存值会留在原地，过期就当没挂
+        if (triggerAtMs <= 0L || triggerAtMs <= System.currentTimeMillis()) return null
+        return triggerAtMs
     }
 
     companion object {
         private const val REMINDER_MINUTES_BEFORE = 15
         private const val SINGLE_REMINDER_REQUEST_CODE = 21001
+        // 和课程提醒共用 reminder_codes 这个 prefs，键名必须错开
+        private const val KEY_NEXT_TRIGGER = "exam_next_trigger"
 
         const val EXTRA_COURSE_NAME = "exam_course_name"
         const val EXTRA_PLACE = "exam_place"

@@ -30,13 +30,16 @@ import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
+import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -66,6 +69,7 @@ class SettingsViewModelTest {
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
+    private val timetable = mock<TimetablePort>(MockMode.autofill)
 
     private val mainDispatcher = UnconfinedTestDispatcher()
 
@@ -111,9 +115,31 @@ class SettingsViewModelTest {
                 courseRepository, courseReminder,
             ),
             scheduleNextExamReminder = ScheduleNextExamReminderUseCase(
-                FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, termSettings),
+                CollectReminderExaminationsUseCase(
+                    FetchExaminationsUseCase(
+                        authWorkflow, academic, examRepository, auth, termSettings,
+                    ),
+                    examRepository,
+                ),
                 examReminder,
             ),
+            rescheduleAllReminders = RescheduleAllRemindersUseCase(
+                settings = reminderSettings,
+                courseRepository = courseRepository,
+                timetable = timetable,
+                courseReminder = courseReminder,
+                examReminder = examReminder,
+                collectReminderExaminations = CollectReminderExaminationsUseCase(
+                    FetchExaminationsUseCase(
+                        authWorkflow, academic, examRepository, auth, termSettings,
+                    ),
+                    examRepository,
+                ),
+                cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+                cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
+            ),
+            courseReminderPort = courseReminder,
+            examReminderPort = examReminder,
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, deviceSettings),
         )
     }

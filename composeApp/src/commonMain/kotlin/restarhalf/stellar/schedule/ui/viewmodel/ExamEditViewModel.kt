@@ -27,6 +27,7 @@ import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllCoursesUseCase
 import restarhalf.stellar.schedule.domain.usecase.ObserveExaminationByIdUseCase
 import restarhalf.stellar.schedule.domain.usecase.DeleteExaminationUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
@@ -38,6 +39,7 @@ class ExamEditViewModel(
     private val academic: AcademicPort,
     private val saveExaminationUseCase: SaveExaminationUseCase,
     private val deleteExaminationUseCase: DeleteExaminationUseCase,
+    private val rescheduleNextExamReminderIfEnabled: RescheduleNextExamReminderIfEnabledUseCase,
 ) : ViewModel() {
 
     private val _saving = MutableStateFlow(false)
@@ -194,6 +196,8 @@ class ExamEditViewModel(
                         AppLogger.log("ExamEdit", "保存考试失败", e)
                     }
                     .isSuccess
+                // 存完立刻按新数据重排一次，不用等下次打开考试页
+                if (saved) rescheduleReminderQuietly()
                 onResult(saved)
             } finally {
                 _saving.value = false
@@ -222,7 +226,17 @@ class ExamEditViewModel(
                     AppLogger.log("ExamEdit", "删除考试失败", e)
                 }
                 .isSuccess
+            if (deleted) rescheduleReminderQuietly()
             onResult(deleted)
         }
+    }
+
+    /** 重排失败不影响保存结果，只记日志 */
+    private suspend fun rescheduleReminderQuietly() {
+        runCatching { withContext(AppIoDispatcher) { rescheduleNextExamReminderIfEnabled() } }
+            .onFailure { e ->
+                if (e is CancellationException) throw e
+                AppLogger.log("ExamEdit", "保存后重排考试提醒失败", e)
+            }
     }
 }

@@ -25,6 +25,8 @@ class ExamReminderPortImpl(
 
     override fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
 
+    override fun nextScheduledAtMs(): Long? = scheduler.getNextTriggerTime()
+
     override fun cancelAll() {
         scheduler.cancelAll()
     }
