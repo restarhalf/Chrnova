@@ -84,6 +84,7 @@ fun AppContent(
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
     ) -> Unit = { _, _ -> },
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    ensureExactAlarmPermission: () -> Unit = {},
     openUri: (String) -> Boolean = { false },
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
@@ -124,6 +125,7 @@ fun AppContent(
         }
     val pictureSelectorHostState by rememberUpdatedState(pictureSelectorHost)
     val ensureNotificationPermissionState by rememberUpdatedState(ensureNotificationPermission)
+    val ensureExactAlarmPermissionState by rememberUpdatedState(ensureExactAlarmPermission)
     val openUriState by rememberUpdatedState(openUri)
     val showMessageState by rememberUpdatedState(showMessage)
     val saveAwardPictureState by rememberUpdatedState(saveAwardPicture)
@@ -242,6 +244,7 @@ fun AppContent(
                                     announcementVm = announcementVm,
                                     runSync = runSyncState,
                                     ensureNotificationPermission = ensureNotificationPermissionState,
+                                    ensureExactAlarmPermission = ensureExactAlarmPermissionState,
                                     saveCsv = saveCsv,
                                     showMessage = showMessage,
                                     canSaveImage = canSaveImageState,

@@ -28,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 
@@ -42,6 +44,8 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
         defaultHandler?.uncaughtException(thread, throwable)
     }
     setContent {
+
+        val reminderSettings: ReminderSettingsPort = koinInject()
 
         var themeMode by remember { mutableIntStateOf(displaySettings.getThemeMode()) }
         val darkMode =
@@ -119,6 +123,7 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
             },
             ensureExactAlarmPermission = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    reminderSettings.markExactAlarmPermissionAsked()
                     requestExactAlarmIfNeeded(exactAlarmLauncher)
                 }
             },

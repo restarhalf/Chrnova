@@ -28,4 +28,12 @@ class ReminderSettingsPortImpl(
     override fun setExamReminderEnabled(enabled: Boolean) {
         settings[SettingsKeys.EXAM_REMINDER_ENABLED] = enabled
     }
+
+    override fun hasAskedExactAlarmPermission(): Boolean {
+        return settings.getBoolean(SettingsKeys.EXACT_ALARM_PERMISSION_ASKED, false)
+    }
+
+    override fun markExactAlarmPermissionAsked() {
+        settings[SettingsKeys.EXACT_ALARM_PERMISSION_ASKED] = true
+    }
 }

@@ -21,4 +21,13 @@ class ReminderSettingsPortImplTest {
         impl.setExamReminderEnabled(true)
         assertTrue(impl.observeExamReminderEnabled().first())
     }
+
+    @Test
+    fun exactAlarmAskedDefaultsFalseAndStaysTrue() {
+        assertFalse(impl.hasAskedExactAlarmPermission())
+        impl.markExactAlarmPermissionAsked()
+        assertTrue(impl.hasAskedExactAlarmPermission())
+        impl.markExactAlarmPermissionAsked()
+        assertTrue(impl.hasAskedExactAlarmPermission())
+    }
 }

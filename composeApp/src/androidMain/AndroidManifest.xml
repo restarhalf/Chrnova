@@ -34,9 +34,12 @@
         android:usesCleartextTraffic="false"
         tools:targetApi="33">
 
-        <meta-data
-            android:name="miuiWidgetVersion"
-            android:value="1" />
+        <!-- miuiWidgetVersion 已一并移除：本应用不再声明 miuiWidget，
+             走标准 AppWidget，这个版本号没有意义，留着反而可能被当成
+             MIUI 小组件应用。
+             将来若获批接入 MIUI 小组件通道，要同时加回 miuiWidget（两个
+             receiver 各一套）和这里这个版本号，并且每次改小组件都递增，
+             否则系统会把应用所有小组件下线。 -->
 
         <activity
             android:name="restarhalf.stellar.schedule.MainActivity"
@@ -97,18 +100,13 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_small_widget_info" />
-            <meta-data
-                android:name="miuiWidget"
-                android:value="true" />
-            <meta-data
-                android:name="miuiWidgetRefresh"
-                android:value="exposure" />
-            <meta-data
-                android:name="miuiWidgetRefreshMinInterval"
-                android:value="60000" />
-            <meta-data
-                android:name="miuiWidgetTransitionAnimation"
-                android:value="true" />
+            <!-- 不要声明 miuiWidget=true。声明之后系统把这几个 provider 从标准
+                 AppWidget 列表里摘走，交给智能助理那套服务端下发的 MIUI 小部件
+                 配置；第三方应用没被小米适配过，详情页就永远停在「正在努力适配中，
+                 请您耐心等待」（同一份资源里的西语原文是「这个小部件暂不可用」）。
+                 实测：不声明，安卓小部件列表里正常出现；声明了，两边都没有。
+                 代价是不再收 miui.appwidget.action.APPWIDGET_UPDATE 的曝光刷新，
+                 刷新靠亮屏解锁 + 兜底 tick + 打开应用时触发。 -->
         </receiver>
 
         <receiver
@@ -122,18 +120,7 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_large_widget_info" />
-            <meta-data
-                android:name="miuiWidget"
-                android:value="true" />
-            <meta-data
-                android:name="miuiWidgetRefresh"
-                android:value="exposure" />
-            <meta-data
-                android:name="miuiWidgetRefreshMinInterval"
-                android:value="60000" />
-            <meta-data
-                android:name="miuiWidgetTransitionAnimation"
-                android:value="true" />
+            <!-- 同上：不声明 miuiWidget，保持标准 AppWidget。 -->
         </receiver>
 
         <receiver

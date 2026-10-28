@@ -76,8 +76,11 @@ internal object WidgetRefreshController {
             return
         }
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        alarmManager.setRepeating(
-            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+        // 非唤醒型：小组件只在屏幕亮着时才有意义，没必要每 30 分钟把设备从
+        // 睡眠里叫醒一次（一天 48 次）。睡着时这次 tick 会等到下次醒来再补，
+        // 亮屏/解锁本来也有 ScreenStateReceiver 兜着。
+        alarmManager.setInexactRepeating(
+            AlarmManager.ELAPSED_REALTIME,
             SystemClock.elapsedRealtime() + 1_000L,
             FALLBACK_PERIOD_MS,
             buildFallbackPendingIntent(context),

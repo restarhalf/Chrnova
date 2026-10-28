@@ -227,7 +227,6 @@ class CourseReminderScheduler(
         object Failed : ScheduleResult()
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleAlarmBestEffort(
         alarmManager: AlarmManager,
@@ -235,8 +234,11 @@ class CourseReminderScheduler(
         pendingIntent: PendingIntent
     ): Boolean {
         return try {
+            // canScheduleExactAlarms 是 API 31 才有的，低版本调它抛的是
+            // NoSuchMethodError（Error，不是 Exception），下面的 catch 接不住。
             val canExact =
-                alarmManager.canScheduleExactAlarms()
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    alarmManager.canScheduleExactAlarms()
             if (canExact) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,

@@ -158,15 +158,17 @@ class ExamReminderScheduler(
         const val EXTRA_EXAM_TIME = "exam_time"
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun scheduleAlarmBestEffort(
         alarmManager: AlarmManager,
         triggerAtMs: Long,
         pendingIntent: PendingIntent
     ): Boolean {
         return try {
+            // canScheduleExactAlarms 是 API 31 才有的，低版本调它抛的是
+            // NoSuchMethodError（Error，不是 Exception），下面的 catch 接不住。
             val canExact =
-                alarmManager.canScheduleExactAlarms()
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    alarmManager.canScheduleExactAlarms()
             if (canExact) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,

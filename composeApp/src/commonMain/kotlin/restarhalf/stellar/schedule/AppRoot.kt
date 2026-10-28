@@ -77,11 +77,15 @@ fun AppRoot(
 
     // 提醒开着却没给精确闹钟授权，闹钟会被系统塞进模糊窗口、到点不响。
     // 启动时补一次申请，用户从旧版本升上来也能修好。
+    // 只问一次：Android 14 起这个权限默认不给，用户不点头就会每次冷启动都被
+    // 拉去系统设置页。问过就记下来，之后想再要可以去设置页关掉提醒再打开。
     LaunchedEffect(Unit) {
         val enabled =
             reminderSettings.observeCourseReminderEnabled().first() ||
                 reminderSettings.observeExamReminderEnabled().first()
-        if (enabled) ensureExactAlarmPermission()
+        if (enabled && !reminderSettings.hasAskedExactAlarmPermission()) {
+            ensureExactAlarmPermission()
+        }
     }
 
     var appState by remember {
@@ -171,6 +175,7 @@ fun AppRoot(
                 pictureSelectorHost = pictureSelectorHost,
                 pdfFilePickerHost = pdfFilePickerHost,
                 ensureNotificationPermission = ensureNotificationPermission,
+                ensureExactAlarmPermission = ensureExactAlarmPermission,
                 openUri = openUri,
                 showMessage = showMessage,
                 canSaveAwardPicture = canSaveAwardPicture,

@@ -73,6 +73,7 @@ fun SettingsScreen(
     isPeLoggedIn: Boolean = false,
     ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
+    onRequestExactAlarmPermission: () -> Unit = {},
     onCampusChange: (Campus) -> Unit,
     onTermStartChange: (Long) -> Unit,
     onTotalWeeksChange: (Int) -> Unit,
@@ -478,6 +479,7 @@ fun SettingsScreen(
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureCourseReminderPermission {
+                                        onRequestExactAlarmPermission()
                                         vm.onReminderEnabledChanged(true)
                                         vm.scheduleCourseReminder(
                                             campus = campus,
@@ -498,6 +500,7 @@ fun SettingsScreen(
                             onCheckedChange = { newValue ->
                                 if (newValue) {
                                     ensureExamReminderPermission {
+                                        onRequestExactAlarmPermission()
                                         vm.onExamReminderEnabledChanged(true)
                                         vm.scheduleExamReminder(
                                             selectedTerm = settingsUiState.selectedTerm
