@@ -85,14 +85,14 @@ class JwxtClient(
 
             val body: String = response.body()
 
-            val serverId =
-                extractServerIdFromSetCookie(response.headers.getAll("Set-Cookie") ?: emptyList())
-            if (!serverId.isNullOrBlank()) {
-                authStore?.setServerIdCookie(serverId)
-            }
-
+            // 先解析响应，确认登录成功后再成组写入 cookie 与 token，避免解析失败留下半更新状态
             val parsed = json.decodeFromString(JwxtLoginResponse.serializer(), body)
             if (parsed.code == 1) {
+                val serverId =
+                    extractServerIdFromSetCookie(response.headers.getAll("Set-Cookie") ?: emptyList())
+                if (!serverId.isNullOrBlank()) {
+                    authStore?.setServerIdCookie(serverId)
+                }
                 authStore?.setToken(parsed.data?.token)
             }
             parsed

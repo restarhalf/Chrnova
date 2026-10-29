@@ -1,6 +1,8 @@
 package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.domain.port.PEGateway
@@ -13,6 +15,8 @@ class PEAuthWorkflowPortImpl(
     private val repository: PERepository,
 ) : PEAuthWorkflowPort {
 
+    private val authMutex = Mutex()
+
     override suspend fun ensureLoggedIn() {
         val token = authStore.getToken().orEmpty()
         if (token.isNotBlank()) return
@@ -23,6 +27,15 @@ class PEAuthWorkflowPortImpl(
     }
 
     override suspend fun login(
+        username: String,
+        password: String,
+    ) {
+        authMutex.withLock {
+            performLogin(username = username, password = password)
+        }
+    }
+
+    private suspend fun performLogin(
         username: String,
         password: String,
     ) {
@@ -51,18 +64,32 @@ class PEAuthWorkflowPortImpl(
     }
 
     override suspend fun logout() {
-        authStore.clear()
-        repository.clearAll()
+        authMutex.withLock {
+            authStore.clear()
+            repository.clearAll()
+        }
     }
 
     override suspend fun refreshSession() {
-        val (username, password) = authStore.getCredentials() ?: return
-        val oldToken = authStore.getToken()
-        runCatching { login(username = username, password = password) }
-            .onFailure { e ->
-                if (e is CancellationException) throw e
+        val tokenBefore = authStore.getToken()
+
+        authMutex.withLock {
+            // 等待锁期间可能已退出登录，凭据要以加锁后的状态为准
+            val (username, password) = authStore.getCredentials() ?: return
+
+            // 已有其他刷新更新了 token，直接复用，避免并发重复登录
+            val currentToken = authStore.getToken()
+            if (currentToken != null && currentToken != tokenBefore) return
+
+            val oldToken = authStore.getToken()
+            try {
+                performLogin(username = username, password = password)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 AppLogger.log("PEAuth", "刷新会话失败，恢复旧Token", e)
                 if (oldToken != null) authStore.setToken(oldToken)
             }
+        }
     }
 }
