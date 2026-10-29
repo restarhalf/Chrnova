@@ -6,8 +6,8 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
-import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
+import dev.mokkery.verifySuspend
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -247,7 +247,7 @@ class ExaminationViewModelTest {
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verify(VerifyMode.not) { examReminder.scheduleNextReminder(any()) }
+        verifySuspend(VerifyMode.not) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test
@@ -263,7 +263,7 @@ class ExaminationViewModelTest {
         withContext(Dispatchers.Default) { delay(100) }
         advanceMain()
 
-        verify(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
+        verifySuspend(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test

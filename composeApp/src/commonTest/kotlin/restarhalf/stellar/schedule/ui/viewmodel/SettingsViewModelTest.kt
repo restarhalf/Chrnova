@@ -8,6 +8,7 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
 import dev.mokkery.verify.VerifyMode
+import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -311,7 +312,7 @@ class SettingsViewModelTest {
 
         verify(VerifyMode.exactly(1)) { termSettings.setSelectedTerm("2025-2") }
         verify(VerifyMode.exactly(1)) { termSettings.setActiveScheduleTerm("2025-2") }
-        verify(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
+        verifySuspend(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
     }
 
     @Test

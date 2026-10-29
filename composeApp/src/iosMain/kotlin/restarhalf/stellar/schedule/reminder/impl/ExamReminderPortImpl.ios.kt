@@ -6,14 +6,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import platform.UserNotifications.UNAuthorizationOptionAlert
-import platform.UserNotifications.UNAuthorizationOptionBadge
-import platform.UserNotifications.UNAuthorizationOptionSound
-import platform.UserNotifications.UNMutableNotificationContent
-import platform.UserNotifications.UNNotificationRequest
-import platform.UserNotifications.UNNotificationSound
-import platform.UserNotifications.UNTimeIntervalNotificationTrigger
-import platform.UserNotifications.UNUserNotificationCenter
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
@@ -26,14 +18,14 @@ class ExamReminderPortImpl(
 ) : ExamReminderPort {
 
     @OptIn(ExperimentalTime::class)
-    override fun scheduleNextReminder(exams: List<Examination>): ExamReminderPort.ScheduleResult {
+    override suspend fun scheduleNextReminder(exams: List<Examination>): ExamReminderPort.ScheduleResult {
         val nowMs = Clock.System.now().toEpochMilliseconds()
         val next = findNextReminder(exams = exams, nowMs = nowMs) ?: run {
             cancelAll()
             return ExamReminderPort.ScheduleResult.NoUpcoming
         }
 
-        val success = scheduleNotification(
+        val success = IosReminderNotifications.schedule(
             identifier = EXAM_REMINDER_ID,
             title = "考试提醒",
             body = "${next.courseName} ${next.place}",
@@ -45,17 +37,22 @@ class ExamReminderPortImpl(
             settings[KEY_EXAM_TRIGGER] = next.triggerAtMs
             ExamReminderPort.ScheduleResult.Scheduled(next.triggerAtMs)
         } else {
+            clearScheduledState()
             ExamReminderPort.ScheduleResult.Failed
         }
     }
 
     @OptIn(ExperimentalTime::class)
-    override fun hasScheduledAlarm(): Boolean {
+    override suspend fun hasScheduledAlarm(): Boolean {
         if (!settings.getBoolean(KEY_EXAM_SCHEDULED, false)) return false
         val triggerAtMs = settings.getLong(KEY_EXAM_TRIGGER, 0L)
         val nowMs = Clock.System.now().toEpochMilliseconds()
         if (triggerAtMs <= 0L || triggerAtMs <= nowMs) {
             cancelAll()
+            return false
+        }
+        if (IosReminderNotifications.isPending(EXAM_REMINDER_ID) == false) {
+            clearScheduledState()
             return false
         }
         return true
@@ -72,8 +69,11 @@ class ExamReminderPortImpl(
     }
 
     override fun cancelAll() {
-        UNUserNotificationCenter.currentNotificationCenter()
-            .removePendingNotificationRequestsWithIdentifiers(listOf(EXAM_REMINDER_ID))
+        IosReminderNotifications.cancel(EXAM_REMINDER_ID)
+        clearScheduledState()
+    }
+
+    private fun clearScheduledState() {
         settings[KEY_EXAM_SCHEDULED] = false
         settings.remove(KEY_EXAM_TRIGGER)
     }
@@ -113,45 +113,6 @@ class ExamReminderPortImpl(
                 AppLogger.log("Reminder", "解析考试时间失败: raw=$raw", it)
             }
             .getOrNull()
-    }
-
-    private fun scheduleNotification(
-        identifier: String,
-        title: String,
-        body: String,
-        triggerAtMs: Long,
-    ): Boolean {
-        return runCatching {
-            val center = UNUserNotificationCenter.currentNotificationCenter()
-            center.requestAuthorizationWithOptions(
-                options = UNAuthorizationOptionAlert or UNAuthorizationOptionSound or UNAuthorizationOptionBadge,
-                completionHandler = { _, _ -> },
-            )
-
-            val nowMs = Clock.System.now().toEpochMilliseconds()
-            val intervalSeconds = ((triggerAtMs - nowMs).coerceAtLeast(1_000L)).toDouble() / 1000.0
-
-            val content = UNMutableNotificationContent().apply {
-                setTitle(title)
-                setBody(body)
-                setSound(UNNotificationSound.defaultSound)
-            }
-            val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
-                timeInterval = intervalSeconds,
-                repeats = false,
-            )
-            val request = UNNotificationRequest.requestWithIdentifier(
-                identifier = identifier,
-                content = content,
-                trigger = trigger,
-            )
-
-            center.removePendingNotificationRequestsWithIdentifiers(listOf(identifier))
-            center.addNotificationRequest(request, withCompletionHandler = { _ -> })
-            true
-        }.onFailure {
-            AppLogger.log("Reminder", "iOS调度考试通知失败", it)
-        }.getOrDefault(false)
     }
 
     private data class NextExamReminder(

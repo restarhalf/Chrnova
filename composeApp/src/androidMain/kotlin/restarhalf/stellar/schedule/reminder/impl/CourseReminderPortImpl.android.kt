@@ -14,7 +14,7 @@ class CourseReminderPortImpl(
 ) : CourseReminderPort {
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
-    override fun scheduleNextReminder(
+    override suspend fun scheduleNextReminder(
         courses: List<Course>,
         campus: Campus,
         termStartMs: Long,
@@ -40,7 +40,7 @@ class CourseReminderPortImpl(
         }
     }
 
-    override fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
+    override suspend fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
 
     override fun nextScheduledAtMs(): Long? = scheduler.getNextTriggerTime()
 

@@ -10,7 +10,7 @@ class ExamReminderPortImpl(
     private val scheduler: ExamReminderScheduler,
 ) : ExamReminderPort {
     @RequiresApi(Build.VERSION_CODES.S)
-    override fun scheduleNextReminder(exams: List<Examination>): ExamReminderPort.ScheduleResult {
+    override suspend fun scheduleNextReminder(exams: List<Examination>): ExamReminderPort.ScheduleResult {
         return when (val result = scheduler.scheduleNextReminder(exams)) {
             is ExamReminderScheduler.ScheduleResult.Scheduled ->
                 ExamReminderPort.ScheduleResult.Scheduled(result.triggerAtMs)
@@ -23,7 +23,7 @@ class ExamReminderPortImpl(
         }
     }
 
-    override fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
+    override suspend fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
 
     override fun nextScheduledAtMs(): Long? = scheduler.getNextTriggerTime()
 

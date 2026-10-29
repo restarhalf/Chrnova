@@ -8,17 +8,8 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import platform.UserNotifications.UNAuthorizationOptionAlert
-import platform.UserNotifications.UNAuthorizationOptionBadge
-import platform.UserNotifications.UNAuthorizationOptionSound
-import platform.UserNotifications.UNMutableNotificationContent
-import platform.UserNotifications.UNNotificationRequest
-import platform.UserNotifications.UNNotificationSound
-import platform.UserNotifications.UNTimeIntervalNotificationTrigger
-import platform.UserNotifications.UNUserNotificationCenter
 import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -34,7 +25,7 @@ class CourseReminderPortImpl(
 ) : CourseReminderPort {
 
     @OptIn(ExperimentalTime::class)
-    override fun scheduleNextReminder(
+    override suspend fun scheduleNextReminder(
         courses: List<Course>,
         campus: Campus,
         termStartMs: Long,
@@ -53,7 +44,7 @@ class CourseReminderPortImpl(
                 return CourseReminderPort.ScheduleResult.NoUpcoming
             }
 
-        val success = scheduleNotification(
+        val success = IosReminderNotifications.schedule(
             identifier = COURSE_REMINDER_ID,
             title = "课程提醒",
             body = "${next.course.name}（${next.slotStart}-${next.slotEnd}） ${next.course.location}",
@@ -65,11 +56,26 @@ class CourseReminderPortImpl(
             settings[KEY_COURSE_TRIGGER] = next.triggerAtMs
             CourseReminderPort.ScheduleResult.Scheduled(next.triggerAtMs)
         } else {
+            clearScheduledState()
             CourseReminderPort.ScheduleResult.Failed
         }
     }
 
-    override fun hasScheduledAlarm(): Boolean = settings.getBoolean(KEY_COURSE_SCHEDULED, false)
+    @OptIn(ExperimentalTime::class)
+    override suspend fun hasScheduledAlarm(): Boolean {
+        if (!settings.getBoolean(KEY_COURSE_SCHEDULED, false)) return false
+        val triggerAtMs = settings.getLong(KEY_COURSE_TRIGGER, 0L)
+        val nowMs = Clock.System.now().toEpochMilliseconds()
+        if (triggerAtMs <= 0L || triggerAtMs <= nowMs) {
+            cancelAll()
+            return false
+        }
+        if (IosReminderNotifications.isPending(COURSE_REMINDER_ID) == false) {
+            clearScheduledState()
+            return false
+        }
+        return true
+    }
 
     @OptIn(ExperimentalTime::class)
     override fun nextScheduledAtMs(): Long? {
@@ -82,8 +88,11 @@ class CourseReminderPortImpl(
     }
 
     override fun cancelAll() {
-        UNUserNotificationCenter.currentNotificationCenter()
-            .removePendingNotificationRequestsWithIdentifiers(listOf(COURSE_REMINDER_ID))
+        IosReminderNotifications.cancel(COURSE_REMINDER_ID)
+        clearScheduledState()
+    }
+
+    private fun clearScheduledState() {
         settings[KEY_COURSE_SCHEDULED] = false
         settings.remove(KEY_COURSE_TRIGGER)
     }
@@ -154,45 +163,6 @@ class CourseReminderPortImpl(
         }
 
         return best
-    }
-
-    private fun scheduleNotification(
-        identifier: String,
-        title: String,
-        body: String,
-        triggerAtMs: Long,
-    ): Boolean {
-        return runCatching {
-            val center = UNUserNotificationCenter.currentNotificationCenter()
-            center.requestAuthorizationWithOptions(
-                options = UNAuthorizationOptionAlert or UNAuthorizationOptionSound or UNAuthorizationOptionBadge,
-                completionHandler = { _, _ -> },
-            )
-
-            val nowMs = Clock.System.now().toEpochMilliseconds()
-            val intervalSeconds = ((triggerAtMs - nowMs).coerceAtLeast(1_000L)).toDouble() / 1000.0
-
-            val content = UNMutableNotificationContent().apply {
-                setTitle(title)
-                setBody(body)
-                setSound(UNNotificationSound.defaultSound)
-            }
-            val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
-                timeInterval = intervalSeconds,
-                repeats = false,
-            )
-            val request = UNNotificationRequest.requestWithIdentifier(
-                identifier = identifier,
-                content = content,
-                trigger = trigger,
-            )
-
-            center.removePendingNotificationRequestsWithIdentifiers(listOf(identifier))
-            center.addNotificationRequest(request, withCompletionHandler = { _ -> })
-            true
-        }.onFailure {
-            AppLogger.log("Reminder", "设置课程提醒失败", it)
-        }.getOrDefault(false)
     }
 
     private data class NextReminder(

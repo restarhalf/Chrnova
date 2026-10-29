@@ -933,7 +933,7 @@ class ScheduleViewModelTest {
 
         vm.refreshCourseRemindersIfEnabled(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
         advanceMain()
-        verify(VerifyMode.not) {
+        verifySuspend(VerifyMode.not) {
             courseReminder.scheduleNextReminder(any(), any(), any(), any())
         }
     }
@@ -947,7 +947,7 @@ class ScheduleViewModelTest {
 
         vm.refreshCourseRemindersIfEnabled(campus = Campus.Jinshitan, termStartMs = termStartMs, totalWeeks = 20)
         advanceMain()
-        verify(VerifyMode.exactly(1)) {
+        verifySuspend(VerifyMode.exactly(1)) {
             courseReminder.scheduleNextReminder(listOf(c1), Campus.Jinshitan, termStartMs, 20)
         }
     }
