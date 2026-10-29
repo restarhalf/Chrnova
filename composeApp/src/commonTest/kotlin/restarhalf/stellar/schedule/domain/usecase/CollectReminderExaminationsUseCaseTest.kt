@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
@@ -54,6 +55,7 @@ class CollectReminderExaminationsUseCaseTest {
 
     private fun stubProfile() {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = "2023001"))
+        every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("2023001", 0)
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
         everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
     }

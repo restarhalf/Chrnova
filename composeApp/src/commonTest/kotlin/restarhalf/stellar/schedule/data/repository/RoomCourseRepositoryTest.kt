@@ -198,13 +198,6 @@ class RoomCourseRepositoryTest {
     }
 
     @Test
-    fun bindUnboundCoursesDelegates() = runTest {
-        everySuspend { dao.bindUnboundCourses("U7") } returns Unit
-        repo.bindUnboundCourses("U7")
-        verifySuspend { dao.bindUnboundCourses("U7") }
-    }
-
-    @Test
     fun replaceSyncedCoursesRejectsBlankUser() = runTest {
         assertFailsWith<IllegalArgumentException> {
             repo.replaceSyncedCourses("", "S1", emptyList())

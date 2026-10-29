@@ -18,15 +18,17 @@ class FetchExaminationsUseCase(
     private val auth: JwxtAuthPort,
     private val settings: TermSettingsPort,
 ) {
-    
+
     suspend operator fun invoke(
         semester: String = "",
         nameOrNumber: String = ""
     ): List<Examination> {
         authWorkflow.ensureLoggedIn()
 
+        val session = auth.getSessionSnapshot()
+        require(session.userNo.isNotBlank()) { "请先登录" }
         val resolvedSemester = resolveSemester(semester)
-        val resolvedNameOrNumber = resolveNameOrNumber(nameOrNumber)
+        val resolvedNameOrNumber = nameOrNumber.ifBlank { session.userNo }
 
         val exams = try {
             academic.fetchExaminations(
@@ -44,15 +46,11 @@ class FetchExaminationsUseCase(
             )
         }
 
-        val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
-            ""
-        }
-        val boundExams = exams.distinctExaminations().map { it.copy(userNo = userNo) }
+        val boundExams = exams.distinctExaminations().map { it.copy(userNo = session.userNo) }
 
         if (nameOrNumber.isBlank()) {
-            repository.replaceExaminations(userNo, resolvedSemester, boundExams)
+            require(auth.getSessionSnapshot() == session) { "登录状态已变化，请重试" }
+            repository.replaceExaminations(session.userNo, resolvedSemester, boundExams)
         }
 
         return boundExams
@@ -63,15 +61,5 @@ class FetchExaminationsUseCase(
         val selectedTerm = settings.observeSelectedTerm().first()
         if (selectedTerm.isNotBlank()) return selectedTerm
         return academic.fetchCurrentTermId()
-    }
-
-    private suspend fun resolveNameOrNumber(nameOrNumber: String): String {
-        if (nameOrNumber.isNotBlank()) return nameOrNumber
-        return try {
-            auth.observeProfile().first().userNo
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            ""
-        }
     }
 }

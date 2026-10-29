@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 
 @OptIn(ExperimentalSettingsApi::class)
@@ -28,6 +29,17 @@ class JwxtAuthPortImpl(
             JwxtAuthProfile(
                 name = name, userNo = userNo, clsName = clsName, academyName = academyName
             )
+        }
+    }
+
+    override fun getSessionSnapshot(): JwxtSessionSnapshot {
+        while (true) {
+            val generationBefore = authStore.getSessionGeneration()
+            val userNo = authStore.getUserNo().orEmpty().trim()
+            val generationAfter = authStore.getSessionGeneration()
+            if (generationBefore == generationAfter) {
+                return JwxtSessionSnapshot(userNo = userNo, generation = generationAfter)
+            }
         }
     }
 

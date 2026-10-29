@@ -35,7 +35,7 @@ val viewModelModule = module {
             fetchGrades = get(),
             jwxtLoginUseCase = get(),
             runSyncUseCase = get(),
-            bindUnboundData = get(),
+            repairExaminationSemesters = get(),
         )
     }
     viewModel {

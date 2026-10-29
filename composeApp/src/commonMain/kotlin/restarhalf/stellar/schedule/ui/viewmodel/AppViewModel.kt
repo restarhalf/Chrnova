@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
-import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
+import restarhalf.stellar.schedule.domain.usecase.RepairExaminationSemestersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
@@ -35,7 +35,7 @@ class AppViewModel(
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val jwxtLoginUseCase: JwxtLoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
-    private val bindUnboundData: BindUnboundDataUseCase,
+    private val repairExaminationSemesters: RepairExaminationSemestersUseCase,
     ) : ViewModel() {
 
     init {
@@ -45,10 +45,10 @@ class AppViewModel(
             }
         }
         viewModelScope.launch {
-            runCatching { bindUnboundData() }
+            runCatching { repairExaminationSemesters() }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("AppViewModel", "数据绑定失败", e)
+                    AppLogger.log("AppViewModel", "考试学期修复失败", e)
                 }
         }
     }

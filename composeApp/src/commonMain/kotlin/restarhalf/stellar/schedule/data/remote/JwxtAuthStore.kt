@@ -2,8 +2,17 @@ package restarhalf.stellar.schedule.data.remote
 
 import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.set
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class JwxtAuthStore(private val settings: ObservableSettings) {
+
+    private val sessionGeneration = MutableStateFlow(0L)
+
+    internal fun getSessionGeneration(): Long = sessionGeneration.value
+
+    fun advanceSessionGeneration() {
+        sessionGeneration.value += 1
+    }
 
     internal fun getSettings(): ObservableSettings = settings
 
@@ -21,10 +30,12 @@ class JwxtAuthStore(private val settings: ObservableSettings) {
     }
 
     fun clear() {
+        advanceSessionGeneration()
         settings.clear()
     }
 
     fun clearSession() {
+        advanceSessionGeneration()
         settings.remove(KEY_TOKEN)
         settings.remove(KEY_SERVERID_COOKIE)
         settings.remove(KEY_USER_NO)

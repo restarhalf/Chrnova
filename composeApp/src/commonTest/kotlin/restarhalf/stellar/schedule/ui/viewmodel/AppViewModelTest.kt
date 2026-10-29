@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -30,10 +31,9 @@ import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
-import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
+import restarhalf.stellar.schedule.domain.usecase.RepairExaminationSemestersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
@@ -61,7 +61,6 @@ class AppViewModelTest {
     private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
-    private val courseRepository = mock<CourseRepository>(MockMode.autofill)
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
     private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
@@ -117,6 +116,7 @@ class AppViewModelTest {
         every { settings.observeLogEnabled() } returns logFlow
         every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { auth.observeProfile() } returns profileFlow
+        every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("2023001", 0)
         return AppViewModel(
             auth = auth,
             timetable = timetable,
@@ -136,7 +136,7 @@ class AppViewModelTest {
                 sync = sync,
                 reminderScheduler = reminderScheduler,
             ),
-            bindUnboundData = BindUnboundDataUseCase(auth, courseRepository, examRepository, academic),
+            repairExaminationSemesters = RepairExaminationSemestersUseCase(examRepository, academic),
         )
     }
 
@@ -162,12 +162,12 @@ class AppViewModelTest {
     }
 
     @Test
-    fun `init未登录时bindUnboundData静默完成`() = runTest {
+    fun `init修复无效考试学期`() = runTest {
+        everySuspend { academic.fetchCurrentTermId() } returns "2026-1"
         val vm = makeViewModel()
         advanceMain()
 
-        verifySuspend(VerifyMode.not) { courseRepository.bindUnboundCourses(any()) }
-        verifySuspend(VerifyMode.not) { examRepository.bindUnboundExaminations(any()) }
+        verifySuspend(VerifyMode.exactly(1)) { examRepository.fixInvalidSemesterIds("2026-1") }
     }
 
     @Test

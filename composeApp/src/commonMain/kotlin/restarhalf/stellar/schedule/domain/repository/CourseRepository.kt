@@ -23,6 +23,4 @@ interface CourseRepository {
     suspend fun getAllCoursesAcrossSemesters(): List<Course>
 
     suspend fun replaceSyncedCourses(userNo: String, semesterId: String, courses: List<Course>)
-
-    suspend fun bindUnboundCourses(userNo: String)
 }

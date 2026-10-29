@@ -107,8 +107,4 @@ class RoomCourseRepository(
             settings.setActiveScheduleTerm(semesterId)
         }
     }
-
-    override suspend fun bindUnboundCourses(userNo: String) {
-        courseDao.bindUnboundCourses(userNo)
-    }
 }

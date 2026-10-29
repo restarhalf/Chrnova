@@ -18,7 +18,5 @@ interface ExaminationRepository {
 
     suspend fun replaceExaminations(userNo: String, semesterId: String, examinations: List<Examination>)
 
-    suspend fun bindUnboundExaminations(userNo: String)
-
     suspend fun fixInvalidSemesterIds(correctSemesterId: String)
 }

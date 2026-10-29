@@ -59,10 +59,6 @@ class RoomExaminationRepository(
         examinationDao.replaceBySemester(userNo, semesterId, entities)
     }
 
-    override suspend fun bindUnboundExaminations(userNo: String) {
-        examinationDao.bindUnboundExaminations(userNo)
-    }
-
     override suspend fun fixInvalidSemesterIds(correctSemesterId: String) {
         examinationDao.updateSemesterId("", correctSemesterId)
         examinationDao.updateSemesterId("manual", correctSemesterId)

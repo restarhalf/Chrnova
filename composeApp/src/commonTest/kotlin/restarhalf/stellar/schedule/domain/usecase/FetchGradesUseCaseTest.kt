@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -44,8 +45,12 @@ class FetchGradesUseCaseTest {
 
     private fun report(vararg grades: GradeCourse) = TermGradeReport(achievements = grades.toList())
 
+    private var session = JwxtSessionSnapshot(userNo = "2023001", generation = 0)
+
     private fun stubProfile(userNo: String) {
+        session = session.copy(userNo = userNo)
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = userNo))
+        every { auth.getSessionSnapshot() } calls { session }
     }
 
     @Test
@@ -88,6 +93,20 @@ class FetchGradesUseCaseTest {
 
         assertEquals(0, result.achievements.size)
         verifySuspend(VerifyMode.exactly(1)) { academic.fetchGradeReport("2099-9") }
+        verifySuspend(VerifyMode.not) { repository.replaceGradesByUserNoAndSemester(any(), any(), any()) }
+    }
+
+    @Test
+    fun `请求中会话代次变化时丢弃结果`() = runTest {
+        stubProfile("2023001")
+        everySuspend { academic.fetchGradeReport(any()) } calls {
+            session = session.copy(generation = session.generation + 1)
+            report(grade())
+        }
+
+        val error = assertFailsWith<IllegalArgumentException> { useCase(semester = "2026-1") }
+
+        assertEquals("登录状态已变化，请重试", error.message)
         verifySuspend(VerifyMode.not) { repository.replaceGradesByUserNoAndSemester(any(), any(), any()) }
     }
 

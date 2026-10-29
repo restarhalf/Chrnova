@@ -46,6 +46,8 @@ class FetchGradesUseCase(
 
         authWorkflow.ensureLoggedIn()
 
+        val session = auth.getSessionSnapshot()
+        require(session.userNo.isNotBlank()) { "请先登录" }
         val report = try {
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
@@ -59,17 +61,11 @@ class FetchGradesUseCase(
         }
 
         if (report.achievements.isNotEmpty()) {
-            val userNo = try {
-                auth.observeProfile().first().userNo
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("Fetch", "获取用户学号失败，使用空值", e)
-                ""
-            }
             val sem = report.achievements.firstOrNull()?.semester ?: ""
             if (sem.isNotBlank()) {
-                val gradesWithUserNo = report.achievements.map { it.copy(userNo = userNo) }
-                repository.replaceGradesByUserNoAndSemester(userNo, sem, gradesWithUserNo)
+                require(auth.getSessionSnapshot() == session) { "登录状态已变化，请重试" }
+                val gradesWithUserNo = report.achievements.map { it.copy(userNo = session.userNo) }
+                repository.replaceGradesByUserNoAndSemester(session.userNo, sem, gradesWithUserNo)
             }
         }
 

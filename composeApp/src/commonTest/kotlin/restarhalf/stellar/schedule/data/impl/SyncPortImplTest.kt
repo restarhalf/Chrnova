@@ -7,7 +7,6 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -18,7 +17,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtCurriculumResponse
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.domain.model.Course
-import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -63,9 +62,9 @@ class SyncPortImplTest {
         }
     }
 
-    private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = "U1"))
+    private var session = JwxtSessionSnapshot(userNo = "U1", generation = 0)
     private val auth = mock<JwxtAuthPort> {
-        every { observeProfile() } returns profileFlow
+        every { getSessionSnapshot() } calls { session }
     }
 
     private val impl = SyncPortImpl(JwxtSync(gateway), courseRepository, auth)
@@ -102,12 +101,25 @@ class SyncPortImplTest {
 
     @Test
     fun syncRejectsBlankUserBeforeFetchingOrReplacing() = runTest {
-        profileFlow.value = JwxtAuthProfile(userNo = "")
+        session = session.copy(userNo = "")
 
         val error = assertFailsWith<IllegalArgumentException> { impl.sync("S", "C", "all") }
 
         assertEquals("请先登录", error.message)
         assertTrue(capturedFields.isEmpty())
+        assertTrue(capturedCourses.isEmpty())
+    }
+
+    @Test
+    fun syncDiscardsResultWhenSessionChangesDuringRequest() = runTest {
+        everySuspend { gateway.fetchCurriculum(any()) } calls {
+            session = session.copy(generation = session.generation + 1)
+            json.decodeFromString(JwxtCurriculumResponse.serializer(), curriculumJson)
+        }
+
+        val error = assertFailsWith<IllegalArgumentException> { impl.sync("S", "C", "all") }
+
+        assertEquals("登录状态已变化，请重试", error.message)
         assertTrue(capturedCourses.isEmpty())
     }
 

@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -61,6 +62,7 @@ class ExaminationViewModelTest {
 
     private fun makeViewModel(): ExaminationViewModel {
         every { auth.observeProfile() } returns profileFlow
+        every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("2023001", 0)
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
         every { reminderSettings.observeExamReminderEnabled() } returns examReminderEnabledFlow

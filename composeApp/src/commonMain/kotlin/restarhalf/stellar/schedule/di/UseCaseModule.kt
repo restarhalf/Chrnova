@@ -3,7 +3,7 @@ package restarhalf.stellar.schedule.di
 import org.koin.dsl.module
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.domain.port.CourseEvaluationPort
-import restarhalf.stellar.schedule.domain.usecase.BindUnboundDataUseCase
+import restarhalf.stellar.schedule.domain.usecase.RepairExaminationSemestersUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeClockSnapshotUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeGreetingUseCase
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeHeaderUiUseCase
@@ -192,11 +192,9 @@ val useCaseModule = module {
     factory { IsExamNotEndedUseCase() }
 
     factory {
-        BindUnboundDataUseCase(
-            auth = get(),
-            courseRepository = get(),
+        RepairExaminationSemestersUseCase(
             examinationRepository = get(),
-            academic = get()
+            academic = get(),
         )
     }
     factory { TransCourseUseCase() }

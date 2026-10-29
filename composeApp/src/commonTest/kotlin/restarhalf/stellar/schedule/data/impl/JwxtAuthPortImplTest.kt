@@ -8,6 +8,7 @@ import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class JwxtAuthPortImplTest {
 
@@ -54,8 +55,10 @@ class JwxtAuthPortImplTest {
     fun clearRemovesEverything() = runTest {
         store.setToken("tok")
         settings[JwxtAuthStore.KEY_USER_NO] = "2024000000"
+        val before = impl.getSessionSnapshot()
         impl.clear()
         assertEquals("", impl.observeToken().first())
         assertNull(store.getUserNo())
+        assertTrue(impl.getSessionSnapshot().generation > before.generation)
     }
 }

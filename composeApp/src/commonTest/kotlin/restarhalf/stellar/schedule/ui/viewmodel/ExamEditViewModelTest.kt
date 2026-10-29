@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.setMain
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -117,6 +118,7 @@ class ExamEditViewModelTest {
         every { settings.observeSelectedTerm() } returns selectedTermFlow
         every { settings.observeCurrentTermId() } returns currentTermFlow
         every { auth.observeProfile() } returns profileFlow
+        every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("20230001", 0)
         return ExamEditViewModel(
             observeAllCourses = ObserveAllCoursesUseCase(courseRepository),
             observeExaminationById = ObserveExaminationByIdUseCase(examinationRepository),

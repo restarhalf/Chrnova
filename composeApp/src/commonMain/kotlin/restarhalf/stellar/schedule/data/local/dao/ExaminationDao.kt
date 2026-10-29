@@ -29,9 +29,6 @@ interface ExaminationDao {
     @Query("DELETE FROM examinations WHERE id = :id")
     suspend fun deleteExamination(id: Long)
 
-    @Query("UPDATE examinations SET userNo = :userNo WHERE userNo = ''")
-    suspend fun bindUnboundExaminations(userNo: String)
-
     @Query("UPDATE examinations SET semesterId = :newSemesterId WHERE semesterId = :oldSemesterId")
     suspend fun updateSemesterId(oldSemesterId: String, newSemesterId: String)
 

@@ -34,9 +34,6 @@ interface CourseDao {
     @Update
     suspend fun updateCourse(course: CourseEntity)
 
-    @Query("UPDATE courses SET userNo = :userNo WHERE userNo = ''")
-    suspend fun bindUnboundCourses(userNo: String)
-
     @Query("DELETE FROM courses WHERE userNo = :userNo AND semesterId = :semesterId AND type = 0")
     suspend fun deleteSyncedCoursesByUserNoAndSemester(userNo: String, semesterId: String)
 

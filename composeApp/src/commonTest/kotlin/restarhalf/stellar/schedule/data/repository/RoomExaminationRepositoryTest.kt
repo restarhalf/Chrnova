@@ -120,13 +120,6 @@ class RoomExaminationRepositoryTest {
     }
 
     @Test
-    fun bindUnboundDelegates() = runTest {
-        everySuspend { dao.bindUnboundExaminations("U2") } returns Unit
-        repo.bindUnboundExaminations("U2")
-        verifySuspend { dao.bindUnboundExaminations("U2") }
-    }
-
-    @Test
     fun replaceExaminationsRejectsBlankUser() = runTest {
         assertFailsWith<IllegalArgumentException> {
             repo.replaceExaminations("", "SEM-X", emptyList())

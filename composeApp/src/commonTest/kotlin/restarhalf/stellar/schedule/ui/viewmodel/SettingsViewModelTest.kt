@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
@@ -97,6 +98,7 @@ class SettingsViewModelTest {
         every { deviceSettings.getStarVerified() } returns false
         every { auth.observeToken() } returns tokenFlow
         every { auth.observeProfile() } returns profileFlow
+        every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("2023001", 0)
         everySuspend { authWorkflow.ensureLoggedIn() } returns Unit
         everySuspend { academic.fetchExaminations(any(), any()) } returns emptyList()
         return SettingsViewModel(

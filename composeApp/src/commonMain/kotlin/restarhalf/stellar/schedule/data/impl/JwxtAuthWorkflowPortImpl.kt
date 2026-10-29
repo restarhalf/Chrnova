@@ -27,6 +27,24 @@ class JwxtAuthWorkflowPortImpl(
         codeVal: String,
         p: String?,
     ) {
+        performLogin(
+            userNo = userNo,
+            password = password,
+            captchaData = captchaData,
+            codeVal = codeVal,
+            p = p,
+            startNewSession = true,
+        )
+    }
+
+    private suspend fun performLogin(
+        userNo: String,
+        password: String,
+        captchaData: String = "",
+        codeVal: String = "",
+        p: String? = null,
+        startNewSession: Boolean,
+    ) {
         val resp = gateway.login(
             userNo = userNo,
             password = password,
@@ -45,6 +63,9 @@ class JwxtAuthWorkflowPortImpl(
         }
 
         val newUserNo = resp.data?.userNo.orEmpty().trim().ifBlank { userNo.trim() }
+        if (startNewSession) {
+            authStore.advanceSessionGeneration()
+        }
         authStore.setLastUserNo(newUserNo)
 
         authStore.setProfile(
@@ -60,7 +81,7 @@ class JwxtAuthWorkflowPortImpl(
     override suspend fun refreshSession() {
         val (userNo, password) = authStore.getCredentials() ?: return
         val oldToken = authStore.getToken()
-        runCatching { login(userNo = userNo, password = password) }
+        runCatching { performLogin(userNo = userNo, password = password, startNewSession = false) }
             .onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Auth", "刷新会话失败，恢复旧Token", e)

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
@@ -35,8 +36,12 @@ class FetchExaminationsUseCaseTest {
 
     private val exam = Examination(courseNumber = "C001", courseName = "高等数学", time = "2026-01-15 14:00-16:00")
 
+    private var session = JwxtSessionSnapshot(userNo = "2023001", generation = 0)
+
     private fun stubProfile(userNo: String) {
+        session = session.copy(userNo = userNo)
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = userNo))
+        every { auth.getSessionSnapshot() } calls { session }
     }
 
     @Test
@@ -93,6 +98,32 @@ class FetchExaminationsUseCaseTest {
         assertEquals(2, attempts)
         assertEquals(listOf("高等数学"), result.map { it.courseName })
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
+    }
+
+    @Test
+    fun `空学号全量同步拒绝落库`() = runTest {
+        stubProfile("")
+        every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        everySuspend { academic.fetchExaminations(any(), any()) } returns emptyList()
+
+        val error = assertFailsWith<IllegalArgumentException> { useCase() }
+
+        assertEquals("请先登录", error.message)
+        verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any(), any()) }
+    }
+
+    @Test
+    fun `请求中会话代次变化时丢弃结果`() = runTest {
+        stubProfile("2023001")
+        everySuspend { academic.fetchExaminations(any(), any()) } calls {
+            session = session.copy(generation = session.generation + 1)
+            listOf(exam)
+        }
+
+        val error = assertFailsWith<IllegalArgumentException> { useCase(semester = "2026-1") }
+
+        assertEquals("登录状态已变化，请重试", error.message)
+        verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any(), any()) }
     }
 
     @Test
