@@ -290,7 +290,13 @@ class PEViewModel(
     }
 
     fun logout() {
-        peAuthWorkflow.logout()
         _uiState.value = PeUiState()
+        viewModelScope.launch {
+            runCatching { peAuthWorkflow.logout() }
+                .onFailure { e ->
+                    if (e is CancellationException) throw e
+                    AppLogger.log("PE", "退出登录清理失败", e)
+                }
+        }
     }
 }

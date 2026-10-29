@@ -232,10 +232,11 @@ class PEViewModelTest {
         assertTrue(vm.uiState.value.yearScores.isNotEmpty())
 
         vm.logout()
+        advanceMain()
 
         assertEquals(0, vm.uiState.value.yearScores.size)
         assertNull(vm.uiState.value.error)
-        verify(VerifyMode.exactly(1)) { peAuthWorkflow.logout() }
+        verifySuspend(VerifyMode.exactly(1)) { peAuthWorkflow.logout() }
     }
 
     @Test

@@ -50,8 +50,9 @@ class PEAuthWorkflowPortImpl(
         authStore.setCredentials(username, password)
     }
 
-    override fun logout() {
-        authStore.clearSession()
+    override suspend fun logout() {
+        authStore.clear()
+        repository.clearAll()
     }
 
     override suspend fun refreshSession() {

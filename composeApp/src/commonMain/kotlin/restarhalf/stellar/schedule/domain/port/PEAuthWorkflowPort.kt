@@ -9,7 +9,7 @@ interface PEAuthWorkflowPort {
         password: String,
     )
 
-    fun logout()
+    suspend fun logout()
 
     suspend fun refreshSession()
 }
