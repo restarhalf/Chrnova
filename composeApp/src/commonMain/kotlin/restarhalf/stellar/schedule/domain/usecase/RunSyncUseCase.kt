@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
@@ -109,6 +110,7 @@ class RunSyncUseCase(
                     AppLogger.log("Sync", "同步网络错误", ex)
                     throw ex
                 }
+                if (ex is ParseFailureException) throw ex
                 AppLogger.log("Sync", "同步失败，刷新会话重试", ex)
             }
             authWorkflow.refreshSession()

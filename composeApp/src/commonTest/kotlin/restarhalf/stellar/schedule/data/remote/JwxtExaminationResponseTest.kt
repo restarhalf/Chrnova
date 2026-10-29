@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.data.remote
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class JwxtExaminationResponseTest {
@@ -26,7 +27,7 @@ class JwxtExaminationResponseTest {
 
         assertTrue(resp.isSuccess())
         assertEquals("success", resp.messageOrEmpty())
-        assertEquals(0, resp.data.size)
+        assertEquals(0, resp.data?.size)
     }
 
     @Test
@@ -34,9 +35,9 @@ class JwxtExaminationResponseTest {
         val resp = json.decodeFromString(JwxtExaminationResponse.serializer(), nonEmptySnapshot)
 
         assertTrue(resp.isSuccess())
-        assertEquals(2, resp.data.size)
+        assertEquals(2, resp.data?.size)
 
-        val first = resp.data.first()
+        val first = resp.data!!.first()
         assertEquals("高等数学", first.courseName)
         assertEquals("M1101", first.courseNumber)
         assertEquals("一教101", first.examinationPlace)
@@ -44,9 +45,20 @@ class JwxtExaminationResponseTest {
         assertEquals("2026-01-12 09:00~11:00", first.time)
         assertEquals("", first.ksbz)
 
-        val second = resp.data[1]
+        val second = resp.data!![1]
         assertEquals("笔试", second.ksbz)
         assertEquals("二教203", second.examinationPlace)
         assertEquals("12", second.zwh)
+    }
+
+    @Test
+    fun `缺少data字段时为null`() {
+        val resp = json.decodeFromString(
+            JwxtExaminationResponse.serializer(),
+            """{"Msg":"success","code":"1"}""",
+        )
+
+        assertTrue(resp.isSuccess())
+        assertNull(resp.data)
     }
 }

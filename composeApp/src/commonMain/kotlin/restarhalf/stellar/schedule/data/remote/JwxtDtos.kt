@@ -111,7 +111,7 @@ data class JwxtCampusResponse(
 data class JwxtCurriculumResponse(
     @SerialName("Msg") val msg: String = "",
     @SerialName("code") val code: String = "",
-    @SerialName("data") val data: List<JwxtCurriculumDayBlock> = emptyList(),
+    @SerialName("data") val data: List<JwxtCurriculumDayBlock>? = null,
     @SerialName("nowWeek") val nowWeek: String = "",
     @SerialName("jcdatalist") val jcDataList: List<JwxtJcDataItem> = emptyList(),
     @SerialName("nkbList") val nkbList: List<JwxtNkbItem> = emptyList()
@@ -203,7 +203,7 @@ data class JwxtExaminationResponse(
     @SerialName("Msg") val msg: String = "",
     @SerialName("msg") val msgAlt: String = "",
     @SerialName("code") val code: String = "",
-    @SerialName("data") val data: List<JwxtExaminationItem> = emptyList()
+    @SerialName("data") val data: List<JwxtExaminationItem>? = null
 ) {
     fun isSuccess(): Boolean = code == "1"
 

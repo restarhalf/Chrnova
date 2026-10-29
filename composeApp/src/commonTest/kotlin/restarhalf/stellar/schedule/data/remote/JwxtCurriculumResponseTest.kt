@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.data.remote
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class JwxtCurriculumResponseTest {
@@ -36,8 +37,8 @@ class JwxtCurriculumResponseTest {
         assertEquals("当前周次未查询到课表！", r.msg)
         assertEquals("1", r.nowWeek)
 
-        assertEquals(1, r.data.size)
-        val block = r.data.first()
+        assertEquals(1, r.data?.size)
+        val block = r.data!!.first()
         assertEquals(7, block.date.size)
         assertEquals("一", block.date.first().xqmc)
         assertEquals("2026-08-24", block.date.first().mxrq)
@@ -66,8 +67,8 @@ class JwxtCurriculumResponseTest {
     fun `week字段Int与String双类型兼容`() {
         val intWeek = """{"code":"1","data":[{"date":[],"item":[],"week":3,"weekday":"一"}]}"""
         val strWeek = """{"code":"1","data":[{"date":[],"item":[],"week":"3","weekday":"一"}]}"""
-        assertEquals("3", json.decodeFromString(JwxtCurriculumResponse.serializer(), intWeek).data.first().week)
-        assertEquals("3", json.decodeFromString(JwxtCurriculumResponse.serializer(), strWeek).data.first().week)
+        assertEquals("3", json.decodeFromString(JwxtCurriculumResponse.serializer(), intWeek).data!!.first().week)
+        assertEquals("3", json.decodeFromString(JwxtCurriculumResponse.serializer(), strWeek).data!!.first().week)
     }
 
     @Test
@@ -92,8 +93,8 @@ class JwxtCurriculumResponseTest {
 
         assertEquals("success~", r.msg)
         assertTrue(r.isSuccess())
-        assertEquals("4", r.data.first().week)
-        val items = r.data.first().item
+        assertEquals("4", r.data!!.first().week)
+        val items = r.data!!.first().item
         assertEquals(2, items.size)
 
         assertEquals("P0013", items[0].kch)
@@ -112,5 +113,16 @@ class JwxtCurriculumResponseTest {
         assertEquals("考查", items[1].khfs)
         assertEquals("金石滩校区北区", items[1].xqName)
         assertEquals(",4,5,8,9,10,11,", items[1].classWeekDetails)
+    }
+
+    @Test
+    fun `缺少data字段时为null`() {
+        val r = json.decodeFromString(
+            JwxtCurriculumResponse.serializer(),
+            """{"code":"1","Msg":"success"}""",
+        )
+
+        assertTrue(r.isSuccess())
+        assertNull(r.data)
     }
 }

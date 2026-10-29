@@ -85,7 +85,6 @@ class JwxtClient(
 
             val body: String = response.body()
 
-            // 先解析响应，确认登录成功后再成组写入 cookie 与 token，避免解析失败留下半更新状态
             val parsed = json.decodeFromString(JwxtLoginResponse.serializer(), body)
             if (parsed.code == 1) {
                 val serverId =

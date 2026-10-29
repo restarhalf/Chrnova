@@ -11,7 +11,6 @@ val JwxtAuthPlugin = createClientPlugin("JwxtAuthPlugin", ::JwxtAuthPluginConfig
     val authStore = pluginConfig.authStore ?: return@createClientPlugin
 
     onRequest { request, _ ->
-        // 登录请求不能携带旧会话的 token/cookie，否则服务端可能按旧会话处理
         if (request.url.encodedPathSegments.lastOrNull() != "login") {
             val token = authStore.getToken().orEmpty()
             val serverIdCookie = authStore.getServerIdCookie().orEmpty()

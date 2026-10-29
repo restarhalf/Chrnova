@@ -12,6 +12,7 @@ import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
@@ -123,6 +124,19 @@ class FetchExaminationsUseCaseTest {
         val error = assertFailsWith<IllegalArgumentException> { useCase(semester = "2026-1") }
 
         assertEquals("登录状态已变化，请重试", error.message)
+        verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any(), any()) }
+    }
+
+    @Test
+    fun `解析失败直接抛出且不刷新不落库`() = runTest {
+        stubProfile("2023001")
+        every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        everySuspend { academic.fetchExaminations(any(), any()) } throws
+            ParseFailureException("考试安排解析失败")
+
+        assertFailsWith<ParseFailureException> { useCase() }
+
+        verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
         verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any(), any()) }
     }
 

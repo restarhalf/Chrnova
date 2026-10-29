@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.GradeCourse
@@ -71,6 +72,7 @@ class AcademicPortImpl(
             throw IllegalStateException(resp.messageOrEmpty().ifBlank { "获取考试安排失败" })
         }
         val items = resp.data
+            ?: throw ParseFailureException("考试安排解析失败：缺少 data 字段")
         return items.map {
             Examination(
                 courseNumber = it.courseNumber,

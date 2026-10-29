@@ -64,7 +64,6 @@ class JwxtAuthWorkflowPortImpl(
             throw IllegalStateException(resp.messageOrEmpty().ifBlank { "登录失败" })
         }
 
-        // 登录期间若发生退出登录，丢弃本次结果，避免把旧会话写回去
         if (authStore.getSessionGeneration() != generation) {
             authStore.clearToken()
             throw IllegalStateException("登录已取消")
@@ -87,7 +86,6 @@ class JwxtAuthWorkflowPortImpl(
 
         authStore.setCredentials(userNo, password)
 
-        // 写入期间若发生退出登录，撤销本次登录结果
         if (authStore.getSessionGeneration() != generation) {
             authStore.clear()
             throw IllegalStateException("登录已取消")
@@ -102,10 +100,8 @@ class JwxtAuthWorkflowPortImpl(
         val tokenBefore = authStore.getToken()
 
         authMutex.withLock {
-            // 等待锁期间可能已退出登录，凭据要以加锁后的状态为准
             val (userNo, password) = authStore.getCredentials() ?: return
 
-            // 已有其他刷新更新了 token，直接复用，避免并发重复登录
             val currentToken = authStore.getToken()
             if (currentToken != null && currentToken != tokenBefore) return
 
@@ -119,7 +115,6 @@ class JwxtAuthWorkflowPortImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // 会话已被退出登录清空，不再恢复旧 token
                 if (authStore.getSessionGeneration() != generation) return
                 AppLogger.log("Auth", "刷新会话失败，恢复旧Token", e)
                 if (tokenBefore != null) authStore.setToken(tokenBefore)

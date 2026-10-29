@@ -13,6 +13,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.data.remote.JwxtCurriculumResponse
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.data.remote.JwxtSync
@@ -129,6 +130,40 @@ class SyncPortImplTest {
             json.decodeFromString(JwxtCurriculumResponse.serializer(), """{"code":"0","Msg":"boom"}""")
         val error = assertFailsWith<IllegalStateException> { impl.sync("S", "C", "all") }
         assertTrue(error.message!!.contains("boom"))
+    }
+
+    @Test
+    fun syncKeepsCacheWhenAllItemsFailToParse() = runTest {
+        everySuspend { gateway.fetchCurriculum(any()) } returns
+            json.decodeFromString(
+                JwxtCurriculumResponse.serializer(),
+                """{"code":"1","data":[{"date":[],"item":[{"classTime":"abc","classWeekDetails":"1,2","courseName":"x"}]}]}""",
+            )
+
+        assertFailsWith<ParseFailureException> { impl.sync("S", "C", "all") }
+
+        assertTrue(capturedCourses.isEmpty())
+    }
+
+    @Test
+    fun syncKeepsCacheWhenDataFieldMissing() = runTest {
+        everySuspend { gateway.fetchCurriculum(any()) } returns
+            json.decodeFromString(JwxtCurriculumResponse.serializer(), """{"code":"1"}""")
+
+        assertFailsWith<ParseFailureException> { impl.sync("S", "C", "all") }
+
+        assertTrue(capturedCourses.isEmpty())
+    }
+
+    @Test
+    fun syncClearsCacheWhenServerReturnsEmptyTimetable() = runTest {
+        everySuspend { gateway.fetchCurriculum(any()) } returns
+            json.decodeFromString(JwxtCurriculumResponse.serializer(), """{"code":"1","data":[]}""")
+
+        val result = impl.sync("S", "C", "all")
+
+        assertEquals(0, result.inserted)
+        assertTrue(capturedCourses.single().isEmpty())
     }
 
     @Test

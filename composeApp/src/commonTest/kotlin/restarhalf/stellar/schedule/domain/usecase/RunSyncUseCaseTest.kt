@@ -13,6 +13,7 @@ import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
@@ -166,6 +167,17 @@ class RunSyncUseCaseTest {
         everySuspend { sync.sync(any(), any(), any()) } throws RuntimeException("connection timeout")
 
         assertFailsWith<RuntimeException> { useCase() }
+        verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
+        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
+    }
+
+    @Test
+    fun `解析失败直抛不刷新会话`() = runTest {
+        stubHappyPath()
+        everySuspend { sync.sync(any(), any(), any()) } throws
+            ParseFailureException("课表数据解析失败")
+
+        assertFailsWith<ParseFailureException> { useCase() }
         verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
         verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
     }

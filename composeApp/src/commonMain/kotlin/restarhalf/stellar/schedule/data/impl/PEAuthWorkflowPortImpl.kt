@@ -74,10 +74,8 @@ class PEAuthWorkflowPortImpl(
         val tokenBefore = authStore.getToken()
 
         authMutex.withLock {
-            // 等待锁期间可能已退出登录，凭据要以加锁后的状态为准
             val (username, password) = authStore.getCredentials() ?: return
 
-            // 已有其他刷新更新了 token，直接复用，避免并发重复登录
             val currentToken = authStore.getToken()
             if (currentToken != null && currentToken != tokenBefore) return
 

@@ -9,6 +9,7 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.data.remote.JwxtApiResponse
 import restarhalf.stellar.schedule.data.remote.JwxtCampusItem
 import restarhalf.stellar.schedule.data.remote.JwxtCampusResponse
@@ -134,6 +135,22 @@ class AcademicPortImplTest {
             JwxtExaminationResponse(code = "0", msg = "exam err")
         val error = assertFailsWith<IllegalStateException> { impl.fetchExaminations("S1", "") }
         assertTrue(error.message!!.contains("exam err"))
+    }
+
+    @Test
+    fun fetchExaminationsThrowsParseFailureWhenDataMissing() = runTest {
+        everySuspend { gateway.fetchExaminationArrangement(any(), any()) } returns
+            JwxtExaminationResponse(code = "1", msg = "success")
+
+        assertFailsWith<ParseFailureException> { impl.fetchExaminations("S1", "") }
+    }
+
+    @Test
+    fun fetchExaminationsReturnsEmptyWhenServerHasNoExams() = runTest {
+        everySuspend { gateway.fetchExaminationArrangement(any(), any()) } returns
+            JwxtExaminationResponse(code = "1", msg = "success", data = emptyList())
+
+        assertTrue(impl.fetchExaminations("S1", "").isEmpty())
     }
 
     @Test
