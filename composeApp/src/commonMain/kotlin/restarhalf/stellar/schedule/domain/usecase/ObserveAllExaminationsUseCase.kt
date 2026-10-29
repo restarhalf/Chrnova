@@ -4,7 +4,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
@@ -17,10 +19,11 @@ class ObserveAllExaminationsUseCase(
     operator fun invoke(): Flow<List<Examination>> {
         return auth.observeProfile().map { it.userNo }.distinctUntilChanged()
             .flatMapLatest { userNo ->
-                if (userNo.isNotBlank()) {
-                    repository.observeExaminationsByUserNo(userNo)
+                if (userNo.isBlank()) {
+                    flowOf(emptyList())
                 } else {
-                    repository.observeAllExaminations()
+                    repository.observeExaminationsByUserNo(userNo)
+                        .onStart { emit(emptyList()) }
                 }
             }
     }

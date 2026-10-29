@@ -11,9 +11,6 @@ import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 @Dao
 interface GradeDao {
     
-    @Query("SELECT * FROM grades")
-    fun observeAllGrades(): Flow<List<GradeEntity>>
-
     @Query("SELECT * FROM grades WHERE userNo = :userNo")
     fun observeGradesByUserNo(userNo: String): Flow<List<GradeEntity>>
 

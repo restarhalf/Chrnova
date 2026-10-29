@@ -103,6 +103,7 @@ class HomeViewModelTest {
         startSection: Int = 1,
         sectionCount: Int = 2,
         weeks: List<Int> = listOf(1),
+        userNo: String = "20230001",
     ) = Course(
         name = name,
         location = location,
@@ -112,6 +113,7 @@ class HomeViewModelTest {
         sectionCount = sectionCount,
         weeks = weeks,
         color = "#FF0000",
+        userNo = userNo,
     )
 
     private fun exam(
@@ -128,11 +130,11 @@ class HomeViewModelTest {
         userNo = userNo,
     )
 
-    private fun makeViewModel(userNo: String = ""): HomeViewModel {
+    private fun makeViewModel(userNo: String = "20230001"): HomeViewModel {
 
         every { courseRepository.observeAllCourses() } returns coursesFlow
-        every { auth.observeProfile() } returns MutableStateFlow(JwxtAuthProfile(userNo = userNo))
-        every { examinationRepository.observeAllExaminations() } returns examsAllFlow
+        profileFlow.value = JwxtAuthProfile(userNo = userNo)
+        every { auth.observeProfile() } returns profileFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsForUserFlow
         every { timetable.getCampusTimetable(any()) } returns timetableSlots
         val todaySchedule = BuildHomeTodayScheduleUseCase()
@@ -196,17 +198,18 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `uiState学号为空时不过滤考试`() = runTest {
-        val vm = makeViewModel(userNo = "")
+    fun `uiState学号变为空时清空课程和考试`() = runTest {
+        coursesFlow.value = listOf(course())
+        examsForUserFlow.value = listOf(exam())
+        val vm = makeViewModel(userNo = "20230001")
         subscribeUi(vm)
-        awaitState(vm) { true }
+        awaitState(vm) { it.courses.isNotEmpty() && it.exams.isNotEmpty() }
 
-        val mine = exam(userNo = "20230001")
-        val others = exam(courseName = "大学物理", userNo = "999")
-        examsAllFlow.value = listOf(mine, others)
-        val state = awaitState(vm) { it.exams.isNotEmpty() }
+        profileFlow.value = JwxtAuthProfile()
 
-        assertEquals(2, state.exams.size)
+        val state = awaitState(vm) { it.courses.isEmpty() && it.exams.isEmpty() }
+        assertTrue(state.courses.isEmpty())
+        assertTrue(state.exams.isEmpty())
     }
 
     @Test

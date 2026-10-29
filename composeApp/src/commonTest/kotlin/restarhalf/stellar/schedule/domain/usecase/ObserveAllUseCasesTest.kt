@@ -5,6 +5,7 @@ import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.mock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -16,6 +17,7 @@ import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ObserveAllUseCasesTest {
 
@@ -30,21 +32,19 @@ class ObserveAllUseCasesTest {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = "2023001"))
         every { examRepo.observeExaminationsByUserNo("2023001") } returns flowOf(bound)
 
-        val result = ObserveAllExaminationsUseCase(examRepo, auth)().first()
+        val result = ObserveAllExaminationsUseCase(examRepo, auth)().drop(1).first()
 
         assertEquals(bound, result)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `学号为空时观察全部考试`() = runTest {
-        val all = listOf(Examination(courseName = "英语"))
+    fun `学号为空时不观察任何考试`() = runTest {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = ""))
-        every { examRepo.observeAllExaminations() } returns flowOf(all)
 
         val result = ObserveAllExaminationsUseCase(examRepo, auth)().first()
 
-        assertEquals(all, result)
+        assertTrue(result.isEmpty())
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -54,20 +54,18 @@ class ObserveAllUseCasesTest {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = "2023001"))
         every { gradeRepo.observeGradesByUserNo("2023001") } returns flowOf(grades)
 
-        val result = ObserveAllGradesUseCase(gradeRepo, auth)().first()
+        val result = ObserveAllGradesUseCase(gradeRepo, auth)().drop(1).first()
 
         assertEquals(grades, result)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `学号为空时观察全部成绩`() = runTest {
-        val grades = listOf(GradeCourse(courseName = "英语"))
+    fun `学号为空时不观察任何成绩`() = runTest {
         every { auth.observeProfile() } returns flowOf(JwxtAuthProfile(userNo = ""))
-        every { gradeRepo.observeAllGrades() } returns flowOf(grades)
 
         val result = ObserveAllGradesUseCase(gradeRepo, auth)().first()
 
-        assertEquals(grades, result)
+        assertTrue(result.isEmpty())
     }
 }

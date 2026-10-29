@@ -61,7 +61,6 @@ class ExaminationViewModelTest {
 
     private fun makeViewModel(): ExaminationViewModel {
         every { auth.observeProfile() } returns profileFlow
-        every { examinationRepository.observeAllExaminations() } returns examsFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
         every { reminderSettings.observeExamReminderEnabled() } returns examReminderEnabledFlow
@@ -132,10 +131,11 @@ class ExaminationViewModelTest {
 
     @Test
     fun `uiState按学期过滤`() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "2023001")
         termFlow.value = "2024-2025-1"
         examsFlow.value = listOf(
-            exam(semesterId = "2024-2025-1", courseName = "A"),
-            exam(semesterId = "2023-2024-1", courseName = "B"),
+            exam(semesterId = "2024-2025-1", userNo = "2023001", courseName = "A"),
+            exam(semesterId = "2023-2024-1", userNo = "2023001", courseName = "B"),
         )
         val vm = makeViewModel()
         subscribeUi(vm)
@@ -163,7 +163,7 @@ class ExaminationViewModelTest {
     }
 
     @Test
-    fun `profile与term为空时不过滤`() = runTest {
+    fun `profile为空时不展示任何考试`() = runTest {
         profileFlow.value = JwxtAuthProfile(userNo = "")
         termFlow.value = ""
         examsFlow.value = listOf(
@@ -173,9 +173,11 @@ class ExaminationViewModelTest {
         val vm = makeViewModel()
         subscribeUi(vm)
 
-        val state = awaitState(vm) { it.items.isNotEmpty() }
+        awaitState(vm) { true }
+        advanceMain()
+        val state = vm.uiState.value
 
-        assertEquals(2, state.items.size)
+        assertTrue(state.items.isEmpty())
     }
 
     @Test

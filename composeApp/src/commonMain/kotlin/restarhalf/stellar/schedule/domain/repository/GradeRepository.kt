@@ -5,8 +5,6 @@ import restarhalf.stellar.schedule.domain.model.GradeCourse
 
 interface GradeRepository {
     
-    fun observeAllGrades(): Flow<List<GradeCourse>>
-
     fun observeGradesByUserNo(userNo: String): Flow<List<GradeCourse>>
 
     suspend fun getAllGradesByUserNo(userNo: String): List<GradeCourse>

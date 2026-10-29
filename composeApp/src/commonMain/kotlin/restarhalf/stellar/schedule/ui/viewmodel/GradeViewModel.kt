@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
@@ -24,6 +25,7 @@ import restarhalf.stellar.schedule.core.text.uniqueKeys
 import restarhalf.stellar.schedule.core.time.SemesterUtils
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.ObserveAllGradesUseCase
 import kotlin.math.roundToInt
@@ -31,6 +33,7 @@ import kotlin.math.roundToInt
 class GradeViewModel(
     observeAllGrades: ObserveAllGradesUseCase,
     private val settings: TermSettingsPort,
+    private val auth: JwxtAuthPort,
 ) : ViewModel() {
 
     @Immutable
@@ -44,7 +47,18 @@ class GradeViewModel(
 
     private val _error = MutableStateFlow("")
 
-    private val _summary = MutableStateFlow(TermGradeReport())
+    private data class SummarySnapshot(
+        val userNo: String,
+        val report: TermGradeReport,
+    )
+
+    private val _summary = MutableStateFlow(SummarySnapshot("", TermGradeReport()))
+
+    private val _visibleSummary = combine(_summary, auth.observeProfile()) { snapshot, profile ->
+        snapshot.report.takeIf {
+            profile.userNo.isNotBlank() && snapshot.userNo == profile.userNo
+        } ?: TermGradeReport()
+    }
 
     private var cachedGradesRef: List<GradeCourse>? = null
     private var cachedSortedSemesters: List<String>? = null
@@ -67,7 +81,7 @@ class GradeViewModel(
             _loading,
             _error,
             settings.observeSelectedTerm(),
-            _summary,
+            _visibleSummary,
             observeAllGrades()
         ) { loading, error, term, summary, allGrades ->
             val itemsForTerm = allGrades.filter { it.semester == term }
@@ -195,8 +209,14 @@ class GradeViewModel(
         _error.value = ""
 
         viewModelScope.launch {
+            val userNo = auth.observeProfile().first().userNo
+            if (userNo.isBlank()) {
+                _summary.value = SummarySnapshot("", TermGradeReport())
+                _loading.value = false
+                return@launch
+            }
             runCatching { loader() }
-                .onSuccess { _summary.value = it }
+                .onSuccess { _summary.value = SummarySnapshot(userNo, it) }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
                     AppLogger.log("Grades", "加载成绩数据失败", e)

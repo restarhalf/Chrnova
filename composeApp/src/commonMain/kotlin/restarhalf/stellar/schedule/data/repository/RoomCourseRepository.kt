@@ -5,7 +5,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import restarhalf.stellar.schedule.data.local.dao.CourseDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
@@ -28,26 +30,30 @@ class RoomCourseRepository(
         ) { semesterId, userNo ->
             semesterId to userNo
         }.distinctUntilChanged().flatMapLatest { (semesterId, userNo) ->
-            val hasUser = userNo.isNotBlank()
-            val hasSemester = semesterId.isNotBlank()
-            when {
-                hasUser && hasSemester -> courseDao.getCoursesByUserNoAndSemester(
-                    userNo,
-                    semesterId
-                )
-
-                hasUser -> courseDao.getCoursesByUserNo(userNo)
-                hasSemester -> courseDao.getCoursesBySemester(semesterId)
-                else -> courseDao.getAllCourses()
-            }.map { list -> list.map { it.toDomain() } }
+            if (userNo.isBlank()) {
+                flowOf(emptyList())
+            } else {
+                val entities = if (semesterId.isNotBlank()) {
+                    courseDao.getCoursesByUserNoAndSemester(userNo, semesterId)
+                } else {
+                    courseDao.getCoursesByUserNo(userNo)
+                }
+                entities.map { list -> list.map { it.toDomain() } }
+                    .onStart { emit(emptyList()) }
+            }
         }
 
     override fun observeCourseById(id: Long): Flow<Course?> =
         combine(
-            courseDao.getCourseById(id).map { it?.toDomain() },
-            settings.observeActiveScheduleTerm()
-        ) { course, semesterId ->
-            course?.takeIf { semesterId.isBlank() || it.semesterId == semesterId }
+            courseDao.getCourseById(id),
+            settings.observeActiveScheduleTerm(),
+            auth.observeProfile().map { it.userNo },
+        ) { entity, semesterId, userNo ->
+            entity?.toDomain()?.takeIf { course ->
+                userNo.isNotBlank() &&
+                    course.userNo == userNo &&
+                    (semesterId.isBlank() || course.semesterId == semesterId)
+            }
         }
 
     override suspend fun insertCourse(course: Course): Long =
@@ -65,16 +71,24 @@ class RoomCourseRepository(
         )
 
     override suspend fun getAllCoursesOnce(): List<Course> {
-        val semesterId = settings.observeActiveScheduleTerm().first()
-        return if (semesterId.isNotBlank()) {
-            courseDao.getCoursesBySemesterOnce(semesterId).map { it.toDomain() }
+        val (semesterId, userNo) = combine(
+            settings.observeActiveScheduleTerm(),
+            auth.observeProfile().map { it.userNo },
+        ) { semesterId, userNo -> semesterId to userNo }.first()
+        if (userNo.isBlank()) return emptyList()
+
+        val entities = if (semesterId.isNotBlank()) {
+            courseDao.getCoursesByUserNoAndSemesterOnce(userNo, semesterId)
         } else {
-            courseDao.getAllCoursesOnce().map { it.toDomain() }
+            courseDao.getCoursesByUserNoOnce(userNo)
         }
+        return entities.map { it.toDomain() }
     }
 
     override suspend fun getAllCoursesAcrossSemesters(): List<Course> {
-        return courseDao.getAllCoursesOnce().map { it.toDomain() }
+        val userNo = auth.observeProfile().first().userNo
+        if (userNo.isBlank()) return emptyList()
+        return courseDao.getCoursesByUserNoOnce(userNo).map { it.toDomain() }
     }
 
     override suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String) {

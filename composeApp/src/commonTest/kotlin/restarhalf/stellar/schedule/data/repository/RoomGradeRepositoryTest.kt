@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.data.local.dao.GradeDao
 import restarhalf.stellar.schedule.data.local.entity.GradeEntity
 import restarhalf.stellar.schedule.data.mapper.toDomain
-import restarhalf.stellar.schedule.domain.model.GradeCourse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -32,18 +31,10 @@ class RoomGradeRepositoryTest {
     )
 
     private val dao = mock<GradeDao>(MockMode.autofill) {
-        every { observeAllGrades() } returns MutableStateFlow(listOf(entity("all")))
         every { observeGradesByUserNo(any()) } returns MutableStateFlow(listOf(entity("byUser")))
     }
 
     private val repo = RoomGradeRepository(dao)
-
-    @Test
-    fun observeAllMapsToDomain() = runTest {
-        val grades = repo.observeAllGrades().first()
-        assertEquals(listOf("all"), grades.map { it.courseName })
-        assertTrue(grades.single() is GradeCourse)
-    }
 
     @Test
     fun observeByUserNoDelegates() = runTest {
@@ -51,6 +42,12 @@ class RoomGradeRepositoryTest {
             listOf("byUser"),
             repo.observeGradesByUserNo("U1").first().map { it.courseName },
         )
+    }
+
+    @Test
+    fun blankUserNoReturnsEmpty() = runTest {
+        assertTrue(repo.observeGradesByUserNo("").first().isEmpty())
+        assertTrue(repo.getAllGradesByUserNo("").isEmpty())
     }
 
     @Test

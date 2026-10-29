@@ -1,36 +1,43 @@
 package restarhalf.stellar.schedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
 import restarhalf.stellar.schedule.data.mapper.toDomain
 import restarhalf.stellar.schedule.data.mapper.toEntity
 import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
 class RoomExaminationRepository(
-    private val examinationDao: ExaminationDao
+    private val examinationDao: ExaminationDao,
+    private val auth: JwxtAuthPort,
 ) : ExaminationRepository {
 
-    override fun observeAllExaminations(): Flow<List<Examination>> {
-        return examinationDao.observeAllExaminations().map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
-
     override suspend fun getAllExaminationsOnce(): List<Examination> {
-        return examinationDao.getAllExaminationsOnce().map { it.toDomain() }
+        val userNo = auth.observeProfile().first().userNo
+        if (userNo.isBlank()) return emptyList()
+        return examinationDao.getAllExaminationsByUserNoOnce(userNo).map { it.toDomain() }
     }
 
     override fun observeExaminationsByUserNo(userNo: String): Flow<List<Examination>> {
+        if (userNo.isBlank()) return flowOf(emptyList())
         return examinationDao.observeExaminationsByUserNo(userNo).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
     override fun observeExaminationById(id: Long): Flow<Examination?> {
-        return examinationDao.observeExaminationById(id).map { entity ->
-            entity?.toDomain()
+        return combine(
+            examinationDao.observeExaminationById(id),
+            auth.observeProfile().map { it.userNo },
+        ) { entity, userNo ->
+            entity?.toDomain()?.takeIf { exam ->
+                userNo.isNotBlank() && exam.userNo == userNo
+            }
         }
     }
 

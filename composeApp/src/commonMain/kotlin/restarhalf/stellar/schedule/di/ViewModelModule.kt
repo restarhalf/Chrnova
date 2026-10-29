@@ -112,6 +112,7 @@ val viewModelModule = module {
         GradeViewModel(
             observeAllGrades = get(),
             settings = get(),
+            auth = get(),
         )
     }
     viewModel {

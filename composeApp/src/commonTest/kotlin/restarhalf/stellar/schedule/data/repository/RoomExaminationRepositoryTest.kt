@@ -14,35 +14,34 @@ import kotlinx.coroutines.test.runTest
 import restarhalf.stellar.schedule.data.local.dao.ExaminationDao
 import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 import restarhalf.stellar.schedule.data.mapper.toDomain
-import restarhalf.stellar.schedule.domain.model.Examination
+import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RoomExaminationRepositoryTest {
 
-    private fun entity(marker: String, semesterId: String = "S1") = ExaminationEntity(
+    private fun entity(marker: String, semesterId: String = "S1", userNo: String = "U1") = ExaminationEntity(
         id = 3L,
         courseNumber = "MA101",
         courseName = marker,
         semesterId = semesterId,
+        userNo = userNo,
     )
 
+    private val profileFlow = MutableStateFlow(JwxtAuthProfile())
+
     private val dao = mock<ExaminationDao>(MockMode.autofill) {
-        every { observeAllExaminations() } returns MutableStateFlow(listOf(entity("all")))
         every { observeExaminationsByUserNo(any()) } returns MutableStateFlow(listOf(entity("byUser")))
         every { observeExaminationById(any()) } returns MutableStateFlow<ExaminationEntity?>(null)
     }
 
-    private val repo = RoomExaminationRepository(dao)
-
-    @Test
-    fun observeAllMapsToDomain() = runTest {
-        val exams = repo.observeAllExaminations().first()
-        assertEquals(1, exams.size)
-        assertEquals("all", exams.single().courseName)
-        assertTrue(exams.single() is Examination)
+    private val auth = mock<JwxtAuthPort> {
+        every { observeProfile() } returns profileFlow
     }
+
+    private val repo = RoomExaminationRepository(dao, auth)
 
     @Test
     fun observeByUserNoDelegates() = runTest {
@@ -50,10 +49,31 @@ class RoomExaminationRepositoryTest {
     }
 
     @Test
-    fun observeByIdMapsNullAndValue() = runTest {
+    fun observeByBlankUserNoReturnsEmpty() = runTest {
+        assertTrue(repo.observeExaminationsByUserNo("").first().isEmpty())
+    }
+
+    @Test
+    fun getAllOnceUsesCurrentUser() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
+        everySuspend { dao.getAllExaminationsByUserNoOnce("U1") } returns listOf(entity("once"))
+        assertEquals(listOf("once"), repo.getAllExaminationsOnce().map { it.courseName })
+    }
+
+    @Test
+    fun getAllOnceBlankUserReturnsEmpty() = runTest {
+        assertTrue(repo.getAllExaminationsOnce().isEmpty())
+    }
+
+    @Test
+    fun observeByIdOnlyReturnsCurrentUsersExam() = runTest {
         assertEquals(null, repo.observeExaminationById(1L).first())
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
         every { dao.observeExaminationById(9L) } returns MutableStateFlow(entity("single"))
         assertEquals("single", repo.observeExaminationById(9L).first()?.courseName)
+
+        every { dao.observeExaminationById(10L) } returns MutableStateFlow(entity("other", userNo = "U2"))
+        assertEquals(null, repo.observeExaminationById(10L).first())
     }
 
     @Test

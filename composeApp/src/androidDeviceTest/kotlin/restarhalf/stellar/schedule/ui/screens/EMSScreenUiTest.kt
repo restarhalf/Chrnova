@@ -50,14 +50,13 @@ class EMSScreenUiTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
 
-    private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
+    private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = "U1"))
     private val examsFlow = MutableStateFlow<List<Examination>>(emptyList())
     private val gradesFlow = MutableStateFlow<List<GradeCourse>>(emptyList())
     private val termFlow = MutableStateFlow("")
 
     private fun makeExamViewModel(): ExaminationViewModel {
         every { auth.observeProfile() } returns profileFlow
-        every { examinationRepository.observeAllExaminations() } returns examsFlow
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsFlow
         every { settings.observeSelectedTerm() } returns termFlow
         every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
@@ -86,11 +85,12 @@ class EMSScreenUiTest {
 
     private fun makeGradeViewModel(): GradeViewModel {
         every { auth.observeProfile() } returns profileFlow
-        every { gradeRepository.observeAllGrades() } returns gradesFlow
+        every { gradeRepository.observeGradesByUserNo("U1") } returns gradesFlow
         every { settings.observeSelectedTerm() } returns termFlow
         return GradeViewModel(
             observeAllGrades = ObserveAllGradesUseCase(gradeRepository, auth),
             settings = settings,
+            auth = auth,
         )
     }
 
@@ -114,6 +114,7 @@ class EMSScreenUiTest {
                                 courseName = "大学物理",
                                 time = "2027-01-08 14:00-16:00",
                                 examinationPlace = "A101",
+                                userNo = "U1",
                             ),
                         )
                         examsFlow.value = list
@@ -149,7 +150,7 @@ class EMSScreenUiTest {
                     gradeVm = makeGradeViewModel(),
                     onLoadExaminations = {
                         val list = listOf(
-                            Examination(courseName = "大学物理", time = "2027-01-08 14:00-16:00"),
+                            Examination(courseName = "大学物理", time = "2027-01-08 14:00-16:00", userNo = "U1"),
                         )
                         examsFlow.value = list
                         list

@@ -5,9 +5,7 @@ import restarhalf.stellar.schedule.domain.model.Examination
 
 interface ExaminationRepository {
     
-    fun observeAllExaminations(): Flow<List<Examination>>
-
-    /** 一次性读出库里全部考试，含手动添加的（source = "manual"）。 */
+    /** 一次性读出当前用户的全部考试，含手动添加的（source = "manual"）。 */
     suspend fun getAllExaminationsOnce(): List<Examination>
 
     fun observeExaminationsByUserNo(userNo: String): Flow<List<Examination>>

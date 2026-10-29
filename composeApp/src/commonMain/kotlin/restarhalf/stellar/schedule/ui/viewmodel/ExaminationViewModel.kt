@@ -75,7 +75,7 @@ class ExaminationViewModel(
                 val (loading, error, userNo) = pair.first
                 val term = pair.second
                 val filtered = exams.filter { exam ->
-                    val userMatch = if (userNo.isNotBlank()) exam.userNo == userNo else true
+                    val userMatch = userNo.isNotBlank() && exam.userNo == userNo
                     val termMatch = if (term.isNotBlank()) exam.semesterId == term else true
                     userMatch && termMatch
                 }

@@ -13,17 +13,11 @@ import restarhalf.stellar.schedule.data.local.entity.CourseEntity
 @Dao
 interface CourseDao {
 
-    @Query("SELECT * FROM courses")
-    fun getAllCourses(): Flow<List<CourseEntity>>
-
     @Query("SELECT * FROM courses WHERE userNo = :userNo")
     fun getCoursesByUserNo(userNo: String): Flow<List<CourseEntity>>
 
     @Query("SELECT * FROM courses WHERE userNo = :userNo AND semesterId = :semesterId")
     fun getCoursesByUserNoAndSemester(userNo: String, semesterId: String): Flow<List<CourseEntity>>
-
-    @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
-    fun getCoursesBySemester(semesterId: String): Flow<List<CourseEntity>>
 
     @Query("SELECT * FROM courses WHERE id = :id LIMIT 1")
     fun getCourseById(id: Long): Flow<CourseEntity?>
@@ -55,11 +49,14 @@ interface CourseDao {
     @Query("UPDATE courses SET semesterId = :semesterId WHERE type != 0 AND semesterId = ''")
     suspend fun bindManualCoursesWithoutSemester(semesterId: String)
 
-    @Query("SELECT * FROM courses")
-    suspend fun getAllCoursesOnce(): List<CourseEntity>
+    @Query("SELECT * FROM courses WHERE userNo = :userNo")
+    suspend fun getCoursesByUserNoOnce(userNo: String): List<CourseEntity>
 
-    @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
-    suspend fun getCoursesBySemesterOnce(semesterId: String): List<CourseEntity>
+    @Query("SELECT * FROM courses WHERE userNo = :userNo AND semesterId = :semesterId")
+    suspend fun getCoursesByUserNoAndSemesterOnce(
+        userNo: String,
+        semesterId: String,
+    ): List<CourseEntity>
 
     @Transaction
     suspend fun replaceCourses(toDelete: List<CourseEntity>, toInsert: List<CourseEntity>) {

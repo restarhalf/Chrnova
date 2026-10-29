@@ -38,17 +38,19 @@ class GradeViewModelTest {
 
     private val mainDispatcher = UnconfinedTestDispatcher()
 
-    private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = ""))
+    private val profileFlow = MutableStateFlow(JwxtAuthProfile(userNo = "U1"))
     private val gradesFlow = MutableStateFlow<List<GradeCourse>>(emptyList())
     private val termFlow = MutableStateFlow("")
 
     private fun makeViewModel(): GradeViewModel {
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
         every { auth.observeProfile() } returns profileFlow
-        every { gradeRepository.observeAllGrades() } returns gradesFlow
+        every { gradeRepository.observeGradesByUserNo("U1") } returns gradesFlow
         every { settings.observeSelectedTerm() } returns termFlow
         return GradeViewModel(
             observeAllGrades = ObserveAllGradesUseCase(gradeRepository, auth),
             settings = settings,
+            auth = auth,
         )
     }
 
@@ -158,6 +160,26 @@ class GradeViewModelTest {
 
         val state = awaitState(vm) { it.report.earnedCredits == "120" && !it.loading }
         assertFalse(state.loading)
+    }
+
+    @Test
+    fun `退出后隐藏已加载summary`() = runTest {
+        termFlow.value = "9999"
+        gradesFlow.value = emptyList()
+        val vm = makeViewModel()
+        subscribeUi(vm)
+        vm.bindLoader {
+            TermGradeReport(earnedCredits = "120", achievements = listOf(grade("U1学期")))
+        }
+        vm.load()
+        awaitState(vm) { it.report.earnedCredits == "120" }
+
+        profileFlow.value = JwxtAuthProfile()
+
+        val state = awaitState(vm) {
+            it.report.earnedCredits.isEmpty() && it.report.achievements.isEmpty()
+        }
+        assertEquals(TermGradeReport(), state.report)
     }
 
     @Test

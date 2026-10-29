@@ -11,14 +11,11 @@ import restarhalf.stellar.schedule.data.local.entity.ExaminationEntity
 @Dao
 interface ExaminationDao {
     
-    @Query("SELECT * FROM examinations")
-    fun observeAllExaminations(): Flow<List<ExaminationEntity>>
-
-    @Query("SELECT * FROM examinations")
-    suspend fun getAllExaminationsOnce(): List<ExaminationEntity>
-
     @Query("SELECT * FROM examinations WHERE userNo = :userNo")
     fun observeExaminationsByUserNo(userNo: String): Flow<List<ExaminationEntity>>
+
+    @Query("SELECT * FROM examinations WHERE userNo = :userNo")
+    suspend fun getAllExaminationsByUserNoOnce(userNo: String): List<ExaminationEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExaminations(examinations: List<ExaminationEntity>)

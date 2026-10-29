@@ -142,7 +142,7 @@ val portModule = module {
     single { TimetableSettings(get(named("timetable_prefs"))) }
 
     single<CourseRepository> { RoomCourseRepository(courseDao = get(), settings = get(), auth = get()) }
-    single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get()) }
+    single<ExaminationRepository> { RoomExaminationRepository(examinationDao = get(), auth = get()) }
     single<GradeRepository> { RoomGradeRepository(gradeDao = get()) }
     single<PERepository> { RoomPERepositoryImpl(peYearScoreDao = get(), peDetailDao = get()) }
 

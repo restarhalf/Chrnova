@@ -93,12 +93,17 @@ class HomeViewModel(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val _uiState: StateFlow<HomeUiState> =
         combine(observeAllCourses(), _nowMs, _userNo, observeAllExaminations()) { courses, nowMs, userNo, exams ->
+            val filteredCourses = if (userNo.isNotBlank()) {
+                courses.filter { it.userNo == userNo }
+            } else {
+                emptyList()
+            }
             val filteredExams = if (userNo.isNotBlank()) {
                 exams.filter { it.userNo == userNo }
             } else {
-                exams
+                emptyList()
             }
-            HomeUiState(courses = courses.toPersistentList(), exams = filteredExams.toPersistentList(), nowMs = nowMs)
+            HomeUiState(courses = filteredCourses.toPersistentList(), exams = filteredExams.toPersistentList(), nowMs = nowMs)
         }
             .distinctUntilChanged()
             .stateIn(

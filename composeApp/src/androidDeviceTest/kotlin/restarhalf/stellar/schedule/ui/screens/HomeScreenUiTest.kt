@@ -97,8 +97,7 @@ class HomeScreenUiTest {
 
     private fun makeHomeViewModel(): HomeViewModel {
         every { courseRepository.observeAllCourses() } returns coursesFlow
-        every { auth.observeProfile() } returns MutableStateFlow(JwxtAuthProfile())
-        every { examinationRepository.observeAllExaminations() } returns examsAllFlow
+        every { auth.observeProfile() } returns MutableStateFlow(JwxtAuthProfile(userNo = "U1"))
         every { examinationRepository.observeExaminationsByUserNo(any()) } returns examsForUserFlow
         every { timetable.getCampusTimetable(any()) } returns timetableSlots
         val todaySchedule = BuildHomeTodayScheduleUseCase()
@@ -149,6 +148,7 @@ class HomeScreenUiTest {
                 sectionCount = 2,
                 weeks = (1..25).toList(),
                 color = "#FF5722",
+                userNo = "U1",
             ),
         )
         setContent {
