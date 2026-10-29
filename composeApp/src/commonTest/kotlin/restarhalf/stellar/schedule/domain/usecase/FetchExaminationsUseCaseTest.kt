@@ -48,7 +48,7 @@ class FetchExaminationsUseCaseTest {
 
         assertEquals(1, result.size)
         verifySuspend(VerifyMode.exactly(1)) { academic.fetchExaminations("2026-1", "数学") }
-        verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any()) }
+        verifySuspend(VerifyMode.not) { repository.replaceExaminations(any(), any(), any()) }
     }
 
     @Test
@@ -63,7 +63,7 @@ class FetchExaminationsUseCaseTest {
 
         assertEquals("2023001", result[0].userNo)
         verifySuspend(VerifyMode.exactly(1)) { academic.fetchExaminations("2026-1", "2023001") }
-        verifySuspend(VerifyMode.exactly(1)) { repository.replaceExaminations("2026-1", result) }
+        verifySuspend(VerifyMode.exactly(1)) { repository.replaceExaminations("2023001", "2026-1", result) }
     }
 
     @Test

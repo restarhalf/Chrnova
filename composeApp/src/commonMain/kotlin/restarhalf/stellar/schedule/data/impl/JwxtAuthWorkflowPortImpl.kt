@@ -1,18 +1,14 @@
 package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.repository.CourseRepository
-import restarhalf.stellar.schedule.platform.AppIoDispatcher
 
 class JwxtAuthWorkflowPortImpl(
     private val gateway: JwxtGateway,
     private val authStore: JwxtAuthStore,
-    private val courseRepository: CourseRepository,
 ) : JwxtAuthWorkflowPort {
 
     override suspend fun ensureLoggedIn() {
@@ -31,7 +27,6 @@ class JwxtAuthWorkflowPortImpl(
         codeVal: String,
         p: String?,
     ) {
-        val oldUserNo = authStore.getLastUserNo().orEmpty().trim()
         val resp = gateway.login(
             userNo = userNo,
             password = password,
@@ -50,10 +45,6 @@ class JwxtAuthWorkflowPortImpl(
         }
 
         val newUserNo = resp.data?.userNo.orEmpty().trim().ifBlank { userNo.trim() }
-        if (oldUserNo.isNotBlank() && newUserNo.isNotBlank() && oldUserNo != newUserNo) {
-            withContext(AppIoDispatcher) { courseRepository.clearAllCourses() }
-        }
-
         authStore.setLastUserNo(newUserNo)
 
         authStore.setProfile(

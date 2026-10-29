@@ -20,9 +20,6 @@ interface ExaminationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExaminations(examinations: List<ExaminationEntity>)
 
-    @Query("DELETE FROM examinations WHERE semesterId = :semesterId")
-    suspend fun deleteExaminationsBySemester(semesterId: String)
-
     @Query("SELECT * FROM examinations WHERE id = :id")
     fun observeExaminationById(id: Long): Flow<ExaminationEntity?>
 
@@ -31,9 +28,6 @@ interface ExaminationDao {
 
     @Query("DELETE FROM examinations WHERE id = :id")
     suspend fun deleteExamination(id: Long)
-
-    @Query("DELETE FROM examinations")
-    suspend fun deleteAll()
 
     @Query("UPDATE examinations SET userNo = :userNo WHERE userNo = ''")
     suspend fun bindUnboundExaminations(userNo: String)
@@ -44,12 +38,16 @@ interface ExaminationDao {
     @Query("SELECT COUNT(*) FROM examinations WHERE semesterId = '' OR semesterId = 'manual'")
     suspend fun countExamsWithInvalidSemester(): Int
 
-    @Query("DELETE FROM examinations WHERE semesterId = :semesterId AND source = 'sync'")
-    suspend fun deleteSyncExaminationsBySemester(semesterId: String)
+    @Query("DELETE FROM examinations WHERE userNo = :userNo AND semesterId = :semesterId AND source = 'sync'")
+    suspend fun deleteSyncExaminationsByUserNoAndSemester(userNo: String, semesterId: String)
 
     @Transaction
-    suspend fun replaceBySemester(semesterId: String, examinations: List<ExaminationEntity>) {
-        deleteSyncExaminationsBySemester(semesterId)
+    suspend fun replaceBySemester(
+        userNo: String,
+        semesterId: String,
+        examinations: List<ExaminationEntity>,
+    ) {
+        deleteSyncExaminationsByUserNoAndSemester(userNo, semesterId)
         if (examinations.isNotEmpty()) {
             insertExaminations(examinations)
         }

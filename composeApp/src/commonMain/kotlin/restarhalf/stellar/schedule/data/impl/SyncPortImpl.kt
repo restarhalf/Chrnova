@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.data.impl
 
 import kotlinx.coroutines.flow.first
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtSync
 import restarhalf.stellar.schedule.data.remote.JwxtTimeParser
 import restarhalf.stellar.schedule.domain.model.Course
@@ -35,16 +34,17 @@ class SyncPortImpl(
     }
 
     override suspend fun sync(semesterId: String, campusId: String, week: String): SyncResult {
-        val userNo = try { auth.observeProfile().first().userNo } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            AppLogger.log("Sync", "获取用户学号失败，使用空值", e)
-            ""
-        }
+        val userNo = auth.observeProfile().first().userNo
+        require(userNo.isNotBlank()) { "请先登录" }
         val courses =
             jwxtSync.fetchCourses(semesterId = semesterId, campusId = campusId, week = week).map {
                 it.toDomain().copy(semesterId = semesterId, userNo = userNo)
             }
-        courseRepository.replaceSyncedCourses(courses = courses, semesterId = semesterId)
+        courseRepository.replaceSyncedCourses(
+            userNo = userNo,
+            semesterId = semesterId,
+            courses = courses,
+        )
         return SyncResult(
             inserted = courses.size,
             semesterId = semesterId,

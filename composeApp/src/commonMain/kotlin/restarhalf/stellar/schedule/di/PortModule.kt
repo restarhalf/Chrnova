@@ -175,7 +175,6 @@ val portModule = module {
         JwxtAuthWorkflowPortImpl(
             gateway = get(),
             authStore = get(),
-            courseRepository = get()
         )
     }
     single<PEAuthPort> { PEAuthPortImpl(authStore = get()) }

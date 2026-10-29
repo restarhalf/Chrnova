@@ -22,6 +22,7 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class RoomCourseRepositoryTest {
@@ -167,38 +168,33 @@ class RoomCourseRepositoryTest {
     }
 
     @Test
-    fun replaceSyncedCoursesBindsManualAndSetsActiveTerm() = runTest {
+    fun replaceSyncedCoursesScopesUserAndBindsManualCourses() = runTest {
+        val capturedUsers = mutableListOf<String>()
         val capturedLists = mutableListOf<List<CourseEntity>>()
         val capturedSemesters = mutableListOf<String>()
-        everySuspend { dao.replaceSyncedCourses(any(), any()) } calls { (list: List<CourseEntity>, sem: String) ->
-            capturedLists.add(list)
+        everySuspend { dao.replaceSyncedCourses(any(), any(), any()) } calls {
+            (userNo: String, sem: String, list: List<CourseEntity>) ->
+            capturedUsers.add(userNo)
             capturedSemesters.add(sem)
+            capturedLists.add(list)
             Unit
         }
 
         every { settings.setActiveScheduleTerm(any()) } returns Unit
-        repo.replaceSyncedCourses(listOf(entity("x").toDomain()), "S1")
-        verifySuspend { dao.replaceSyncedCourses(any(), any()) }
-        verifySuspend { dao.bindManualCoursesWithoutSemester("S1") }
+        repo.replaceSyncedCourses("U1", "S1", listOf(entity("x", userNo = "U2").toDomain()))
+        verifySuspend { dao.replaceSyncedCourses("U1", "S1", any()) }
+        verifySuspend { dao.bindManualCoursesWithoutSemester("U1", "S1") }
         verify { settings.setActiveScheduleTerm("S1") }
+        assertEquals("U1", capturedUsers.single())
         assertEquals("S1", capturedSemesters.single())
+        assertTrue(capturedLists.single().all { it.userNo == "U1" && it.semesterId == "S1" })
     }
 
     @Test
     fun replaceSyncedCoursesBlankSemesterSkipsBinding() = runTest {
-        everySuspend { dao.replaceSyncedCourses(any(), any()) } returns Unit
-        repo.replaceSyncedCourses(emptyList(), "")
-        verifySuspend { dao.replaceSyncedCourses(emptyList(), "") }
-    }
-
-    @Test
-    fun clearAllCoursesDeletesAndResetsTerm() = runTest {
-        everySuspend { dao.deleteAll() } returns Unit
-        every { settings.setActiveScheduleTerm(any()) } returns Unit
-        termFlow.value = "S1"
-        repo.clearAllCourses()
-        verifySuspend { dao.deleteAll() }
-        verify { settings.setActiveScheduleTerm("") }
+        everySuspend { dao.replaceSyncedCourses(any(), any(), any()) } returns Unit
+        repo.replaceSyncedCourses("U1", "", emptyList())
+        verifySuspend { dao.replaceSyncedCourses("U1", "", emptyList()) }
     }
 
     @Test
@@ -206,5 +202,12 @@ class RoomCourseRepositoryTest {
         everySuspend { dao.bindUnboundCourses("U7") } returns Unit
         repo.bindUnboundCourses("U7")
         verifySuspend { dao.bindUnboundCourses("U7") }
+    }
+
+    @Test
+    fun replaceSyncedCoursesRejectsBlankUser() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            repo.replaceSyncedCourses("", "S1", emptyList())
+        }
     }
 }

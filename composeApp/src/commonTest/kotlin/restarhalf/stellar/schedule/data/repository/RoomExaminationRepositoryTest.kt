@@ -18,6 +18,7 @@ import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class RoomExaminationRepositoryTest {
@@ -89,29 +90,33 @@ class RoomExaminationRepositoryTest {
     }
 
     @Test
-    fun deleteAndClearDelegate() = runTest {
+    fun deleteDelegates() = runTest {
         everySuspend { dao.deleteExamination(5L) } returns Unit
-        everySuspend { dao.deleteAll() } returns Unit
         repo.deleteExamination(5L)
-        repo.clearAll()
         verifySuspend { dao.deleteExamination(5L) }
-        verifySuspend { dao.deleteAll() }
     }
 
     @Test
-    fun replaceExaminationsOverridesSemesterId() = runTest {
+    fun replaceExaminationsScopesUserAndSemester() = runTest {
+        val capturedUsers = mutableListOf<String>()
         val capturedSem = mutableListOf<String>()
         val capturedList = mutableListOf<List<ExaminationEntity>>()
-        everySuspend { dao.replaceBySemester(any(), any()) } calls { (sem: String, list: List<ExaminationEntity>) ->
+        everySuspend { dao.replaceBySemester(any(), any(), any()) } calls {
+            (userNo: String, sem: String, list: List<ExaminationEntity>) ->
+            capturedUsers.add(userNo)
             capturedSem.add(sem)
             capturedList.add(list)
             Unit
         }
-        val exams = listOf(entity("a").toDomain(), entity("b").toDomain())
-        repo.replaceExaminations("SEM-X", exams)
+        val exams = listOf(
+            entity("a", userNo = "U2").toDomain(),
+            entity("b").toDomain(),
+        )
+        repo.replaceExaminations("U1", "SEM-X", exams)
+        assertEquals("U1", capturedUsers.single())
         assertEquals("SEM-X", capturedSem.single())
         assertEquals(listOf("a", "b"), capturedList.single().map { it.courseName })
-        assertTrue(capturedList.single().all { it.semesterId == "SEM-X" })
+        assertTrue(capturedList.single().all { it.userNo == "U1" && it.semesterId == "SEM-X" })
     }
 
     @Test
@@ -119,6 +124,13 @@ class RoomExaminationRepositoryTest {
         everySuspend { dao.bindUnboundExaminations("U2") } returns Unit
         repo.bindUnboundExaminations("U2")
         verifySuspend { dao.bindUnboundExaminations("U2") }
+    }
+
+    @Test
+    fun replaceExaminationsRejectsBlankUser() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            repo.replaceExaminations("", "SEM-X", emptyList())
+        }
     }
 
     @Test

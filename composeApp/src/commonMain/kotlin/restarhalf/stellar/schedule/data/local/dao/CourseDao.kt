@@ -34,20 +34,14 @@ interface CourseDao {
     @Update
     suspend fun updateCourse(course: CourseEntity)
 
-    @Query("DELETE FROM courses")
-    suspend fun deleteAll()
-
     @Query("UPDATE courses SET userNo = :userNo WHERE userNo = ''")
     suspend fun bindUnboundCourses(userNo: String)
 
-    @Query("DELETE FROM courses WHERE type = 0 AND semesterId = :semesterId")
-    suspend fun deleteSyncedCoursesBySemester(semesterId: String)
+    @Query("DELETE FROM courses WHERE userNo = :userNo AND semesterId = :semesterId AND type = 0")
+    suspend fun deleteSyncedCoursesByUserNoAndSemester(userNo: String, semesterId: String)
 
-    @Query("DELETE FROM courses WHERE type = 0")
-    suspend fun deleteSyncedCourses()
-
-    @Query("UPDATE courses SET semesterId = :semesterId WHERE type != 0 AND semesterId = ''")
-    suspend fun bindManualCoursesWithoutSemester(semesterId: String)
+    @Query("UPDATE courses SET semesterId = :semesterId WHERE userNo = :userNo AND type != 0 AND semesterId = ''")
+    suspend fun bindManualCoursesWithoutSemester(userNo: String, semesterId: String)
 
     @Query("SELECT * FROM courses WHERE userNo = :userNo")
     suspend fun getCoursesByUserNoOnce(userNo: String): List<CourseEntity>
@@ -67,8 +61,12 @@ interface CourseDao {
     }
 
     @Transaction
-    suspend fun replaceSyncedCourses(courses: List<CourseEntity>, semesterId: String) {
-        deleteSyncedCoursesBySemester(semesterId)
+    suspend fun replaceSyncedCourses(
+        userNo: String,
+        semesterId: String,
+        courses: List<CourseEntity>,
+    ) {
+        deleteSyncedCoursesByUserNoAndSemester(userNo, semesterId)
         if (courses.isNotEmpty()) {
             insertCourses(courses)
         }

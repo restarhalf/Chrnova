@@ -91,18 +91,21 @@ class RoomCourseRepository(
         return courseDao.getCoursesByUserNoOnce(userNo).map { it.toDomain() }
     }
 
-    override suspend fun replaceSyncedCourses(courses: List<Course>, semesterId: String) {
-        courseDao.replaceSyncedCourses(courses.map { it.toEntity() }, semesterId)
+    override suspend fun replaceSyncedCourses(
+        userNo: String,
+        semesterId: String,
+        courses: List<Course>,
+    ) {
+        require(userNo.isNotBlank()) { "用户学号不能为空" }
+        val entities = courses.map {
+            it.copy(userNo = userNo, semesterId = semesterId).toEntity()
+        }
+        courseDao.replaceSyncedCourses(userNo, semesterId, entities)
 
         if (semesterId.isNotBlank()) {
-            courseDao.bindManualCoursesWithoutSemester(semesterId)
+            courseDao.bindManualCoursesWithoutSemester(userNo, semesterId)
             settings.setActiveScheduleTerm(semesterId)
         }
-    }
-
-    override suspend fun clearAllCourses() {
-        courseDao.deleteAll()
-        settings.setActiveScheduleTerm("")
     }
 
     override suspend fun bindUnboundCourses(userNo: String) {

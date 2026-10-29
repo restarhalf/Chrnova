@@ -16,9 +16,7 @@ interface ExaminationRepository {
 
     suspend fun deleteExamination(id: Long)
 
-    suspend fun replaceExaminations(semesterId: String, examinations: List<Examination>)
-
-    suspend fun clearAll()
+    suspend fun replaceExaminations(userNo: String, semesterId: String, examinations: List<Examination>)
 
     suspend fun bindUnboundExaminations(userNo: String)
 

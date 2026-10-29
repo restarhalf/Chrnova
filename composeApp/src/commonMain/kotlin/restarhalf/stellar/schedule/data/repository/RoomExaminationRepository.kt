@@ -49,12 +49,14 @@ class RoomExaminationRepository(
         examinationDao.deleteExamination(id)
     }
 
-    override suspend fun replaceExaminations(semesterId: String, examinations: List<Examination>) {
-        examinationDao.replaceBySemester(semesterId, examinations.map { it.toEntity(semesterId) })
-    }
-
-    override suspend fun clearAll() {
-        examinationDao.deleteAll()
+    override suspend fun replaceExaminations(
+        userNo: String,
+        semesterId: String,
+        examinations: List<Examination>,
+    ) {
+        require(userNo.isNotBlank()) { "用户学号不能为空" }
+        val entities = examinations.map { it.copy(userNo = userNo).toEntity(semesterId) }
+        examinationDao.replaceBySemester(userNo, semesterId, entities)
     }
 
     override suspend fun bindUnboundExaminations(userNo: String) {

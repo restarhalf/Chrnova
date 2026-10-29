@@ -8,7 +8,6 @@ import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -43,6 +42,7 @@ class SyncPortImplTest {
     """.trimIndent().replace("\n", "")
 
     private val capturedFields = mutableListOf<Map<String, String>>()
+    private val capturedUsers = mutableListOf<String>()
     private val capturedCourses = mutableListOf<List<Course>>()
     private val capturedSemesters = mutableListOf<String>()
 
@@ -54,10 +54,11 @@ class SyncPortImplTest {
     }
 
     private val courseRepository = mock<CourseRepository>(MockMode.autofill) {
-        everySuspend { replaceSyncedCourses(any(), any()) } calls {
-            (courses: List<Course>, semesterId: String) ->
-            capturedCourses.add(courses)
+        everySuspend { replaceSyncedCourses(any(), any(), any()) } calls {
+            (userNo: String, semesterId: String, courses: List<Course>) ->
+            capturedUsers.add(userNo)
             capturedSemesters.add(semesterId)
+            capturedCourses.add(courses)
             Unit
         }
     }
@@ -91,6 +92,7 @@ class SyncPortImplTest {
         assertEquals("MA101|30304", course.remoteKey)
         assertEquals("2026-2027-1", course.semesterId)
         assertEquals("U1", course.userNo)
+        assertEquals("U1", capturedUsers.single())
 
         assertEquals(
             SyncResult(inserted = 1, semesterId = "2026-2027-1", campusId = "CAMPUS-1", campusName = "", week = "all"),
@@ -99,11 +101,14 @@ class SyncPortImplTest {
     }
 
     @Test
-    fun syncFallsBackToBlankUserNoWhenProfileFails() = runTest {
-        every { auth.observeProfile() } returns flow { throw IllegalStateException("not logged in") }
-        val result = impl.sync("S", "C", "all")
-        assertEquals(1, result.inserted)
-        assertEquals("", capturedCourses.single().single().userNo)
+    fun syncRejectsBlankUserBeforeFetchingOrReplacing() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "")
+
+        val error = assertFailsWith<IllegalArgumentException> { impl.sync("S", "C", "all") }
+
+        assertEquals("请先登录", error.message)
+        assertTrue(capturedFields.isEmpty())
+        assertTrue(capturedCourses.isEmpty())
     }
 
     @Test
