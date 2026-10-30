@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.data.impl
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.calls
+import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
@@ -71,7 +72,8 @@ class PEAuthWorkflowPortImplTest {
             loginStarted.complete(Unit)
             release.await()
             store.setToken("new-token")
-            PELoginResponse(status = "PASS")
+            store.setUserId("new-user")
+            PELoginResponse(status = "PASS", token = "new-token", userId = "new-user")
         }
 
         val refreshJob = launch { impl.refreshSession() }
@@ -85,6 +87,51 @@ class PEAuthWorkflowPortImplTest {
         assertNull(store.getToken())
         assertNull(store.getCredentials())
         assertNull(store.getLastUsername())
+    }
+
+    @Test
+    fun `登录响应缺少token时清会话并失败`() = runTest {
+        store.setToken("old-token")
+        store.setUserId("old-user")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any()) } returns
+            PELoginResponse(status = "PASS", token = null, userId = "u1")
+
+        val error = assertFailsWith<IllegalStateException> { impl.login("2023001", "password") }
+
+        assertEquals("登录响应缺少 Token 或用户标识，请重新登录", error.message)
+        assertNull(store.getToken())
+        assertNull(store.getUserId())
+    }
+
+    @Test
+    fun `登录响应缺少userId时清会话并失败`() = runTest {
+        store.setToken("old-token")
+        store.setUserId("old-user")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any()) } returns
+            PELoginResponse(status = "PASS", token = "new-token", userId = " ")
+
+        val error = assertFailsWith<IllegalStateException> { impl.login("2023001", "password") }
+
+        assertEquals("登录响应缺少 Token 或用户标识，请重新登录", error.message)
+        assertNull(store.getToken())
+        assertNull(store.getUserId())
+    }
+
+    @Test
+    fun `登录响应完整时写入会话与凭据`() = runTest {
+        everySuspend { gateway.login(any(), any()) } calls {
+            store.setToken("new-token")
+            store.setUserId("u1")
+            PELoginResponse(status = "PASS", token = "new-token", userId = "u1")
+        }
+
+        impl.login("2023001", "password")
+
+        assertEquals("new-token", store.getToken())
+        assertEquals("u1", store.getUserId())
+        assertEquals("2023001" to "password", store.getCredentials())
     }
 
     @Test
@@ -150,7 +197,8 @@ class PEAuthWorkflowPortImplTest {
             loginStarted.complete(Unit)
             release.await()
             store.setToken("refreshed-token")
-            PELoginResponse(status = "PASS")
+            store.setUserId("u1")
+            PELoginResponse(status = "PASS", token = "refreshed-token", userId = "u1")
         }
 
         val first = launch { impl.refreshSession() }

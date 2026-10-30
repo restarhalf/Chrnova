@@ -156,8 +156,12 @@ class PEClient(
 
             val parsed = json.decodeFromString(PELoginResponse.serializer(), body)
             if (parsed.status == "PASS") {
-                parsed.token?.let { authStore.setToken(it) }
-                parsed.userId?.let { authStore.setUserId(it) }
+                val token = parsed.token?.takeIf { it.isNotBlank() }
+                val userId = parsed.userId?.takeIf { it.isNotBlank() }
+                if (token != null && userId != null) {
+                    authStore.setToken(token)
+                    authStore.setUserId(userId)
+                }
             }
             parsed
         }

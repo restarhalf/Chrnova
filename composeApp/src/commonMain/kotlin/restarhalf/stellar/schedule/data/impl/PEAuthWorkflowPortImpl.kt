@@ -49,9 +49,11 @@ class PEAuthWorkflowPortImpl(
             throw IllegalStateException(resp.message.ifBlank { "登录失败" })
         }
 
-        val token = authStore.getToken().orEmpty()
-        if (token.isBlank()) {
-            throw IllegalStateException("登录成功但未获取到 Token")
+        val token = resp.token?.takeIf { it.isNotBlank() }
+        val userId = resp.userId?.takeIf { it.isNotBlank() }
+        if (token == null || userId == null) {
+            authStore.clearSession()
+            throw IllegalStateException("登录响应缺少 Token 或用户标识，请重新登录")
         }
 
         val newUsername = username.trim()
