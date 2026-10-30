@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.ui.components.AppCard
@@ -29,9 +31,11 @@ fun PEAppointmentWebScreen(
     peAuth: PEAuthPort = koinInject(),
 ) {
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
-    val token = peAuth.getToken()
+    val token by peAuth.observeToken().collectAsStateWithLifecycle(
+        initialValue = peAuth.getToken().orEmpty(),
+    )
     val userId = peAuth.getUserId()
-    val canAutoLogin = !token.isNullOrBlank() && !userId.isNullOrBlank()
+    val canAutoLogin = token.isNotBlank() && !userId.isNullOrBlank()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -55,7 +59,7 @@ fun PEAppointmentWebScreen(
             PEWebView(
                 targetUrl = PEWebAuth.APPOINTMENT_URL,
                 authScript = PEWebAuth.buildInjectScript(
-                    token = token.orEmpty(),
+                    token = token,
                     userId = userId.orEmpty(),
                 ),
                 modifier = Modifier

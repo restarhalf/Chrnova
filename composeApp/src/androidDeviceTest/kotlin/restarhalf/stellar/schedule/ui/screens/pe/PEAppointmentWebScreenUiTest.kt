@@ -12,6 +12,7 @@ import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.mock
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
@@ -35,6 +36,7 @@ class PEAppointmentWebScreenUiTest {
     fun 未登录时渲染登录提示卡片() = runUltronUiTest {
         every { peAuth.getToken() } returns null
         every { peAuth.getUserId() } returns null
+        every { peAuth.observeToken() } returns flowOf("")
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
                 PEAppointmentWebScreen(onBack = {}, peAuth = peAuth)
@@ -49,6 +51,7 @@ class PEAppointmentWebScreenUiTest {
     fun 只有token没有userId时仍提示登录() = runUltronUiTest {
         every { peAuth.getToken() } returns "tok"
         every { peAuth.getUserId() } returns ""
+        every { peAuth.observeToken() } returns flowOf("tok")
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
                 PEAppointmentWebScreen(onBack = {}, peAuth = peAuth)
@@ -62,6 +65,7 @@ class PEAppointmentWebScreenUiTest {
     fun 已登录时不再显示登录提示() = runUltronUiTest {
         every { peAuth.getToken() } returns "tok"
         every { peAuth.getUserId() } returns "u1"
+        every { peAuth.observeToken() } returns flowOf("tok")
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
                 PEAppointmentWebScreen(onBack = {}, peAuth = peAuth)
@@ -76,6 +80,7 @@ class PEAppointmentWebScreenUiTest {
     fun 返回按钮回调() = runUltronUiTest {
         every { peAuth.getToken() } returns null
         every { peAuth.getUserId() } returns null
+        every { peAuth.observeToken() } returns flowOf("")
         var backCalls = 0
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {

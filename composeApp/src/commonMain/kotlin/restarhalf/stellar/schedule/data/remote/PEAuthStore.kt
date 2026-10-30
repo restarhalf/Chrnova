@@ -23,6 +23,14 @@ class PEAuthStore(private val settings: ObservableSettings) {
         settings.clear()
     }
 
+    fun clearSession() {
+        settings[KEY_TOKEN] = null
+        settings[KEY_USER_ID] = null
+        settings[KEY_STU_NAME] = null
+        settings[KEY_STD_NUMBER] = null
+        settings[KEY_TEST_CODE] = null
+    }
+
     fun getLastUsername(): String? =
         settings.getStringOrNull(KEY_LAST_USERNAME)?.takeIf { it.isNotBlank() }
 

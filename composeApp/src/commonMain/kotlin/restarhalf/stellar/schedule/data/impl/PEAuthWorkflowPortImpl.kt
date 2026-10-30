@@ -74,19 +74,23 @@ class PEAuthWorkflowPortImpl(
         val tokenBefore = authStore.getToken()
 
         authMutex.withLock {
-            val (username, password) = authStore.getCredentials() ?: return
+            val credentials = authStore.getCredentials()
+            if (credentials == null) {
+                AppLogger.log("PEAuth", "刷新会话失败，没有保存的凭据，清理本地会话")
+                authStore.clearSession()
+                return
+            }
 
             val currentToken = authStore.getToken()
             if (currentToken != null && currentToken != tokenBefore) return
 
-            val oldToken = authStore.getToken()
             try {
-                performLogin(username = username, password = password)
+                performLogin(username = credentials.first, password = credentials.second)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLogger.log("PEAuth", "刷新会话失败，恢复旧Token", e)
-                if (oldToken != null) authStore.setToken(oldToken)
+                AppLogger.log("PEAuth", "刷新会话失败，清理本地会话", e)
+                authStore.clearSession()
             }
         }
     }
