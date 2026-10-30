@@ -39,16 +39,32 @@ class PESessionRetryTest {
     }
 
     @Test
-    fun `解析异常刷新会话后重试成功`() = runTest {
+    fun `解析异常不刷新会话也不重放`() = runTest {
         var attempts = 0
-        val result = withSessionRetry(peAuthWorkflow) {
-            attempts++
-            if (attempts == 1) throw SerializationException("bad json")
-            42
+
+        assertFailsWith<SerializationException> {
+            withSessionRetry(peAuthWorkflow) {
+                attempts++
+                throw SerializationException("bad json")
+            }
         }
 
-        assertEquals(42, result)
-        assertEquals(2, attempts)
+        assertEquals(1, attempts)
+        verifySuspend(VerifyMode.not) { peAuthWorkflow.refreshSession() }
+    }
+
+    @Test
+    fun `写操作遇到认证错误只刷新不重放`() = runTest {
+        var attempts = 0
+
+        assertFailsWith<PETokenExpiredException> {
+            withSessionRetry(peAuthWorkflow, replayOnAuthError = false) {
+                attempts++
+                throw PETokenExpiredException()
+            }
+        }
+
+        assertEquals(1, attempts)
         verifySuspend(VerifyMode.exactly(1)) { peAuthWorkflow.refreshSession() }
     }
 

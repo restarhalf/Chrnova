@@ -31,7 +31,7 @@ class PEFreeApplyUseCase(
         schoolYear: String,
         freeApplyType: String,
         attachments: List<String>,
-    ): PEFreeActionResponse = withSessionRetry(authWorkflow) {
+    ): PEFreeActionResponse = withSessionRetry(authWorkflow, replayOnAuthError = false) {
         gateway.submitFreeApply(
             stdNumber = stdNumber,
             schoolYear = schoolYear,
@@ -44,7 +44,7 @@ class PEFreeApplyUseCase(
         fileName: String,
         mimeType: String,
         bytes: ByteArray,
-    ): PEFreeActionResponse = withSessionRetry(authWorkflow) {
+    ): PEFreeActionResponse = withSessionRetry(authWorkflow, replayOnAuthError = false) {
         gateway.uploadPeFile(fileName = fileName, mimeType = mimeType, bytes = bytes)
     }
 

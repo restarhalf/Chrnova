@@ -12,7 +12,7 @@ class PEEnterAppointmentUseCase(
         appointmentId: String,
         timesId: String,
         enterDate: String,
-    ): PEAppointmentActionResponse = withSessionRetry(authWorkflow) {
+    ): PEAppointmentActionResponse = withSessionRetry(authWorkflow, replayOnAuthError = false) {
         gateway.enterAppointment(
             appointmentId = appointmentId,
             timesId = timesId,

@@ -9,7 +9,7 @@ class PECancelAppointmentUseCase(
     private val authWorkflow: PEAuthWorkflowPort,
 ) {
     suspend operator fun invoke(temporaryId: String): PEAppointmentActionResponse =
-        withSessionRetry(authWorkflow) {
+        withSessionRetry(authWorkflow, replayOnAuthError = false) {
             gateway.cancelAppointment(temporaryId)
         }
 }
