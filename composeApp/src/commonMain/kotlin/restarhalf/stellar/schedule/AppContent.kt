@@ -11,6 +11,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,11 +26,15 @@ import coil3.compose.AsyncImage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.qualifier.named
+import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
+import restarhalf.stellar.schedule.domain.usecase.SyncExactAlarmPermissionUseCase
 import restarhalf.stellar.schedule.platform.AppIoDispatcher
 import restarhalf.stellar.schedule.ui.image.toAsyncImageModel
 import restarhalf.stellar.schedule.ui.navigation.AppBottomBar
@@ -147,11 +152,22 @@ fun AppContent(
         }
     }
     val announcementVm: AnnouncementViewModel = koinViewModel()
+    val syncExactAlarmPermission: SyncExactAlarmPermissionUseCase = koinInject()
+    val exactAlarmScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 announcementVm.refresh()
+                exactAlarmScope.launch {
+                    withContext(AppIoDispatcher) {
+                        runCatching { syncExactAlarmPermission() }
+                            .onFailure {
+                                if (it is CancellationException) throw it
+                                AppLogger.log("Reminder", "同步精确闹钟授权失败", it)
+                            }
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

@@ -59,6 +59,7 @@ import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEn
 import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
+import restarhalf.stellar.schedule.domain.usecase.SyncExactAlarmPermissionUseCase
 import restarhalf.stellar.schedule.ui.model.home.ResolveCourseStatusUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.domain.usecase.SaveExaminationUseCase
@@ -164,6 +165,14 @@ val useCaseModule = module {
     factory { CancelAllCourseRemindersUseCase(courseReminder = get()) }
     factory { CancelAllExamRemindersUseCase(examReminder = get()) }
     factory { IsAnyReminderEnabledUseCase(settings = get()) }
+    factory {
+        SyncExactAlarmPermissionUseCase(
+            exactAlarmPermission = get(),
+            reminderSettings = get(),
+            isAnyReminderEnabled = get(),
+            rescheduleAllReminders = get(),
+        )
+    }
     factory {
         RescheduleNextCourseReminderIfEnabledUseCase(
             settings = get(),

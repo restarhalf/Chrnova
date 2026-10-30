@@ -18,11 +18,13 @@ import restarhalf.stellar.schedule.domain.model.SettingsKeys
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
 import restarhalf.stellar.schedule.reminder.impl.CourseReminderPortImpl
 import restarhalf.stellar.schedule.reminder.impl.ExamReminderPortImpl
+import restarhalf.stellar.schedule.reminder.impl.ExactAlarmPermissionPortImpl
 import restarhalf.stellar.schedule.reminder.impl.ReminderSchedulerPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
 import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
@@ -53,6 +55,7 @@ private val iosPlatformModule = module {
     single<CourseReminderPort> { CourseReminderPortImpl(settings = get(named("reminder_codes"))) }
     single<ExamReminderPort> { ExamReminderPortImpl(settings = get(named("reminder_codes"))) }
     single<ReminderSchedulerPort> { ReminderSchedulerPortImpl(rescheduleReminders = get()) }
+    single<ExactAlarmPermissionPort> { ExactAlarmPermissionPortImpl() }
     single<AppUpdatePort> { AppUpdatePortImpl() }
     single<CourseSelectionServicePort> { CourseSelectionServicePortImpl() }
 }

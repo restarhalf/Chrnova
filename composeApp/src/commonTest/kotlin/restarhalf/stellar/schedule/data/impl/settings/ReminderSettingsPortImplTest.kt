@@ -4,7 +4,9 @@ import com.russhwolf.settings.MapSettings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ReminderSettingsPortImplTest {
@@ -29,5 +31,14 @@ class ReminderSettingsPortImplTest {
         assertTrue(impl.hasAskedExactAlarmPermission())
         impl.markExactAlarmPermissionAsked()
         assertTrue(impl.hasAskedExactAlarmPermission())
+    }
+
+    @Test
+    fun exactAlarmAllowedStartsUnknownAndRoundTrips() {
+        assertNull(impl.getExactAlarmAllowed())
+        impl.setExactAlarmAllowed(false)
+        assertEquals(false, impl.getExactAlarmAllowed())
+        impl.setExactAlarmAllowed(true)
+        assertEquals(true, impl.getExactAlarmAllowed())
     }
 }

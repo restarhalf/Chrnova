@@ -1,16 +1,13 @@
 package restarhalf.stellar.schedule
 
 import android.Manifest
-import android.app.AlarmManager
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -31,6 +28,7 @@ import androidx.core.net.toUri
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
@@ -46,6 +44,7 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     setContent {
 
         val reminderSettings: ReminderSettingsPort = koinInject()
+        val exactAlarmPermission: ExactAlarmPermissionPort = koinInject()
 
         var themeMode by remember { mutableIntStateOf(displaySettings.getThemeMode()) }
         val darkMode =
@@ -83,13 +82,6 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                 }
             }
 
-        // SCHEDULE_EXACT_ALARM 走的是「特殊权限」，不是运行时权限，
-        // 必须弹系统设置页让用户开。不开的话 setExact 会被降级成
-        // setAndAllowWhileIdle，闹钟被塞进最长 1 小时的模糊窗口，
-        // 表现就是「排上了但到点不响」。
-        val exactAlarmLauncher =
-            rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
-
         AppRoot(
             onThemeModeChange = { themeMode = it },
             pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
@@ -121,10 +113,15 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                     notificationPermissionLauncher.launch(permsArray)
                 }
             },
+            // SCHEDULE_EXACT_ALARM 走的是「特殊权限」，不是运行时权限，
+            // 必须弹系统设置页让用户开。不开的话 setExact 会被降级成
+            // setAndAllowWhileIdle，闹钟被塞进最长 1 小时的模糊窗口，
+            // 表现就是「排上了但到点不响」。
             ensureExactAlarmPermission = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    exactAlarmPermission.openExactAlarmSettings()
+                ) {
                     reminderSettings.markExactAlarmPermissionAsked()
-                    requestExactAlarmIfNeeded(exactAlarmLauncher)
                 }
             },
             openUri = { uri ->
@@ -209,26 +206,3 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     }
 }
 
-/**
- * 没开精确闹钟权限就跳系统设置页。
- *
- * 跳过或没开成也不阻断流程——闹钟仍然会排，只是走 setAndAllowWhileIdle，
- * 到点时间可能被推迟（实测有 40 多分钟的窗口）。
- */
-@RequiresApi(Build.VERSION_CODES.S)
-private fun ComponentActivity.requestExactAlarmIfNeeded(
-    launcher: androidx.activity.result.ActivityResultLauncher<Intent>,
-) {
-    val alarmManager = getSystemService(AlarmManager::class.java) ?: return
-    if (alarmManager.canScheduleExactAlarms()) return
-
-    runCatching {
-        launcher.launch(
-            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                data = Uri.parse("package:$packageName")
-            }
-        )
-    }.onFailure {
-        AppLogger.log("App", "申请精确闹钟权限失败", it)
-    }
-}

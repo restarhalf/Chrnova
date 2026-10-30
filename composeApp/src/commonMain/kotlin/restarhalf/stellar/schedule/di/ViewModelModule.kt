@@ -72,6 +72,7 @@ val viewModelModule = module {
             authWorkflow = get(),
             displaySettings = get(),
             reminderSettings = get(),
+            exactAlarmPermission = get(),
             termSettings = get(),
             logSettings = get(),
             userProfile = get(),

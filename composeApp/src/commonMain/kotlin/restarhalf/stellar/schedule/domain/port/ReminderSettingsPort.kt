@@ -16,4 +16,9 @@ interface ReminderSettingsPort {
     fun hasAskedExactAlarmPermission(): Boolean
 
     fun markExactAlarmPermissionAsked()
+
+    /** 上次从系统读到的精确闹钟授权结果；没记录过返回 null。 */
+    fun getExactAlarmAllowed(): Boolean?
+
+    fun setExactAlarmAllowed(allowed: Boolean)
 }

@@ -27,10 +27,12 @@ import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
+import restarhalf.stellar.schedule.domain.model.ExactAlarmPermissionState
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
@@ -54,6 +56,7 @@ class SettingsViewModel(
     private val authWorkflow: JwxtAuthWorkflowPort,
     private val displaySettings: DisplaySettingsPort,
     private val reminderSettings: ReminderSettingsPort,
+    private val exactAlarmPermission: ExactAlarmPermissionPort,
     private val termSettings: TermSettingsPort,
     private val logSettings: LogSettingsPort,
     private val userProfile: UserProfilePort,
@@ -71,6 +74,18 @@ class SettingsViewModel(
 
     private val _rescheduling = MutableStateFlow(false)
     val rescheduling: StateFlow<Boolean> = _rescheduling
+
+    private val _exactAlarmState = MutableStateFlow(ExactAlarmPermissionState.GRANTED)
+    val exactAlarmState: StateFlow<ExactAlarmPermissionState> = _exactAlarmState
+
+    fun refreshExactAlarmState() {
+        _exactAlarmState.value =
+            when {
+                exactAlarmPermission.isExactAlarmAllowed() -> ExactAlarmPermissionState.GRANTED
+                reminderSettings.hasAskedExactAlarmPermission() -> ExactAlarmPermissionState.DENIED
+                else -> ExactAlarmPermissionState.NOT_ASKED
+            }
+    }
 
     /** 「重新排提醒」下面的那行小字：当前实际挂着的下一条提醒 */
     private val _nextReminderSummary = MutableStateFlow("")

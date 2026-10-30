@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
@@ -61,6 +62,7 @@ class SettingsViewModelTest {
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val displaySettings = mock<DisplaySettingsPort>(MockMode.autofill)
     private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val exactAlarmPermission = mock<ExactAlarmPermissionPort>(MockMode.autofill)
     private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
     private val logSettings = mock<LogSettingsPort>(MockMode.autofill)
     private val userProfile = mock<UserProfilePort>(MockMode.autofill)
@@ -107,6 +109,7 @@ class SettingsViewModelTest {
             authWorkflow = authWorkflow,
             displaySettings = displaySettings,
             reminderSettings = reminderSettings,
+            exactAlarmPermission = exactAlarmPermission,
             termSettings = termSettings,
             logSettings = logSettings,
             userProfile = userProfile,

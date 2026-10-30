@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -32,6 +36,7 @@ import restarhalf.stellar.schedule.domain.policy.CsvExporter
 import restarhalf.stellar.schedule.domain.policy.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.model.ExactAlarmPermissionState
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.ui.components.AppCard
@@ -91,6 +96,16 @@ fun SettingsScreen(
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val settingsUiState by vm.uiState.collectAsStateWithLifecycle()
+    val exactAlarmState by vm.exactAlarmState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) { vm.refreshExactAlarmState() }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) vm.refreshExactAlarmState()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val timetablePort: TimetablePort = koinInject()
 
     val screenUi =
@@ -511,6 +526,20 @@ fun SettingsScreen(
                                 }
                             })
                     })
+                    if (exactAlarmState != ExactAlarmPermissionState.GRANTED) {
+                        add(CardItem("exactAlarm") {
+                            ArrowPreference(
+                                title = "精确闹钟权限",
+                                summary =
+                                    when (exactAlarmState) {
+                                        ExactAlarmPermissionState.DENIED ->
+                                            "未开启，提醒可能被系统推迟，点此去系统设置开启"
+                                        else -> "未开启，点此去系统开启"
+                                    },
+                                onClick = onRequestExactAlarmPermission,
+                            )
+                        })
+                    }
                     add(CardItem("log") {
                         SwitchPreference(
                             title = "开启日志",
