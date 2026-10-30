@@ -8,11 +8,12 @@ import com.russhwolf.settings.coroutines.getStringFlow
 import com.russhwolf.settings.set
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class TimetableSettings(private val settings: ObservableSettings) {
@@ -77,8 +78,9 @@ class TimetableSettings(private val settings: ObservableSettings) {
 
         @OptIn(ExperimentalTime::class)
         fun defaultTermStartMs(): Long {
-            val date = LocalDate(2026, 3, 2)
-            return date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+            val tz = TimeZone.currentSystemDefault()
+            val today = Clock.System.now().toLocalDateTime(tz).date
+            return today.atStartOfDayIn(tz).toEpochMilliseconds()
         }
     }
 }
