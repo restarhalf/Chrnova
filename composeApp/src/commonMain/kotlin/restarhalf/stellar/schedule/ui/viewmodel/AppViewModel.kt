@@ -17,6 +17,7 @@ import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
+import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -36,6 +37,7 @@ class AppViewModel(
     private val jwxtLoginUseCase: JwxtLoginUseCase,
     private val runSyncUseCase: RunSyncUseCase,
     private val repairExaminationSemesters: RepairExaminationSemestersUseCase,
+    private val courseSelectionService: CourseSelectionServicePort,
     ) : ViewModel() {
 
     init {
@@ -111,6 +113,8 @@ class AppViewModel(
     }
 
     fun logout() {
+        runCatching { courseSelectionService.stop() }
+            .onFailure { AppLogger.log("AppViewModel", "退出登录停止抢课服务失败", it) }
         auth.clear()
     }
 

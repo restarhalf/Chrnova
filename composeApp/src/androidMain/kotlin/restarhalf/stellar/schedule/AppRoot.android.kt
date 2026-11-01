@@ -36,11 +36,7 @@ import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
 @RequiresApi(Build.VERSION_CODES.Q)
 fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     AppLogger.init(filesDir.absolutePath + "/logs")
-    val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-        runCatching { AppLogger.logFatal(thread.name, throwable) }
-        defaultHandler?.uncaughtException(thread, throwable)
-    }
+    installCrashHandler()
     setContent {
 
         val reminderSettings: ReminderSettingsPort = koinInject()
@@ -206,3 +202,15 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
     }
 }
 
+
+private var crashHandlerInstalled = false
+
+private fun installCrashHandler() {
+    if (crashHandlerInstalled) return
+    crashHandlerInstalled = true
+    val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+        runCatching { AppLogger.logFatal(thread.name, throwable) }
+        defaultHandler?.uncaughtException(thread, throwable)
+    }
+}

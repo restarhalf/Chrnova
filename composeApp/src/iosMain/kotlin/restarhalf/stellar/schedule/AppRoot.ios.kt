@@ -44,9 +44,14 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.UIKit.UIImage
 import platform.UIKit.UIViewController
+import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_semaphore_create
+import platform.darwin.dispatch_semaphore_signal
+import platform.darwin.dispatch_semaphore_wait
 import platform.darwin.dispatch_sync
+import platform.darwin.dispatch_time
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
@@ -143,15 +148,31 @@ private fun sanitizeUri(raw: String): String = raw.trim().filterNot { it.isWhite
 private fun canOpenUrlOnMain(url: NSURL): Boolean =
     runOnMainSyncBoolean { UIApplication.sharedApplication.canOpenURL(url) }
 
-private fun openUrlWithOptionsOnMain(url: NSURL): Boolean =
-    runOnMainSyncBoolean {
+private fun openUrlWithOptionsOnMain(url: NSURL): Boolean {
+    if (NSThread.isMainThread) {
+        if (!UIApplication.sharedApplication.canOpenURL(url)) return false
         UIApplication.sharedApplication.openURL(
             url = url,
             options = emptyMap<Any?, Any>(),
-            completionHandler = null,
-        )
-        true
+        ) { success ->
+            if (!success) AppLogger.log("AppRoot", "打开链接失败")
+        }
+        return true
     }
+    val semaphore = dispatch_semaphore_create(0)
+    var opened = false
+    dispatch_async(dispatch_get_main_queue()) {
+        UIApplication.sharedApplication.openURL(
+            url = url,
+            options = emptyMap<Any?, Any>(),
+        ) { success ->
+            opened = success
+            dispatch_semaphore_signal(semaphore)
+        }
+    }
+    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 2_000_000_000L))
+    return opened
+}
 
 @OptIn(ExperimentalForeignApi::class)
 private fun ensureNotificationPermission(

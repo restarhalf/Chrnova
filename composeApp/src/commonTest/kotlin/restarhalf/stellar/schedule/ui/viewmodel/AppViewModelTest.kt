@@ -24,6 +24,7 @@ import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
@@ -64,6 +65,7 @@ class AppViewModelTest {
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
     private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
+    private val courseSelectionService = mock<CourseSelectionServicePort>(MockMode.autofill)
 
     private val campusFlow = MutableStateFlow(Campus.Jinshitan)
     private val termStartFlow = MutableStateFlow(1000L)
@@ -137,6 +139,7 @@ class AppViewModelTest {
                 reminderScheduler = reminderScheduler,
             ),
             repairExaminationSemesters = RepairExaminationSemestersUseCase(examRepository, academic),
+            courseSelectionService = courseSelectionService,
         )
     }
 
@@ -260,6 +263,25 @@ class AppViewModelTest {
 
     @Test
     fun `logout清除认证信息`() = runTest {
+        val vm = makeViewModel()
+
+        vm.logout()
+
+        verify(VerifyMode.exactly(1)) { auth.clear() }
+    }
+
+    @Test
+    fun `logout停止抢课服务`() = runTest {
+        val vm = makeViewModel()
+
+        vm.logout()
+
+        verify(VerifyMode.exactly(1)) { courseSelectionService.stop() }
+    }
+
+    @Test
+    fun `logout停止抢课服务失败仍清除认证`() = runTest {
+        every { courseSelectionService.stop() } throws IllegalStateException("not running")
         val vm = makeViewModel()
 
         vm.logout()

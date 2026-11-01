@@ -36,6 +36,7 @@ val viewModelModule = module {
             jwxtLoginUseCase = get(),
             runSyncUseCase = get(),
             repairExaminationSemesters = get(),
+            courseSelectionService = get(),
         )
     }
     viewModel {

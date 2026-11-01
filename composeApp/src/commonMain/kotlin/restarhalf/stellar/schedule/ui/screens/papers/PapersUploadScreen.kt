@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import restarhalf.stellar.schedule.papers.isPaperDocument
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
@@ -201,11 +202,15 @@ fun PapersUploadScreen(
                 val file = picked.firstOrNull()
                 showFilePicker = false
                 if (file != null) {
-                    selectedFileBytes = file.bytes
-                    selectedFileName = file.name
-                    selectedFileMime = file.mime
-                    selectedFilePath = file.name
-                    title = file.name.substringBeforeLast('.')
+                    if (isPaperDocument(file)) {
+                        selectedFileBytes = file.bytes
+                        selectedFileName = file.name
+                        selectedFileMime = file.mime
+                        selectedFilePath = file.name
+                        title = file.name.substringBeforeLast('.')
+                    } else {
+                        onResult("试卷只支持 PDF、DOC、DOCX")
+                    }
                 }
             }
         }
