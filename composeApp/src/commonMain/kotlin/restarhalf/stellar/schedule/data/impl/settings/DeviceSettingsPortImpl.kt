@@ -10,9 +10,14 @@ class DeviceSettingsPortImpl(
     private val settings: ObservableSettings,
 ) : DeviceSettingsPort {
 
-    override fun getDeviceId(): String {
-        val existing = settings.getStringOrNull(SettingsKeys.DEVICE_ID)
-        if (!existing.isNullOrEmpty()) return existing
+    private val cachedDeviceId: String by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        settings.getStringOrNull(SettingsKeys.DEVICE_ID)?.takeIf { it.isNotEmpty() }
+            ?: generateDeviceId()
+    }
+
+    override fun getDeviceId(): String = cachedDeviceId
+
+    private fun generateDeviceId(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         val id = buildString(32) {
             repeat(32) { append(chars[Random.nextInt(chars.length)]) }

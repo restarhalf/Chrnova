@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule.data.remote
 
 import kotlinx.serialization.json.Json
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionRotation
@@ -40,14 +41,16 @@ class JwxtSelectionParserTest {
     }
 
     @Test
-    fun `parseList结构异常时返回空列表`() {
-        val courses = JwxtSelectionParser.parseList(
-            data("""{"foo":1}"""),
-            JwxtSelectionCourse.serializer(),
-            "课程列表",
-        )
+    fun `parseList结构异常时抛出解析异常`() {
+        val e = assertFailsWith<ParseFailureException> {
+            JwxtSelectionParser.parseList(
+                data("""{"foo":1}"""),
+                JwxtSelectionCourse.serializer(),
+                "课程列表",
+            )
+        }
 
-        assertTrue(courses.isEmpty())
+        assertEquals("解析课程列表失败，请稍后重试", e.message)
     }
 
     @Test

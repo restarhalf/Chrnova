@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.port.JwxtSelectionSession
@@ -22,11 +23,12 @@ internal object JwxtSelectionParser {
         label: String,
     ): List<T> {
         if (data == null) return emptyList()
-        return runCatching {
+        return try {
             json.decodeFromString(ListSerializer(serializer), data.toString())
-        }.getOrElse {
-            AppLogger.log("CourseSelection", "解析$label 失败", it)
-            emptyList()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            AppLogger.log("CourseSelection", "解析$label 失败", e)
+            throw ParseFailureException("解析${label}失败，请稍后重试")
         }
     }
 

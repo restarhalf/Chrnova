@@ -205,6 +205,7 @@ class ExamReminderScheduler(
     }
 
     fun hasScheduledAlarm(): Boolean {
+        if (getNextTriggerTime() == null) return false
         val pendingIntent =
             PendingIntent.getBroadcast(
                 context,

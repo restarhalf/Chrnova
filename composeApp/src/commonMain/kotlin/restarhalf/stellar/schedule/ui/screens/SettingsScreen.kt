@@ -132,7 +132,7 @@ fun SettingsScreen(
     }
 
     LaunchedEffect(Unit) {
-        vm.rescheduleMessages.collect { showMessage(it) }
+        vm.userMessages.collect { showMessage(it) }
     }
 
     val termSelectionUi =

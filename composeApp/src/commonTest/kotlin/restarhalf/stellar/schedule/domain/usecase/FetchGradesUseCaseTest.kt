@@ -93,7 +93,49 @@ class FetchGradesUseCaseTest {
 
         assertEquals(0, result.achievements.size)
         verifySuspend(VerifyMode.exactly(1)) { academic.fetchGradeReport("2099-9") }
-        verifySuspend(VerifyMode.not) { repository.replaceGradesByUserNoAndSemester(any(), any(), any()) }
+        verifySuspend(VerifyMode.exactly(1)) {
+            repository.replaceGradesByUserNoAndSemester("2023001", "2099-9", emptyList())
+        }
+    }
+
+    @Test
+    fun `混合学期响应按各自学期落库`() = runTest {
+        stubProfile("2023001")
+        everySuspend { academic.fetchGradeReport(any()) } returns
+            report(grade("2026-1"), grade("2025-2"))
+
+        useCase(semester = "2026-1")
+
+        verifySuspend(VerifyMode.exactly(1)) {
+            repository.replaceGradesByUserNoAndSemester(
+                "2023001",
+                "2026-1",
+                listOf(grade("2026-1").copy(userNo = "2023001")),
+            )
+        }
+        verifySuspend(VerifyMode.exactly(1)) {
+            repository.replaceGradesByUserNoAndSemester(
+                "2023001",
+                "2025-2",
+                listOf(grade("2025-2").copy(userNo = "2023001")),
+            )
+        }
+    }
+
+    @Test
+    fun `空响应清掉本次查询过的学期缓存`() = runTest {
+        stubProfile("2023001")
+        everySuspend { academic.fetchSemesterIds() } returns listOf("2025-2", "2026-1")
+        everySuspend { academic.fetchGradeReport(any()) } returns report()
+
+        useCase(semester = "2026-1")
+
+        verifySuspend(VerifyMode.exactly(1)) {
+            repository.replaceGradesByUserNoAndSemester("2023001", "2026-1", emptyList())
+        }
+        verifySuspend(VerifyMode.exactly(1)) {
+            repository.replaceGradesByUserNoAndSemester("2023001", "2025-2", emptyList())
+        }
     }
 
     @Test

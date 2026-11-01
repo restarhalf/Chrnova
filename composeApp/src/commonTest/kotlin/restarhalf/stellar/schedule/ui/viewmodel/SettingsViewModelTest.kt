@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.ui.viewmodel
 
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
+import dev.mokkery.answering.throws
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
@@ -168,6 +169,14 @@ class SettingsViewModelTest {
         }
     }
 
+    private fun TestScope.collectMessages(vm: SettingsViewModel): List<String> {
+        val messages = mutableListOf<String>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.userMessages.collect { messages += it }
+        }
+        return messages
+    }
+
     private suspend fun awaitState(
         vm: SettingsViewModel,
         timeoutMs: Long = 5000,
@@ -316,6 +325,130 @@ class SettingsViewModelTest {
         verify(VerifyMode.exactly(1)) { termSettings.setSelectedTerm("2025-2") }
         verify(VerifyMode.exactly(1)) { termSettings.setActiveScheduleTerm("2025-2") }
         verifySuspend(VerifyMode.exactly(1)) { examReminder.scheduleNextReminder(any()) }
+    }
+
+    @Test
+    fun `课程提醒调度返回失败时保持开关并提示`() = runTest {
+        everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
+            CourseReminderPort.ScheduleResult.Failed
+        val vm = makeViewModel()
+        val messages = collectMessages(vm)
+
+        vm.scheduleCourseReminder(Campus.Development, 0L, 20)
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        assertEquals(listOf("课程提醒没排上，稍后会自动重试"), messages)
+        verify(VerifyMode.not) { reminderSettings.setCourseReminderEnabled(false) }
+    }
+
+    @Test
+    fun `课程提醒调度抛异常时保持开关并提示`() = runTest {
+        everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } throws
+            IllegalStateException("boom")
+        val vm = makeViewModel()
+        val messages = collectMessages(vm)
+
+        vm.scheduleCourseReminder(Campus.Development, 0L, 20)
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        assertEquals(listOf("课程提醒没排上，稍后会自动重试"), messages)
+        verify(VerifyMode.not) { reminderSettings.setCourseReminderEnabled(false) }
+    }
+
+    @Test
+    fun `考试提醒调度返回失败时保持开关并提示`() = runTest {
+        everySuspend { examReminder.scheduleNextReminder(any()) } returns
+            ExamReminderPort.ScheduleResult.Failed
+        val vm = makeViewModel()
+        val messages = collectMessages(vm)
+
+        vm.scheduleExamReminder("2025-2")
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        assertEquals(listOf("考试提醒没排上，稍后会自动重试"), messages)
+        verify(VerifyMode.not) { reminderSettings.setExamReminderEnabled(false) }
+    }
+
+    @Test
+    fun `课程提醒调度成功时不提示`() = runTest {
+        everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
+            CourseReminderPort.ScheduleResult.NoUpcoming
+        val vm = makeViewModel()
+        val messages = collectMessages(vm)
+
+        vm.scheduleCourseReminder(Campus.Development, 0L, 20)
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        assertEquals(emptyList(), messages)
+    }
+
+    @Test
+    fun `token为空时仍尝试自动重登`() = runTest {
+        val vm = makeViewModel()
+
+        vm.refreshAuth()
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
+    }
+
+    @Test
+    fun `自动重登失败只记日志不抛异常`() = runTest {
+        everySuspend { authWorkflow.ensureLoggedIn() } throws IllegalStateException("请先登录")
+        val vm = makeViewModel()
+
+        vm.refreshAuth()
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
+    }
+
+    @Test
+    fun `未登录时已存学期重置为当前学期`() = runTest {
+        termFlow.value = "2025-2"
+        val vm = makeViewModel()
+
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        verify(VerifyMode.exactly(1)) { termSettings.setSelectedTerm("") }
+        verify(VerifyMode.exactly(1)) { termSettings.setActiveScheduleTerm("") }
+    }
+
+    @Test
+    fun `刷新远程学期后已存学期不在列表时重置为当前学期`() = runTest {
+        tokenFlow.value = "tok"
+        termFlow.value = "2025-2"
+        everySuspend { academic.fetchSemesterIds() } returns listOf("2026-1")
+        val vm = makeViewModel()
+        subscribeUi(vm)
+
+        vm.refreshRemoteTerms()
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        verify(VerifyMode.exactly(1)) { termSettings.setSelectedTerm("") }
+    }
+
+    @Test
+    fun `刷新远程学期后已存学期在列表时保持不变`() = runTest {
+        tokenFlow.value = "tok"
+        termFlow.value = "2026-1"
+        everySuspend { academic.fetchSemesterIds() } returns listOf("2026-1")
+        val vm = makeViewModel()
+        subscribeUi(vm)
+
+        vm.refreshRemoteTerms()
+        withContext(Dispatchers.Default) { delay(100) }
+        advanceMain()
+
+        verify(VerifyMode.not) { termSettings.setSelectedTerm(any()) }
     }
 
     @Test

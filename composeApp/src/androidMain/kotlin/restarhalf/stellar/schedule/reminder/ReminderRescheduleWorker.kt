@@ -97,7 +97,7 @@ object ReminderWorkScheduler {
     fun enqueueNow(context: Context) {
         val request =
             OneTimeWorkRequestBuilder<ReminderRescheduleWorker>()
-                .setConstraints(createConstraints())
+                .setConstraints(Constraints.NONE)
                 .build()
 
         WorkManager.getInstance(context)

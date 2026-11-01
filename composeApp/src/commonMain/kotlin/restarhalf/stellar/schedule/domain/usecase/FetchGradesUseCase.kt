@@ -36,19 +36,23 @@ class FetchGradesUseCase(
             return sorted.getOrNull(idx + 1)?.takeIf { it != current }
         }
 
-        suspend fun fetchWithFallback(resolvedSemester: String): TermGradeReport {
+        suspend fun fetchWithFallback(
+            resolvedSemester: String,
+        ): Pair<TermGradeReport, List<String>> {
             val current = academic.fetchGradeReport(semester = resolvedSemester)
-            if (current.achievements.isNotEmpty()) return current
+            if (current.achievements.isNotEmpty()) return current to listOf(resolvedSemester)
 
-            val previous = resolvePreviousSemesterOrNull(resolvedSemester) ?: return current
-            return academic.fetchGradeReport(semester = previous)
+            val previous = resolvePreviousSemesterOrNull(resolvedSemester)
+                ?: return current to listOf(resolvedSemester)
+            return academic.fetchGradeReport(semester = previous) to
+                listOf(resolvedSemester, previous)
         }
 
         authWorkflow.ensureLoggedIn()
 
         val session = auth.getSessionSnapshot()
         require(session.userNo.isNotBlank()) { "请先登录" }
-        val report = try {
+        val (report, queriedSemesters) = try {
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)
         } catch (e: Exception) {
@@ -60,12 +64,29 @@ class FetchGradesUseCase(
             fetchWithFallback(resolvedSemester)
         }
 
+        val sessionUnchanged = auth.getSessionSnapshot() == session
         if (report.achievements.isNotEmpty()) {
-            val sem = report.achievements.firstOrNull()?.semester ?: ""
-            if (sem.isNotBlank()) {
-                require(auth.getSessionSnapshot() == session) { "登录状态已变化，请重试" }
-                val gradesWithUserNo = report.achievements.map { it.copy(userNo = session.userNo) }
-                repository.replaceGradesByUserNoAndSemester(session.userNo, sem, gradesWithUserNo)
+            require(sessionUnchanged) { "登录状态已变化，请重试" }
+            val fallbackSemester = report.achievements.first().semester
+            report.achievements
+                .map { it.copy(userNo = session.userNo) }
+                .groupBy { it.semester.ifBlank { fallbackSemester } }
+                .forEach { (semester, grades) ->
+                    if (semester.isNotBlank()) {
+                        repository.replaceGradesByUserNoAndSemester(
+                            session.userNo,
+                            semester,
+                            grades,
+                        )
+                    }
+                }
+        } else if (sessionUnchanged) {
+            queriedSemesters.filter { it.isNotBlank() }.forEach { semester ->
+                repository.replaceGradesByUserNoAndSemester(
+                    session.userNo,
+                    semester,
+                    emptyList(),
+                )
             }
         }
 

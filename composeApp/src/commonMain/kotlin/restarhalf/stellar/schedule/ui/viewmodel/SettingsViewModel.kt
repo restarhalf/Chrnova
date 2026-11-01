@@ -91,8 +91,8 @@ class SettingsViewModel(
     private val _nextReminderSummary = MutableStateFlow("")
     val nextReminderSummary: StateFlow<String> = _nextReminderSummary
 
-    private val _rescheduleMessages = MutableSharedFlow<String>(extraBufferCapacity = 8)
-    val rescheduleMessages: SharedFlow<String> = _rescheduleMessages
+    private val _userMessages = MutableSharedFlow<String>(extraBufferCapacity = 8)
+    val userMessages: SharedFlow<String> = _userMessages
 
     val starVerification = StarVerificationHolder(
         verifyGitHubStar = verifyGitHubStar,
@@ -226,9 +226,15 @@ class SettingsViewModel(
 
     val uiState: StateFlow<SettingsUiState> = _uiState
 
-    fun refreshAuth() {
-        if (uiState.value.authToken.isBlank()) return
+    init {
+        viewModelScope.launch {
+            authFlow.collect { auth ->
+                if (auth.authToken.isBlank()) resetTermIfMissing(emptyList())
+            }
+        }
+    }
 
+    fun refreshAuth() {
         viewModelScope.launch {
             withContext(AppIoDispatcher) {
                 runCatching { authWorkflow.ensureLoggedIn() }
@@ -253,11 +259,19 @@ class SettingsViewModel(
                         fetchSemesterIds()
                     }
                 _remoteTermItems.value = terms.toPersistentList()
+                resetTermIfMissing(terms)
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 AppLogger.log("Settings", "刷新远程学期列表失败", e)
             }
         }
+    }
+
+    private suspend fun resetTermIfMissing(terms: List<String>) {
+        val current = termSettings.observeSelectedTerm().first()
+        if (current.isBlank() || current in terms) return
+        AppLogger.log("Settings", "已存学期 $current 不在可选列表中，重置为当前学期")
+        onSelectedTermChanged("")
     }
 
     fun buildTermSelectionUi(
@@ -415,11 +429,17 @@ class SettingsViewModel(
                         )
                     }
                 }
-            if (result.isFailure) {
-                val e = result.exceptionOrNull()!!
-                if (e is CancellationException) throw e
-                AppLogger.log("Reminder", "课程提醒调度失败", e)
-                onReminderEnabledChanged(false)
+            val e = result.exceptionOrNull()
+            when {
+                e is CancellationException -> throw e
+                e != null -> {
+                    AppLogger.log("Reminder", "课程提醒调度失败", e)
+                    _userMessages.emit("课程提醒没排上，稍后会自动重试")
+                }
+                result.getOrNull() == CourseReminderPort.ScheduleResult.Failed -> {
+                    AppLogger.log("Reminder", "课程提醒调度返回失败")
+                    _userMessages.emit("课程提醒没排上，稍后会自动重试")
+                }
             }
         }
     }
@@ -432,10 +452,17 @@ class SettingsViewModel(
                         scheduleNextExamReminder(selectedTerm = selectedTerm)
                     }
                 }
-            if (result.isFailure) {
-                val e = result.exceptionOrNull()!!
-                if (e is CancellationException) throw e
-                AppLogger.log("Reminder", "考试提醒调度失败", e)
+            val e = result.exceptionOrNull()
+            when {
+                e is CancellationException -> throw e
+                e != null -> {
+                    AppLogger.log("Reminder", "考试提醒调度失败", e)
+                    _userMessages.emit("考试提醒没排上，稍后会自动重试")
+                }
+                result.getOrNull() == ExamReminderPort.ScheduleResult.Failed -> {
+                    AppLogger.log("Reminder", "考试提醒调度返回失败")
+                    _userMessages.emit("考试提醒没排上，稍后会自动重试")
+                }
             }
         }
     }
@@ -456,7 +483,7 @@ class SettingsViewModel(
                 }
             _rescheduling.value = false
             refreshNextReminderSummary()
-            _rescheduleMessages.emit(describeReschedule(report))
+            _userMessages.emit(describeReschedule(report))
         }
     }
 
