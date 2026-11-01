@@ -14,11 +14,33 @@ import restarhalf.stellar.schedule.reminder.receiver.ExamReminderReceiver
 
 object NotificationChannels {
 
+    const val MUTE_CHANNEL_ID = "course_mute_low"
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun ensureAll(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
         ensureCourseReminder(manager)
         ensureExamReminder(manager)
+        ensureMuteFeedback(manager)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun ensureMuteFeedback(manager: NotificationManager) {
+        if (manager.getNotificationChannel(MUTE_CHANNEL_ID) != null) return
+
+        val channel =
+            NotificationChannel(
+                MUTE_CHANNEL_ID,
+                "静音状态",
+                NotificationManager.IMPORTANCE_LOW
+            )
+                .apply {
+                    description = "上课静音与下课恢复铃声的结果提示"
+                    setShowBadge(false)
+                    setSound(null, null)
+                    enableVibration(false)
+                }
+        manager.createNotificationChannel(channel)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

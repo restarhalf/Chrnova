@@ -71,6 +71,10 @@
             android:exported="false" />
 
         <receiver
+            android:name="restarhalf.stellar.schedule.reminder.receiver.MuteAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name="restarhalf.stellar.schedule.reminder.receiver.BootReceiver"
             android:exported="true"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">

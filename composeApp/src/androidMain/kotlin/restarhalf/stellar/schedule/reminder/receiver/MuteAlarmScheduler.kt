@@ -3,6 +3,9 @@ package restarhalf.stellar.schedule.reminder.receiver
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import restarhalf.stellar.schedule.core.log.AppLogger
 import java.util.Calendar
 
 internal object MuteAlarmScheduler {
@@ -15,23 +18,20 @@ internal object MuteAlarmScheduler {
         context: Context,
         notificationId: Int,
         startAtMs: Long,
-        startTime: String,
         endTime: String,
     ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
         val pendingIntent =
-            activityPendingIntent(
+            broadcastPendingIntent(
                 context = context,
                 requestCode = notificationId xor MUTE_REQUEST_CODE_MASK,
                 intent =
-                    MuteActionActivity.applyMuteIntent(
+                    MuteAlarmReceiver.muteAlarmIntent(
                         context = context,
                         notificationId = notificationId,
-                        startTime = startTime,
                         endTime = endTime,
                     ),
             )
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startAtMs, pendingIntent)
+        setAlarmBestEffort(context, startAtMs, pendingIntent)
     }
 
     fun scheduleAutoUnmute(
@@ -40,13 +40,12 @@ internal object MuteAlarmScheduler {
         endTime: String,
         restoreMode: Int,
     ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
         val triggerAtMs = parseTodayTimeMs(endTime)
         val pendingIntent =
-            activityPendingIntent(
+            broadcastPendingIntent(
                 context = context,
                 requestCode = notificationId xor UNMUTE_REQUEST_CODE_MASK,
-                intent = MuteActionActivity.unmuteIntent(context, restoreMode),
+                intent = MuteAlarmReceiver.unmuteAlarmIntent(context, restoreMode),
             )
 
         val now = System.currentTimeMillis()
@@ -56,20 +55,58 @@ internal object MuteAlarmScheduler {
                 triggerAtMs <= now -> now + 5000L
                 else -> triggerAtMs
             }
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeTrigger, pendingIntent)
+        setAlarmBestEffort(context, safeTrigger, pendingIntent)
     }
 
-    private fun activityPendingIntent(
+    private fun broadcastPendingIntent(
         context: Context,
         requestCode: Int,
-        intent: android.content.Intent,
+        intent: Intent,
     ): PendingIntent =
-        PendingIntent.getActivity(
+        PendingIntent.getBroadcast(
             context,
             requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+
+    private fun setAlarmBestEffort(
+        context: Context,
+        triggerAtMs: Long,
+        pendingIntent: PendingIntent,
+    ) {
+        val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+        try {
+            val canExact =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    alarmManager.canScheduleExactAlarms()
+            if (canExact) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMs,
+                    pendingIntent,
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMs,
+                    pendingIntent,
+                )
+            }
+        } catch (e: SecurityException) {
+            AppLogger.log("Reminder", "设置静音闹钟SecurityException", e)
+            try {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMs,
+                    pendingIntent,
+                )
+            } catch (e2: Exception) {
+                if (e2 is kotlinx.coroutines.CancellationException) throw e2
+                AppLogger.log("Reminder", "设置静音闹钟重试失败", e2)
+            }
+        }
+    }
 
     fun parseTodayTimeMs(time: String): Long? {
         val parts = time.split(":")
