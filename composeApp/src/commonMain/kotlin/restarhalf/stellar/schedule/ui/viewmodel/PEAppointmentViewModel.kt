@@ -480,6 +480,7 @@ fun appointmentStatusText(status: String): String = when (status) {
     "2" -> "已取消"
     "3" -> "可预约"
     "4" -> "已结束"
+    "5" -> "未开始"
     else -> status.ifBlank { "未知" }
 }
 
