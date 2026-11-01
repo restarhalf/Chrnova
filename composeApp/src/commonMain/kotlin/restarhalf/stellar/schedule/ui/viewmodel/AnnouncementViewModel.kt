@@ -4,8 +4,11 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +39,7 @@ class AnnouncementViewModel(
         
         val unreadCount: Int = 0,
         
-        val lastReadAtMs: Long = 0L,
+        val readIds: ImmutableSet<String> = persistentSetOf(),
         
         val selectedAnnouncement: Announcement? = null,
         
@@ -76,7 +79,7 @@ class AnnouncementViewModel(
                         loaded = true,
                         announcements = result.announcements.toPersistentList(),
                         unreadCount = result.unreadCount,
-                        lastReadAtMs = result.lastReadAtMs,
+                        readIds = result.readIds.toPersistentSet(),
                     )
                 }
             }.onFailure { e ->
@@ -93,13 +96,12 @@ class AnnouncementViewModel(
     }
 
     fun markAnnouncementRead(announcement: Announcement) {
-        val targetMs = announcement.lastChangeAtMs
         markAnnouncementsRead(announcement)
         _uiState.update { state ->
-            val lastReadAtMs = maxOf(state.lastReadAtMs, targetMs)
+            val readIds = (state.readIds + announcement.id).toPersistentSet()
             state.copy(
-                lastReadAtMs = lastReadAtMs,
-                unreadCount = state.announcements.count { it.lastChangeAtMs > lastReadAtMs },
+                readIds = readIds,
+                unreadCount = state.announcements.count { it.id !in readIds },
             )
         }
     }

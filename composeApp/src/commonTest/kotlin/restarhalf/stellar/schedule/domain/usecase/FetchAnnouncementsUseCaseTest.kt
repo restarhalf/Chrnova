@@ -23,6 +23,7 @@ class FetchAnnouncementsUseCaseTest {
 
     private val store = mock<AnnouncementCachePort>(MockMode.autofill) {
         every { getCacheTtlMs() } returns CACHE_TTL_MS
+        every { getReadIds() } returns emptySet()
     }
     private val port = mock<AnnouncementPort>()
     private val useCase = FetchAnnouncementsUseCase(port, store)
@@ -93,17 +94,17 @@ class FetchAnnouncementsUseCaseTest {
     }
 
     @Test
-    fun `未读数量按内容变化时间计算`() = runTest {
+    fun `未读数量按已读id计算`() = runTest {
         val nowSec = Clock.System.now().toEpochMilliseconds() / 1000L
         val readAnnouncement = Announcement(id = "1", title = "已读", createdAt = nowSec - 3600)
         val unreadAnnouncement = Announcement(id = "2", title = "未读", createdAt = nowSec + 10)
         everySuspend { port.listAnnouncements() } returns listOf(readAnnouncement, unreadAnnouncement)
-        every { store.getLastReadAtMs() } returns 0L
+        every { store.getReadIds() } returns setOf("1")
 
         val result = useCase()
 
-        assertEquals(0L, result.lastReadAtMs)
-        assertEquals(2, result.unreadCount)
+        assertEquals(setOf("1"), result.readIds)
+        assertEquals(1, result.unreadCount)
     }
 
     private companion object {

@@ -354,6 +354,25 @@ class CourseEvaluationViewModelTest {
     }
 
     @Test
+    fun `delete返回false时提示删除失败`() = runTest {
+        profileFlow.value = loggedInProfile()
+        val vm = makeViewModel()
+        advanceMain()
+        everySuspend { port.deleteEvaluation("e1") } returns false
+        var callbackResult: Boolean? = null
+
+        vm.deleteEvaluation("e1") { callbackResult = it }
+        advanceMain()
+
+        assertEquals("删除失败", vm.uiState.value.error)
+        assertEquals(false, callbackResult)
+        assertNull(vm.uiState.value.successMessage)
+        verifySuspend(VerifyMode.exactly(0)) {
+            port.listEvaluations(any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `delete抛异常回调false并设置error`() = runTest {
         profileFlow.value = loggedInProfile()
         val vm = makeViewModel()
@@ -503,6 +522,25 @@ class CourseEvaluationViewModelTest {
 
         assertEquals(1, vm.uiState.value.filteredEvaluations.size)
         assertEquals("mine", vm.uiState.value.filteredEvaluations[0].id)
+    }
+
+    @Test
+    fun `开启我的评价时拉完全部分页`() = runTest {
+        profileFlow.value = loggedInProfile()
+        val vm = makeViewModel()
+        advanceMain()
+        val mineHash = CourseEvaluationPort.hashUserNo("20230001")
+        everySuspend { port.listEvaluations(any(), any(), 1, any()) } returns
+            EvaluationPage(items = listOf(evaluation("other", userHash = "abc")), total = 2, page = 1)
+        everySuspend { port.listEvaluations(any(), any(), 2, any()) } returns
+            EvaluationPage(items = listOf(evaluation("mine", userHash = mineHash)), total = 2, page = 2)
+
+        vm.setOnlyMine(true)
+        advanceMain()
+
+        assertEquals(1, vm.uiState.value.filteredEvaluations.size)
+        assertEquals("mine", vm.uiState.value.filteredEvaluations[0].id)
+        verifySuspend(VerifyMode.exactly(1)) { port.listEvaluations(any(), any(), 2, any()) }
     }
 
     @Test

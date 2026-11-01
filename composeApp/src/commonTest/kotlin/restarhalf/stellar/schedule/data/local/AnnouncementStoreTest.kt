@@ -102,14 +102,16 @@ class AnnouncementStoreTest {
     }
 
     @Test
-    fun `已读时间默认 0`() {
-        assertEquals(0L, store.getLastReadAtMs())
+    fun `已读 id 默认为空`() {
+        assertTrue(store.getReadIds().isEmpty())
     }
 
     @Test
-    fun `推进已读时间后可读回`() {
-        store.setLastReadAtMs(700_000L)
+    fun `添加已读 id 后可读回去重`() {
+        store.addReadId("a")
+        store.addReadId("b")
+        store.addReadId("a")
 
-        assertEquals(700_000L, store.getLastReadAtMs())
+        assertEquals(setOf("a", "b"), store.getReadIds())
     }
 }

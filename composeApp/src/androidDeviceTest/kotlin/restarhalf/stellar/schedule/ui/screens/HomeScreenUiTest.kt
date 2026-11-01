@@ -63,6 +63,7 @@ class HomeScreenUiTest {
     private val announcementPort = mock<AnnouncementPort>(MockMode.autofill)
     private val announcementCache = mock<AnnouncementCachePort>(MockMode.autofill) {
         every { getCacheTtlMs() } returns 10L * 60L * 1000L
+        every { getReadIds() } returns emptySet()
     }
 
     private val coursesFlow = MutableStateFlow<List<Course>>(emptyList())

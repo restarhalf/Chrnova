@@ -146,10 +146,19 @@ class CourseEvaluationViewModel(
         viewModelScope.launch {
             updateState { it.copy(loading = true, error = null) }
             runCatching {
-                port.listEvaluations(
-                    course = _uiState.value.selectedCourse,
-                    teacher = _uiState.value.selectedTeacher,
-                )
+                val course = _uiState.value.selectedCourse
+                val teacher = _uiState.value.selectedTeacher
+                val first = port.listEvaluations(course = course, teacher = teacher)
+                if (!_uiState.value.onlyMine) return@runCatching first
+                val items = first.items.toMutableList()
+                var page = 1
+                while (items.size < first.total && page < MAX_PAGES) {
+                    page++
+                    val next = port.listEvaluations(course = course, teacher = teacher, page = page)
+                    if (next.items.isEmpty()) break
+                    items += next.items
+                }
+                first.copy(items = items)
             }.onSuccess { page ->
                 updateState {
                     it.copy(
@@ -234,7 +243,12 @@ class CourseEvaluationViewModel(
             }
             updateState { it.copy(loading = true, error = null) }
             runCatching { port.deleteEvaluation(id) }
-                .onSuccess {
+                .onSuccess { deleted ->
+                    if (!deleted) {
+                        updateState { it.copy(loading = false, error = "删除失败") }
+                        onResult(false)
+                        return@onSuccess
+                    }
                     updateState { it.copy(loading = false, successMessage = "已删除") }
                     loadEvaluations()
                     onResult(true)
@@ -277,7 +291,9 @@ class CourseEvaluationViewModel(
     }
 
     fun setOnlyMine(onlyMine: Boolean) {
+        val changed = _uiState.value.onlyMine != onlyMine
         updateState { it.copy(onlyMine = onlyMine) }
+        if (onlyMine && changed) loadEvaluations()
     }
 
     fun updateEvaluation(id: String, req: EvaluationUpdateRequest) {
@@ -314,4 +330,7 @@ class CourseEvaluationViewModel(
         updateState { it.copy(searchQuery = query) }
     }
 
+    private companion object {
+        const val MAX_PAGES = 50
+    }
 }

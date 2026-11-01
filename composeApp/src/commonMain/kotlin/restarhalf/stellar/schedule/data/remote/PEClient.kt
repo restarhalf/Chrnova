@@ -459,7 +459,7 @@ class PEClient(
                             bytes,
                             Headers.build {
                                 append(HttpHeaders.ContentType, mimeType.ifBlank { "application/octet-stream" })
-                                append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                                append(HttpHeaders.ContentDisposition, contentDispositionFileName(fileName))
                             },
                         )
                         append("fileTime", fileTime)

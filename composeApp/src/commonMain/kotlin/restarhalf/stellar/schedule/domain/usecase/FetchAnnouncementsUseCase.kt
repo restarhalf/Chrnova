@@ -30,15 +30,15 @@ class FetchAnnouncementsUseCase(
                 cached
             }
 
-        val lastReadAtMs = store.getLastReadAtMs()
-        val unreadCount = announcements.count { it.lastChangeAtMs > lastReadAtMs }
-        return FetchResult(announcements, unreadCount, lastReadAtMs)
+        val readIds = store.getReadIds()
+        val unreadCount = announcements.count { it.id !in readIds }
+        return FetchResult(announcements, unreadCount, readIds)
     }
 
     data class FetchResult(
         val announcements: List<Announcement>,
         val unreadCount: Int,
 
-        val lastReadAtMs: Long,
+        val readIds: Set<String>,
     )
 }

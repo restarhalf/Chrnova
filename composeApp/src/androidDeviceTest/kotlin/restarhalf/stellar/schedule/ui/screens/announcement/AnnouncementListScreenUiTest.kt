@@ -37,6 +37,7 @@ class AnnouncementListScreenUiTest {
 
     private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
         every { getCacheTtlMs() } returns 10L * 60L * 1000L
+        every { getReadIds() } returns emptySet()
     }
     private val port = mock<AnnouncementPort>()
 

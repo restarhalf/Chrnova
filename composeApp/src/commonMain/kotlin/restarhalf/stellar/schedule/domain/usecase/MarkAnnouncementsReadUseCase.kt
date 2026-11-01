@@ -8,9 +8,6 @@ class MarkAnnouncementsReadUseCase(
 ) {
 
     operator fun invoke(announcement: Announcement) {
-        val targetMs = announcement.lastChangeAtMs
-        if (targetMs > store.getLastReadAtMs()) {
-            store.setLastReadAtMs(targetMs)
-        }
+        store.addReadId(announcement.id)
     }
 }

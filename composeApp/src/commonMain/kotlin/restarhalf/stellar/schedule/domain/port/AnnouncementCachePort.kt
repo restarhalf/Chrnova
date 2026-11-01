@@ -12,7 +12,7 @@ interface AnnouncementCachePort {
 
     fun getCacheTtlMs(): Long
 
-    fun getLastReadAtMs(): Long
+    fun getReadIds(): Set<String>
 
-    fun setLastReadAtMs(ms: Long)
+    fun addReadId(id: String)
 }

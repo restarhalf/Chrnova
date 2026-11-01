@@ -11,6 +11,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -93,7 +94,11 @@ class CourseEvaluationApi(
             deviceHeader(this)
             userHashHeader(this)
         }
-        response.status.isSuccess()
+        when {
+            response.status == HttpStatusCode.NotFound -> true
+            response.status.isSuccess() -> true
+            else -> throw IllegalStateException("删除评价失败（HTTP ${response.status.value}）")
+        }
     }
 
     override suspend fun updateEvaluation(

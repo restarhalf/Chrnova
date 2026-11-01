@@ -101,28 +101,25 @@ class PapersApi(
         mimeType: String,
         title: String,
         folder: String,
-    ): Paper =
-        withContext(AppIoDispatcher) {
-            val response: HttpResponse = httpClient.post("$baseUrl/upload") {
-                deviceHeader(this)
-                setBody(MultiPartFormDataContent(
-                    formData {
-                        append("title", title)
-                        append("folder", folder)
-                        append("file", fileBytes, Headers.build {
-                            append(HttpHeaders.ContentType, mimeType)
-                            append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
-                        })
-                    }
-                ))
-            }
-
-            if (!response.status.isSuccess()) {
-                throw IllegalStateException("上传失败（HTTP ${response.status.value}）")
-            }
-
-            json.decodeFromString(Paper.serializer(), response.body())
+    ) = withContext(AppIoDispatcher) {
+        val response: HttpResponse = httpClient.post("$baseUrl/upload") {
+            deviceHeader(this)
+            setBody(MultiPartFormDataContent(
+                formData {
+                    append("title", title)
+                    append("folder", folder)
+                    append("file", fileBytes, Headers.build {
+                        append(HttpHeaders.ContentType, mimeType)
+                        append(HttpHeaders.ContentDisposition, contentDispositionFileName(fileName))
+                    })
+                }
+            ))
         }
+
+        if (!response.status.isSuccess()) {
+            throw IllegalStateException("上传失败（HTTP ${response.status.value}）")
+        }
+    }
 
     override suspend fun deletePaper(id: String): Boolean =
         withContext(AppIoDispatcher) {

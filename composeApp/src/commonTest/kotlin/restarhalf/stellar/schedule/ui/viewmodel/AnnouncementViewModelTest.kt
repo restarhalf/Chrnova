@@ -36,6 +36,7 @@ class AnnouncementViewModelTest {
 
     private val cache = mock<AnnouncementCachePort>(MockMode.autofill) {
         every { getCacheTtlMs() } returns 10L * 60L * 1000L
+        every { getReadIds() } returns emptySet()
     }
     private val port = mock<AnnouncementPort>()
 
@@ -137,7 +138,7 @@ class AnnouncementViewModelTest {
     }
 
     @Test
-    fun `markAnnouncementRead 推进阅读时间并重算未读数`() = runTest {
+    fun `markAnnouncementRead 记录已读id并重算未读数`() = runTest {
         installTestMain(testScheduler)
         val older = Announcement(id = "1", title = "较早", createdAt = 1000L)
         val newer = Announcement(id = "2", title = "较晚", createdAt = 5000L)
@@ -151,7 +152,7 @@ class AnnouncementViewModelTest {
         vm.markAnnouncementRead(older)
 
         val after = vm.uiState.value
-        assertEquals(1_000_000L, after.lastReadAtMs)
+        assertEquals(setOf("1"), after.readIds.toSet())
 
         assertEquals(1, after.unreadCount)
     }

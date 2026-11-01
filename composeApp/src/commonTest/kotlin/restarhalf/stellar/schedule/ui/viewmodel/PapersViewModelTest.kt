@@ -172,7 +172,7 @@ class PapersViewModelTest {
     fun `uploadPaper成功置successMessage并刷新列表`() = runTest {
         everySuspend {
             papersPort.uploadPaper(any(), any(), any(), any(), any())
-        } returns paper("up1", "标题")
+        } returns Unit
         everySuspend { papersPort.listPapers() } returns listOf(paper("1", "新试卷"))
         everySuspend { papersPort.getFolders() } returns listOf("新文件夹")
 

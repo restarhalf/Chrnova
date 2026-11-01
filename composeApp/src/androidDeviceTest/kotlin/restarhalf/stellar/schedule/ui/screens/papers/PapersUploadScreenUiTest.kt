@@ -21,7 +21,6 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import restarhalf.stellar.schedule.domain.model.Paper
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -105,8 +104,7 @@ class PapersUploadScreenUiTest {
 
     @Test
     fun 表单填完后上传成功并显示提示() = runUltronUiTest {
-        everySuspend { papersPort.uploadPaper(any(), any(), any(), any(), any()) } returns
-            Paper(id = "pf9", title = "高数期末")
+        everySuspend { papersPort.uploadPaper(any(), any(), any(), any(), any()) } returns Unit
         everySuspend { papersPort.listPapers() } returns emptyList()
         everySuspend { papersPort.getFolders() } returns emptyList()
         setContent {

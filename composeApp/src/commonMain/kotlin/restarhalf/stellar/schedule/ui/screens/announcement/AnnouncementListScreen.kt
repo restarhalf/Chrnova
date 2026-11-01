@@ -168,7 +168,7 @@ fun AnnouncementListScreen(
 
                 items(uiState.announcements, key = { it.id }) { announcement ->
                     val date = formatAnnouncementDate(announcement.createdAt)
-                    val isUnread = announcement.lastChangeAtMs > uiState.lastReadAtMs
+                    val isUnread = announcement.id !in uiState.readIds
                     AppCard(
                         modifier = Modifier.fillMaxWidth(),
                     ) {

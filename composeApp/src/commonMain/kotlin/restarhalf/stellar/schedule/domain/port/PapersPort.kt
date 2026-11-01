@@ -20,7 +20,7 @@ interface PapersPort {
         mimeType: String,
         title: String,
         folder: String,
-    ): Paper
+    )
 
     suspend fun deletePaper(id: String): Boolean
 
