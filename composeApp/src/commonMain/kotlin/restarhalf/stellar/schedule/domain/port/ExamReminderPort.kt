@@ -3,7 +3,7 @@ package restarhalf.stellar.schedule.domain.port
 import restarhalf.stellar.schedule.domain.model.Examination
 
 interface ExamReminderPort {
-    suspend fun scheduleNextReminder(exams: List<Examination>): ScheduleResult
+    suspend fun scheduleNextReminder(exams: List<Examination>): ReminderScheduleResult
 
     suspend fun hasScheduledAlarm(): Boolean
 
@@ -11,10 +11,4 @@ interface ExamReminderPort {
     fun nextScheduledAtMs(): Long?
 
     fun cancelAll()
-
-    sealed class ScheduleResult {
-        data class Scheduled(val triggerAtMs: Long) : ScheduleResult()
-        data object NoUpcoming : ScheduleResult()
-        data object Failed : ScheduleResult()
-    }
 }

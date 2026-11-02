@@ -32,6 +32,7 @@ import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -330,7 +331,7 @@ class SettingsViewModelTest {
     @Test
     fun `课程提醒调度返回失败时保持开关并提示`() = runTest {
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
         val vm = makeViewModel()
         val messages = collectMessages(vm)
 
@@ -360,7 +361,7 @@ class SettingsViewModelTest {
     @Test
     fun `考试提醒调度返回失败时保持开关并提示`() = runTest {
         everySuspend { examReminder.scheduleNextReminder(any()) } returns
-            ExamReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
         val vm = makeViewModel()
         val messages = collectMessages(vm)
 
@@ -375,7 +376,7 @@ class SettingsViewModelTest {
     @Test
     fun `课程提醒调度成功时不提示`() = runTest {
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.NoUpcoming
+            ReminderScheduleResult.NoUpcoming
         val vm = makeViewModel()
         val messages = collectMessages(vm)
 

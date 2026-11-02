@@ -36,6 +36,7 @@ import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
@@ -436,7 +437,7 @@ class SettingsViewModel(
                     AppLogger.log("Reminder", "课程提醒调度失败", e)
                     _userMessages.emit("课程提醒没排上，稍后会自动重试")
                 }
-                result.getOrNull() == CourseReminderPort.ScheduleResult.Failed -> {
+                result.getOrNull() == ReminderScheduleResult.Failed -> {
                     AppLogger.log("Reminder", "课程提醒调度返回失败")
                     _userMessages.emit("课程提醒没排上，稍后会自动重试")
                 }
@@ -459,7 +460,7 @@ class SettingsViewModel(
                     AppLogger.log("Reminder", "考试提醒调度失败", e)
                     _userMessages.emit("考试提醒没排上，稍后会自动重试")
                 }
-                result.getOrNull() == ExamReminderPort.ScheduleResult.Failed -> {
+                result.getOrNull() == ReminderScheduleResult.Failed -> {
                     AppLogger.log("Reminder", "考试提醒调度返回失败")
                     _userMessages.emit("考试提醒没排上，稍后会自动重试")
                 }
@@ -544,12 +545,16 @@ class SettingsViewModel(
 
         val lines = mutableListOf<String>()
         if (report.courseEnabled) {
-            lines += "课程提醒：" + describeResult(report.courseResult)
+            lines += "课程提醒：" + describeResult(report.courseResult, "近期没有课")
         }
         if (report.examEnabled) {
             lines +=
                 "考试提醒：" +
-                    if (report.examFetchFailed) "拉取考试安排失败" else describeResult(report.examResult)
+                    if (report.examFetchFailed) {
+                        "拉取考试安排失败"
+                    } else {
+                        describeResult(report.examResult, "近期没有考试")
+                    }
         }
         return lines.joinToString("\n")
     }
@@ -566,18 +571,11 @@ class SettingsViewModel(
         return "下次 $month/${dateTime.day} $hour:$minute"
     }
 
-    private fun describeResult(result: CourseReminderPort.ScheduleResult?): String =
+    private fun describeResult(result: ReminderScheduleResult?, noUpcomingText: String): String =
         when (result) {
-            is CourseReminderPort.ScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
-            CourseReminderPort.ScheduleResult.NoUpcoming -> "近期没有课"
-            CourseReminderPort.ScheduleResult.Failed, null -> "调度失败"
-        }
-
-    private fun describeResult(result: ExamReminderPort.ScheduleResult?): String =
-        when (result) {
-            is ExamReminderPort.ScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
-            ExamReminderPort.ScheduleResult.NoUpcoming -> "近期没有考试"
-            ExamReminderPort.ScheduleResult.Failed, null -> "调度失败"
+            is ReminderScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
+            ReminderScheduleResult.NoUpcoming -> noUpcomingText
+            ReminderScheduleResult.Failed, null -> "调度失败"
         }
 
     @OptIn(ExperimentalTime::class)

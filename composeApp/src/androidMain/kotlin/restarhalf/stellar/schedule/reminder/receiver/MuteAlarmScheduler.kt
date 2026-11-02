@@ -5,8 +5,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import kotlinx.coroutines.CancellationException
 import restarhalf.stellar.schedule.core.log.AppLogger
-import java.util.Calendar
+import restarhalf.stellar.schedule.reminder.ReminderKind
+import restarhalf.stellar.schedule.reminder.parseTodayTimeMs
 
 internal object MuteAlarmScheduler {
 
@@ -14,8 +16,9 @@ internal object MuteAlarmScheduler {
     private const val MUTE_REQUEST_CODE_MASK = 0x4D2A
     private const val UNMUTE_REQUEST_CODE_MASK = 0x1F3A
 
-    fun scheduleClassMute(
+    fun scheduleMute(
         context: Context,
+        kind: ReminderKind,
         notificationId: Int,
         startAtMs: Long,
         endTime: String,
@@ -27,6 +30,7 @@ internal object MuteAlarmScheduler {
                 intent =
                     MuteAlarmReceiver.muteAlarmIntent(
                         context = context,
+                        kind = kind,
                         notificationId = notificationId,
                         endTime = endTime,
                     ),
@@ -36,6 +40,7 @@ internal object MuteAlarmScheduler {
 
     fun scheduleAutoUnmute(
         context: Context,
+        kind: ReminderKind,
         notificationId: Int,
         endTime: String,
         restoreMode: Int,
@@ -45,7 +50,7 @@ internal object MuteAlarmScheduler {
             broadcastPendingIntent(
                 context = context,
                 requestCode = notificationId xor UNMUTE_REQUEST_CODE_MASK,
-                intent = MuteAlarmReceiver.unmuteAlarmIntent(context, restoreMode),
+                intent = MuteAlarmReceiver.unmuteAlarmIntent(context, kind, restoreMode),
             )
 
         val now = System.currentTimeMillis()
@@ -102,24 +107,9 @@ internal object MuteAlarmScheduler {
                     pendingIntent,
                 )
             } catch (e2: Exception) {
-                if (e2 is kotlinx.coroutines.CancellationException) throw e2
+                if (e2 is CancellationException) throw e2
                 AppLogger.log("Reminder", "设置静音闹钟重试失败", e2)
             }
         }
-    }
-
-    fun parseTodayTimeMs(time: String): Long? {
-        val parts = time.split(":")
-        if (parts.size != 2) return null
-        val hour = parts[0].trim().toIntOrNull() ?: return null
-        val minute = parts[1].trim().toIntOrNull() ?: return null
-        val calendar =
-            Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-        return calendar.timeInMillis
     }
 }

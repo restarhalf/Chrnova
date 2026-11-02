@@ -2,6 +2,7 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 
 class ScheduleNextCourseReminderUseCase(
@@ -12,7 +13,7 @@ class ScheduleNextCourseReminderUseCase(
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
-    ): CourseReminderPort.ScheduleResult {
+    ): ReminderScheduleResult {
         val courses = courseRepository.getAllCoursesOnce()
         return courseReminder.scheduleNextReminder(
             courses = courses,

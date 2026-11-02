@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -27,9 +28,9 @@ class RescheduleAllRemindersUseCase(
 
     data class Report(
         val courseEnabled: Boolean,
-        val courseResult: CourseReminderPort.ScheduleResult?,
+        val courseResult: ReminderScheduleResult?,
         val examEnabled: Boolean,
-        val examResult: ExamReminderPort.ScheduleResult?,
+        val examResult: ReminderScheduleResult?,
         /** 考试拉取失败（多为网络/登录问题），此时课程提醒仍然照常重排 */
         val examFetchFailed: Boolean,
     )
@@ -43,7 +44,7 @@ class RescheduleAllRemindersUseCase(
 
         val courseResult = if (courseEnabled) scheduleCourse() else null
 
-        var examResult: ExamReminderPort.ScheduleResult? = null
+        var examResult: ReminderScheduleResult? = null
         var examFetchFailed = false
         if (examEnabled) {
             val collected = collectReminderExaminations(semester = "", nameOrNumber = "")
@@ -70,7 +71,7 @@ class RescheduleAllRemindersUseCase(
         )
     }
 
-    private suspend fun scheduleCourse(): CourseReminderPort.ScheduleResult? =
+    private suspend fun scheduleCourse(): ReminderScheduleResult? =
         runCatching {
             courseReminder.scheduleNextReminder(
                 courses = courseRepository.getAllCoursesOnce(),

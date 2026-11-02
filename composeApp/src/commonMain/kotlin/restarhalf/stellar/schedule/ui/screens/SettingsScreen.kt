@@ -489,7 +489,7 @@ fun SettingsScreen(
                     add(CardItem("courseReminder") {
                         SwitchPreference(
                             title = "课程提醒",
-                            summary = "上课前15分钟推送本地通知",
+                            summary = "上课前16分钟推送本地通知",
                             checked = settingsUiState.reminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {
@@ -510,7 +510,7 @@ fun SettingsScreen(
                     add(CardItem("examReminder") {
                         SwitchPreference(
                             title = "考试提醒",
-                            summary = "考试前15分钟推送本地通知",
+                            summary = "考试前16分钟推送本地通知",
                             checked = settingsUiState.examReminderEnabled,
                             onCheckedChange = { newValue ->
                                 if (newValue) {

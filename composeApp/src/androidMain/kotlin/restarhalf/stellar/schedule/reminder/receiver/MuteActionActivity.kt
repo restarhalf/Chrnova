@@ -8,6 +8,8 @@ import android.media.AudioManager
 import android.os.Build
 import android.widget.Toast
 import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.reminder.ReminderKind
+import restarhalf.stellar.schedule.reminder.parseTodayTimeMs
 
 class MuteActionActivity : Activity() {
 
@@ -33,29 +35,31 @@ class MuteActionActivity : Activity() {
     }
 
     private fun handleMute() {
+        val kind = ReminderKind.fromName(intent.getStringExtra(EXTRA_KIND))
         val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
         val startTime = intent.getStringExtra(EXTRA_COURSE_START_TIME).orEmpty()
         val endTime = intent.getStringExtra(EXTRA_COURSE_END_TIME).orEmpty()
         val now = System.currentTimeMillis()
-        val startAtMs = MuteAlarmScheduler.parseTodayTimeMs(startTime)
-        val endAtMs = MuteAlarmScheduler.parseTodayTimeMs(endTime)
+        val startAtMs = parseTodayTimeMs(startTime)
+        val endAtMs = parseTodayTimeMs(endTime)
         val canChangeRinger = RingerControl.canChange(this)
 
         val accepted =
             when {
 
                 startAtMs != null && now < startAtMs -> {
-                    MuteAlarmScheduler.scheduleClassMute(
+                    MuteAlarmScheduler.scheduleMute(
                         context = this,
+                        kind = kind,
                         notificationId = notificationId,
                         startAtMs = startAtMs,
                         endTime = endTime,
                     )
                     if (canChangeRinger) {
-                        toast("已设置上课静音，到点自动开启")
+                        toast("已设置${kind.sessionLabel}静音，到点自动开启")
                     } else {
                         RingerControl.requestAccess(this)
-                        toast("已设置上课静音，但需要先允许修改勿扰状态")
+                        toast("已设置${kind.sessionLabel}静音，但需要先允许修改勿扰状态")
                     }
                     true
                 }
@@ -71,17 +75,18 @@ class MuteActionActivity : Activity() {
                         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
                         MuteAlarmScheduler.scheduleAutoUnmute(
                             context = this,
+                            kind = kind,
                             notificationId = notificationId,
                             endTime = endTime,
                             restoreMode = previousMode,
                         )
-                        toast("当前在上课时段，已开启静音")
+                        toast("当前在${kind.sessionLabel}时段，已开启静音")
                         true
                     }
                 }
 
                 else -> {
-                    toast("当前不在上课时段，未开启静音")
+                    toast("当前不在${kind.sessionLabel}时段，未开启静音")
                     false
                 }
             }
@@ -96,18 +101,21 @@ class MuteActionActivity : Activity() {
     }
 
     companion object {
+        private const val EXTRA_KIND = "reminder_kind"
         private const val EXTRA_COURSE_START_TIME = "course_time"
         private const val EXTRA_COURSE_END_TIME = "course_end_time"
         private const val EXTRA_NOTIFICATION_ID = "notification_id"
 
         fun muteIntent(
             context: Context,
+            kind: ReminderKind,
             notificationId: Int,
             startTime: String,
             endTime: String,
         ): Intent =
             Intent(context, MuteActionActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(EXTRA_KIND, kind.name)
                 putExtra(EXTRA_NOTIFICATION_ID, notificationId)
                 putExtra(EXTRA_COURSE_START_TIME, startTime)
                 putExtra(EXTRA_COURSE_END_TIME, endTime)

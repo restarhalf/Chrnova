@@ -7,6 +7,7 @@ import androidx.annotation.RequiresPermission
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.reminder.CourseReminderScheduler
 
 class CourseReminderPortImpl(
@@ -19,26 +20,13 @@ class CourseReminderPortImpl(
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
-    ): CourseReminderPort.ScheduleResult {
-        val result =
-            scheduler.scheduleNextReminder(
-                courses = courses,
-                campus = campus,
-                termStartMs = termStartMs,
-                totalWeeks = totalWeeks
-            )
-
-        return when (result) {
-            is CourseReminderScheduler.ScheduleResult.Scheduled ->
-                CourseReminderPort.ScheduleResult.Scheduled(result.triggerAtMs)
-
-            is CourseReminderScheduler.ScheduleResult.NoUpcoming ->
-                CourseReminderPort.ScheduleResult.NoUpcoming
-
-            is CourseReminderScheduler.ScheduleResult.Failed ->
-                CourseReminderPort.ScheduleResult.Failed
-        }
-    }
+    ): ReminderScheduleResult =
+        scheduler.scheduleNextReminder(
+            courses = courses,
+            campus = campus,
+            termStartMs = termStartMs,
+            totalWeeks = totalWeeks,
+        )
 
     override suspend fun hasScheduledAlarm(): Boolean = scheduler.hasScheduledAlarm()
 

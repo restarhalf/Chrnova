@@ -19,6 +19,7 @@ import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -76,9 +77,9 @@ class RescheduleRemindersUseCaseTest {
         everySuspend { examinationRepository.getAllExaminationsOnce() } returns emptyList()
         everySuspend { courseRepository.getAllCoursesOnce() } returns emptyList()
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.Scheduled(5000L)
+            ReminderScheduleResult.Scheduled(5000L)
         everySuspend { examReminder.scheduleNextReminder(any()) } returns
-            ExamReminderPort.ScheduleResult.NoUpcoming
+            ReminderScheduleResult.NoUpcoming
     }
 
     @Test
@@ -113,7 +114,7 @@ class RescheduleRemindersUseCaseTest {
         everySuspend { courseReminder.hasScheduledAlarm() } returns false
         everySuspend { examReminder.hasScheduledAlarm() } returns true
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
 
         val result = useCase()
 
@@ -126,7 +127,7 @@ class RescheduleRemindersUseCaseTest {
         everySuspend { courseReminder.hasScheduledAlarm() } returns true
         everySuspend { examReminder.hasScheduledAlarm() } returns false
         everySuspend { examReminder.scheduleNextReminder(any()) } returns
-            ExamReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
 
         val result = useCase()
 
@@ -139,9 +140,9 @@ class RescheduleRemindersUseCaseTest {
         everySuspend { courseReminder.hasScheduledAlarm() } returns false
         everySuspend { examReminder.hasScheduledAlarm() } returns false
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
         everySuspend { examReminder.scheduleNextReminder(any()) } returns
-            ExamReminderPort.ScheduleResult.Failed
+            ReminderScheduleResult.Failed
 
         val result = useCase()
 

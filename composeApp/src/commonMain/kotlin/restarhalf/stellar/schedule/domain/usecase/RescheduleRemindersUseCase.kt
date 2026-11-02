@@ -3,6 +3,7 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
@@ -48,9 +49,9 @@ class RescheduleRemindersUseCase(
                         termStartMs = termStartMs,
                         totalWeeks = totalWeeks
                     )) {
-                    is CourseReminderPort.ScheduleResult.Scheduled -> Unit
-                    is CourseReminderPort.ScheduleResult.NoUpcoming -> Unit
-                    is CourseReminderPort.ScheduleResult.Failed -> courseFailed = true
+                    is ReminderScheduleResult.Scheduled -> Unit
+                    is ReminderScheduleResult.NoUpcoming -> Unit
+                    is ReminderScheduleResult.Failed -> courseFailed = true
                 }
             }
         }
@@ -59,9 +60,9 @@ class RescheduleRemindersUseCase(
             if (!examReminder.hasScheduledAlarm()) {
                 val exams = collectReminderExaminations(semester = "", nameOrNumber = "").exams
                 when (examReminder.scheduleNextReminder(exams)) {
-                    is ExamReminderPort.ScheduleResult.Scheduled -> Unit
-                    is ExamReminderPort.ScheduleResult.NoUpcoming -> Unit
-                    is ExamReminderPort.ScheduleResult.Failed -> examFailed = true
+                    is ReminderScheduleResult.Scheduled -> Unit
+                    is ReminderScheduleResult.NoUpcoming -> Unit
+                    is ReminderScheduleResult.Failed -> examFailed = true
                 }
             }
         }

@@ -9,7 +9,7 @@ interface CourseReminderPort {
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
-    ): ScheduleResult
+    ): ReminderScheduleResult
 
     suspend fun hasScheduledAlarm(): Boolean
 
@@ -17,10 +17,4 @@ interface CourseReminderPort {
     fun nextScheduledAtMs(): Long?
 
     fun cancelAll()
-
-    sealed class ScheduleResult {
-        data class Scheduled(val triggerAtMs: Long) : ScheduleResult()
-        data object NoUpcoming : ScheduleResult()
-        data object Failed : ScheduleResult()
-    }
 }

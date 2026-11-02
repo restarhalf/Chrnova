@@ -35,7 +35,7 @@ object NotificationChannels {
                 NotificationManager.IMPORTANCE_LOW
             )
                 .apply {
-                    description = "上课静音与下课恢复铃声的结果提示"
+                    description = "静音与恢复铃声的结果提示"
                     setShowBadge(false)
                     setSound(null, null)
                     enableVibration(false)

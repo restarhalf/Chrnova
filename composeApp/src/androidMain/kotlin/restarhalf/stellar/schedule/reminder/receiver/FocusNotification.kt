@@ -11,6 +11,7 @@ import android.util.Log
 import restarhalf.stellar.schedule.R
 
 internal data class FocusContent(
+    val business: String,
     val courseName: String,
     val timeRange: String,
     val statusLabel: String,
@@ -217,7 +218,7 @@ internal object FocusNotification {
                 },
                 "picInfo": { "type": $PIC_TYPE_DEFAULT },
                 "outEffectSrc": "$OUT_EFFECT",
-                "business": "course_schedule"$islandBlock
+                "business": "${content.business}"$islandBlock
               }
             }
         """.trimIndent()

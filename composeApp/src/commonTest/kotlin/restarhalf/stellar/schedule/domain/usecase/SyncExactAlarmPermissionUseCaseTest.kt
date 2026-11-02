@@ -18,6 +18,7 @@ import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -76,7 +77,7 @@ class SyncExactAlarmPermissionUseCaseTest {
         every { timetable.getTotalWeeks() } returns 20
         everySuspend { courseRepository.getAllCoursesOnce() } returns emptyList()
         everySuspend { courseReminder.scheduleNextReminder(any(), any(), any(), any()) } returns
-            CourseReminderPort.ScheduleResult.NoUpcoming
+            ReminderScheduleResult.NoUpcoming
     }
 
     @Test

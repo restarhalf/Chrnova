@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.reminder
 
 import android.Manifest
-import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -9,293 +8,105 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.set
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
-import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
-import restarhalf.stellar.schedule.core.log.AppLogger
-import restarhalf.stellar.schedule.core.time.ClockTime
-import restarhalf.stellar.schedule.core.time.WeekCalculator
 import restarhalf.stellar.schedule.domain.model.Campus
-import restarhalf.stellar.schedule.domain.policy.getCampusTimetable
+import restarhalf.stellar.schedule.domain.model.Course
+import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
+import restarhalf.stellar.schedule.domain.reminder.CourseReminderPlanner
 import restarhalf.stellar.schedule.reminder.receiver.CourseReminderReceiver
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import restarhalf.stellar.schedule.domain.model.Course as DomainCourse
 
 class CourseReminderScheduler(
     private val context: Context,
-    private val settings: ObservableSettings
+    private val settings: ObservableSettings,
 ) {
-
-    data class NextReminder(
-        val triggerAtMs: Long,
-        val course: DomainCourse,
-        val slotStart: String,
-        val slotEnd: String
-    )
 
     @RequiresApi(Build.VERSION_CODES.S)
     @OptIn(ExperimentalTime::class)
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     fun scheduleNextReminder(
-        courses: List<DomainCourse>,
+        courses: List<Course>,
         campus: Campus,
         termStartMs: Long,
         totalWeeks: Int,
-        nowMs: Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
-    ): ScheduleResult {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-
+        nowMs: Long = Clock.System.now().toEpochMilliseconds(),
+    ): ReminderScheduleResult {
         val next =
-            findNextReminder(
+            CourseReminderPlanner.findNext(
                 courses = courses,
                 campus = campus,
                 termStartMs = termStartMs,
                 totalWeeks = totalWeeks,
-                nowMs = nowMs
+                nowMs = nowMs,
             )
                 ?: run {
                     cancelAll()
-                    return ScheduleResult.NoUpcoming
+                    return ReminderScheduleResult.NoUpcoming
                 }
 
         val intent =
             Intent(context, CourseReminderReceiver::class.java).apply {
-                putExtra(EXTRA_COURSE_NAME, next.course.name)
-                putExtra(EXTRA_COURSE_LOCATION, next.course.location)
-                putExtra(EXTRA_COURSE_TIME, next.slotStart)
-                putExtra(EXTRA_COURSE_END_TIME, next.slotEnd)
+                putExtra(EXTRA_COURSE_NAME, next.courseName)
+                putExtra(EXTRA_COURSE_LOCATION, next.place)
+                putExtra(EXTRA_COURSE_TIME, next.timeStart)
+                putExtra(EXTRA_COURSE_END_TIME, next.timeEnd)
             }
 
         val pendingIntent =
             PendingIntent.getBroadcast(
                 context,
-                SINGLE_REMINDER_REQUEST_CODE,
+                ReminderKind.Course.requestCode,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
         val success =
-            scheduleAlarmBestEffort(
-                alarmManager = alarmManager,
+            ReminderAlarmScheduler.schedule(
+                context = context,
                 triggerAtMs = next.triggerAtMs,
-                pendingIntent = pendingIntent
+                pendingIntent = pendingIntent,
+                logLabel = "课程提醒",
             )
 
-        if (success) {
-            settings[KEY_CODES] = encodeCodes(setOf(SINGLE_REMINDER_REQUEST_CODE.toString()))
-            settings[KEY_NEXT_TRIGGER] = next.triggerAtMs
-            return ScheduleResult.Scheduled(next.triggerAtMs)
-        } else {
-            return ScheduleResult.Failed
-        }
-    }
+        if (!success) return ReminderScheduleResult.Failed
 
-    @OptIn(ExperimentalTime::class)
-    private fun findNextReminder(
-        courses: List<DomainCourse>,
-        campus: Campus,
-        termStartMs: Long,
-        totalWeeks: Int,
-        nowMs: Long
-    ): NextReminder? {
-        val timetable = getCampusTimetable(campus)
-        val today = kotlin.time.Instant.fromEpochMilliseconds(nowMs)
-            .toLocalDateTime(TimeZone.currentSystemDefault()).date
-
-        var best: NextReminder? = null
-        val scanDays = 14
-        for (offset in 0 until scanDays) {
-            val targetDay = today.plus(offset, DateTimeUnit.DAY)
-            val targetDayStartMs =
-                targetDay.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-
-            val weekInfo =
-                WeekCalculator.detect(
-                    totalWeeks = totalWeeks,
-                    termStartMs = termStartMs,
-                    nowMs = targetDayStartMs + (12 * 60 * 60 * 1000L)
-                )
-            if (weekInfo.isHoliday) continue
-
-            val week = weekInfo.week
-            val dayOfWeekMon1 = targetDay.dayOfWeek.isoDayNumber
-
-            val effective = effectiveCoursesForWeek(all = courses, week = week)
-            val dayCourses =
-                effective.filter { it.dayOfWeek == dayOfWeekMon1 && isCourseActiveInWeek(it, week) }
-
-            for (course in dayCourses) {
-                val slot = timetable.getOrNull(course.startSection - 1) ?: continue
-                val endSection = course.startSection + course.sectionCount - 1
-                val endSlot = timetable.getOrNull(endSection - 1) ?: continue
-
-                val (hour, minute) = ClockTime.parseToHourMinute(slot.start) ?: continue
-
-                val triggerTime = targetDay.atStartOfDayIn(TimeZone.currentSystemDefault())
-                    .toEpochMilliseconds() + (hour * 60L + minute - REMINDER_MINUTES_BEFORE) * 60 * 1000L
-
-                if (triggerTime <= nowMs) continue
-
-                val candidate =
-                    NextReminder(
-                        triggerAtMs = triggerTime,
-                        course = course,
-                        slotStart = slot.start,
-                        slotEnd = endSlot.end
-                    )
-
-                if (best == null || candidate.triggerAtMs < best.triggerAtMs) {
-                    best = candidate
-                }
-            }
-
-            if (best != null) break
-        }
-
-        return best
+        ReminderAlarmScheduler.writeNextTrigger(
+            settings = settings,
+            key = ReminderKind.Course.triggerKey,
+            triggerAtMs = next.triggerAtMs,
+        )
+        return ReminderScheduleResult.Scheduled(next.triggerAtMs)
     }
 
     fun cancelAll() {
-        val codes = decodeCodes(settings.getString(KEY_CODES, ""))
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-
-        for (codeStr in codes) {
-            val code = codeStr.toIntOrNull() ?: continue
-            val intent = Intent(context, CourseReminderReceiver::class.java)
-            val pendingIntent =
-                PendingIntent.getBroadcast(
-                    context,
-                    code,
-                    intent,
-                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-                )
-            if (pendingIntent != null) {
-                alarmManager.cancel(pendingIntent)
-                pendingIntent.cancel()
-            }
-        }
-
-        val singleIntent = Intent(context, CourseReminderReceiver::class.java)
-        val singlePendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                SINGLE_REMINDER_REQUEST_CODE,
-                singleIntent,
-                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-            )
-        if (singlePendingIntent != null) {
-            alarmManager.cancel(singlePendingIntent)
-            singlePendingIntent.cancel()
-        }
-
-        settings.remove(KEY_CODES)
-        settings.remove(KEY_NEXT_TRIGGER)
-    }
-
-    private fun encodeCodes(codes: Set<String>): String = codes.joinToString(",")
-
-    private fun decodeCodes(raw: String): Set<String> {
-        if (raw.isBlank()) return emptySet()
-        return raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-    }
-
-    companion object {
-        private const val PREFS_NAME = "reminder_codes"
-        private const val KEY_CODES = "codes"
-        private const val KEY_NEXT_TRIGGER = "next_trigger"
-        private const val REMINDER_MINUTES_BEFORE = 16
-
-        private const val SINGLE_REMINDER_REQUEST_CODE = 20001
-
-        private const val EXTRA_COURSE_NAME = "course_name"
-        private const val EXTRA_COURSE_LOCATION = "course_location"
-        private const val EXTRA_COURSE_TIME = "course_time"
-        private const val EXTRA_COURSE_END_TIME = "course_end_time"
-    }
-
-    sealed class ScheduleResult {
-        data class Scheduled(val triggerAtMs: Long) : ScheduleResult()
-
-        object NoUpcoming : ScheduleResult()
-
-        object Failed : ScheduleResult()
-    }
-
-    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
-    private fun scheduleAlarmBestEffort(
-        alarmManager: AlarmManager,
-        triggerAtMs: Long,
-        pendingIntent: PendingIntent
-    ): Boolean {
-        return try {
-            // canScheduleExactAlarms 是 API 31 才有的，低版本调它抛的是
-            // NoSuchMethodError（Error，不是 Exception），下面的 catch 接不住。
-            val canExact =
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                    alarmManager.canScheduleExactAlarms()
-            if (canExact) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMs,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMs,
-                    pendingIntent
-                )
-            }
-            true
-        } catch (e: SecurityException) {
-            AppLogger.log("Reminder", "设置课程提醒SecurityException", e)
-
-            try {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMs,
-                    pendingIntent
-                )
-                true
-            } catch (e2: Exception) {
-                if (e2 is kotlinx.coroutines.CancellationException) throw e2
-                AppLogger.log("Reminder", "设置课程提醒重试失败", e2)
-                false
-            }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            AppLogger.log("Reminder", "设置课程提醒失败", e)
-            false
-        }
+        ReminderAlarmScheduler.cancel(
+            context = context,
+            requestCode = ReminderKind.Course.requestCode,
+            receiver = CourseReminderReceiver::class.java,
+        )
+        ReminderAlarmScheduler.clearNextTrigger(settings, ReminderKind.Course.triggerKey)
     }
 
     fun hasScheduledAlarm(): Boolean {
         if (getNextTriggerTime() == null) return false
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                SINGLE_REMINDER_REQUEST_CODE,
-                Intent(context, CourseReminderReceiver::class.java),
-                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-            )
-        return pendingIntent != null
+        return ReminderAlarmScheduler.hasPending(
+            context = context,
+            requestCode = ReminderKind.Course.requestCode,
+            receiver = CourseReminderReceiver::class.java,
+        )
     }
 
-    fun getNextTriggerTime(): Long? {
-        val triggerAtMs =
-            if (settings.hasKey(KEY_NEXT_TRIGGER)) {
-                settings.getLong(KEY_NEXT_TRIGGER, 0L)
-            } else {
-                return null
-            }
-        // 闹钟响过之后预存值会留在原地，过期就当没挂
-        if (triggerAtMs <= 0L || triggerAtMs <= System.currentTimeMillis()) return null
-        return triggerAtMs
+    fun getNextTriggerTime(): Long? =
+        ReminderAlarmScheduler.readNextTrigger(
+            settings = settings,
+            key = ReminderKind.Course.triggerKey,
+            nowMs = System.currentTimeMillis(),
+        )
+
+    companion object {
+        private const val EXTRA_COURSE_NAME = "course_name"
+        private const val EXTRA_COURSE_LOCATION = "course_location"
+        private const val EXTRA_COURSE_TIME = "course_time"
+        private const val EXTRA_COURSE_END_TIME = "course_end_time"
     }
 }

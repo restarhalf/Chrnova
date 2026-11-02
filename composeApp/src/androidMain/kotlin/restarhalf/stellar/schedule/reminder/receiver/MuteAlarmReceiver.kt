@@ -11,6 +11,7 @@ import restarhalf.stellar.schedule.MainActivity
 import restarhalf.stellar.schedule.R
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.reminder.NotificationChannels
+import restarhalf.stellar.schedule.reminder.ReminderKind
 
 class MuteAlarmReceiver : BroadcastReceiver() {
 
@@ -31,6 +32,7 @@ class MuteAlarmReceiver : BroadcastReceiver() {
             return
         }
 
+        val kind = readKind(intent)
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val previousMode = audioManager.ringerMode
         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
@@ -40,6 +42,7 @@ class MuteAlarmReceiver : BroadcastReceiver() {
         if (endTime.isNotBlank()) {
             MuteAlarmScheduler.scheduleAutoUnmute(
                 context = context,
+                kind = kind,
                 notificationId = notificationId,
                 endTime = endTime,
                 restoreMode = previousMode,
@@ -52,14 +55,16 @@ class MuteAlarmReceiver : BroadcastReceiver() {
 
         post(
             context = context,
-            title = "已开启上课静音",
-            text = if (endTime.isBlank()) "下课后请手动恢复铃声" else "$endTime 自动恢复铃声",
+            title = "已开启${kind.sessionLabel}静音",
+            text = if (endTime.isBlank()) "${kind.endHint}请手动恢复铃声" else "$endTime 自动恢复铃声",
         )
     }
 
     private fun restoreRinger(context: Context, intent: Intent) {
+        val kind = readKind(intent)
+
         if (!RingerControl.canChange(context)) {
-            post(context, "课程已结束", "缺少勿扰权限，请手动恢复铃声")
+            post(context, "${kind.nounLabel}已结束", "缺少勿扰权限，请手动恢复铃声")
             return
         }
 
@@ -67,8 +72,11 @@ class MuteAlarmReceiver : BroadcastReceiver() {
         val restoreMode =
             intent.getIntExtra(EXTRA_RESTORE_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL)
         audioManager.ringerMode = restoreMode
-        post(context, "课程已结束", "已恢复铃声")
+        post(context, "${kind.nounLabel}已结束", "已恢复铃声")
     }
+
+    private fun readKind(intent: Intent): ReminderKind =
+        ReminderKind.fromName(intent.getStringExtra(EXTRA_KIND))
 
     private fun post(context: Context, title: String, text: String) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -101,6 +109,7 @@ class MuteAlarmReceiver : BroadcastReceiver() {
 
         private const val EXTRA_MODE = "mute_mode"
         private const val MODE_UNMUTE = "unmute"
+        private const val EXTRA_KIND = "reminder_kind"
         private const val EXTRA_NOTIFICATION_ID = "notification_id"
         private const val EXTRA_COURSE_END_TIME = "course_end_time"
         private const val EXTRA_RESTORE_RINGER_MODE = "restore_ringer_mode"
@@ -111,17 +120,20 @@ class MuteAlarmReceiver : BroadcastReceiver() {
 
         fun muteAlarmIntent(
             context: Context,
+            kind: ReminderKind,
             notificationId: Int,
             endTime: String,
         ): Intent =
             Intent(context, MuteAlarmReceiver::class.java).apply {
+                putExtra(EXTRA_KIND, kind.name)
                 putExtra(EXTRA_NOTIFICATION_ID, notificationId)
                 putExtra(EXTRA_COURSE_END_TIME, endTime)
             }
 
-        fun unmuteAlarmIntent(context: Context, restoreMode: Int): Intent =
+        fun unmuteAlarmIntent(context: Context, kind: ReminderKind, restoreMode: Int): Intent =
             Intent(context, MuteAlarmReceiver::class.java).apply {
                 putExtra(EXTRA_MODE, MODE_UNMUTE)
+                putExtra(EXTRA_KIND, kind.name)
                 putExtra(EXTRA_RESTORE_RINGER_MODE, restoreMode)
             }
     }
