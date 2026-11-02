@@ -31,7 +31,7 @@ import restarhalf.stellar.schedule.platform.AppIoDispatcher
         PESubjectScoreEntity::class,
         PEDetailSummaryEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 @ColumnTypeConverters(Converters::class)
@@ -184,6 +184,23 @@ private val migration19To20 = object : Migration(19, 20) {
     }
 }
 
+private val migration20To21 = object : Migration(20, 21) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS pe_scores")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_scores` (`userNo` TEXT NOT NULL, `schoolYear` TEXT NOT NULL, `total` REAL NOT NULL, `isFree` INTEGER NOT NULL, `done` INTEGER NOT NULL, `nums` INTEGER NOT NULL, PRIMARY KEY(`userNo`, `schoolYear`))"
+        )
+        connection.execSQL("DROP TABLE IF EXISTS pe_detail_scores")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_detail_scores` (`userNo` TEXT NOT NULL, `schoolYear` TEXT NOT NULL, `subjectId` TEXT NOT NULL, `subName` TEXT NOT NULL, `result` TEXT, `score` INTEGER, `unit` TEXT NOT NULL, `subRatio` TEXT NOT NULL, `grade` TEXT, `isJoin` INTEGER NOT NULL, PRIMARY KEY(`userNo`, `schoolYear`, `subjectId`))"
+        )
+        connection.execSQL("DROP TABLE IF EXISTS pe_detail_summary")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `pe_detail_summary` (`userNo` TEXT NOT NULL, `schoolYear` TEXT NOT NULL, `totalScore` REAL NOT NULL, `totalGrade` TEXT NOT NULL, PRIMARY KEY(`userNo`, `schoolYear`))"
+        )
+    }
+}
+
 fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
@@ -207,6 +224,7 @@ fun buildAppDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
             migration16To17,
             migration17To18,
             migration18To19,
-            migration19To20
+            migration19To20,
+            migration20To21
         )
         .build()

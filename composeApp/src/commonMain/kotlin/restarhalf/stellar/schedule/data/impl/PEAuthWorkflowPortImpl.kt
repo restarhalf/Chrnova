@@ -40,6 +40,7 @@ class PEAuthWorkflowPortImpl(
         password: String,
     ) {
         val oldUsername = authStore.getLastUsername().orEmpty().trim()
+        val oldUserId = authStore.getUserId().orEmpty()
         val resp = gateway.login(
             username = username,
             password = password
@@ -58,7 +59,7 @@ class PEAuthWorkflowPortImpl(
 
         val newUsername = username.trim()
         if (oldUsername.isNotBlank() && newUsername.isNotBlank() && oldUsername != newUsername) {
-            repository.clearAll()
+            repository.clearUser(oldUserId)
         }
 
         authStore.setLastUsername(newUsername)
@@ -67,8 +68,9 @@ class PEAuthWorkflowPortImpl(
 
     override suspend fun logout() {
         authMutex.withLock {
+            val userId = authStore.getUserId().orEmpty()
             authStore.clear()
-            repository.clearAll()
+            repository.clearUser(userId)
         }
     }
 

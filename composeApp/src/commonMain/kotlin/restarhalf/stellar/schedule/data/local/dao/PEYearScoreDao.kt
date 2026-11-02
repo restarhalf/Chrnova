@@ -10,18 +10,18 @@ import restarhalf.stellar.schedule.data.local.entity.PEYearScoreEntity
 
 @Dao
 interface PEYearScoreDao {
-    @Query("SELECT * FROM pe_scores ORDER BY schoolYear DESC")
-    fun observeAllScores(): Flow<List<PEYearScoreEntity>>
+    @Query("SELECT * FROM pe_scores WHERE userNo = :userNo ORDER BY schoolYear DESC")
+    fun observeAllScores(userNo: String): Flow<List<PEYearScoreEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertScores(scores: List<PEYearScoreEntity>)
 
-    @Query("DELETE FROM pe_scores")
-    suspend fun deleteAll()
+    @Query("DELETE FROM pe_scores WHERE userNo = :userNo")
+    suspend fun deleteByUserNo(userNo: String)
 
     @Transaction
-    suspend fun replaceAll(scores: List<PEYearScoreEntity>) {
-        deleteAll()
+    suspend fun replaceAll(userNo: String, scores: List<PEYearScoreEntity>) {
+        deleteByUserNo(userNo)
         if (scores.isNotEmpty()) {
             insertScores(scores)
         }

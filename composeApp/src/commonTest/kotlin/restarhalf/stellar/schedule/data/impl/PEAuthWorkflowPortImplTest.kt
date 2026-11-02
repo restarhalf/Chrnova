@@ -44,7 +44,7 @@ class PEAuthWorkflowPortImplTest {
         assertNull(store.getUserId())
         assertNull(store.getLastUsername())
         assertNull(store.getCredentials())
-        verifySuspend(VerifyMode.exactly(1)) { repository.clearAll() }
+        verifySuspend(VerifyMode.exactly(1)) { repository.clearUser("2023001") }
     }
 
     @Test

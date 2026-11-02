@@ -14,5 +14,5 @@ interface PERepository {
 
     suspend fun saveDetailData(schoolYear: String, detail: PEDetailData)
 
-    suspend fun clearAll()
+    suspend fun clearUser(userId: String)
 }

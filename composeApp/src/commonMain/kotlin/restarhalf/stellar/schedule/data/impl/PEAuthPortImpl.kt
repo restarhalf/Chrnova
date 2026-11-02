@@ -30,6 +30,9 @@ class PEAuthPortImpl(
         }
     }
 
+    override fun observeUserId(): Flow<String> =
+        authStore.getSettings().getStringFlow(PEAuthStore.KEY_USER_ID, "")
+
     override fun setProfile(profile: PEAuthProfile) {
         authStore.setProfile(
             stuName = profile.stuName,

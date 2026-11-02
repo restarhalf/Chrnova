@@ -2,8 +2,12 @@ package restarhalf.stellar.schedule.data.local.entity
 
 import androidx.room3.Entity
 
-@Entity(tableName = "pe_detail_scores", primaryKeys = ["schoolYear", "subjectId"])
+@Entity(
+    tableName = "pe_detail_scores",
+    primaryKeys = ["userNo", "schoolYear", "subjectId"],
+)
 data class PESubjectScoreEntity(
+    val userNo: String,
     val schoolYear: String,
     val subjectId: String,
     val subName: String,

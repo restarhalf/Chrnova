@@ -115,13 +115,14 @@ class MappersTest {
     @Test
     fun peYearScoreRoundTrip() {
         val entity = PEYearScoreEntity(
+            userNo = "U1",
             schoolYear = "2025-2026",
             total = 88.5,
             isFree = 1,
             done = 4,
             nums = 6,
         )
-        assertEquals(entity, entity.toDomain().toEntity())
+        assertEquals(entity, entity.toDomain().toEntity("U1"))
     }
 
     @Test
@@ -136,7 +137,8 @@ class MappersTest {
             grade = null,
             isJoin = 0,
         )
-        val entity = dto.toEntity("2025-2026")
+        val entity = dto.toEntity(userNo = "U1", schoolYear = "2025-2026")
+        assertEquals("U1", entity.userNo)
         assertEquals("2025-2026", entity.schoolYear)
         assertNull(entity.result)
         assertNull(entity.score)
@@ -154,8 +156,9 @@ class MappersTest {
                 PESubjectScore(subjectId = "s2", subName = "跳远", score = 80, isJoin = 1),
             ),
         )
-        val (summaries, scores) = detail.toEntity("2025-2026")
+        val (summaries, scores) = detail.toEntity(userNo = "U1", schoolYear = "2025-2026")
         assertEquals(1, summaries.size)
+        assertEquals("U1", summaries[0].userNo)
         assertEquals(76.0, summaries[0].totalScore)
         assertEquals("良好", summaries[0].totalGrade)
         assertEquals("2025-2026", summaries[0].schoolYear)

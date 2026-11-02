@@ -5,15 +5,17 @@ import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 import restarhalf.stellar.schedule.domain.model.PEDetailData
 import restarhalf.stellar.schedule.domain.model.PESubjectScore
 
-fun PEDetailData.toEntity(schoolYear: String) = listOf(
+fun PEDetailData.toEntity(userNo: String, schoolYear: String) = listOf(
     PEDetailSummaryEntity(
+        userNo = userNo,
         schoolYear = schoolYear,
         totalScore = totalScore,
         totalGrade = totalGrade
     )
-) to dataArr.map { it.toEntity(schoolYear) }
+) to dataArr.map { it.toEntity(userNo, schoolYear) }
 
-fun PESubjectScore.toEntity(schoolYear: String) = PESubjectScoreEntity(
+fun PESubjectScore.toEntity(userNo: String, schoolYear: String) = PESubjectScoreEntity(
+    userNo = userNo,
     schoolYear = schoolYear,
     subjectId = subjectId,
     subName = subName,

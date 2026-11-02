@@ -9,6 +9,8 @@ interface PEAuthPort {
 
     fun observeProfile(): Flow<PEAuthProfile>
 
+    fun observeUserId(): Flow<String>
+
     fun setProfile(profile: PEAuthProfile)
 
     fun setCredentials(username: String, password: String)

@@ -11,11 +11,14 @@ import restarhalf.stellar.schedule.data.local.entity.PESubjectScoreEntity
 
 @Dao
 interface PEDetailDao {
-    @Query("SELECT * FROM pe_detail_scores WHERE schoolYear = :schoolYear")
-    fun observeDetailScores(schoolYear: String): Flow<List<PESubjectScoreEntity>>
+    @Query("SELECT * FROM pe_detail_scores WHERE userNo = :userNo AND schoolYear = :schoolYear")
+    fun observeDetailScores(userNo: String, schoolYear: String): Flow<List<PESubjectScoreEntity>>
 
-    @Query("SELECT * FROM pe_detail_summary WHERE schoolYear = :schoolYear LIMIT 1")
-    fun observeDetailSummary(schoolYear: String): Flow<PEDetailSummaryEntity?>
+    @Query(
+        "SELECT * FROM pe_detail_summary " +
+            "WHERE userNo = :userNo AND schoolYear = :schoolYear LIMIT 1"
+    )
+    fun observeDetailSummary(userNo: String, schoolYear: String): Flow<PEDetailSummaryEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDetailScores(scores: List<PESubjectScoreEntity>)
@@ -23,36 +26,37 @@ interface PEDetailDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDetailSummary(summary: PEDetailSummaryEntity)
 
-    @Query("DELETE FROM pe_detail_scores WHERE schoolYear = :schoolYear")
-    suspend fun deleteDetailScoresByYear(schoolYear: String)
+    @Query("DELETE FROM pe_detail_scores WHERE userNo = :userNo AND schoolYear = :schoolYear")
+    suspend fun deleteDetailScoresByYear(userNo: String, schoolYear: String)
 
-    @Query("DELETE FROM pe_detail_summary WHERE schoolYear = :schoolYear")
-    suspend fun deleteDetailSummaryByYear(schoolYear: String)
+    @Query("DELETE FROM pe_detail_summary WHERE userNo = :userNo AND schoolYear = :schoolYear")
+    suspend fun deleteDetailSummaryByYear(userNo: String, schoolYear: String)
 
-    @Query("DELETE FROM pe_detail_scores")
-    suspend fun deleteAllScores()
+    @Query("DELETE FROM pe_detail_scores WHERE userNo = :userNo")
+    suspend fun deleteScoresByUserNo(userNo: String)
 
-    @Query("DELETE FROM pe_detail_summary")
-    suspend fun deleteAllSummary()
+    @Query("DELETE FROM pe_detail_summary WHERE userNo = :userNo")
+    suspend fun deleteSummaryByUserNo(userNo: String)
 
-    @Query("DELETE FROM pe_scores")
-    suspend fun deleteAllPeScores()
+    @Query("DELETE FROM pe_scores WHERE userNo = :userNo")
+    suspend fun deleteYearScoresByUserNo(userNo: String)
 
     @Transaction
-    suspend fun deleteAllPeData() {
-        deleteAllScores()
-        deleteAllSummary()
-        deleteAllPeScores()
+    suspend fun deletePeDataByUserNo(userNo: String) {
+        deleteScoresByUserNo(userNo)
+        deleteSummaryByUserNo(userNo)
+        deleteYearScoresByUserNo(userNo)
     }
 
     @Transaction
     suspend fun replaceDetailByYear(
+        userNo: String,
         schoolYear: String,
         summary: PEDetailSummaryEntity?,
         scores: List<PESubjectScoreEntity>
     ) {
-        deleteDetailScoresByYear(schoolYear)
-        deleteDetailSummaryByYear(schoolYear)
+        deleteDetailScoresByYear(userNo, schoolYear)
+        deleteDetailSummaryByYear(userNo, schoolYear)
         summary?.let { insertDetailSummary(it) }
         insertDetailScores(scores)
     }
