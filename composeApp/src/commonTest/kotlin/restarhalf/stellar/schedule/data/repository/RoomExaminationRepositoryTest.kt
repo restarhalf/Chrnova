@@ -7,6 +7,7 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -90,10 +91,17 @@ class RoomExaminationRepositoryTest {
     }
 
     @Test
-    fun deleteDelegates() = runTest {
-        everySuspend { dao.deleteExamination(5L) } returns Unit
+    fun deleteScopesToCurrentUser() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
         repo.deleteExamination(5L)
-        verifySuspend { dao.deleteExamination(5L) }
+        verifySuspend { dao.deleteExamination(5L, "U1") }
+    }
+
+    @Test
+    fun deleteRejectsBlankUser() = runTest {
+        profileFlow.value = JwxtAuthProfile()
+        assertFailsWith<IllegalArgumentException> { repo.deleteExamination(5L) }
+        verifySuspend(VerifyMode.not) { dao.deleteExamination(any(), any()) }
     }
 
     @Test
@@ -127,10 +135,17 @@ class RoomExaminationRepositoryTest {
     }
 
     @Test
-    fun fixInvalidSemesterIdsRewritesEmptyAndManual() = runTest {
-        everySuspend { dao.updateSemesterId(any(), any()) } returns Unit
+    fun fixInvalidSemesterIdsRewritesEmptyAndManualForCurrentUser() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
         repo.fixInvalidSemesterIds("FIXED")
-        verifySuspend { dao.updateSemesterId("", "FIXED") }
-        verifySuspend { dao.updateSemesterId("manual", "FIXED") }
+        verifySuspend { dao.updateSemesterId("U1", "", "FIXED") }
+        verifySuspend { dao.updateSemesterId("U1", "manual", "FIXED") }
+    }
+
+    @Test
+    fun fixInvalidSemesterIdsSkipsBlankUser() = runTest {
+        profileFlow.value = JwxtAuthProfile()
+        repo.fixInvalidSemesterIds("FIXED")
+        verifySuspend(VerifyMode.not) { dao.updateSemesterId(any(), any(), any()) }
     }
 }

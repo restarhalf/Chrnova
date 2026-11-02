@@ -9,13 +9,9 @@ interface GradeRepository {
 
     suspend fun getAllGradesByUserNo(userNo: String): List<GradeCourse>
 
-    suspend fun replaceGrades(semester: String, grades: List<GradeCourse>)
-
     suspend fun replaceGradesByUserNoAndSemester(
         userNo: String,
         semester: String,
         grades: List<GradeCourse>
     )
-
-    suspend fun clearAll()
 }

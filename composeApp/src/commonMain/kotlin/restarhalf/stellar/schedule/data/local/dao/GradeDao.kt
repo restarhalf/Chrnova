@@ -20,25 +20,11 @@ interface GradeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGrades(grades: List<GradeEntity>)
 
-    @Query("DELETE FROM grades WHERE semester = :semester")
-    suspend fun deleteGradesBySemester(semester: String)
-
     @Query("DELETE FROM grades WHERE userNo = :userNo AND semester = :semester")
     suspend fun deleteGradesByUserNoAndSemester(userNo: String, semester: String)
 
     @Query("SELECT * FROM grades WHERE userNo = :userNo")
     suspend fun getAllGradesByUserNo(userNo: String): List<GradeEntity>
-
-    @Query("DELETE FROM grades")
-    suspend fun deleteAll()
-
-    @Transaction
-    suspend fun replaceBySemester(semester: String, grades: List<GradeEntity>) {
-        deleteGradesBySemester(semester)
-        if (grades.isNotEmpty()) {
-            insertGrades(grades)
-        }
-    }
 
     @Transaction
     suspend fun replaceByUserNoAndSemester(

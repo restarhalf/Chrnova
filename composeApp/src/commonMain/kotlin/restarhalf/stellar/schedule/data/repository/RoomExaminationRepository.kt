@@ -46,7 +46,9 @@ class RoomExaminationRepository(
     }
 
     override suspend fun deleteExamination(id: Long) {
-        examinationDao.deleteExamination(id)
+        val userNo = auth.observeProfile().first().userNo
+        require(userNo.isNotBlank()) { "请先登录" }
+        examinationDao.deleteExamination(id, userNo)
     }
 
     override suspend fun replaceExaminations(
@@ -60,7 +62,9 @@ class RoomExaminationRepository(
     }
 
     override suspend fun fixInvalidSemesterIds(correctSemesterId: String) {
-        examinationDao.updateSemesterId("", correctSemesterId)
-        examinationDao.updateSemesterId("manual", correctSemesterId)
+        val userNo = auth.observeProfile().first().userNo
+        if (userNo.isBlank()) return
+        examinationDao.updateSemesterId(userNo, "", correctSemesterId)
+        examinationDao.updateSemesterId(userNo, "manual", correctSemesterId)
     }
 }

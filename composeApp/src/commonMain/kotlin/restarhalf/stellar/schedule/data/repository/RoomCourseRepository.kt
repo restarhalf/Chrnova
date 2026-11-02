@@ -62,7 +62,11 @@ class RoomCourseRepository(
     override suspend fun insertCourses(courses: List<Course>): List<Long> =
         courseDao.insertCourses(courses.map { it.toEntity() })
 
-    override suspend fun deleteCourse(course: Course) = courseDao.deleteCourse(course.toEntity())
+    override suspend fun deleteCourse(course: Course) {
+        val userNo = auth.observeProfile().first().userNo
+        require(userNo.isNotBlank()) { "请先登录" }
+        courseDao.deleteCourseByIdAndUserNo(course.id, userNo)
+    }
 
     override suspend fun replaceCourses(toDelete: List<Course>, toInsert: List<Course>) =
         courseDao.replaceCourses(

@@ -25,19 +25,11 @@ class RoomGradeRepository(
         return gradeDao.getAllGradesByUserNo(userNo).map { it.toDomain() }
     }
 
-    override suspend fun replaceGrades(semester: String, grades: List<GradeCourse>) {
-        gradeDao.replaceBySemester(semester, grades.map { it.toEntity() })
-    }
-
     override suspend fun replaceGradesByUserNoAndSemester(
         userNo: String,
         semester: String,
         grades: List<GradeCourse>
     ) {
         gradeDao.replaceByUserNoAndSemester(userNo, semester, grades.map { it.toEntity(userNo) })
-    }
-
-    override suspend fun clearAll() {
-        gradeDao.deleteAll()
     }
 }

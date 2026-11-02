@@ -8,6 +8,7 @@ import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
@@ -202,5 +203,21 @@ class RoomCourseRepositoryTest {
         assertFailsWith<IllegalArgumentException> {
             repo.replaceSyncedCourses("", "S1", emptyList())
         }
+    }
+
+    @Test
+    fun deleteCourseScopesToCurrentUser() = runTest {
+        profileFlow.value = JwxtAuthProfile(userNo = "U1")
+        repo.deleteCourse(entity("x").toDomain())
+        verifySuspend { dao.deleteCourseByIdAndUserNo(1L, "U1") }
+    }
+
+    @Test
+    fun deleteCourseRejectsBlankUser() = runTest {
+        profileFlow.value = JwxtAuthProfile()
+        assertFailsWith<IllegalArgumentException> {
+            repo.deleteCourse(entity("x").toDomain())
+        }
+        verifySuspend(VerifyMode.not) { dao.deleteCourseByIdAndUserNo(any(), any()) }
     }
 }

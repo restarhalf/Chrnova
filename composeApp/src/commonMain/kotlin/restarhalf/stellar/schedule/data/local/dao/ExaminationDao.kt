@@ -26,14 +26,14 @@ interface ExaminationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExamination(examination: ExaminationEntity): Long
 
-    @Query("DELETE FROM examinations WHERE id = :id")
-    suspend fun deleteExamination(id: Long)
+    @Query("DELETE FROM examinations WHERE id = :id AND userNo = :userNo")
+    suspend fun deleteExamination(id: Long, userNo: String)
 
-    @Query("UPDATE examinations SET semesterId = :newSemesterId WHERE semesterId = :oldSemesterId")
-    suspend fun updateSemesterId(oldSemesterId: String, newSemesterId: String)
-
-    @Query("SELECT COUNT(*) FROM examinations WHERE semesterId = '' OR semesterId = 'manual'")
-    suspend fun countExamsWithInvalidSemester(): Int
+    @Query(
+        "UPDATE examinations SET semesterId = :newSemesterId " +
+            "WHERE userNo = :userNo AND semesterId = :oldSemesterId"
+    )
+    suspend fun updateSemesterId(userNo: String, oldSemesterId: String, newSemesterId: String)
 
     @Query("DELETE FROM examinations WHERE userNo = :userNo AND semesterId = :semesterId AND source = 'sync'")
     suspend fun deleteSyncExaminationsByUserNoAndSemester(userNo: String, semesterId: String)

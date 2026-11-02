@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.data.local.dao
 
 import androidx.room3.Dao
-import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
@@ -28,8 +27,8 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCourses(courses: List<CourseEntity>): List<Long>
 
-    @Delete
-    suspend fun deleteCourse(course: CourseEntity)
+    @Query("DELETE FROM courses WHERE id = :id AND userNo = :userNo")
+    suspend fun deleteCourseByIdAndUserNo(id: Long, userNo: String)
 
     @Update
     suspend fun updateCourse(course: CourseEntity)
@@ -51,7 +50,7 @@ interface CourseDao {
 
     @Transaction
     suspend fun replaceCourses(toDelete: List<CourseEntity>, toInsert: List<CourseEntity>) {
-        toDelete.forEach { deleteCourse(it) }
+        toDelete.forEach { deleteCourseByIdAndUserNo(it.id, it.userNo) }
         if (toInsert.isNotEmpty()) {
             insertCourses(toInsert)
         }

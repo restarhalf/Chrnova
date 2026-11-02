@@ -57,19 +57,6 @@ class RoomGradeRepositoryTest {
     }
 
     @Test
-    fun replaceGradesDelegatesToSemester() = runTest {
-        val captured = mutableListOf<Pair<String, List<GradeEntity>>>()
-        everySuspend { dao.replaceBySemester(any(), any()) } calls { (sem: String, list: List<GradeEntity>) ->
-            captured.add(sem to list)
-            Unit
-        }
-        val grades = listOf(entity("g1").toDomain())
-        repo.replaceGrades("S1", grades)
-        assertEquals("S1", captured.single().first)
-        assertEquals(listOf("g1"), captured.single().second.map { it.courseName })
-    }
-
-    @Test
     fun replaceGradesByUserNoAndSemesterStampsUserNo() = runTest {
         val capturedUserNos = mutableListOf<String>()
         val capturedSemesters = mutableListOf<String>()
@@ -83,12 +70,5 @@ class RoomGradeRepositoryTest {
         repo.replaceGradesByUserNoAndSemester("NEW", "S1", grades)
         assertEquals("NEW", capturedUserNos.single())
         assertEquals("S1", capturedSemesters.single())
-    }
-
-    @Test
-    fun clearAllDelegates() = runTest {
-        everySuspend { dao.deleteAll() } returns Unit
-        repo.clearAll()
-        verifySuspend { dao.deleteAll() }
     }
 }
