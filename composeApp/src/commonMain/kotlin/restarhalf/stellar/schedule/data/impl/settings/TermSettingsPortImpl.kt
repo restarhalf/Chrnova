@@ -5,6 +5,7 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.coroutines.getStringFlow
 import com.russhwolf.settings.set
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import restarhalf.stellar.schedule.domain.model.SettingsKeys
@@ -23,19 +24,14 @@ class TermSettingsPortImpl(
         settings[SettingsKeys.SELECTED_TERM] = term
     }
 
-    override fun observeActiveScheduleTerm(): Flow<String> {
-        return settings.getStringFlow(SettingsKeys.ACTIVE_SCHEDULE_TERM, "")
-    }
+    override fun observeActiveScheduleTerm(): Flow<String> =
+        combine(
+            settings.getStringFlow(SettingsKeys.ACTIVE_SCHEDULE_TERM, ""),
+            settings.getStringFlow(SettingsKeys.CURRENT_TERM_ID, ""),
+        ) { active, current -> active.ifBlank { current } }
 
     override fun setActiveScheduleTerm(term: String) {
-        settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] =
-            if (term != "")
-                term
-            else
-                settings.getString(
-                    SettingsKeys.CURRENT_TERM_ID,
-                    defaultValue = ""
-                )
+        settings[SettingsKeys.ACTIVE_SCHEDULE_TERM] = term
     }
 
     override fun observeCurrentTermId(): Flow<String> {

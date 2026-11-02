@@ -21,13 +21,19 @@ class TermSettingsPortImplTest {
     }
 
     @Test
-    fun activeScheduleTermFallsBackToCurrentTermId() = runTest {
+    fun activeScheduleTermFollowsCurrentTermWhenBlank() = runTest {
         impl.setCurrentTermId("2026-2027-1")
 
         impl.setActiveScheduleTerm("")
         assertEquals("2026-2027-1", impl.observeActiveScheduleTerm().first())
 
+        impl.setCurrentTermId("2026-2027-2")
+        assertEquals("2026-2027-2", impl.observeActiveScheduleTerm().first())
+
         impl.setActiveScheduleTerm("2025-2026-1")
+        assertEquals("2025-2026-1", impl.observeActiveScheduleTerm().first())
+
+        impl.setCurrentTermId("2026-2027-3")
         assertEquals("2025-2026-1", impl.observeActiveScheduleTerm().first())
     }
 
