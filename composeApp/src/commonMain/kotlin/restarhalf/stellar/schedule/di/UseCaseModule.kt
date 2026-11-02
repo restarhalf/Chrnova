@@ -168,7 +168,6 @@ val useCaseModule = module {
     factory {
         SyncExactAlarmPermissionUseCase(
             exactAlarmPermission = get(),
-            reminderSettings = get(),
             isAnyReminderEnabled = get(),
             rescheduleAllReminders = get(),
         )

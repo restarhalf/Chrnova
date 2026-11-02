@@ -83,7 +83,7 @@ class SettingsViewModel(
         _exactAlarmState.value =
             when {
                 exactAlarmPermission.isExactAlarmAllowed() -> ExactAlarmPermissionState.GRANTED
-                reminderSettings.hasAskedExactAlarmPermission() -> ExactAlarmPermissionState.DENIED
+                exactAlarmPermission.hasAsked() -> ExactAlarmPermissionState.DENIED
                 else -> ExactAlarmPermissionState.NOT_ASKED
             }
     }

@@ -64,7 +64,6 @@ class SyncExactAlarmPermissionUseCaseTest {
 
     private val useCase = SyncExactAlarmPermissionUseCase(
         exactAlarmPermission = permission,
-        reminderSettings = reminderSettings,
         isAnyReminderEnabled = IsAnyReminderEnabledUseCase(reminderSettings),
         rescheduleAllReminders = rescheduleAll,
     )
@@ -83,31 +82,31 @@ class SyncExactAlarmPermissionUseCaseTest {
     @Test
     fun `首次记录且提醒关着时只写入状态`() = runTest {
         every { permission.isExactAlarmAllowed() } returns true
-        every { reminderSettings.getExactAlarmAllowed() } returns null
+        every { permission.lastKnownAllowed() } returns null
         stubReminders(courseEnabled = false)
 
         assertFalse(useCase())
 
         verify(VerifyMode.not) { courseReminder.cancelAll() }
-        verifySuspend(VerifyMode.exactly(1)) { reminderSettings.setExactAlarmAllowed(true) }
+        verifySuspend(VerifyMode.exactly(1)) { permission.setLastKnownAllowed(true) }
     }
 
     @Test
     fun `首次记录且提醒开着时按可能存在的模糊闹钟重排一次`() = runTest {
         every { permission.isExactAlarmAllowed() } returns true
-        every { reminderSettings.getExactAlarmAllowed() } returns null
+        every { permission.lastKnownAllowed() } returns null
         stubReminders(courseEnabled = true)
 
         assertTrue(useCase())
 
         verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
-        verifySuspend(VerifyMode.exactly(1)) { reminderSettings.setExactAlarmAllowed(true) }
+        verifySuspend(VerifyMode.exactly(1)) { permission.setLastKnownAllowed(true) }
     }
 
     @Test
     fun `从拒绝变为允许且提醒开着时重排`() = runTest {
         every { permission.isExactAlarmAllowed() } returns true
-        every { reminderSettings.getExactAlarmAllowed() } returns false
+        every { permission.lastKnownAllowed() } returns false
         stubReminders(courseEnabled = true)
 
         assertTrue(useCase())
@@ -116,42 +115,42 @@ class SyncExactAlarmPermissionUseCaseTest {
         verifySuspend(VerifyMode.exactly(1)) {
             courseReminder.scheduleNextReminder(any(), any(), any(), any())
         }
-        verifySuspend(VerifyMode.exactly(1)) { reminderSettings.setExactAlarmAllowed(true) }
+        verifySuspend(VerifyMode.exactly(1)) { permission.setLastKnownAllowed(true) }
     }
 
     @Test
     fun `从拒绝变为允许但提醒都关着时不重排`() = runTest {
         every { permission.isExactAlarmAllowed() } returns true
-        every { reminderSettings.getExactAlarmAllowed() } returns false
+        every { permission.lastKnownAllowed() } returns false
         stubReminders(courseEnabled = false)
 
         assertFalse(useCase())
 
         verify(VerifyMode.not) { courseReminder.cancelAll() }
-        verifySuspend(VerifyMode.exactly(1)) { reminderSettings.setExactAlarmAllowed(true) }
+        verifySuspend(VerifyMode.exactly(1)) { permission.setLastKnownAllowed(true) }
     }
 
     @Test
     fun `授权被收回时只更新记录`() = runTest {
         every { permission.isExactAlarmAllowed() } returns false
-        every { reminderSettings.getExactAlarmAllowed() } returns true
+        every { permission.lastKnownAllowed() } returns true
         stubReminders(courseEnabled = true)
 
         assertFalse(useCase())
 
         verify(VerifyMode.not) { courseReminder.cancelAll() }
-        verifySuspend(VerifyMode.exactly(1)) { reminderSettings.setExactAlarmAllowed(false) }
+        verifySuspend(VerifyMode.exactly(1)) { permission.setLastKnownAllowed(false) }
     }
 
     @Test
     fun `状态没变化时不写入也不重排`() = runTest {
         every { permission.isExactAlarmAllowed() } returns true
-        every { reminderSettings.getExactAlarmAllowed() } returns true
+        every { permission.lastKnownAllowed() } returns true
         stubReminders(courseEnabled = true)
 
         assertFalse(useCase())
 
         verify(VerifyMode.not) { courseReminder.cancelAll() }
-        verifySuspend(VerifyMode.not) { reminderSettings.setExactAlarmAllowed(any()) }
+        verifySuspend(VerifyMode.not) { permission.setLastKnownAllowed(any()) }
     }
 }

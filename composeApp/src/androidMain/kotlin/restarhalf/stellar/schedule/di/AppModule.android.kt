@@ -27,7 +27,7 @@ import restarhalf.stellar.schedule.reminder.CourseReminderScheduler
 import restarhalf.stellar.schedule.reminder.ExamReminderScheduler
 import restarhalf.stellar.schedule.reminder.impl.CourseReminderPortImpl
 import restarhalf.stellar.schedule.reminder.impl.ExamReminderPortImpl
-import restarhalf.stellar.schedule.reminder.impl.ExactAlarmPermissionPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.ExactAlarmPermissionPortImpl
 import restarhalf.stellar.schedule.reminder.impl.WorkManagerReminderSchedulerPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
 import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
@@ -70,7 +70,12 @@ private val androidPlatformModule = module {
     single<CourseReminderPort> { CourseReminderPortImpl(scheduler = get()) }
     single<ExamReminderPort> { ExamReminderPortImpl(scheduler = get()) }
     single<ReminderSchedulerPort> { WorkManagerReminderSchedulerPortImpl(context = androidContext()) }
-    single<ExactAlarmPermissionPort> { ExactAlarmPermissionPortImpl(context = androidContext()) }
+    single<ExactAlarmPermissionPort> {
+        ExactAlarmPermissionPortImpl(
+            context = androidContext(),
+            settings = get(named(SettingsKeys.PREFS_NAME)),
+        )
+    }
     single<AppUpdatePort> { AppUpdatePortImpl(context = androidContext()) }
     single<CourseSelectionServicePort> {
         CourseSelectionServicePortImpl(context = androidContext())

@@ -2,11 +2,9 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
-import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 
 class SyncExactAlarmPermissionUseCase(
     private val exactAlarmPermission: ExactAlarmPermissionPort,
-    private val reminderSettings: ReminderSettingsPort,
     private val isAnyReminderEnabled: IsAnyReminderEnabledUseCase,
     private val rescheduleAllReminders: RescheduleAllRemindersUseCase,
 ) {
@@ -17,11 +15,11 @@ class SyncExactAlarmPermissionUseCase(
      */
     suspend operator fun invoke(): Boolean {
         val allowed = exactAlarmPermission.isExactAlarmAllowed()
-        val previous = reminderSettings.getExactAlarmAllowed()
+        val previous = exactAlarmPermission.lastKnownAllowed()
         if (previous == allowed) return false
 
         if (!allowed) {
-            reminderSettings.setExactAlarmAllowed(false)
+            exactAlarmPermission.setLastKnownAllowed(false)
             return false
         }
 
@@ -31,7 +29,7 @@ class SyncExactAlarmPermissionUseCase(
             AppLogger.log("Reminder", "精确闹钟已授权，重新排提醒")
         }
 
-        reminderSettings.setExactAlarmAllowed(true)
+        exactAlarmPermission.setLastKnownAllowed(true)
         return shouldReschedule
     }
 }

@@ -22,6 +22,7 @@ import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
+import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
@@ -74,6 +75,7 @@ fun AppRoot(
     val displaySettings: DisplaySettingsPort = koinInject()
     val deviceSettings: DeviceSettingsPort = koinInject()
     val reminderSettings: ReminderSettingsPort = koinInject()
+    val exactAlarmPermission: ExactAlarmPermissionPort = koinInject()
 
     // 提醒开着却没给精确闹钟授权，闹钟会被系统塞进模糊窗口、到点不响。
     // 启动时补一次申请，用户从旧版本升上来也能修好。
@@ -83,7 +85,7 @@ fun AppRoot(
         val enabled =
             reminderSettings.observeCourseReminderEnabled().first() ||
                 reminderSettings.observeExamReminderEnabled().first()
-        if (enabled && !reminderSettings.hasAskedExactAlarmPermission()) {
+        if (enabled && !exactAlarmPermission.hasAsked()) {
             ensureExactAlarmPermission()
         }
     }
