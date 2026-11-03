@@ -109,4 +109,43 @@ class JwxtAuthWorkflowPortImplTest {
         assertEquals("old-token", store.getToken())
         assertEquals("2023001", store.getCredentials()?.first)
     }
+
+    @Test
+    fun `刷新遇到账号或密码错误时退出登录`() = runTest {
+        store.setToken("old-token")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any(), any(), any(), any()) } returns
+            JwxtLoginResponse(code = 0, msg = "该帐号不存在或密码错误！")
+
+        impl.refreshSession()
+
+        assertNull(store.getToken())
+        assertNull(store.getCredentials())
+    }
+
+    @Test
+    fun `刷新遇到HTTP层返回的密码错误时退出登录`() = runTest {
+        store.setToken("old-token")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any(), any(), any(), any()) } throws
+            IllegalStateException("该帐号不存在或密码错误！")
+
+        impl.refreshSession()
+
+        assertNull(store.getToken())
+        assertNull(store.getCredentials())
+    }
+
+    @Test
+    fun `刷新遇到非凭据失败时保留会话`() = runTest {
+        store.setToken("old-token")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any(), any(), any(), any()) } returns
+            JwxtLoginResponse(code = 0, msg = "系统繁忙，请稍后重试")
+
+        impl.refreshSession()
+
+        assertEquals("old-token", store.getToken())
+        assertEquals("2023001", store.getCredentials()?.first)
+    }
 }

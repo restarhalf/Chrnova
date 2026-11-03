@@ -52,6 +52,11 @@ class PEAuthStore(private val settings: ObservableSettings) {
         settings[KEY_SAVED_PASSWORD] = password
     }
 
+    fun clearCredentials() {
+        settings[KEY_SAVED_USERNAME] = null
+        settings[KEY_SAVED_PASSWORD] = null
+    }
+
     fun getCredentials(): Pair<String, String>? {
         val username =
             settings.getStringOrNull(KEY_SAVED_USERNAME)?.takeIf { it.isNotBlank() } ?: return null

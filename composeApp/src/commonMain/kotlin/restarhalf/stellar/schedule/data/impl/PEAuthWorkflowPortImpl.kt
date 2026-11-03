@@ -3,6 +3,8 @@ package restarhalf.stellar.schedule.data.impl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import restarhalf.stellar.schedule.core.error.CredentialsRejectedException
+import restarhalf.stellar.schedule.core.error.isCredentialRejection
 import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.domain.port.PEGateway
@@ -47,7 +49,9 @@ class PEAuthWorkflowPortImpl(
         )
 
         if (resp.status != "PASS") {
-            throw IllegalStateException(resp.message.ifBlank { "登录失败" })
+            val message = resp.message.ifBlank { "登录失败" }
+            if (isCredentialRejection(message)) throw CredentialsRejectedException(message)
+            throw IllegalStateException(message)
         }
 
         val token = resp.token?.takeIf { it.isNotBlank() }
@@ -93,8 +97,14 @@ class PEAuthWorkflowPortImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLogger.log("PEAuth", "刷新会话失败，清理本地会话", e)
-                authStore.clearSession()
+                if (isCredentialRejection(e.message.orEmpty())) {
+                    AppLogger.log("PEAuth", "刷新会话失败，账号或密码错误，退出登录", e)
+                    authStore.clearSession()
+                    authStore.clearCredentials()
+                    return
+                }
+                AppLogger.log("PEAuth", "刷新会话失败，恢复旧Token", e)
+                if (tokenBefore != null) authStore.setToken(tokenBefore)
             }
         }
     }

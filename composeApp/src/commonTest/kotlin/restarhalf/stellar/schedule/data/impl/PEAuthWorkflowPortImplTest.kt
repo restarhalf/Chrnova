@@ -23,6 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PEAuthWorkflowPortImplTest {
 
@@ -135,7 +136,7 @@ class PEAuthWorkflowPortImplTest {
     }
 
     @Test
-    fun `刷新失败时清理会话并保留保存的凭据`() = runTest {
+    fun `刷新失败时恢复旧Token并保留会话`() = runTest {
         store.setToken("dead-token")
         store.setUserId("2023001")
         store.setProfile("小明", "2023001", "T1")
@@ -145,10 +146,57 @@ class PEAuthWorkflowPortImplTest {
 
         impl.refreshSession()
 
+        assertEquals("dead-token", store.getToken())
+        assertEquals("2023001", store.getUserId())
+        assertEquals("2023001", store.getStdNumber())
+        assertEquals("2023001", store.getLastUsername())
+        assertEquals("2023001" to "password", store.getCredentials())
+    }
+
+    @Test
+    fun `刷新遇到账号或密码错误时退出登录`() = runTest {
+        store.setToken("dead-token")
+        store.setUserId("2023001")
+        store.setProfile("小明", "2023001", "T1")
+        store.setLastUsername("2023001")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any()) } returns
+            PELoginResponse(status = "FAIL", message = "用户名或者密码错误")
+
+        impl.refreshSession()
+
         assertNull(store.getToken())
         assertNull(store.getUserId())
         assertNull(store.getStdNumber())
+        assertNull(store.getCredentials())
         assertEquals("2023001", store.getLastUsername())
+    }
+
+    @Test
+    fun `刷新遇到HTTP层返回的密码错误时退出登录`() = runTest {
+        store.setToken("dead-token")
+        store.setUserId("2023001")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any()) } throws
+            IllegalStateException("用户名或者密码错误")
+
+        impl.refreshSession()
+
+        assertNull(store.getToken())
+        assertNull(store.getUserId())
+        assertNull(store.getCredentials())
+    }
+
+    @Test
+    fun `刷新遇到非凭据失败时保留会话`() = runTest {
+        store.setToken("old-token")
+        store.setCredentials("2023001", "password")
+        everySuspend { gateway.login(any(), any()) } returns
+            PELoginResponse(status = "FAIL", message = "系统繁忙，请稍后重试")
+
+        impl.refreshSession()
+
+        assertEquals("old-token", store.getToken())
         assertEquals("2023001" to "password", store.getCredentials())
     }
 
@@ -165,7 +213,7 @@ class PEAuthWorkflowPortImplTest {
     }
 
     @Test
-    fun `刷新失败后token流广播为未登录`() = runTest {
+    fun `刷新失败后token流保持旧Token`() = runTest {
         val authPort = PEAuthPortImpl(store)
         store.setToken("dead-token")
         store.setUserId("2023001")
@@ -182,7 +230,7 @@ class PEAuthWorkflowPortImplTest {
         job.cancel()
 
         assertEquals("dead-token", tokens.first())
-        assertEquals("", tokens.last())
+        assertTrue(tokens.all { it == "dead-token" })
     }
 
     @Test
