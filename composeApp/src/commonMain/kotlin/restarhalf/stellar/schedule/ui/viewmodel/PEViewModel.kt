@@ -189,7 +189,9 @@ class PEViewModel(
                     onSuccess = { result ->
                         _uiState.update {
                             it.copy(
-                                yearScores = result.dataArr.sortedByDescending { s -> s.schoolYear }.toPersistentList(),
+                                yearScores = result.dataArr.orEmpty()
+                                    .sortedByDescending { s -> s.schoolYear }
+                                    .toPersistentList(),
                                 loadedScoreList = true,
                             )
                         }

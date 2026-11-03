@@ -49,13 +49,14 @@ class PEClientResponseTest {
         val r = json.decodeFromString(PEScoreListResponse.serializer(), planListSnapshot)
 
         assertEquals("PASS", r.status)
-        assertEquals(2, r.dataArr.size)
-        assertEquals("2025", r.dataArr[0].schoolYear)
-        assertEquals(52.0, r.dataArr[0].total)
-        assertEquals(7, r.dataArr[0].done)
-        assertEquals(8, r.dataArr[0].nums)
+        val scores = assertNotNull(r.dataArr)
+        assertEquals(2, scores.size)
+        assertEquals("2025", scores[0].schoolYear)
+        assertEquals(52.0, scores[0].total)
+        assertEquals(7, scores[0].done)
+        assertEquals(8, scores[0].nums)
 
-        assertEquals(50.2, r.dataArr[1].total)
+        assertEquals(50.2, scores[1].total)
     }
 
     private val scoreDetailSnapshot = """

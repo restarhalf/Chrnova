@@ -91,7 +91,9 @@ class AcademicPortImpl(
             throw IllegalStateException(resp.messageOrEmpty().ifBlank { "获取成绩失败" })
         }
 
-        val item = resp.data?.firstOrNull() ?: return TermGradeReport()
+        val data = resp.data
+            ?: throw ParseFailureException("成绩数据解析失败：缺少 data 字段")
+        val item = data.firstOrNull() ?: return TermGradeReport()
         return TermGradeReport(
             studentId = item.studentId,
             studentName = item.name,

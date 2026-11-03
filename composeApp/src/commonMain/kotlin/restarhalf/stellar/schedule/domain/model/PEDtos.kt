@@ -18,7 +18,7 @@ data class PELoginResponse(
 data class PEScoreListResponse(
     @SerialName("status") val status: String = "",
     @SerialName("message") val message: String = "",
-    @SerialName("data_arr") val dataArr: List<PEYearScore> = emptyList(),
+    @SerialName("data_arr") val dataArr: List<PEYearScore>? = null,
 )
 
 @Immutable

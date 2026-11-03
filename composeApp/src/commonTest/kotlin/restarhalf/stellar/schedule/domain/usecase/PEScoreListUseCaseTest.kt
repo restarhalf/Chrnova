@@ -8,6 +8,7 @@ import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
+import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.domain.model.PEScoreListResponse
 import restarhalf.stellar.schedule.domain.model.PEYearScore
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
@@ -53,7 +54,26 @@ class PEScoreListUseCaseTest {
 
         val result = useCase()
 
-        assertEquals(1, result.dataArr.size)
+        assertEquals(1, result.dataArr?.size)
         verifySuspend(VerifyMode.exactly(1)) { repository.replaceScores(any()) }
+    }
+
+    @Test
+    fun `缺少data_arr时抛出解析失败且不动缓存`() = runTest {
+        val useCase = PEScoreListUseCase(gateway, authWorkflow, repository)
+        everySuspend { gateway.getScoreList() } returns PEScoreListResponse()
+
+        assertFailsWith<ParseFailureException> { useCase() }
+        verifySuspend(VerifyMode.not) { repository.replaceScores(any()) }
+    }
+
+    @Test
+    fun `空data_arr正常清空缓存`() = runTest {
+        val useCase = PEScoreListUseCase(gateway, authWorkflow, repository)
+        everySuspend { gateway.getScoreList() } returns PEScoreListResponse(dataArr = emptyList())
+
+        useCase()
+
+        verifySuspend(VerifyMode.exactly(1)) { repository.replaceScores(emptyList()) }
     }
 }
