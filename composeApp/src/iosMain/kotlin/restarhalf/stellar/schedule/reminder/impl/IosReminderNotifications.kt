@@ -81,7 +81,7 @@ internal object IosReminderNotifications {
                 center.getPendingNotificationRequestsWithCompletionHandler { requests ->
                     if (continuation.isActive) {
                         continuation.resume(
-                            requests.any { (it as? UNNotificationRequest)?.identifier == identifier }
+                            requests?.any { (it as? UNNotificationRequest)?.identifier == identifier } == true
                         )
                     }
                 }
