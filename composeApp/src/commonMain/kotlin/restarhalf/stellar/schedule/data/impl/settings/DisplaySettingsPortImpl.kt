@@ -45,18 +45,16 @@ class DisplaySettingsPortImpl(
     }
 
     override fun setThemeMode(mode: Int) {
-        settings[SettingsKeys.THEME_MODE] = mode.coerceIn(0, 2)
+        settings[SettingsKeys.THEME_MODE] = mode.coerceIn(
+            DisplaySettingsPort.THEME_MODE_SYSTEM,
+            DisplaySettingsPort.THEME_MODE_FOLLOW_WALLPAPER,
+        )
     }
 
-    override fun observeFloatingBar(): Flow<Int> {
-        return settings.getIntFlow(SettingsKeys.FLOATING_BAR, 0)
-    }
+    override fun getWidgetPaddingMode(): Int =
+        settings.getInt(SettingsKeys.WIDGET_PADDING_MODE, 0)
 
-    override fun getFloatingBar(): Int {
-        return settings.getInt(SettingsKeys.FLOATING_BAR, 0)
-    }
-
-    override fun setFloatingBar(mode: Int) {
-        settings[SettingsKeys.FLOATING_BAR] = mode.coerceIn(0, 2)
+    override fun setWidgetPaddingMode(mode: Int) {
+        settings[SettingsKeys.WIDGET_PADDING_MODE] = mode.coerceIn(0, 4)
     }
 }

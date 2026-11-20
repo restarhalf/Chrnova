@@ -10,6 +10,14 @@ interface DisplaySettingsPort {
         const val MIN_ROW_HEIGHT_DP = 48
 
         const val MAX_ROW_HEIGHT_DP = 120
+
+        const val THEME_MODE_SYSTEM = 0
+
+        const val THEME_MODE_LIGHT = 1
+
+        const val THEME_MODE_DARK = 2
+
+        const val THEME_MODE_FOLLOW_WALLPAPER = 3
     }
 
     fun observeShowNonCurrentWeek(): Flow<Boolean>
@@ -26,9 +34,8 @@ interface DisplaySettingsPort {
 
     fun setThemeMode(mode: Int)
 
-    fun observeFloatingBar(): Flow<Int>
+    /** 桌面小组件的上下留白档位：0=标准 1=4×6 2=4×7 3=4×6 无字 4=4×7 无字 */
+    fun getWidgetPaddingMode(): Int
 
-    fun getFloatingBar(): Int
-
-    fun setFloatingBar(mode: Int)
+    fun setWidgetPaddingMode(mode: Int)
 }

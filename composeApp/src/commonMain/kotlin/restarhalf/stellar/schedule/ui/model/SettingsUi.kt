@@ -8,8 +8,6 @@ import kotlinx.collections.immutable.ImmutableList
 data class SettingsScreenUi(
     val campusOptions: ImmutableList<String>,
     val campusSelectedIndex: Int,
-    val themeOptions: ImmutableList<String>,
-    val floatingBarOptions: ImmutableList<String>,
     val termStartSummary: String,
     val syncSummary: String,
 )

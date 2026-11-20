@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.ExactAlarmPermissionState
@@ -33,17 +32,19 @@ import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
-import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
+import restarhalf.stellar.schedule.domain.port.ReminderPermissionPort
+import restarhalf.stellar.schedule.domain.port.ReminderPermissionState
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.reminder.ClassroomLabel
+import restarhalf.stellar.schedule.domain.usecase.ClassroomLabelPreview
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.LoadClassroomLabelPreviewUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -58,8 +59,8 @@ class SettingsViewModel(
     private val displaySettings: DisplaySettingsPort,
     private val reminderSettings: ReminderSettingsPort,
     private val exactAlarmPermission: ExactAlarmPermissionPort,
+    private val reminderPermission: ReminderPermissionPort,
     private val termSettings: TermSettingsPort,
-    private val logSettings: LogSettingsPort,
     private val userProfile: UserProfilePort,
     private val deviceSettings: DeviceSettingsPort,
     private val cancelAllCourseReminders: CancelAllCourseRemindersUseCase,
@@ -67,14 +68,10 @@ class SettingsViewModel(
     private val fetchSemesterIds: FetchSemesterIdsUseCase,
     private val scheduleNextCourseReminder: ScheduleNextCourseReminderUseCase,
     private val scheduleNextExamReminder: ScheduleNextExamReminderUseCase,
-    private val rescheduleAllReminders: RescheduleAllRemindersUseCase,
     private val courseReminderPort: CourseReminderPort,
-    private val examReminderPort: ExamReminderPort,
+    private val loadLabelPreview: LoadClassroomLabelPreviewUseCase,
     verifyGitHubStar: VerifyGitHubStarUseCase,
 ) : ViewModel() {
-
-    private val _rescheduling = MutableStateFlow(false)
-    val rescheduling: StateFlow<Boolean> = _rescheduling
 
     private val _exactAlarmState = MutableStateFlow(ExactAlarmPermissionState.GRANTED)
     val exactAlarmState: StateFlow<ExactAlarmPermissionState> = _exactAlarmState
@@ -88,9 +85,43 @@ class SettingsViewModel(
             }
     }
 
-    /** 「重新排提醒」下面的那行小字：当前实际挂着的下一条提醒 */
-    private val _nextReminderSummary = MutableStateFlow("")
-    val nextReminderSummary: StateFlow<String> = _nextReminderSummary
+    private val _reminderPermissionState = MutableStateFlow(ReminderPermissionState())
+    val reminderPermissionState: StateFlow<ReminderPermissionState> = _reminderPermissionState
+
+    fun refreshReminderPermissionState() {
+        _reminderPermissionState.value = reminderPermission.snapshot()
+    }
+
+    fun openBatteryOptimizationSettings() {
+        reminderPermission.openBatteryOptimizationSettings()
+    }
+
+    fun openAppDetailsSettings() {
+        reminderPermission.openAppDetailsSettings()
+    }
+
+    fun openDndPolicySettings() {
+        reminderPermission.openDndPolicySettings()
+    }
+
+    fun requestShizukuPermission() {
+        reminderPermission.requestShizukuPermission { granted ->
+            _reminderPermissionState.value = reminderPermission.snapshot()
+            if (!granted) _userMessages.tryEmit("Shizuku 授权失败")
+        }
+    }
+
+    /** 测试按钮：岛可用且开启时发岛，否则发实况；两者都会带上测试课的自动勿扰。 */
+    fun sendTestReminderNotification(island: Boolean) {
+        reminderPermission.sendTestNotification(island)
+        _userMessages.tryEmit(
+            if (island) {
+                "超级岛测试已发送，70 秒后上课"
+            } else {
+                "实时活动测试已发送，70 秒后上课"
+            },
+        )
+    }
 
     private val _userMessages = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val userMessages: SharedFlow<String> = _userMessages
@@ -106,11 +137,7 @@ class SettingsViewModel(
         val showNonCurrentWeek: Boolean,
         val scheduleRowHeight: Int,
         val reminderEnabled: Boolean,
-        val examReminderEnabled: Boolean,
-        val themeMode: Int,
-        val floatingBar: Int,
         val selectedTerm: String,
-        val logEnabled: Boolean,
     )
 
     @Immutable
@@ -124,11 +151,7 @@ class SettingsViewModel(
         val showNonCurrentWeek: Boolean,
         val scheduleRowHeight: Int,
         val reminderEnabled: Boolean,
-        val examReminderEnabled: Boolean,
-        val themeMode: Int,
-        val floatingBar: Int,
         val selectedTerm: String,
-        val logEnabled: Boolean,
         val authToken: String,
         val profile: JwxtAuthProfile,
         val remoteTermItems: ImmutableList<String>,
@@ -136,8 +159,6 @@ class SettingsViewModel(
 
     private companion object {
         val CAMPUS_OPTIONS = persistentListOf("开发区", "金石滩")
-        val THEME_OPTIONS = persistentListOf("跟随系统", "浅色", "深色")
-        val FLOATING_BAR_OPTIONS = persistentListOf("固定", "悬浮","液态玻璃")
     }
 
     private val _remoteTermItems = MutableStateFlow<ImmutableList<String>>(persistentListOf())
@@ -145,37 +166,28 @@ class SettingsViewModel(
     private val basePrefsFlow = combine(
         displaySettings.observeShowNonCurrentWeek(),
         reminderSettings.observeCourseReminderEnabled(),
-        reminderSettings.observeExamReminderEnabled(),
-        displaySettings.observeThemeMode(),
-        displaySettings.observeFloatingBar(),
-    ) { showNonCurrentWeek, reminderEnabled, examReminderEnabled, themeMode, floatingBar ->
+    ) { showNonCurrentWeek, reminderEnabled ->
         SettingsPrefsState(
             showNonCurrentWeek = showNonCurrentWeek,
             scheduleRowHeight = DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP,
             reminderEnabled = reminderEnabled,
-            examReminderEnabled = examReminderEnabled,
-            themeMode = themeMode,
-            floatingBar = floatingBar,
             selectedTerm = "",
-            logEnabled = false,
         )
     }
 
     private val extraPrefsFlow = combine(
         termSettings.observeSelectedTerm(),
-        logSettings.observeLogEnabled(),
         displaySettings.observeScheduleRowHeight(),
-    ) { selectedTerm, logEnabled, scheduleRowHeight ->
-        Triple(selectedTerm, logEnabled, scheduleRowHeight)
+    ) { selectedTerm, scheduleRowHeight ->
+        selectedTerm to scheduleRowHeight
     }
 
     private val prefsFlow = combine(
         basePrefsFlow,
         extraPrefsFlow,
-    ) { base, (selectedTerm, logEnabled, scheduleRowHeight) ->
+    ) { base, (selectedTerm, scheduleRowHeight) ->
         base.copy(
             selectedTerm = selectedTerm,
-            logEnabled = logEnabled,
             scheduleRowHeight = scheduleRowHeight,
         )
     }.distinctUntilChanged()
@@ -195,11 +207,7 @@ class SettingsViewModel(
                 showNonCurrentWeek = prefs.showNonCurrentWeek,
                 scheduleRowHeight = prefs.scheduleRowHeight,
                 reminderEnabled = prefs.reminderEnabled,
-                examReminderEnabled = prefs.examReminderEnabled,
-                themeMode = prefs.themeMode,
-                floatingBar = prefs.floatingBar,
                 selectedTerm = prefs.selectedTerm,
-                logEnabled = prefs.logEnabled,
                 authToken = auth.authToken,
                 profile = auth.profile,
                 remoteTermItems = remoteTermItems.toPersistentList(),
@@ -214,11 +222,7 @@ class SettingsViewModel(
                         showNonCurrentWeek = true,
                         scheduleRowHeight = DisplaySettingsPort.DEFAULT_ROW_HEIGHT_DP,
                         reminderEnabled = false,
-                        examReminderEnabled = false,
-                        themeMode = 0,
-                        floatingBar = 0,
                         selectedTerm = "",
-                        logEnabled = false,
                         authToken = "",
                         profile = JwxtAuthProfile(),
                         remoteTermItems = persistentListOf(),
@@ -233,6 +237,7 @@ class SettingsViewModel(
                 if (auth.authToken.isBlank()) resetTermIfMissing(emptyList())
             }
         }
+        refreshExtraReminders()
     }
 
     fun refreshAuth() {
@@ -241,19 +246,19 @@ class SettingsViewModel(
                 runCatching { authWorkflow.ensureLoggedIn() }
                     .onFailure { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("Auth", "刷新认证失败", e)
                     }
             }
         }
     }
 
     fun refreshRemoteTerms() {
-        if (uiState.value.authToken.isBlank()) {
-            _remoteTermItems.value = persistentListOf()
-            return
-        }
-
         viewModelScope.launch {
+            val authToken = auth.observeToken().first()
+            if (authToken.isBlank()) {
+                _remoteTermItems.value = persistentListOf()
+                return@launch
+            }
+
             runCatching {
                 val terms =
                     withContext(AppIoDispatcher) {
@@ -263,7 +268,6 @@ class SettingsViewModel(
                 resetTermIfMissing(terms)
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Settings", "刷新远程学期列表失败", e)
             }
         }
     }
@@ -271,7 +275,6 @@ class SettingsViewModel(
     private suspend fun resetTermIfMissing(terms: List<String>) {
         val current = termSettings.observeSelectedTerm().first()
         if (current.isBlank() || current in terms) return
-        AppLogger.log("Settings", "已存学期 $current 不在可选列表中，重置为当前学期")
         onSelectedTermChanged("")
     }
 
@@ -331,8 +334,6 @@ class SettingsViewModel(
         return SettingsScreenUi(
             campusOptions = CAMPUS_OPTIONS.toPersistentList(),
             campusSelectedIndex = campusSelectedIndex,
-            themeOptions = THEME_OPTIONS.toPersistentList(),
-            floatingBarOptions = FLOATING_BAR_OPTIONS.toPersistentList(),
             termStartSummary = termStartSummary,
             syncSummary = syncSummary
         )
@@ -355,17 +356,12 @@ class SettingsViewModel(
             runCatching { scheduleNextExamReminder(selectedTerm = value) }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Reminder", "切换学期后重新调度考试提醒失败", e)
                 }
         }
     }
 
     fun onThemeModeChanged(mode: Int) {
         displaySettings.setThemeMode(mode)
-    }
-
-    fun onFloatingBarChanged(mode: Int) {
-        displaySettings.setFloatingBar(mode)
     }
 
     fun onShowNonCurrentWeekChanged(show: Boolean) {
@@ -376,36 +372,214 @@ class SettingsViewModel(
         displaySettings.setScheduleRowHeight(heightDp)
     }
 
+    val reminderLeadMinutes: StateFlow<Int> =
+        reminderSettings.observeReminderLeadMinutes()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = restarhalf.stellar.schedule.domain.reminder.ReminderTiming.LEAD_MINUTES,
+            )
+
+    fun onReminderLeadMinutesChanged(minutes: Int) {
+        reminderSettings.setReminderLeadMinutes(minutes)
+    }
+
+    val nextDayReminderEnabled: StateFlow<Boolean> =
+        reminderSettings.observeNextDayReminderEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val nextDayReminderMinuteOfDay: StateFlow<Int> =
+        reminderSettings.observeNextDayReminderMinuteOfDay()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                restarhalf.stellar.schedule.domain.reminder.ReminderTiming.NEXT_DAY_MINUTE_OF_DAY,
+            )
+
+    val inClassReminderEnabled: StateFlow<Boolean> =
+        reminderSettings.observeInClassReminderEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val inClassTimingMode: StateFlow<Int> =
+        reminderSettings.observeInClassTimingMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val inClassLeadMinutes: StateFlow<Int> =
+        reminderSettings.observeInClassLeadMinutes()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 10)
+
+    val classDndEnabled: StateFlow<Boolean> =
+        reminderSettings.observeClassDndEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val classDndMode: StateFlow<Int> =
+        reminderSettings.observeClassDndMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val inExamReminderEnabled: StateFlow<Boolean> =
+        reminderSettings.observeInExamReminderEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val inExamTimingMode: StateFlow<Int> =
+        reminderSettings.observeInExamTimingMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val inExamLeadMinutes: StateFlow<Int> =
+        reminderSettings.observeInExamLeadMinutes()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 10)
+
+    val examDndEnabled: StateFlow<Boolean> =
+        reminderSettings.observeExamDndEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val examDndMode: StateFlow<Int> =
+        reminderSettings.observeExamDndMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val islandEnabled: StateFlow<Boolean> =
+        reminderSettings.observeIslandEnabled()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    val islandLeftMode: StateFlow<Int> =
+        reminderSettings.observeIslandLeftMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val islandRightMode: StateFlow<Int> =
+        reminderSettings.observeIslandRightMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 1)
+
+    val islandAodMode: StateFlow<Int> =
+        reminderSettings.observeIslandAodMode()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    fun onIslandEnabledChanged(enabled: Boolean) {
+        reminderSettings.setIslandEnabled(enabled)
+    }
+
+    fun onIslandLeftModeChanged(mode: Int) {
+        reminderSettings.setIslandLeftMode(mode)
+    }
+
+    fun onIslandRightModeChanged(mode: Int) {
+        reminderSettings.setIslandRightMode(mode)
+    }
+
+    fun onIslandAodModeChanged(mode: Int) {
+        reminderSettings.setIslandAodMode(mode)
+    }
+
+    val classroomLabelScope: StateFlow<Int> =
+        reminderSettings.observeClassroomLabelScope()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ClassroomLabel.SCOPE_OFF)
+
+    val classroomLabelMethod: StateFlow<Int> =
+        reminderSettings.observeClassroomLabelMethod()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ClassroomLabel.METHOD_REGEX)
+
+    val classroomLabelAbbreviations: StateFlow<String> =
+        reminderSettings.observeClassroomLabelAbbreviations()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+
+    val classroomLabelOverrides: StateFlow<String> =
+        reminderSettings.observeClassroomLabelOverrides()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+
+    private val _classroomLabelPreview = MutableStateFlow(ClassroomLabelPreview())
+    val classroomLabelPreview: StateFlow<ClassroomLabelPreview> = _classroomLabelPreview
+
+    fun loadClassroomLabelPreview() {
+        viewModelScope.launch {
+            _classroomLabelPreview.value =
+                runCatching { loadLabelPreview() }.getOrDefault(ClassroomLabelPreview())
+        }
+    }
+
+    fun onClassroomLabelScopeChanged(scope: Int) {
+        reminderSettings.setClassroomLabelScope(scope)
+    }
+
+    fun onClassroomLabelMethodChanged(method: Int) {
+        reminderSettings.setClassroomLabelMethod(method)
+    }
+
+    fun onClassroomLabelAbbreviationsChanged(text: String) {
+        reminderSettings.setClassroomLabelAbbreviations(text)
+    }
+
+    fun onClassroomLabelOverridesChanged(text: String) {
+        reminderSettings.setClassroomLabelOverrides(text)
+    }
+
+    fun onNextDayReminderEnabledChanged(enabled: Boolean) {
+        reminderSettings.setNextDayReminderEnabled(enabled)
+        refreshExtraReminders()
+    }
+
+    fun onNextDayReminderMinuteChanged(minuteOfDay: Int) {
+        reminderSettings.setNextDayReminderMinuteOfDay(minuteOfDay)
+        refreshExtraReminders()
+    }
+
+    fun onInClassReminderEnabledChanged(enabled: Boolean) {
+        reminderSettings.setInClassReminderEnabled(enabled)
+    }
+
+    fun onInClassTimingModeChanged(mode: Int) {
+        reminderSettings.setInClassTimingMode(mode)
+    }
+
+    fun onInClassLeadMinutesChanged(minutes: Int) {
+        reminderSettings.setInClassLeadMinutes(minutes)
+    }
+
+    fun onClassDndEnabledChanged(enabled: Boolean) {
+        reminderSettings.setClassDndEnabled(enabled)
+    }
+
+    fun onClassDndModeChanged(mode: Int) {
+        reminderSettings.setClassDndMode(mode)
+    }
+
+    fun onInExamReminderEnabledChanged(enabled: Boolean) {
+        reminderSettings.setInExamReminderEnabled(enabled)
+    }
+
+    fun onInExamTimingModeChanged(mode: Int) {
+        reminderSettings.setInExamTimingMode(mode)
+    }
+
+    fun onInExamLeadMinutesChanged(minutes: Int) {
+        reminderSettings.setInExamLeadMinutes(minutes)
+    }
+
+    fun onExamDndEnabledChanged(enabled: Boolean) {
+        reminderSettings.setExamDndEnabled(enabled)
+    }
+
+    fun onExamDndModeChanged(mode: Int) {
+        reminderSettings.setExamDndMode(mode)
+    }
+
+    private fun refreshExtraReminders() {
+        viewModelScope.launch {
+            withContext(AppIoDispatcher) {
+                runCatching { courseReminderPort.refreshNextDayReminder() }
+                    .onFailure { if (it is CancellationException) throw it }
+            }
+        }
+    }
+
     fun onReminderEnabledChanged(enabled: Boolean) {
         reminderSettings.setCourseReminderEnabled(enabled)
         if (!enabled) {
             viewModelScope.launch {
                 withContext(AppIoDispatcher) {
+                    // 考试提醒沿用课程提醒：关总开关时一并取消
                     runCatching { cancelAllCourseReminders() }
-                }
-                refreshNextReminderSummary()
-            }
-        } else {
-            refreshNextReminderSummary()
-        }
-    }
-
-    fun onExamReminderEnabledChanged(enabled: Boolean) {
-        reminderSettings.setExamReminderEnabled(enabled)
-        if (!enabled) {
-            viewModelScope.launch {
-                withContext(AppIoDispatcher) {
                     runCatching { cancelAllExamReminders() }
                 }
-                refreshNextReminderSummary()
             }
-        } else {
-            refreshNextReminderSummary()
         }
-    }
-
-    fun onLogEnabledChanged(enabled: Boolean) {
-        logSettings.setLogEnabled(enabled)
     }
 
     fun triggerSync(block: suspend () -> Unit) {
@@ -413,7 +587,6 @@ class SettingsViewModel(
             runCatching { block() }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Sync", "同步失败", e)
                 }
         }
     }
@@ -434,11 +607,9 @@ class SettingsViewModel(
             when {
                 e is CancellationException -> throw e
                 e != null -> {
-                    AppLogger.log("Reminder", "课程提醒调度失败", e)
                     _userMessages.emit("课程提醒没排上，稍后会自动重试")
                 }
                 result.getOrNull() == ReminderScheduleResult.Failed -> {
-                    AppLogger.log("Reminder", "课程提醒调度返回失败")
                     _userMessages.emit("课程提醒没排上，稍后会自动重试")
                 }
             }
@@ -457,126 +628,14 @@ class SettingsViewModel(
             when {
                 e is CancellationException -> throw e
                 e != null -> {
-                    AppLogger.log("Reminder", "考试提醒调度失败", e)
                     _userMessages.emit("考试提醒没排上，稍后会自动重试")
                 }
                 result.getOrNull() == ReminderScheduleResult.Failed -> {
-                    AppLogger.log("Reminder", "考试提醒调度返回失败")
                     _userMessages.emit("考试提醒没排上，稍后会自动重试")
                 }
             }
         }
     }
-
-    /** 一键重排：清掉现有闹钟，按当前课表与考试重新算一遍 */
-    fun onRescheduleAllRemindersClicked() {
-        if (_rescheduling.value) return
-        _rescheduling.value = true
-        viewModelScope.launch {
-            val report =
-                withContext(AppIoDispatcher) {
-                    runCatching { rescheduleAllReminders() }
-                        .onFailure {
-                            if (it is CancellationException) throw it
-                            AppLogger.log("Reminder", "一键重排失败", it)
-                        }
-                        .getOrNull()
-                }
-            _rescheduling.value = false
-            refreshNextReminderSummary()
-            _userMessages.emit(describeReschedule(report))
-        }
-    }
-
-    /** 重新读一次两条链上实际挂着的闹钟，更新「重新排提醒」下面的小字 */
-    fun refreshNextReminderSummary() {
-        viewModelScope.launch {
-            val summary =
-                withContext(AppIoDispatcher) {
-                    val courseEnabled = reminderSettings.observeCourseReminderEnabled().first()
-                    val examEnabled = reminderSettings.observeExamReminderEnabled().first()
-                    buildNextReminderSummary(
-                        courseEnabled = courseEnabled,
-                        courseNextAtMs =
-                            if (courseEnabled) {
-                                runCatching { courseReminderPort.nextScheduledAtMs() }.getOrNull()
-                            } else {
-                                null
-                            },
-                        examEnabled = examEnabled,
-                        examNextAtMs =
-                            if (examEnabled) {
-                                runCatching { examReminderPort.nextScheduledAtMs() }.getOrNull()
-                            } else {
-                                null
-                            },
-                    )
-                }
-            _nextReminderSummary.value = summary
-        }
-    }
-
-    @OptIn(ExperimentalTime::class)
-    private fun buildNextReminderSummary(
-        courseEnabled: Boolean,
-        courseNextAtMs: Long?,
-        examEnabled: Boolean,
-        examNextAtMs: Long?,
-    ): String {
-        if (!courseEnabled && !examEnabled) return "提醒都关着"
-
-        val lines = mutableListOf<String>()
-        if (courseEnabled) {
-            lines += "课程 " + describeNext(courseNextAtMs)
-        }
-        if (examEnabled) {
-            lines += "考试 " + describeNext(examNextAtMs)
-        }
-        return lines.joinToString(" · ")
-    }
-
-    private fun describeNext(triggerAtMs: Long?): String =
-        if (triggerAtMs == null) "未排上" else describeResult(triggerAtMs).removePrefix("下次 ")
-
-    @OptIn(ExperimentalTime::class)
-    private fun describeReschedule(report: RescheduleAllRemindersUseCase.Report?): String {
-        if (report == null) return "重排失败，请稍后重试"
-        if (!report.courseEnabled && !report.examEnabled) return "提醒都关着，没有需要重排的项目"
-
-        val lines = mutableListOf<String>()
-        if (report.courseEnabled) {
-            lines += "课程提醒：" + describeResult(report.courseResult, "近期没有课")
-        }
-        if (report.examEnabled) {
-            lines +=
-                "考试提醒：" +
-                    if (report.examFetchFailed) {
-                        "拉取考试安排失败"
-                    } else {
-                        describeResult(report.examResult, "近期没有考试")
-                    }
-        }
-        return lines.joinToString("\n")
-    }
-
-    @OptIn(ExperimentalTime::class)
-    private fun describeResult(triggerAtMs: Long?): String {
-        if (triggerAtMs == null) return "调度失败"
-        val dateTime =
-            Instant.fromEpochMilliseconds(triggerAtMs)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-        val month = dateTime.month.ordinal + 1
-        val minute = dateTime.minute.toString().padStart(2, '0')
-        val hour = dateTime.hour.toString().padStart(2, '0')
-        return "下次 $month/${dateTime.day} $hour:$minute"
-    }
-
-    private fun describeResult(result: ReminderScheduleResult?, noUpcomingText: String): String =
-        when (result) {
-            is ReminderScheduleResult.Scheduled -> describeResult(result.triggerAtMs)
-            ReminderScheduleResult.NoUpcoming -> noUpcomingText
-            ReminderScheduleResult.Failed, null -> "调度失败"
-        }
 
     @OptIn(ExperimentalTime::class)
     private fun formatDateYmd(ms: Long): String {

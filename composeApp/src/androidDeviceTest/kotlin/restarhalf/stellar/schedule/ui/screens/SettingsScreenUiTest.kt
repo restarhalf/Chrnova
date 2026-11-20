@@ -30,7 +30,7 @@ import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderPermissionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
@@ -42,8 +42,8 @@ import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
+import restarhalf.stellar.schedule.domain.usecase.LoadClassroomLabelPreviewUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
-import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
@@ -59,7 +59,6 @@ class SettingsScreenUiTest {
     private val displaySettings = mock<DisplaySettingsPort>(MockMode.autofill)
     private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
     private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
-    private val logSettings = mock<LogSettingsPort>(MockMode.autofill)
     private val userProfile = mock<UserProfilePort>(MockMode.autofill)
     private val deviceSettings = mock<DeviceSettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -70,14 +69,12 @@ class SettingsScreenUiTest {
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
     private val exactAlarmPermission = mock<ExactAlarmPermissionPort>(MockMode.autofill)
+    private val reminderPermission = mock<ReminderPermissionPort>(MockMode.autofill)
 
     private val showFlow = MutableStateFlow(true)
     private val reminderFlow = MutableStateFlow(false)
     private val examReminderFlow = MutableStateFlow(false)
-    private val themeFlow = MutableStateFlow(0)
-    private val floatingBarFlow = MutableStateFlow(0)
     private val termFlow = MutableStateFlow("")
-    private val logFlow = MutableStateFlow(false)
     private val rowHeightFlow = MutableStateFlow(56)
     private val tokenFlow = MutableStateFlow("")
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
@@ -102,10 +99,7 @@ class SettingsScreenUiTest {
         every { displaySettings.observeShowNonCurrentWeek() } returns showFlow
         every { reminderSettings.observeCourseReminderEnabled() } returns reminderFlow
         every { reminderSettings.observeExamReminderEnabled() } returns examReminderFlow
-        every { displaySettings.observeThemeMode() } returns themeFlow
-        every { displaySettings.observeFloatingBar() } returns floatingBarFlow
         every { termSettings.observeSelectedTerm() } returns termFlow
-        every { logSettings.observeLogEnabled() } returns logFlow
         every { displaySettings.observeScheduleRowHeight() } returns rowHeightFlow
         every { termSettings.observeCachedSemesterIds() } returns flowOf(emptyList())
         every { deviceSettings.getStarVerified() } returns false
@@ -119,8 +113,8 @@ class SettingsScreenUiTest {
             displaySettings = displaySettings,
             reminderSettings = reminderSettings,
             exactAlarmPermission = exactAlarmPermission,
+            reminderPermission = reminderPermission,
             termSettings = termSettings,
-            logSettings = logSettings,
             userProfile = userProfile,
             deviceSettings = deviceSettings,
             cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
@@ -138,23 +132,8 @@ class SettingsScreenUiTest {
                 ),
                 examReminder,
             ),
-            rescheduleAllReminders = RescheduleAllRemindersUseCase(
-                settings = reminderSettings,
-                courseRepository = courseRepository,
-                timetable = timetable,
-                courseReminder = courseReminder,
-                examReminder = examReminder,
-                collectReminderExaminations = CollectReminderExaminationsUseCase(
-                    FetchExaminationsUseCase(
-                        authWorkflow, academic, examRepository, auth, termSettings,
-                    ),
-                    examRepository,
-                ),
-                cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
-                cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
-            ),
             courseReminderPort = courseReminder,
-            examReminderPort = examReminder,
+            loadLabelPreview = LoadClassroomLabelPreviewUseCase(courseRepository),
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, deviceSettings),
         )
     }
@@ -162,67 +141,6 @@ class SettingsScreenUiTest {
     private fun androidx.compose.ui.test.ComposeUiTest.waitText(text: String, timeoutMs: Long = 10_000) {
         waitUntil(timeoutMillis = timeoutMs) {
             onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
-        }
-    }
-
-    private fun androidx.compose.ui.test.ComposeUiTest.settingsContent() {
-        ensureKoin()
-        setContent {
-            MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
-                SettingsScreen(
-                    vm = makeViewModel(),
-                    syncUiState = SyncUiState.Idle,
-                    campus = Campus.Jinshitan,
-                    termStartMs = 1_775_000_000_000L,
-                    totalWeeks = 20,
-                    onSync = {},
-                    onLogout = {},
-                    onLogin = {},
-                    onCampusChange = {},
-                    onTermStartChange = {},
-                    onTotalWeeksChange = {},
-                    onChangeBackground = {},
-                    onAbout = {},
-                    onPaper = {},
-                )
-            }
-        }
-    }
-
-    @Test
-    fun 重新排提醒显示当前挂着的下次提醒() = runUltronUiTest {
-        // 课程/考试提醒都开着，分别有下次时间
-        reminderFlow.value = true
-        examReminderFlow.value = true
-        every { courseReminder.nextScheduledAtMs() } returns 1_793_080_000_000L
-        every { examReminder.nextScheduledAtMs() } returns null
-
-        settingsContent()
-        waitText("重新排提醒")
-
-        // 摘要应该拼成「课程 <时间> · 考试 未排上」，而不是还写着通用文案
-        waitUntil(timeoutMillis = 10_000) {
-            onAllNodesWithText("按当前课表和考试，重算下一条提醒时间")
-                .fetchSemanticsNodes()
-                .isEmpty() &&
-                onAllNodesWithText("考试 未排上", substring = true)
-                    .fetchSemanticsNodes()
-                    .isNotEmpty()
-        }
-    }
-
-    @Test
-    fun 提醒都关着时摘要说明没有可重排项() = runUltronUiTest {
-        reminderFlow.value = false
-        examReminderFlow.value = false
-
-        settingsContent()
-        waitText("重新排提醒")
-
-        waitUntil(timeoutMillis = 10_000) {
-            onAllNodesWithText("提醒都关着", substring = true)
-                .fetchSemanticsNodes()
-                .isNotEmpty()
         }
     }
 
@@ -243,7 +161,6 @@ class SettingsScreenUiTest {
                     onCampusChange = {},
                     onTermStartChange = {},
                     onTotalWeeksChange = {},
-                    onChangeBackground = {},
                     onAbout = {},
                     onPaper = {},
                 )
@@ -273,7 +190,6 @@ class SettingsScreenUiTest {
                     onCampusChange = {},
                     onTermStartChange = {},
                     onTotalWeeksChange = {},
-                    onChangeBackground = {},
                     onAbout = {},
                     onPaper = {},
                 )

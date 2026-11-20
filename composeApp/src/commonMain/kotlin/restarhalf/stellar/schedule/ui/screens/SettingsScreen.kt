@@ -37,30 +37,32 @@ import restarhalf.stellar.schedule.domain.policy.IcsExporter
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.ExactAlarmPermissionState
-import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.CardItem
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.PersonalInfoCard
-import restarhalf.stellar.schedule.ui.components.RowHeightPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.groupedCardItems
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -77,13 +79,13 @@ fun SettingsScreen(
     onLogin: () -> Unit,
     isPeLoggedIn: Boolean = false,
     ensureCourseReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
-    ensureExamReminderPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     onRequestExactAlarmPermission: () -> Unit = {},
     onCampusChange: (Campus) -> Unit,
     onTermStartChange: (Long) -> Unit,
     onTotalWeeksChange: (Int) -> Unit,
-    onChangeBackground: () -> Unit,
     onAbout: () -> Unit,
+    onReminderSettings: () -> Unit = {},
+    onWidgetIntro: () -> Unit = {},
     onPaper: () -> Unit,
     onEvaluation: () -> Unit = {},
     onProfile: () -> Unit = {},
@@ -92,9 +94,9 @@ fun SettingsScreen(
     onExportCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     courses: ImmutableList<Course> = persistentListOf(),
     showMessage: (String) -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val settingsUiState by vm.uiState.collectAsStateWithLifecycle()
     val exactAlarmState by vm.exactAlarmState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -119,16 +121,13 @@ fun SettingsScreen(
 
     val showTermStartPicker = remember { mutableStateOf(false) }
     val showTotalWeeksPicker = remember { mutableStateOf(false) }
-    val showRowHeightPicker = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val starVerificationState by vm.starVerification.state.collectAsStateWithLifecycle()
-    val rescheduling by vm.rescheduling.collectAsStateWithLifecycle()
-    val nextReminderSummary by vm.nextReminderSummary.collectAsStateWithLifecycle()
+    val reminderLeadMinutes by vm.reminderLeadMinutes.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         vm.refreshAuth()
         vm.refreshRemoteTerms()
-        vm.refreshNextReminderSummary()
     }
 
     LaunchedEffect(Unit) {
@@ -158,11 +157,9 @@ fun SettingsScreen(
         vm.loadPersonalInfo()
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(title = "课程表设置", scrollBehavior = topAppBarScrollBehavior)
-        },
+    AppPageScaffold(
+        title = "设置",
+        onBack = onBack,
         popupHost = {
             if (showTermStartPicker.value) {
                 DatePickerBottomSheet(
@@ -194,19 +191,6 @@ fun SettingsScreen(
                     },
                 )
             }
-            if (showRowHeightPicker.value) {
-                RowHeightPickerBottomSheet(
-                    show = showRowHeightPicker.value,
-                    title = "课程格子高度（dp）",
-                    initialHeightDp = settingsUiState.scheduleRowHeight,
-                    heightRange = DisplaySettingsPort.MIN_ROW_HEIGHT_DP..DisplaySettingsPort.MAX_ROW_HEIGHT_DP,
-                    onDismissRequest = { showRowHeightPicker.value = false },
-                    onConfirm = { heightDp: Int ->
-                        vm.onScheduleRowHeightChanged(heightDp)
-                        showRowHeightPicker.value = false
-                    },
-                )
-            }
             StarVerificationDialog(
                 show = starVerificationState.showDialog,
                 username = starVerificationState.username,
@@ -216,23 +200,15 @@ fun SettingsScreen(
                 onVerify = { vm.starVerification.verify() },
                 onDismiss = { vm.starVerification.dismissDialog() },
             )
-        }) { paddingValues ->
+        }) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
-                    .padding(
-                        PaddingValues(
-                            top = paddingValues.calculateTopPadding(),
-                            start =
-                                paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                            bottom = 0.dp
-                        )
-                    )
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .collapsibleTopInset(scrollBehavior)
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding =
                 appPageContentPadding(
-                    innerPadding = PaddingValues(),
+                    innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
                     extraStart = 12.dp,
@@ -291,7 +267,7 @@ fun SettingsScreen(
                 outerHorizontalPadding = 0.dp,
                 items = listOf(
                     CardItem("term") {
-                        OverlayDropdownPreference(
+                        GlassDropdownPreference(
                             title = "学期",
                             summary = "用于查询课表和成绩",
                             items = termSelectionUi.items,
@@ -304,7 +280,7 @@ fun SettingsScreen(
                             })
                     },
                     CardItem("campus") {
-                        OverlayDropdownPreference(
+                        GlassDropdownPreference(
                             title = "上课校区",
                             summary = "用于课表时间与作息展示",
                             items = screenUi.campusOptions,
@@ -414,52 +390,6 @@ fun SettingsScreen(
             )
 
             item {
-                SmallTitle(text = "外观")
-            }
-            groupedCardItems(
-                keyPrefix = "settings_appearance",
-                outerBottomPadding = 6.dp,
-                outerHorizontalPadding = 0.dp,
-                items = listOf(
-                    CardItem("theme") {
-                        OverlayDropdownPreference(
-                            title = "主题模式",
-                            summary = "深色/浅色可跟随系统",
-                            items = screenUi.themeOptions,
-                            selectedIndex = settingsUiState.themeMode.coerceIn(0, 2),
-                            onSelectedIndexChange = { index: Int ->
-                                vm.onThemeModeChanged(index)
-                            })
-                    },
-                    CardItem("floatingBar") {
-                        OverlayDropdownPreference(
-                            title = "底栏形式",
-                            summary = "选择底栏的状态",
-                            items = screenUi.floatingBarOptions,
-                            selectedIndex = settingsUiState.floatingBar.coerceIn(0, 2),
-                            onSelectedIndexChange = { index: Int ->
-                                vm.onFloatingBarChanged(index)
-                            }
-                        )
-                    },
-                    CardItem("scheduleRowHeight") {
-                        ArrowPreference(
-                            title = "课程格子高度",
-                            summary = "${settingsUiState.scheduleRowHeight}dp",
-                            onClick = { showRowHeightPicker.value = true })
-                    },
-                    CardItem("background") {
-                        ArrowPreference(
-                            title = "更换背景",
-                            summary = "设置背景图片、模糊度与透明度",
-                            onClick = onChangeBackground
-                        )
-                    },
-
-                ),
-            )
-
-            item {
                 SmallTitle(text = "杂项")
             }
             groupedCardItems(
@@ -467,64 +397,24 @@ fun SettingsScreen(
                 outerBottomPadding = 6.dp,
                 outerHorizontalPadding = 0.dp,
                 items = buildList {
-                    add(CardItem("sync") {
-                        ArrowPreference(
-                            title = "手动刷新课表",
-                            summary = screenUi.syncSummary,
-                            onClick = { vm.triggerSync { onSync() } })
-                    })
-                    add(CardItem("rescheduleReminders") {
-                        ArrowPreference(
-                            title = "重新排提醒",
-                            summary =
-                                when {
-                                    rescheduling -> "重排中..."
-                                    nextReminderSummary.isNotBlank() -> nextReminderSummary
-                                    else -> "按当前课表和考试，重算下一条提醒时间"
-                                },
-                            onClick = {
-                                if (!rescheduling) vm.onRescheduleAllRemindersClicked()
-                            })
-                    })
                     add(CardItem("courseReminder") {
-                        SwitchPreference(
-                            title = "课程提醒",
-                            summary = "上课前16分钟推送本地通知",
-                            checked = settingsUiState.reminderEnabled,
-                            onCheckedChange = { newValue ->
-                                if (newValue) {
-                                    ensureCourseReminderPermission {
-                                        onRequestExactAlarmPermission()
-                                        vm.onReminderEnabledChanged(true)
-                                        vm.scheduleCourseReminder(
-                                            campus = campus,
-                                            termStartMs = termStartMs,
-                                            totalWeeks = totalWeeks
-                                        )
-                                    }
+                        ArrowPreference(
+                            title = "提醒设置",
+                            summary =
+                                if (settingsUiState.reminderEnabled) {
+                                    "已开启，上课前 ${reminderLeadMinutes} 分钟提醒"
                                 } else {
-                                    vm.onReminderEnabledChanged(false)
-                                }
-                            })
+                                    "下节课与考试提醒、提前时间"
+                                },
+                            onClick = onReminderSettings,
+                        )
                     })
-                    add(CardItem("examReminder") {
-                        SwitchPreference(
-                            title = "考试提醒",
-                            summary = "考试前16分钟推送本地通知",
-                            checked = settingsUiState.examReminderEnabled,
-                            onCheckedChange = { newValue ->
-                                if (newValue) {
-                                    ensureExamReminderPermission {
-                                        onRequestExactAlarmPermission()
-                                        vm.onExamReminderEnabledChanged(true)
-                                        vm.scheduleExamReminder(
-                                            selectedTerm = settingsUiState.selectedTerm
-                                        )
-                                    }
-                                } else {
-                                    vm.onExamReminderEnabledChanged(false)
-                                }
-                            })
+                    add(CardItem("widgetIntro") {
+                        ArrowPreference(
+                            title = "桌面小部件",
+                            summary = "预览、添加与自定义桌面小组件",
+                            onClick = onWidgetIntro,
+                        )
                     })
                     if (exactAlarmState != ExactAlarmPermissionState.GRANTED) {
                         add(CardItem("exactAlarm") {
@@ -540,15 +430,6 @@ fun SettingsScreen(
                             )
                         })
                     }
-                    add(CardItem("log") {
-                        SwitchPreference(
-                            title = "开启日志",
-                            summary = "关于页面连续点击五次应用版本进入日志",
-                            checked = settingsUiState.logEnabled,
-                            onCheckedChange = {
-                                vm.onLogEnabledChanged(it)
-                            })
-                    })
                 },
             )
             item {

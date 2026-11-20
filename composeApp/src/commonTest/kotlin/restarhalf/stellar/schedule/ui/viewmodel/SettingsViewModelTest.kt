@@ -26,16 +26,15 @@ import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
+import restarhalf.stellar.schedule.domain.port.ReminderPermissionPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.ReminderScheduleResult
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
-import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
@@ -44,7 +43,7 @@ import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchSemesterIdsUseCase
-import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.LoadClassroomLabelPreviewUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
@@ -65,8 +64,8 @@ class SettingsViewModelTest {
     private val displaySettings = mock<DisplaySettingsPort>(MockMode.autofill)
     private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
     private val exactAlarmPermission = mock<ExactAlarmPermissionPort>(MockMode.autofill)
+    private val reminderPermission = mock<ReminderPermissionPort>(MockMode.autofill)
     private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
-    private val logSettings = mock<LogSettingsPort>(MockMode.autofill)
     private val userProfile = mock<UserProfilePort>(MockMode.autofill)
     private val deviceSettings = mock<DeviceSettingsPort>(MockMode.autofill)
     private val courseRepository = mock<CourseRepository>(MockMode.autofill)
@@ -75,17 +74,13 @@ class SettingsViewModelTest {
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val papersPort = mock<PapersPort>(MockMode.autofill)
-    private val timetable = mock<TimetablePort>(MockMode.autofill)
 
     private val mainDispatcher = UnconfinedTestDispatcher()
 
     private val showFlow = MutableStateFlow(true)
     private val reminderFlow = MutableStateFlow(false)
     private val examReminderFlow = MutableStateFlow(false)
-    private val themeFlow = MutableStateFlow(0)
-    private val floatingBarFlow = MutableStateFlow(0)
     private val termFlow = MutableStateFlow("")
-    private val logFlow = MutableStateFlow(false)
     private val rowHeightFlow = MutableStateFlow(56)
     private val tokenFlow = MutableStateFlow("")
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
@@ -94,10 +89,7 @@ class SettingsViewModelTest {
         every { displaySettings.observeShowNonCurrentWeek() } returns showFlow
         every { reminderSettings.observeCourseReminderEnabled() } returns reminderFlow
         every { reminderSettings.observeExamReminderEnabled() } returns examReminderFlow
-        every { displaySettings.observeThemeMode() } returns themeFlow
-        every { displaySettings.observeFloatingBar() } returns floatingBarFlow
         every { termSettings.observeSelectedTerm() } returns termFlow
-        every { logSettings.observeLogEnabled() } returns logFlow
         every { displaySettings.observeScheduleRowHeight() } returns rowHeightFlow
         every { termSettings.observeCachedSemesterIds() } returns flowOf(emptyList())
         every { deviceSettings.getStarVerified() } returns false
@@ -112,8 +104,8 @@ class SettingsViewModelTest {
             displaySettings = displaySettings,
             reminderSettings = reminderSettings,
             exactAlarmPermission = exactAlarmPermission,
+            reminderPermission = reminderPermission,
             termSettings = termSettings,
-            logSettings = logSettings,
             userProfile = userProfile,
             deviceSettings = deviceSettings,
             cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
@@ -131,23 +123,8 @@ class SettingsViewModelTest {
                 ),
                 examReminder,
             ),
-            rescheduleAllReminders = RescheduleAllRemindersUseCase(
-                settings = reminderSettings,
-                courseRepository = courseRepository,
-                timetable = timetable,
-                courseReminder = courseReminder,
-                examReminder = examReminder,
-                collectReminderExaminations = CollectReminderExaminationsUseCase(
-                    FetchExaminationsUseCase(
-                        authWorkflow, academic, examRepository, auth, termSettings,
-                    ),
-                    examRepository,
-                ),
-                cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
-                cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
-            ),
             courseReminderPort = courseReminder,
-            examReminderPort = examReminder,
+            loadLabelPreview = LoadClassroomLabelPreviewUseCase(courseRepository),
             verifyGitHubStar = VerifyGitHubStarUseCase(papersPort, deviceSettings),
         )
     }
@@ -195,18 +172,15 @@ class SettingsViewModelTest {
 
     @Test
     fun `uiState反映偏好与学期设置`() = runTest {
-        themeFlow.value = 1
         rowHeightFlow.value = 80
         termFlow.value = "2025-1"
-        logFlow.value = true
         val vm = makeViewModel()
         subscribeUi(vm)
 
-        val state = awaitState(vm) { it.themeMode == 1 }
+        val state = awaitState(vm) { it.scheduleRowHeight == 80 }
 
         assertEquals(80, state.scheduleRowHeight)
         assertEquals("2025-1", state.selectedTerm)
-        assertEquals(true, state.logEnabled)
         assertEquals(true, state.showNonCurrentWeek)
     }
 
@@ -233,15 +207,6 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `onFloatingBarChanged透传`() = runTest {
-        val vm = makeViewModel()
-
-        vm.onFloatingBarChanged(1)
-
-        verify(VerifyMode.exactly(1)) { displaySettings.setFloatingBar(1) }
-    }
-
-    @Test
     fun `onShowNonCurrentWeekChanged透传`() = runTest {
         val vm = makeViewModel()
 
@@ -257,15 +222,6 @@ class SettingsViewModelTest {
         vm.onScheduleRowHeightChanged(72)
 
         verify(VerifyMode.exactly(1)) { displaySettings.setScheduleRowHeight(72) }
-    }
-
-    @Test
-    fun `onLogEnabledChanged透传`() = runTest {
-        val vm = makeViewModel()
-
-        vm.onLogEnabledChanged(true)
-
-        verify(VerifyMode.exactly(1)) { logSettings.setLogEnabled(true) }
     }
 
     @Test
@@ -290,28 +246,7 @@ class SettingsViewModelTest {
 
         verify(VerifyMode.exactly(1)) { reminderSettings.setCourseReminderEnabled(false) }
         verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
-    }
-
-    @Test
-    fun `开启考试提醒只写设置不取消提醒`() = runTest {
-        val vm = makeViewModel()
-
-        vm.onExamReminderEnabledChanged(true)
-        advanceMain()
-
-        verify(VerifyMode.exactly(1)) { reminderSettings.setExamReminderEnabled(true) }
-        verify(VerifyMode.not) { examReminder.cancelAll() }
-    }
-
-    @Test
-    fun `关闭考试提醒并取消考试提醒`() = runTest {
-        val vm = makeViewModel()
-
-        vm.onExamReminderEnabledChanged(false)
-        withContext(Dispatchers.Default) { delay(100) }
-        advanceMain()
-
-        verify(VerifyMode.exactly(1)) { reminderSettings.setExamReminderEnabled(false) }
+        // 考试提醒沿用课程提醒：关总开关时一并取消
         verify(VerifyMode.exactly(1)) { examReminder.cancelAll() }
     }
 
@@ -370,7 +305,6 @@ class SettingsViewModelTest {
         advanceMain()
 
         assertEquals(listOf("考试提醒没排上，稍后会自动重试"), messages)
-        verify(VerifyMode.not) { reminderSettings.setExamReminderEnabled(false) }
     }
 
     @Test
@@ -463,6 +397,19 @@ class SettingsViewModelTest {
 
         val state = awaitState(vm) { it.remoteTermItems.isNotEmpty() }
         assertEquals(listOf("2026-1", "2025-2"), state.remoteTermItems)
+    }
+
+    @Test
+    fun `uiState尚未就绪时刷新也能按已存token填充`() = runTest {
+        tokenFlow.value = "tok"
+        everySuspend { academic.fetchSemesterIds() } returns listOf("2026-1")
+        val vm = makeViewModel()
+
+        vm.refreshRemoteTerms()
+        subscribeUi(vm)
+
+        val state = awaitState(vm) { it.remoteTermItems.isNotEmpty() }
+        assertEquals(listOf("2026-1"), state.remoteTermItems)
     }
 
     @Test
