@@ -353,10 +353,17 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.androidx.navigationevent)
-                implementation(libs.miuix.ui)
-                implementation(libs.miuix.blur)
-                implementation(libs.miuix.preference)
-                implementation(libs.miuix.nav)
+                implementation(project(":miuix"))
+                implementation(project(":ui-components"))
+                implementation(project(":picture-selector"))
+                implementation(libs.miuix.core)
+                implementation("top.yukonga.miuix.kmp:miuix-blur:0.9.4") {
+                    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-ui")
+                }
+                implementation("top.yukonga.miuix.kmp:miuix-nav:0.9.4") {
+                    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-ui")
+                }
+                implementation(libs.miuix.squircle)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.network.ktor3)
                 implementation(libs.markdown.renderer)
@@ -381,11 +388,10 @@ kotlin {
             }
         }
         androidMain.dependencies {
-            implementation(libs.androidx.work.runtime.ktx)
-            implementation(libs.androidx.glance.appwidget)
-            implementation(libs.androidx.glance)
             implementation(libs.androidx.exifinterface)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.shizuku.api)
+            implementation(libs.shizuku.provider)
         }
 
         iosMain.dependencies {
