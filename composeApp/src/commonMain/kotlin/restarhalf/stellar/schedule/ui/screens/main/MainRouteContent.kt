@@ -20,11 +20,11 @@ import restarhalf.stellar.schedule.ui.navigation.LocalMainPagerState
 import restarhalf.stellar.schedule.ui.navigation.LocalNavigator
 import restarhalf.stellar.schedule.ui.navigation.MainPagerState
 import restarhalf.stellar.schedule.ui.navigation.Screen
+import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
 import restarhalf.stellar.schedule.ui.navigation.rootTabAt
 import restarhalf.stellar.schedule.ui.screens.EMSScreen
 import restarhalf.stellar.schedule.ui.screens.HomeScreen
 import restarhalf.stellar.schedule.ui.screens.ScheduleScreen
-import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.screens.pe.PEScoreScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
@@ -44,9 +44,7 @@ fun MainRouteContent(
     vm: AppViewModel,
     announcementVm: AnnouncementViewModel,
     runSync: suspend () -> Unit,
-    ensureNotificationPermission: (onGranted: () -> Unit) -> Unit,
-    ensureExactAlarmPermission: () -> Unit = {},
-    saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
+    onChangeBackground: () -> Unit = {},
     showMessage: (String) -> Unit = {},
     canSaveImage: Boolean = false,
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
@@ -84,8 +82,8 @@ fun MainRouteContent(
                     campus = appUiState.campus,
                     termStartMs = appUiState.termStartMs,
                     totalWeeks = appUiState.totalWeeks,
-                    componentsAlpha = bgUiState.componentsAlpha,
-                    hasBackground = bgUiState.backgroundImageUri != null
+                    componentsAlpha = LocalComponentsAlpha.current,
+                    hasBackground = bgUiState.wallpaper != null
                 )
             }
 
@@ -115,9 +113,11 @@ fun MainRouteContent(
                     onSaveImage = saveImage,
                     sharerNickname = personalInfo.nickname,
                     sharerAvatarUri = personalInfo.avatarUri,
-                    backgroundImageUri = bgState.backgroundImageUri,
+                    backgroundImageUri = bgState.wallpaperPath,
                     backgroundAlpha = bgState.backgroundAlpha,
                     backgroundBlur = bgState.backgroundBlur,
+                    backgroundBrightness = bgState.backgroundBrightness,
+                    onCustomize = onChangeBackground,
                 )
             }
 
@@ -130,6 +130,7 @@ fun MainRouteContent(
                     onAddExam = { navigator.push(Screen.ExamEdit()) },
                     onEditExam = { examId -> navigator.push(Screen.ExamEdit(examinationId = examId)) },
                     onNavigateToElectiveCredit = { navigator.push(Screen.ElectiveCredit) },
+                    onCustomize = onChangeBackground,
                 )
             }
 
@@ -144,40 +145,8 @@ fun MainRouteContent(
                     onLogin = { navigator.push(Screen.PELogin) },
                     onAppointment = { navigator.push(Screen.PEAppointment) },
                     onFreeApply = { navigator.push(Screen.PEFreeApply) },
+                    onCustomize = onChangeBackground,
                     jwxtAuthProfile = settingsUiState.profile
-                )
-            }
-
-            Screen.Settings -> {
-                val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
-
-                val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
-                SettingsScreen(
-                    vm = settingsVm,
-                    syncUiState = syncUiState,
-                    campus = appUiState.campus,
-                    termStartMs = appUiState.termStartMs,
-                    totalWeeks = appUiState.totalWeeks,
-                    onSync = runSync,
-                    onLogout = { vm.logout() },
-                    ensureCourseReminderPermission = ensureNotificationPermission,
-                    ensureExamReminderPermission = ensureNotificationPermission,
-                    onRequestExactAlarmPermission = ensureExactAlarmPermission,
-                    onCampusChange = { campus -> vm.onCampusChanged(campus) },
-                    onTermStartChange = { termStartMs -> vm.onTermStartMsChanged(termStartMs) },
-                    onTotalWeeksChange = { totalWeeks -> vm.onTotalWeeksChanged(totalWeeks) },
-                    onChangeBackground = { navigator.push(Screen.ChangeBackground) },
-                    onAbout = { navigator.push(Screen.About) },
-                    onPaper = { navigator.push(Screen.Papers) },
-                    onEvaluation = { navigator.push(Screen.Evaluation) },
-                    onCourseSelection = { navigator.push(Screen.CourseSelection) },
-                    onCourseEnroll = { navigator.push(Screen.CourseEnroll) },
-                    onLogin = { navigator.push(Screen.JwxtLogin) },
-                    onProfile = { navigator.push(Screen.Profile) },
-                    isPeLoggedIn = isPeLoggedIn,
-                    onExportCsv = saveCsv,
-                    courses = courses,
-                    showMessage = showMessage,
                 )
             }
 

@@ -24,16 +24,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -43,7 +42,6 @@ fun AnnouncementDetailScreen(
     onBack: () -> Unit,
     onImageClick: (String) -> Unit = {},
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
@@ -63,41 +61,19 @@ fun AnnouncementDetailScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "公告详情",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                    ) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回",
-                        )
-                    }
-                },
-            )
-        },
-    ) { paddingValues ->
+    AppPageScaffold(
+        title = "公告详情",
+        onBack = onBack,
+    ) { scrollBehavior, paddingValues ->
         val appScaffoldPadding = LocalAppScaffoldPadding.current
         LazyColumn(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(
-                        PaddingValues(
-                            top = paddingValues.calculateTopPadding(),
-                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                            bottom = paddingValues.calculateBottomPadding(),
-                        ),
-                    )
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .collapsibleTopInset(scrollBehavior)
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = appScaffoldPadding,
                 extraTop = 12.dp,
                 extraStart = 12.dp,

@@ -32,4 +32,15 @@ class BuildHomeSurfaceUiUseCaseTest {
         assertEquals(BuildHomeSurfaceUiUseCase.HeaderBackgroundMode.PRIMARY_SOLID, ui.headerBackgroundMode)
         assertEquals(1f, ui.contentSurfaceAlpha)
     }
+
+    @Test
+    fun `无壁纸时组件透明度强制为1`() {
+        assertEquals(1f, resolveComponentsAlpha(hasWallpaper = false, componentsAlpha = 0.3f))
+    }
+
+    @Test
+    fun `有壁纸时组件透明度收敛到0到1`() {
+        assertEquals(0f, resolveComponentsAlpha(hasWallpaper = true, componentsAlpha = -1f))
+        assertEquals(1f, resolveComponentsAlpha(hasWallpaper = true, componentsAlpha = 2f))
+    }
 }

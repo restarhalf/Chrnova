@@ -37,7 +37,6 @@ fun AdBanner(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable {
                     when {

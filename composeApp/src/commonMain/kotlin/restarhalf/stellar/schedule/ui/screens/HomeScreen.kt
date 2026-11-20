@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,13 +19,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.haooz.softglass.shape.ContinuousRoundedRectangle
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.ui.model.home.BuildHomeSurfaceUiUseCase
+import restarhalf.stellar.schedule.ui.components.LocalGlassRedrawSignal
+import restarhalf.stellar.schedule.ui.components.LocalSoftGlassSurface
 import restarhalf.stellar.schedule.ui.components.screen.home.HomeExamSection
 import restarhalf.stellar.schedule.ui.components.screen.home.HomePeriodSection
 import restarhalf.stellar.schedule.ui.icons.Notifications
@@ -139,13 +147,41 @@ fun HomeScreen(
                 }
             }
 
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding() + 140.dp)
-                        .squircleBackground(colors.surface.copy(alpha = surfaceUi.contentSurfaceAlpha), 24.dp)
-            ) {
+            val surfaceAlpha = surfaceUi.contentSurfaceAlpha
+            val surfaceShape = remember { ContinuousRoundedRectangle(24.dp) }
+            // 首页大卡采壁纸金字塔（静态采样源，整页共享一份）：
+            // 大卡本身只在主 pager 切 tab 时整层平移，由 LocalGlassRedrawSignal 驱动跟手。
+            val softGlass = LocalSoftGlassSurface.current
+            val glassRedraw = LocalGlassRedrawSignal.current
+            val density = LocalDensity.current
+            val glassRadiusPx = remember(density) { with(density) { 24.dp.toPx() } }
+            val glassOrigin = remember { arrayOf(Offset.Zero) }
+            val glassModifier =
+                remember(softGlass, glassRadiusPx, density, glassRedraw) {
+                    softGlass?.modifier(
+                        density = density,
+                        origin = { glassOrigin[0] },
+                        radiusPx = glassRadiusPx,
+                        redraw = glassRedraw,
+                    )
+                }
+            val cardSurface = colors.surface.copy(alpha = surfaceAlpha)
+            val cardModifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding() + 140.dp)
+                    .then(
+                        if (glassModifier != null && surfaceAlpha < 0.999f) {
+                            // 玻璃在下、卡面在上：surfaceAlpha < 1，折射与边光从卡面下透出来
+                            Modifier
+                                .onGloballyPositioned { glassOrigin[0] = it.positionInWindow() }
+                                .then(glassModifier)
+                                .background(cardSurface, surfaceShape)
+                        } else {
+                            Modifier.squircleBackground(cardSurface, 24.dp)
+                        },
+                    )
+            Box(modifier = cardModifier) {
                 Column(
                     modifier =
                         Modifier
@@ -182,10 +218,15 @@ fun HomeScreen(
                         .padding(top = paddingValues.calculateTopPadding()+20.dp, end = 20.dp),
                 contentAlignment = Alignment.TopEnd,
             ) {
-                HomeNotificationButton(
-                    unreadCount = announcementUiState.unreadCount,
-                    onClick = onAnnouncementClick,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    HomeNotificationButton(
+                        unreadCount = announcementUiState.unreadCount,
+                        onClick = onAnnouncementClick,
+                    )
+                }
             }
         }
     }

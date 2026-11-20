@@ -12,17 +12,14 @@ class BuildHomeSurfaceUiUseCase {
         val contentSurfaceAlpha: Float,
     )
 
-    operator fun invoke(hasBackground: Boolean, componentsAlpha: Float): SurfaceUi {
-        return if (hasBackground) {
-            SurfaceUi(
-                headerBackgroundMode = HeaderBackgroundMode.IMAGE_OVERLAY,
-                contentSurfaceAlpha = componentsAlpha.coerceIn(0f, 1f)
-            )
-        } else {
-            SurfaceUi(
-                headerBackgroundMode = HeaderBackgroundMode.PRIMARY_SOLID,
-                contentSurfaceAlpha = 1f
-            )
-        }
-    }
+    operator fun invoke(hasBackground: Boolean, componentsAlpha: Float): SurfaceUi =
+        SurfaceUi(
+            headerBackgroundMode =
+                if (hasBackground) HeaderBackgroundMode.IMAGE_OVERLAY
+                else HeaderBackgroundMode.PRIMARY_SOLID,
+            contentSurfaceAlpha = resolveComponentsAlpha(hasBackground, componentsAlpha),
+        )
 }
+
+fun resolveComponentsAlpha(hasWallpaper: Boolean, componentsAlpha: Float): Float =
+    if (hasWallpaper) componentsAlpha.coerceIn(0f, 1f) else 1f

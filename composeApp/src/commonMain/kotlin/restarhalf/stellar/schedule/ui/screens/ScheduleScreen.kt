@@ -1,22 +1,33 @@
 package restarhalf.stellar.schedule.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,6 +37,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,44 +47,73 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.drawText
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.haooz.softglass.backdrop.backdrops.layerBackdrop as glassLayerBackdrop
+import com.haooz.softglass.backdrop.backdrops.rememberCombinedBackdrop
+import com.haooz.softglass.backdrop.backdrops.rememberLayerBackdrop as rememberGlassLayerBackdrop
+import com.haooz.softglass.shape.ContinuousRoundedRectangle
+import kotlin.math.abs
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import restarhalf.stellar.schedule.domain.policy.effectiveCoursesForWeek
 import restarhalf.stellar.schedule.domain.policy.isCourseActiveInWeek
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
+import restarhalf.stellar.schedule.ui.components.BackToNowFloatingButton
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
+import restarhalf.stellar.schedule.ui.components.LocalWallpaperBackdrop
+import restarhalf.stellar.schedule.ui.components.sheetContentBottomInset
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseCard
 import restarhalf.stellar.schedule.ui.components.screen.schedule.CourseDetailItem
 import restarhalf.stellar.schedule.ui.components.screen.schedule.TransClassDialog
-import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekHeaderRow
 import restarhalf.stellar.schedule.ui.components.screen.schedule.WeekPickerSheet
+import restarhalf.stellar.schedule.ui.components.wallpaperGlass
+import restarhalf.stellar.schedule.ui.components.topbar.AppMoreMenuItem
+import restarhalf.stellar.schedule.ui.components.topbar.MorePopupMenu
+import restarhalf.stellar.schedule.ui.components.topbar.LiquidGlassDropdownShadowPadding
+import restarhalf.stellar.schedule.ui.components.topbar.LiquidTopBarButton
+import restarhalf.stellar.schedule.ui.components.topbar.ScheduleTopBar
+import restarhalf.stellar.schedule.ui.components.topbar.scheduleContentTopPadding
 import restarhalf.stellar.schedule.ui.icons.Add
+import restarhalf.stellar.schedule.ui.icons.Background
+import restarhalf.stellar.schedule.ui.icons.FastForward
+import restarhalf.stellar.schedule.ui.icons.Refresh
 import restarhalf.stellar.schedule.ui.icons.Share
 import restarhalf.stellar.schedule.ui.mapper.CourseRenderItem
 import restarhalf.stellar.schedule.ui.share.ShareTimetableDialog
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
@@ -80,13 +121,12 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.layout.rememberSharedScrollBehavior
+import top.yukonga.miuix.kmp.overlay.BlurBottomSheet
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -113,9 +153,27 @@ fun ScheduleScreen(
     backgroundImageUri: String? = null,
     backgroundAlpha: Float = 1f,
     backgroundBlur: Float = 0f,
+    backgroundBrightness: Float = 0f,
+    onCustomize: () -> Unit = {},
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
+    val topAppBarScrollBehavior = rememberSharedScrollBehavior()
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val contentTopPadding = scheduleContentTopPadding(statusBarHeight)
+    val wallpaperBackdrop = LocalWallpaperBackdrop.current
+    val surfaceColor = MiuixTheme.colorScheme.surface
+    val hasWallpaper = wallpaperBackdrop != null
+    // 使用默认 contentOnlyCapture = true，无壁纸时把底色放到 layerBackdrop 右侧 .background(surfaceColor)，
+    // 避免整张课表在翻周重录期间画两遍。
+    val barContentBackdrop = rememberGlassLayerBackdrop()
+    val chromeBackdrop =
+        if (wallpaperBackdrop != null) {
+            rememberCombinedBackdrop(wallpaperBackdrop, barContentBackdrop)
+        } else {
+            barContentBackdrop
+        }
+    val topBarSampleBackdrop = rememberGlassLayerBackdrop()
+    val overlayGlassBackdrop = rememberCombinedBackdrop(chromeBackdrop, topBarSampleBackdrop)
     val pageBottomPadding =
         appPageContentPadding(
             innerPadding = PaddingValues(),
@@ -141,6 +199,17 @@ fun ScheduleScreen(
     var selectedEmptyCell by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var showWeekPicker by remember { mutableStateOf(false) }
     var showShare by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
+    val moreMaterialAlpha = remember { mutableFloatStateOf(0f) }
+    val moreSlotCoordinates = remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val moreMenuFraction = remember { Animatable(0f) }
+    var topBarSampled by remember { mutableStateOf(false) }
+    if (showMoreMenu && !topBarSampled) topBarSampled = true
+    LaunchedEffect(showMoreMenu) {
+        if (showMoreMenu) return@LaunchedEffect
+        snapshotFlow { moreMenuFraction.value }.first { it <= 0.5f }
+        topBarSampled = false
+    }
     var revertChoice by remember {
         mutableStateOf<Pair<restarhalf.stellar.schedule.domain.model.Course, List<restarhalf.stellar.schedule.domain.model.Course>>?>(null)
     }
@@ -148,6 +217,7 @@ fun ScheduleScreen(
 
     LaunchedEffect(pagerState.currentPage) {
         selectedEmptyCell = null
+        topAppBarScrollBehavior.state.contentOffset = 0f
     }
 
     LaunchedEffect(syncUiState) {
@@ -169,10 +239,21 @@ fun ScheduleScreen(
     val rowHeight = scheduleUiState.scheduleRowHeight.dp
     val rowGap = 1.dp
     val restHeight = 24.dp
-    val cellInset = 0.5.dp
-    val restBarTextMeasurer = rememberTextMeasurer()
-    val footnoteStyle = MiuixTheme.textStyles.footnote1
 
+    // 采样层录制指纹：结构量一变强制重录一帧；滚动 / 翻页中每帧续录。
+    // ⚠ 只给 recordKey 不给 mustRecord 会让采样冻结 —— 屏幕上内容在动、录进层里的像素不动，
+    // 玻璃就成了贴在屏上的旧照片。两者必须成对提供。
+    val contentRecordKey = remember(currentWeek, isDarkMode, courses, rowHeight, dayCount) {
+        listOf(currentWeek, isDarkMode, courses, rowHeight, dayCount)
+    }
+    val contentMustRecord: () -> Boolean =
+        remember(pagerState) {
+            {
+                pagerState.isScrollInProgress ||
+                    abs(pagerState.currentPageOffsetFraction) > 0.001f
+            }
+        }
+    val cellInset = 0.5.dp
     val effectiveCoursesCache =
         remember(courses) { mutableMapOf<Int, List<restarhalf.stellar.schedule.domain.model.Course>>() }
 
@@ -233,54 +314,6 @@ fun ScheduleScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = {
-            Box {
-                AppPageTopBar(
-                    title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        if (currentWeek != uiState.detectedWeekInfo.week) {
-                            IconButton(onClick = {
-                                animateToWeek(uiState.detectedWeekInfo.week)
-                            }) {
-                                Text(text = "回到当前周")
-                            }
-                        }
-                    },
-                    actions = {
-                        if (syncUiState is SyncUiState.Loading) {
-                            Box(
-                                modifier = Modifier.size(40.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    size = 18.dp,
-                                    strokeWidth = 2.dp,
-                                )
-                            }
-                        }
-                        IconButton(onClick = {showShare=true}){
-                            Icon(imageVector = Share, contentDescription = "分享")
-                        }
-                    },
-                )
-
-                Box(
-                    modifier = Modifier.matchParentSize(),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(150.dp)
-                            .fillMaxHeight()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { showWeekPicker = true }
-                    )
-                }
-            }
-        },
         popupHost = {
             if (showShare) {
                 val shareWeekHeaderUi =
@@ -328,6 +361,7 @@ fun ScheduleScreen(
                     backgroundImageUri = backgroundImageUri,
                     backgroundAlpha = backgroundAlpha,
                     backgroundBlur = backgroundBlur,
+                    backgroundBrightness = backgroundBrightness,
                 )
             }
             WeekPickerSheet(
@@ -400,8 +434,9 @@ fun ScheduleScreen(
             }
             val conflicts = scheduleUiState.transConflictUiState.conflicts
             if (scheduleUiState.transConflictUiState.show) {
-                WindowDialog(
+                OverlayDialog(
                     show = scheduleUiState.transConflictUiState.show,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     modifier = Modifier,
                     title = "调课冲突",
                     titleColor = DialogDefaults.titleColor(),
@@ -483,86 +518,74 @@ fun ScheduleScreen(
             val dc = scheduleUiState.detailSheetUiState.courses
             if (scheduleUiState.detailSheetUiState.show && dc.isNotEmpty()) {
 
-                OverlayBottomSheet(
+                BlurBottomSheet(
                     show = scheduleUiState.detailSheetUiState.show,
-                    modifier = Modifier,
                     title = "课程详情",
-                    startAction = null,
-                    endAction = null,
-                    backgroundColor = BottomSheetDefaults.backgroundColor(),
-                    enableWindowDim = true,
-                    cornerRadius = BottomSheetDefaults.cornerRadius,
-                    sheetMaxWidth = BottomSheetDefaults.maxWidth,
+                    dimBackground = true,
+                    glassBackdrop = LocalLiquidGlassBackdrop.current,
                     onDismissRequest = {
                         vm.closeDetailSheet()
                     },
-                    onDismissFinished = null,
-                    outsideMargin = BottomSheetDefaults.outsideMargin,
-                    insideMargin = BottomSheetDefaults.insideMargin,
-                    defaultWindowInsetsPadding = true,
-                    dragHandleColor = colors.background,
-                    allowDismiss = true,
-                    enableNestedScroll = true,
-                    renderInRootScaffold = true,
-                    content = {
-                        LazyColumn {
-                            items(dc.size, key = { dc[it].id }) { index ->
-                                val c = dc[index]
+                ) {
+                    LazyColumn(modifier = Modifier.padding(horizontal = 24.dp)) {
+                        item { Spacer(Modifier.height(58.dp)) }
+                        items(dc.size, key = { dc[it].id }) { index ->
+                            val c = dc[index]
 
-                                val isCurrent = isCourseActiveInWeek(c, currentWeek)
-                                val detailUi = remember(c.id, currentWeek, timetable) {
-                                    vm.buildCourseDetailUi(c, currentWeek, timetable)
-                                }
+                            val isCurrent = isCourseActiveInWeek(c, currentWeek)
+                            val detailUi = remember(c.id, currentWeek, timetable) {
+                                vm.buildCourseDetailUi(c, currentWeek, timetable)
+                            }
 
-                                CourseDetailItem(
-                                    modifier =
-                                        Modifier.animateItem(
-                                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                        ),
-                                    course = c,
-                                    surfaceSoft = surfaceSoft,
-                                    textPrimary = textPrimary,
-                                    textSecondary = textSecondary,
-                                    detailUi = detailUi,
-                                    isCurrent = isCurrent,
-                                    onEditLabCourse = { id ->
-                                        vm.closeDetailSheet()
-                                        onEditLabCourse(id)
-                                    },
-                                    onTransCourse = { courseToTrans ->
-                                        vm.openTransDialog(courseToTrans, currentWeek)
-                                        vm.closeDetailSheet()
-                                    },
-                                    onRevertTrans = { id ->
-                                        val target = dc.firstOrNull { it.id == id }
-                                            ?: courses.firstOrNull { it.id == id }
-                                        if (target != null) {
-                                            val group = vm.buildTransGroup(courses, target)
-                                            if (group.size > 1) {
-                                                revertChoice = target to group
-                                            } else {
-                                                vm.closeDetailSheet()
-                                                scope.launch {
-                                                    val deleted = vm.deleteCourse(target)
-                                                    if (!deleted) {
-                                                        showMessage("撤销调课失败，请重试")
-                                                    }
+                            CourseDetailItem(
+                                modifier =
+                                    Modifier.animateItem(
+                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                    ),
+                                course = c,
+                                surfaceSoft = surfaceSoft,
+                                textPrimary = textPrimary,
+                                textSecondary = textSecondary,
+                                detailUi = detailUi,
+                                isCurrent = isCurrent,
+                                onEditLabCourse = { id ->
+                                    vm.closeDetailSheet()
+                                    onEditLabCourse(id)
+                                },
+                                onTransCourse = { courseToTrans ->
+                                    vm.openTransDialog(courseToTrans, currentWeek)
+                                    vm.closeDetailSheet()
+                                },
+                                onRevertTrans = { id ->
+                                    val target = dc.firstOrNull { it.id == id }
+                                        ?: courses.firstOrNull { it.id == id }
+                                    if (target != null) {
+                                        val group = vm.buildTransGroup(courses, target)
+                                        if (group.size > 1) {
+                                            revertChoice = target to group
+                                        } else {
+                                            vm.closeDetailSheet()
+                                            scope.launch {
+                                                val deleted = vm.deleteCourse(target)
+                                                if (!deleted) {
+                                                    showMessage("撤销调课失败，请重试")
                                                 }
                                             }
                                         }
-                                    })
-                            }
+                                    }
+                                })
                         }
-
-                        Spacer(Modifier.height(25.dp))
-                    })
+                        item { Spacer(Modifier.height(sheetContentBottomInset())) }
+                    }
+                }
             }
 
             val choice = revertChoice
             if (choice != null) {
                 val (target, group) = choice
-                WindowDialog(
+                OverlayDialog(
                     show = true,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     modifier = Modifier,
                     title = "撤销调课",
                     titleColor = DialogDefaults.titleColor(),
@@ -621,152 +644,162 @@ fun ScheduleScreen(
                     .fillMaxSize()
                     .padding(
                         PaddingValues(
-                            top = paddingValues.calculateTopPadding(),
                             start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                             end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
                             bottom = 0.dp,
                         )
                     )
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                val weekHeaderUi =
-                    remember(
-                        currentWeek,
-                        uiState.detectedWeekInfo.diffDays,
-                        uiState.detectedWeekInfo.week,
-                        termStartMs,
-                        dayCount
-                    ) {
-                        vm.buildWeekHeaderUi(
-                            currentWeek = currentWeek,
-                            detectedDiffDays = uiState.detectedWeekInfo.diffDays,
-                            detectedWeek = uiState.detectedWeekInfo.week,
-                            termStartMs = termStartMs,
-                            dayCount = dayCount
-                        )
-                    }
-
-                Box(
-                    modifier =
-                        Modifier
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
-                            .padding(vertical = 4.dp)
+            val weekHeaderUi =
+                remember(
+                    currentWeek,
+                    uiState.detectedWeekInfo.diffDays,
+                    uiState.detectedWeekInfo.week,
+                    termStartMs,
+                    dayCount
                 ) {
-                    WeekHeaderRow(
-                        ui = weekHeaderUi, primary = primary, textSecondary = textSecondary
+                    vm.buildWeekHeaderUi(
+                        currentWeek = currentWeek,
+                        detectedDiffDays = uiState.detectedWeekInfo.diffDays,
+                        detectedWeek = uiState.detectedWeekInfo.week,
+                        termStartMs = termStartMs,
+                        dayCount = dayCount
                     )
                 }
 
-                HorizontalPager(
-                    state = pagerState,
+            // 首帧仅组合当前周缩短冷启动，80ms 后再静默预热左右邻周，避免翻周首帧阻塞组合。
+            var scheduleBeyondPageCount by remember(pagerState) { mutableIntStateOf(0) }
+            LaunchedEffect(pagerState) {
+                delay(80.milliseconds)
+                scheduleBeyondPageCount = 1
+            }
+
+            val density = LocalDensity.current
+            val rowHeightPx = with(density) { rowHeight.toPx() }
+            val rowGapPx = with(density) { rowGap.toPx() }
+            val restHeightPx = with(density) { restHeight.toPx() }
+            val selectedCellProvider = remember { { selectedEmptyCell } }
+            val currentPageProvider = remember(pagerState) { { pagerState.currentPage } }
+
+            HorizontalPager(
+                state = pagerState,
+                beyondViewportPageCount = scheduleBeyondPageCount,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .glassLayerBackdrop(
+                        backdrop = barContentBackdrop,
+                        recordKey = contentRecordKey,
+                        mustRecord = contentMustRecord,
+                    )
+                    .then(if (!hasWallpaper) Modifier.background(surfaceColor) else Modifier),
+            ) { page: Int ->
+                val actualWeek = vm.pageToWeek(page = page, includeWeek0 = uiState.includeWeek0)
+                val weekCourses = effectiveCoursesCache.getOrPut(actualWeek) {
+                    effectiveCoursesForWeek(all = courses, week = actualWeek)
+                }
+
+                val pageRenderUi =
+                    remember(
+                        weekCourses,
+                        page,
+                        scheduleUiState.showNonCurrentWeek,
+                        scheduleUiState.scheduleRowHeight,
+                        isDarkMode,
+                        mutedCourseColor,
+                        mutedTitleColor,
+                        mutedSubColor,
+                        cellInset,
+                    ) {
+                        vm.buildPageRenderUi(
+                            courses = courses,
+                            page = page,
+                            includeWeek0 = uiState.includeWeek0,
+                            dayCount = dayCount,
+                            showNonCurrentWeek = scheduleUiState.showNonCurrentWeek,
+                            isDarkMode = isDarkMode,
+                            mutedCourseColor = mutedCourseColor,
+                            mutedTitleColor = mutedTitleColor,
+                            mutedSubColor = mutedSubColor,
+                            yForSection = ::yForSection,
+                            heightForSections = ::heightForSections,
+                            cellInset = cellInset,
+                            effectiveCourses = weekCourses
+                        )
+                    }
+                val pageScrollState =
+                    remember(page) { ScrollState(0) }
+
+                val pageRenderData = pageRenderUi.dayRenderData
+                val latestPageRenderData by rememberUpdatedState(pageRenderData)
+
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                ) { page: Int ->
-                    val actualWeek = vm.pageToWeek(page = page, includeWeek0 = uiState.includeWeek0)
-                    val weekCourses = effectiveCoursesCache.getOrPut(actualWeek) {
-                        effectiveCoursesForWeek(all = courses, week = actualWeek)
-                    }
-
-                    val pageRenderUi =
-                        remember(
-                            weekCourses,
-                            page,
-                            scheduleUiState.showNonCurrentWeek,
-                            scheduleUiState.scheduleRowHeight,
-                            isDarkMode,
-                            mutedCourseColor,
-                            mutedTitleColor,
-                            mutedSubColor,
-                            cellInset,
-                        ) {
-                            vm.buildPageRenderUi(
-                                courses = courses,
-                                page = page,
-                                includeWeek0 = uiState.includeWeek0,
-                                dayCount = dayCount,
-                                showNonCurrentWeek = scheduleUiState.showNonCurrentWeek,
-                                isDarkMode = isDarkMode,
-                                mutedCourseColor = mutedCourseColor,
-                                mutedTitleColor = mutedTitleColor,
-                                mutedSubColor = mutedSubColor,
-                                yForSection = ::yForSection,
-                                heightForSections = ::heightForSections,
-                                cellInset = cellInset,
-                                effectiveCourses = weekCourses
-                            )
-                        }
-                    val pageScrollState =
-                        remember(page) { ScrollState(0) }
-
-                    val pageRenderData = pageRenderUi.dayRenderData
-
+                        .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior)
+                        .verticalScroll(pageScrollState)
+                ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior)
-                            .verticalScroll(pageScrollState)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .padding(top = contentTopPadding)
+                                .padding(bottom = pageBottomPadding)
                     ) {
                         Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = pageBottomPadding)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(totalHeight)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(totalHeight)
-                            ) {
 
-                                Canvas(modifier = Modifier.fillMaxSize()) {
-                                    val sectionHeight = rowHeight.toPx()
-                                    val gapPx = rowGap.toPx()
-                                    val restPx = restHeight.toPx()
-                                    val barHeight = restHeight.toPx()
-                                    fun drawRestBar(afterSection: Int, label: String) {
-                                        val y =
-                                            afterSection * (sectionHeight + gapPx) +
-                                                    (if (afterSection > 4) restPx else 0f)
-                                        drawRect(
-                                            color = surfaceSoft,
-                                            topLeft = Offset(0f, y),
-                                            size = androidx.compose.ui.geometry.Size(
-                                                size.width,
-                                                barHeight
-                                            )
-                                        )
-                                        val textLayout =
-                                            restBarTextMeasurer.measure(
-                                                text = label,
-                                                style = footnoteStyle.copy(color = textSecondary),
-                                            )
+                            ScheduleRestBands(
+                                rowHeight = rowHeight,
+                                rowGap = rowGap,
+                                restHeight = restHeight,
+                                isDark = isDarkMode,
+                                surfaceSoft = surfaceSoft,
+                                textHint = textHint,
+                            )
 
-                                        drawText(
-                                            textLayoutResult = textLayout,
-                                            topLeft = Offset(
-                                                x = (size.width - textLayout.size.width) / 2f,
-                                                y = y + (barHeight - textLayout.size.height) / 2f,
-                                            ),
-                                        )
-                                    }
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                ScheduleSectionLabels(
+                                    timetable = timetable,
+                                    rowHeight = rowHeight,
+                                    rowGap = rowGap,
+                                    restHeight = restHeight,
+                                    textSecondary = textSecondary,
+                                    textHint = textHint,
+                                )
 
-                                    drawRestBar(afterSection = 4, label = "午休")
-
-                                    drawRestBar(afterSection = 8, label = "晚休")
-                                }
-
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    ScheduleSectionLabels(
-                                        timetable = timetable,
-                                        rowHeight = rowHeight,
-                                        rowGap = rowGap,
-                                        restHeight = restHeight,
-                                        textSecondary = textSecondary,
-                                        textHint = textHint,
-                                    )
-
-                                    Row(modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .pointerInput(dayCount, rowHeightPx, rowGapPx, restHeightPx) {
+                                            detectTapGestures { offset ->
+                                                val colWidth = size.width / dayCount.toFloat()
+                                                if (colWidth <= 0f) return@detectTapGestures
+                                                val day = ((offset.x / colWidth).toInt() + 1).coerceIn(1, dayCount)
+                                                val section = findSectionAtY(
+                                                    yPx = offset.y,
+                                                    rowHeightPx = rowHeightPx,
+                                                    rowGapPx = rowGapPx,
+                                                    restHeightPx = restHeightPx,
+                                                ) ?: return@detectTapGestures
+                                                val dayItems = latestPageRenderData[day]?.items ?: persistentListOf()
+                                                if (isSectionOccupied(dayItems, section, rowHeight, ::yForSection)) {
+                                                    return@detectTapGestures
+                                                }
+                                                if (selectedEmptyCell == Pair(day, section)) {
+                                                    onAddLabCourse(day, section, actualWeek)
+                                                    selectedEmptyCell = null
+                                                } else {
+                                                    selectedEmptyCell = Pair(day, section)
+                                                }
+                                            }
+                                        },
+                                ) {
+                                    Row(modifier = Modifier.fillMaxSize()) {
                                         (1..dayCount).forEach { day ->
                                             Box(
                                                 modifier = Modifier
@@ -778,33 +811,210 @@ fun ScheduleScreen(
 
                                                 ScheduleDayContent(
                                                     renderItems = renderItems,
-                                                    day = day,
-                                                    rowHeight = rowHeight,
-                                                    rowGap = rowGap,
-                                                    selectedEmptyCell = selectedEmptyCell,
-                                                    onEmptyCellClick = { d, s ->
-                                                        if (selectedEmptyCell == Pair(d, s)) {
-                                                            onAddLabCourse(d, s, currentWeek)
-                                                            selectedEmptyCell = null
-                                                        } else {
-                                                            selectedEmptyCell = Pair(d, s)
-                                                        }
-                                                    },
                                                     onCourseClick = { item ->
                                                         selectedEmptyCell = null
                                                         vm.openDetailSheet(item.overlaps)
                                                     },
-                                                    yForSection = ::yForSection,
                                                 )
                                             }
                                         }
                                     }
+
+                                    ScheduleEmptyCellSelectionOverlay(
+                                        selectedCell = selectedCellProvider,
+                                        activePage = currentPageProvider,
+                                        page = page,
+                                        dayCount = dayCount,
+                                        rowHeight = rowHeight,
+                                        yForSection = ::yForSection,
+                                        onSelectedCellClick = { d, s ->
+                                            onAddLabCourse(d, s, actualWeek)
+                                            selectedEmptyCell = null
+                                        },
+                                    )
                                 }
                             }
                         }
                     }
                 }
             }
+
+            val showBackToNow =
+                currentWeek != uiState.detectedWeekInfo.week &&
+                    !scheduleUiState.detailSheetUiState.show &&
+                    !showShare &&
+                    !showWeekPicker
+            AnimatedVisibility(
+                visible = showBackToNow,
+                enter = EnterTransition.None,
+                exit = ExitTransition.None,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = appScaffoldPadding.calculateBottomPadding())
+                        .zIndex(20f),
+            ) {
+                val appear by
+                    transition.animateFloat(
+                        transitionSpec = {
+                            if (targetState == EnterExitState.Visible) {
+                                tween(durationMillis = 320, easing = FastOutSlowInEasing)
+                            } else {
+                                tween(durationMillis = 200, easing = FastOutSlowInEasing)
+                            }
+                        },
+                        label = "BackToNowAppear",
+                    ) { if (it == EnterExitState.Visible) 1f else 0f }
+                BackToNowFloatingButton(
+                    onClick = {
+                        showMoreMenu = false
+                        animateToWeek(uiState.detectedWeekInfo.week)
+                    },
+                    backdrop = chromeBackdrop,
+                    label = "今",
+                    modifier =
+                        Modifier.graphicsLayer {
+                            transformOrigin = TransformOrigin(0.5f, 1f)
+                            scaleX = 0.6f + 0.4f * appear
+                            scaleY = 0.6f + 0.4f * appear
+                            alpha = appear
+                            clip = false
+                        },
+                )
+            }
+
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .then(
+                            if (topBarSampled) {
+                                Modifier.glassLayerBackdrop(
+                                    backdrop = topBarSampleBackdrop,
+                                    recordKey = contentRecordKey,
+                                    mustRecord = contentMustRecord,
+                                )
+                            } else {
+                                Modifier
+                            },
+                        ),
+            ) {
+                ScheduleTopBar(
+                    title = if (currentWeek == 0) "假期中" else "第${currentWeek}周",
+                    weekHeaderUi = weekHeaderUi,
+                    backdrop = chromeBackdrop,
+                    scrollBehavior = topAppBarScrollBehavior,
+                    onMoreSlotCoordinates = { moreSlotCoordinates.value = it },
+                    onMoreMaterial = { moreMaterialAlpha.floatValue = it },
+                    onMoreExpand = { showMoreMenu = true },
+                ) { backdropAlpha, shadowAlpha ->
+                    if (syncUiState is SyncUiState.Loading) {
+                        Box(
+                            modifier = Modifier.size(40.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                size = 18.dp,
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    } else {
+                        LiquidTopBarButton(
+                            onClick = { scope.launch { onSync() } },
+                            backdrop = chromeBackdrop,
+                            icon = Refresh,
+                            contentDescription = "刷新课表",
+                            backdropAlpha = backdropAlpha,
+                            shadowAlpha = shadowAlpha,
+                        )
+                    }
+                }
+            }
+
+            MorePopupMenu(
+                showMorePopup = showMoreMenu,
+                onMorePopupDismiss = { showMoreMenu = false },
+                onMorePopupExpand = { showMoreMenu = true },
+                items =
+                    listOf(
+                        AppMoreMenuItem(
+                            text = "分享",
+                            icon = Share,
+                            onClick = { showShare = true },
+                        ),
+                        AppMoreMenuItem(
+                            text = "跳转周数",
+                            icon = FastForward,
+                            onClick = { showWeekPicker = true },
+                        ),
+                        AppMoreMenuItem(
+                            text = "软件外观",
+                            icon = Background,
+                            iconSize = 23.dp,
+                            onClick = onCustomize,
+                        ),
+                    ),
+                morePopupFraction = moreMenuFraction,
+                moreSlotCoordinates = moreSlotCoordinates,
+                materialAlpha = { moreMaterialAlpha.floatValue },
+                liquidGlassBackdrop = overlayGlassBackdrop,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScheduleRestBands(
+    rowHeight: Dp,
+    rowGap: Dp,
+    restHeight: Dp,
+    isDark: Boolean,
+    surfaceSoft: Color,
+    textHint: Color,
+) {
+    val wallpaperBackdrop = LocalWallpaperBackdrop.current
+    val dividerShape = remember { ContinuousRoundedRectangle(10.dp) }
+    val baseColor =
+        when {
+            wallpaperBackdrop != null -> Color.Transparent
+            MiuixTheme.isDynamicColor -> surfaceSoft
+            isDark -> Color(0xFF121212)
+            else -> Color(0xFFF0F0F0)
+        }
+    val glassColor = surfaceSoft.copy(alpha = if (isDark) 0.64f else 0.50f)
+
+    listOf(4 to "午休", 8 to "晚休").forEach { (afterSection, label) ->
+        val top =
+            (rowHeight + rowGap) * afterSection +
+                (if (afterSection > 4) restHeight else 0.dp)
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .offset(y = top)
+                    .height(restHeight)
+                    .padding(vertical = 2.dp)
+                    .padding(horizontal = 4.dp)
+                    .then(
+                        if (wallpaperBackdrop != null) {
+                            Modifier.wallpaperGlass(
+                                backdrop = wallpaperBackdrop,
+                                color = glassColor,
+                                shape = dividerShape,
+                                cornerRadius = 10.dp,
+                            )
+                        } else {
+                            Modifier.background(baseColor, dividerShape)
+                        }
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                style = MiuixTheme.textStyles.footnote2,
+                color = textHint,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -871,74 +1081,85 @@ private fun ScheduleSectionLabels(
 @Composable
 private fun ScheduleDayContent(
     renderItems: ImmutableList<CourseRenderItem>,
-    day: Int,
-    rowHeight: Dp,
-    rowGap: Dp,
-    selectedEmptyCell: Pair<Int, Int>?,
-    onEmptyCellClick: (day: Int, section: Int) -> Unit,
     onCourseClick: (CourseRenderItem) -> Unit,
-    yForSection: (Int) -> Dp,
 ) {
-    val colors = MiuixTheme.colorScheme
     renderItems.forEach { item ->
         CourseCard(
             model = item.model,
-            onClick = { onCourseClick(item) }
+            onClick = { onCourseClick(item) },
         )
     }
+}
 
-    val occupiedSections = remember(renderItems) {
-        val rowHeightPx = rowHeight.value
-        val rowGapPx = (rowHeight + rowGap).value
-        val cellInsetPx = 0.5f
-        buildSet {
-            for (item in renderItems) {
-                val courseStart =
-                    ((item.model.topOffsetY.value - cellInsetPx) / rowGapPx).toInt() + 1
-                val courseSections =
-                    (item.model.height.value / rowHeightPx).toInt()
-                        .coerceAtLeast(1)
-                for (s in courseStart until (courseStart + courseSections)) {
-                    add(s)
-                }
-            }
+@Composable
+private fun ScheduleEmptyCellSelectionOverlay(
+    selectedCell: () -> Pair<Int, Int>?,
+    activePage: () -> Int,
+    page: Int,
+    dayCount: Int,
+    rowHeight: Dp,
+    yForSection: (Int) -> Dp,
+    onSelectedCellClick: (day: Int, section: Int) -> Unit,
+) {
+    val cell = selectedCell() ?: return
+    if (activePage() != page) return
+    val (day, section) = cell
+    val colors = MiuixTheme.colorScheme
+    val interactionSource = remember { MutableInteractionSource() }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val colWidth = maxWidth / dayCount
+        Box(
+            modifier = Modifier
+                .width(colWidth)
+                .height(rowHeight)
+                .offset(x = colWidth * (day - 1), y = yForSection(section))
+                .padding(horizontal = 1.dp)
+                .squircleBackground(colors.surfaceContainerHighest, 8.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                ) {
+                    onSelectedCellClick(day, section)
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Add,
+                contentDescription = "添加课程",
+                tint = colors.surfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
         }
     }
-    val emptyCellInteractionSource = remember { MutableInteractionSource() }
+}
 
-    (1..12).forEach { section ->
-        if (section !in occupiedSections) {
-            val isSelected = selectedEmptyCell == Pair(day, section)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(rowHeight)
-                    .padding(horizontal = 1.dp)
-                    .offset(y = yForSection(section))
-                    .clickable(
-                        interactionSource = emptyCellInteractionSource,
-                        indication = null
-                    ) {
-                        onEmptyCellClick(day, section)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                if (isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .squircleBackground(colors.surfaceContainerHighest, 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Add,
-                            contentDescription = "添加课程",
-                            tint = colors.surfaceVariant,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-        }
+private fun findSectionAtY(
+    yPx: Float,
+    rowHeightPx: Float,
+    rowGapPx: Float,
+    restHeightPx: Float,
+): Int? {
+    for (section in 1..12) {
+        val rest = (if (section > 4) restHeightPx else 0f) + (if (section > 8) restHeightPx else 0f)
+        val top = (rowHeightPx + rowGapPx) * (section - 1) + rest
+        if (yPx >= top && yPx <= top + rowHeightPx) return section
     }
+    return null
+}
+
+private inline fun isSectionOccupied(
+    items: ImmutableList<CourseRenderItem>,
+    section: Int,
+    rowHeight: Dp,
+    yForSection: (Int) -> Dp,
+): Boolean {
+    if (items.isEmpty()) return false
+    val cellTop = yForSection(section).value
+    val cellBottom = cellTop + rowHeight.value
+    for (item in items) {
+        val itemTop = item.model.topOffsetY.value
+        val itemBottom = itemTop + item.model.height.value
+        if (cellBottom > itemTop && cellTop < itemBottom) return true
+    }
+    return false
 }

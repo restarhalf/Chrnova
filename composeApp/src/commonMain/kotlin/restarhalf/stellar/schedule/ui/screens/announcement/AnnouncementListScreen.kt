@@ -10,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,17 +31,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.AnnouncementViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -52,7 +50,6 @@ fun AnnouncementListScreen(
     onAnnouncementClick: (String) -> Unit,
     onAdOpenUrl: (String) -> Unit = {},
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
@@ -61,90 +58,57 @@ fun AnnouncementListScreen(
         vm.refresh()
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Column {
-                AppPageTopBar(
-                    title = "公告",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBack,
-                        ) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                            )
-                        }
-                    },
-                )
-                AnimatedVisibility(
-                    visible = uiState.error != null,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
+    AppPageScaffold(
+        title = "公告",
+        onBack = onBack,
+        topBarExtra = {
+            AnimatedVisibility(
+                visible = uiState.error != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(28.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Box(
                         modifier =
                             Modifier
-                                .fillMaxWidth()
-                                .height(28.dp),
-                        contentAlignment = Alignment.Center,
+                                .clip(CircleShape)
+                                .background(colors.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .clip(CircleShape)
-                                    .background(colors.surfaceContainerHigh)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                        ) {
-                            Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error ?: "")
-                        }
+                        Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error ?: "")
                     }
                 }
             }
         },
-    ) { paddingValues ->
-        Column(
+    ) { scrollBehavior, paddingValues ->
+        val layoutDirection = LocalLayoutDirection.current
+        PullToRefresh(
+            isRefreshing = uiState.loading,
+            onRefresh = { vm.refresh() },
+            pullToRefreshState = pullToRefreshState,
+            refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
             modifier =
                 Modifier
                     .fillMaxSize()
+                    .collapsibleTopInset(scrollBehavior)
                     .padding(
-                        PaddingValues(
-                            top = paddingValues.calculateTopPadding(),
-                            start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                            end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                            bottom = 0.dp,
-                        ),
+                        start = paddingValues.calculateStartPadding(layoutDirection),
+                        end = paddingValues.calculateEndPadding(layoutDirection),
                     ),
         ) {
-
-            AdBanner(
-                config = uiState.adConfig?.let {
-                    AdBannerConfig(
-                        imageUrl = it.imageUrl,
-                        targetUrl = it.targetUrl,
-                        announcementId = it.announcementId,
-                    )
-                },
-                onOpenUrl = onAdOpenUrl,
-                onOpenAnnouncement = onAnnouncementClick,
-            )
-
-            PullToRefresh(
-                isRefreshing = uiState.loading,
-                onRefresh = { vm.refresh() },
-                pullToRefreshState = pullToRefreshState,
-                refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-            ) {
             LazyColumn(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                        .pageScrollModifiers(scrollBehavior = scrollBehavior),
                 contentPadding = appPageContentPadding(
-                    innerPadding = PaddingValues(),
+                    innerPadding = paddingValues,
                     outerPadding = paddingValues,
                     extraTop = 12.dp,
                     extraStart = 12.dp,
@@ -152,6 +116,22 @@ fun AnnouncementListScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                val adConfig = uiState.adConfig
+                if (adConfig != null) {
+                    item(key = "adBanner") {
+                        AdBanner(
+                            config = AdBannerConfig(
+                                imageUrl = adConfig.imageUrl,
+                                targetUrl = adConfig.targetUrl,
+                                announcementId = adConfig.announcementId,
+                            ),
+                            onOpenUrl = onAdOpenUrl,
+                            onOpenAnnouncement = onAnnouncementClick,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
+                }
+
                 if (!uiState.loading && uiState.announcements.isEmpty() && uiState.error == null) {
                     item {
                         Text(
@@ -211,7 +191,6 @@ fun AnnouncementListScreen(
                     }
                 }
             }
-        }
         }
     }
 }

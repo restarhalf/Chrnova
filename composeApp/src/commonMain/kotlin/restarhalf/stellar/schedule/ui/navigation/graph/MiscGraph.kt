@@ -9,31 +9,26 @@ import org.koin.compose.viewmodel.koinViewModel
 import restarhalf.stellar.schedule.ui.navigation.AppNavigator
 import restarhalf.stellar.schedule.ui.navigation.Screen
 import restarhalf.stellar.schedule.ui.screens.AboutScreen
-import restarhalf.stellar.schedule.ui.screens.ChangeBackgroundScreen
 import restarhalf.stellar.schedule.ui.screens.CourseEditScreen
 import restarhalf.stellar.schedule.ui.screens.ExamEditScreen
 import restarhalf.stellar.schedule.ui.screens.JwxtLoginScreen
-import restarhalf.stellar.schedule.ui.screens.LogScreen
 import restarhalf.stellar.schedule.ui.screens.ProfileScreen
+import restarhalf.stellar.schedule.ui.screens.ReminderSettingsScreen
+import restarhalf.stellar.schedule.ui.screens.WidgetIntroRoute
+import restarhalf.stellar.schedule.ui.screens.SettingsScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
+import restarhalf.stellar.schedule.ui.viewmodel.ScheduleViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
 fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
     val navigator = deps.navigator
 
-    entry<Screen.ChangeBackground> {
-        ChangeBackgroundScreen(
-            vm = deps.bgVm,
-            onBack = { navigator.pop() },
-            pictureSelectorHost = deps.pictureSelectorHost,
-        )
-    }
     entry<Screen.About> {
         val aboutVm: AboutViewModel = koinViewModel()
         AboutScreen(
@@ -42,7 +37,6 @@ fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
             showMessage = deps.showMessage,
             canSaveAwardPicture = deps.canSaveAwardPicture,
             onSaveAwardPicture = deps.saveAwardPicture,
-            onIconTap = { navigator.push(Screen.Log) },
             onHandleEvent = { event ->
                 when (event) {
                     is AboutViewModel.AboutUiEvent.OpenUri -> {
@@ -116,18 +110,6 @@ fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
             showMessage = deps.showMessage,
         )
     }
-    entry<Screen.Log> {
-        val scope = rememberCoroutineScope()
-        LogScreen(
-            onBack = { navigator.pop() },
-            onExport = { fileName, content ->
-                scope.launch {
-                    val path = deps.saveLog(fileName, content)
-                    deps.showMessage(if (path != null) "已保存: $path" else "保存失败")
-                }
-            },
-        )
-    }
     entry<Screen.Profile> {
         val settingsVm: SettingsViewModel = koinViewModel()
         val settingsUiState by settingsVm.uiState.collectAsStateWithLifecycle()
@@ -142,6 +124,65 @@ fun NavEntryBuilder.miscEntries(deps: AppNavDeps) {
             onLogoutPE = { peVm.logout() },
             pictureSelectorHost = deps.pictureSelectorHost,
             personalInfoViewModel = personalInfoViewModel,
+        )
+    }
+    entry<Screen.Settings> {
+        val settingsVm: SettingsViewModel = koinViewModel()
+        val scheduleVm: ScheduleViewModel = koinViewModel()
+        val peVm: PEViewModel = koinViewModel()
+        val appUiState by deps.appVm.uiState.collectAsStateWithLifecycle()
+        val syncUiState by deps.appVm.syncUiState.collectAsStateWithLifecycle()
+        val courses by scheduleVm.allCourses.collectAsStateWithLifecycle()
+        val isPeLoggedIn by peVm.isLoggedIn.collectAsStateWithLifecycle()
+        SettingsScreen(
+            vm = settingsVm,
+            syncUiState = syncUiState,
+            campus = appUiState.campus,
+            termStartMs = appUiState.termStartMs,
+            totalWeeks = appUiState.totalWeeks,
+            onSync = deps.runSync,
+            onLogout = { deps.appVm.logout() },
+            ensureCourseReminderPermission = deps.ensureNotificationPermission,
+            onRequestExactAlarmPermission = deps.ensureExactAlarmPermission,
+            onCampusChange = { campus -> deps.appVm.onCampusChanged(campus) },
+            onTermStartChange = { termStartMs -> deps.appVm.onTermStartMsChanged(termStartMs) },
+            onTotalWeeksChange = { totalWeeks -> deps.appVm.onTotalWeeksChanged(totalWeeks) },
+            onAbout = { navigator.push(Screen.About) },
+            onReminderSettings = { navigator.push(Screen.ReminderSettings) },
+            onWidgetIntro = { navigator.push(Screen.WidgetIntro) },
+            onPaper = { navigator.push(Screen.Papers) },
+            onEvaluation = { navigator.push(Screen.Evaluation) },
+            onCourseSelection = { navigator.push(Screen.CourseSelection) },
+            onCourseEnroll = { navigator.push(Screen.CourseEnroll) },
+            onLogin = { navigator.push(Screen.JwxtLogin) },
+            onProfile = { navigator.push(Screen.Profile) },
+            isPeLoggedIn = isPeLoggedIn,
+            onExportCsv = deps.saveCsv,
+            courses = courses,
+            showMessage = deps.showMessage,
+            onBack = { navigator.pop() },
+        )
+    }
+    entry<Screen.ReminderSettings> {
+        val settingsVm: SettingsViewModel = koinViewModel()
+        val appUiState by deps.appVm.uiState.collectAsStateWithLifecycle()
+        ReminderSettingsScreen(
+            vm = settingsVm,
+            campus = appUiState.campus,
+            termStartMs = appUiState.termStartMs,
+            totalWeeks = appUiState.totalWeeks,
+            ensureCourseReminderPermission = deps.ensureNotificationPermission,
+            onRequestExactAlarmPermission = deps.ensureExactAlarmPermission,
+            onRequestDndPolicyPermission = deps.onRequestDndPolicyPermission,
+            showMessage = deps.showMessage,
+            onBack = { navigator.pop() },
+        )
+    }
+    entry<Screen.WidgetIntro> {
+        WidgetIntroRoute(
+            onBack = { navigator.pop() },
+            pictureSelectorHost = deps.pictureSelectorHost,
+            onRequestWidgetRefresh = deps.onRequestWidgetRefresh,
         )
     }
     entry<Screen.JwxtLogin> {
