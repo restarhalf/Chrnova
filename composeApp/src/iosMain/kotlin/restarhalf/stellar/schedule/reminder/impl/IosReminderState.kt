@@ -54,7 +54,6 @@ internal class IosReminderState(
         if (!settings.getBoolean(scheduledKey, false)) return null
 
         val triggerAtMs = settings.getLong(triggerKey, 0L)
-        // 通知响过之后预存值会留在原地，过期就当没挂
         if (triggerAtMs <= 0L || triggerAtMs <= nowMs()) return null
         return triggerAtMs
     }

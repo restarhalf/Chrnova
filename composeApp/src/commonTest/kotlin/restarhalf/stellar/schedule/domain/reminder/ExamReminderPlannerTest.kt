@@ -106,4 +106,101 @@ class ExamReminderPlannerTest {
     fun `没有考试返回 null`() {
         assertNull(ExamReminderPlanner.findNext(exams = emptyList(), nowMs = msOf(2026, 3, 2, 8, 0)))
     }
+
+    @Test
+    fun `planDay取当天全部考试并按开考排序`() {
+        val slots =
+            ExamReminderPlanner.planDay(
+                exams =
+                    listOf(
+                        exam(courseName = "大学物理", time = "2026-03-05 14:00~16:00"),
+                        exam(courseName = "高等数学", time = "2026-03-05 09:00~11:00"),
+                        exam(courseName = "明天的英语", time = "2026-03-06 09:00~11:00"),
+                    ),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 0,
+            )
+
+        assertEquals(listOf("高等数学", "大学物理"), slots.map { it.name })
+        assertEquals(msOf(2026, 3, 5, 9, 0), slots[0].startAtMs)
+        assertEquals(msOf(2026, 3, 5, 11, 0), slots[0].endAtMs)
+        assertEquals("09:00", slots[0].timeStart)
+        assertEquals("11:00", slots[0].timeEnd)
+    }
+
+    @Test
+    fun `planDay按偏移日取明天的考试`() {
+        val slots =
+            ExamReminderPlanner.planDay(
+                exams =
+                    listOf(
+                        exam(courseName = "高等数学", time = "2026-03-05 09:00~11:00"),
+                        exam(courseName = "明天的英语", time = "2026-03-06 09:00~11:00"),
+                    ),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 1,
+            )
+
+        assertEquals(listOf("明天的英语"), slots.map { it.name })
+        assertEquals(msOf(2026, 3, 6, 9, 0), slots[0].startAtMs)
+    }
+
+    @Test
+    fun `planDay保留考试id与考场`() {
+        val slots =
+            ExamReminderPlanner.planDay(
+                exams =
+                    listOf(
+                        exam(time = "2026-03-05 09:00~11:00", place = "教三 201")
+                            .copy(id = 42L),
+                    ),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 0,
+            )
+
+        assertEquals(42L, slots.single().examId)
+        assertEquals("教三 201", slots.single().place)
+    }
+
+    @Test
+    fun `planDay跨零点的结束时间顺延到次日`() {
+        val slots =
+            ExamReminderPlanner.planDay(
+                exams = listOf(exam(time = "2026-03-05 23:00~01:00")),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 0,
+            )
+
+        assertEquals(msOf(2026, 3, 5, 23, 0), slots.single().startAtMs)
+        assertEquals(msOf(2026, 3, 6, 1, 0), slots.single().endAtMs)
+    }
+
+    @Test
+    fun `planDay跳过待定与别的日期`() {
+        val slots =
+            ExamReminderPlanner.planDay(
+                exams =
+                    listOf(
+                        exam(courseName = "体育", time = "待定"),
+                        exam(courseName = "上周的考试", time = "2026-03-04 09:00~11:00"),
+                        exam(courseName = "高等数学", time = "2026-03-05 09:00~11:00"),
+                    ),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 0,
+            )
+
+        assertEquals(listOf("高等数学"), slots.map { it.name })
+    }
+
+    @Test
+    fun `planDay当天没有考试返回空`() {
+        assertEquals(
+            emptyList(),
+            ExamReminderPlanner.planDay(
+                exams = listOf(exam(time = "2026-03-08 09:00~11:00")),
+                nowMs = msOf(2026, 3, 5, 7, 0),
+                dayOffset = 0,
+            ),
+        )
+    }
 }

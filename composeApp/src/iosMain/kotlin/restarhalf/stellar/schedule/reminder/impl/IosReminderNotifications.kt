@@ -14,7 +14,6 @@ import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNNotificationSound
 import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
-import restarhalf.stellar.schedule.core.log.AppLogger
 import kotlin.coroutines.resume
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -35,7 +34,6 @@ internal object IosReminderNotifications {
         val center = UNUserNotificationCenter.currentNotificationCenter()
 
         if (!isAuthorized(center)) {
-            AppLogger.log("Reminder", "通知权限未授予，跳过提醒 $identifier")
             return false
         }
 
@@ -68,7 +66,6 @@ internal object IosReminderNotifications {
         }
 
         if (added != true) {
-            AppLogger.log("Reminder", "添加通知失败 $identifier")
             return false
         }
         return true

@@ -35,4 +35,8 @@ class CourseReminderPortImpl(
     override fun cancelAll() {
         scheduler.cancelAll()
     }
+
+    override suspend fun refreshNextDayReminder() {
+        scheduler.refreshNextDayReminder()
+    }
 }

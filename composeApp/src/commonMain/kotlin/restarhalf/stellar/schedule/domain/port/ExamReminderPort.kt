@@ -7,7 +7,6 @@ interface ExamReminderPort {
 
     suspend fun hasScheduledAlarm(): Boolean
 
-    /** 已挂的考试提醒触发时间；没挂或已过期返回 null。 */
     fun nextScheduledAtMs(): Long?
 
     fun cancelAll()

@@ -95,7 +95,6 @@ class CollectReminderExaminationsUseCaseTest {
         val result = useCase()
 
         assertEquals(2, result.exams.size)
-        // 远程的排在前面，保留的是刚拉到的那条
         assertEquals(0L, result.exams.first { it.courseName == "高等数学" }.id)
     }
 }

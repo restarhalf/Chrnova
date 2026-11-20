@@ -56,6 +56,10 @@ class CourseReminderPortImpl(
         state.cancelAll()
     }
 
+    override suspend fun refreshNextDayReminder() {
+        // iOS 尚未实现次日课程提醒
+    }
+
     private companion object {
         private const val COURSE_REMINDER_ID = "course.next.reminder"
         private const val KEY_COURSE_SCHEDULED = "ios_course_reminder_scheduled"

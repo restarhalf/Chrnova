@@ -13,8 +13,10 @@ interface CourseReminderPort {
 
     suspend fun hasScheduledAlarm(): Boolean
 
-    /** 已挂的课程提醒触发时间；没挂或已过期返回 null。 */
     fun nextScheduledAtMs(): Long?
 
     fun cancelAll()
+
+    /** 重排与课程无关的次日课程提醒（每天固定时刻）。 */
+    suspend fun refreshNextDayReminder()
 }

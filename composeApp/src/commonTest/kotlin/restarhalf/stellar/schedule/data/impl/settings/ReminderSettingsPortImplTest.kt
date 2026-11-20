@@ -17,8 +17,9 @@ class ReminderSettingsPortImplTest {
         impl.setCourseReminderEnabled(true)
         assertTrue(impl.observeCourseReminderEnabled().first())
 
-        assertFalse(impl.observeExamReminderEnabled().first())
-        impl.setExamReminderEnabled(true)
+        // 考试提醒沿用课程提醒：没有独立开关，跟随 REMINDER_ENABLED
         assertTrue(impl.observeExamReminderEnabled().first())
+        impl.setCourseReminderEnabled(false)
+        assertFalse(impl.observeExamReminderEnabled().first())
     }
 }

@@ -12,6 +12,7 @@ import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -24,22 +25,28 @@ import restarhalf.stellar.schedule.domain.model.JwxtSessionSnapshot
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
+import restarhalf.stellar.schedule.domain.usecase.CancelAllCourseRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CancelAllExamRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.CollectReminderExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.RepairExaminationSemestersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesSimpleUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchGradesUseCase
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
+import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.RunSyncUseCase
 import restarhalf.stellar.schedule.ui.sync.SyncUiState
 import kotlin.test.AfterTest
@@ -58,19 +65,40 @@ class AppViewModelTest {
     private val auth = mock<JwxtAuthPort>(MockMode.autofill)
     private val authWorkflow = mock<JwxtAuthWorkflowPort>(MockMode.autofill)
     private val timetable = mock<TimetablePort>(MockMode.autofill)
-    private val settings = mock<LogSettingsPort>(MockMode.autofill)
     private val termSettings = mock<TermSettingsPort>(MockMode.autofill)
     private val academic = mock<AcademicPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
     private val examRepository = mock<ExaminationRepository>(MockMode.autofill)
     private val gradeRepository = mock<GradeRepository>(MockMode.autofill)
-    private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val courseRepository = mock<CourseRepository>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
     private val courseSelectionService = mock<CourseSelectionServicePort>(MockMode.autofill)
+
+    private val rescheduleAllReminders = RescheduleAllRemindersUseCase(
+        settings = reminderSettings,
+        courseRepository = courseRepository,
+        timetable = timetable,
+        courseReminder = courseReminder,
+        examReminder = examReminder,
+        collectReminderExaminations = CollectReminderExaminationsUseCase(
+            fetchExaminations = FetchExaminationsUseCase(
+                authWorkflow = authWorkflow,
+                academic = academic,
+                repository = examRepository,
+                auth = auth,
+                settings = termSettings,
+            ),
+            repository = examRepository,
+        ),
+        cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+        cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
+    )
 
     private val campusFlow = MutableStateFlow(Campus.Jinshitan)
     private val termStartFlow = MutableStateFlow(1000L)
     private val totalWeeksFlow = MutableStateFlow(20)
-    private val logFlow = MutableStateFlow(false)
     private val selectedTermFlow = MutableStateFlow("2026-1")
     private val profileFlow = MutableStateFlow(JwxtAuthProfile())
 
@@ -101,6 +129,8 @@ class AppViewModelTest {
 
     private fun stubHappyPath() {
         every { termSettings.observeSelectedTerm() } returns selectedTermFlow
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan, development)
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(5, "c-js")
@@ -115,14 +145,12 @@ class AppViewModelTest {
         every { timetable.getCampus() } returns Campus.Jinshitan
         every { timetable.getTermStartMs() } returns 1000L
         every { timetable.getTotalWeeks() } returns 20
-        every { settings.observeLogEnabled() } returns logFlow
         every { termSettings.observeSelectedTerm() } returns selectedTermFlow
         every { auth.observeProfile() } returns profileFlow
         every { auth.getSessionSnapshot() } returns JwxtSessionSnapshot("2023001", 0)
         return AppViewModel(
             auth = auth,
             timetable = timetable,
-            settings = settings,
             fetchExaminations = FetchExaminationsSimpleUseCase(
                 FetchExaminationsUseCase(authWorkflow, academic, examRepository, auth, termSettings),
             ),
@@ -136,7 +164,7 @@ class AppViewModelTest {
                 timetable = timetable,
                 settings = termSettings,
                 sync = sync,
-                reminderScheduler = reminderScheduler,
+                rescheduleAllReminders = rescheduleAllReminders,
             ),
             repairExaminationSemesters = RepairExaminationSemestersUseCase(examRepository, academic),
             courseSelectionService = courseSelectionService,

@@ -1,107 +1,95 @@
 package restarhalf.stellar.schedule.reminder.receiver
 
-import android.app.Notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.russhwolf.settings.ObservableSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import restarhalf.stellar.schedule.core.log.AppLogger
+import org.koin.core.qualifier.named
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
+import restarhalf.stellar.schedule.reminder.ClassDndController
+import restarhalf.stellar.schedule.reminder.CourseDayAlarmScheduler
 import restarhalf.stellar.schedule.reminder.NotificationChannels
-import restarhalf.stellar.schedule.reminder.ReminderKind
-import restarhalf.stellar.schedule.reminder.ReminderStatusLabels
-import restarhalf.stellar.schedule.reminder.clockStage
-import restarhalf.stellar.schedule.reminder.parseTodayTimeMs
+import restarhalf.stellar.schedule.reminder.PreClassLiveDispatcher
+import restarhalf.stellar.schedule.reminder.ReminderTickScheduler
 import java.util.Calendar
 
+/**
+ * 课前提醒闹钟。
+ *
+ * 与 Nexio 相同：闹钟里带的是注册时刻的课程快照，触发时一律回查当前课表：
+ * 课程被删 / 改时间就按新课表发，查不到就跳过并整批重排清理过期闹钟；
+ * 同一课次只发一次（闹钟与补发路径共用去重标记）。
+ */
 class CourseReminderReceiver : BroadcastReceiver() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onReceive(context: Context, intent: Intent) {
         val result = goAsync()
-
-        val name = intent.getStringExtra("course_name")
-        if (name.isNullOrBlank()) {
-            result.finish()
-            return
-        }
-        val location = intent.getStringExtra("course_location") ?: ""
-        val time = intent.getStringExtra("course_time") ?: ""
-        val endTime = intent.getStringExtra("course_end_time") ?: ""
-
-        NotificationChannels.ensureAll(context)
-
-        val nowMs = System.currentTimeMillis()
-        val notificationId = reminderNotificationId(nowMs = nowMs, name = name, time = time)
-
-        val descText =
-            buildString {
-                if (time.isNotBlank()) append(time)
-                if (location.isNotBlank()) {
-                    if (isNotEmpty()) append(" · ")
-                    append(location)
-                }
-            }
-
-        val startAt = parseTodayTimeMs(time)
-        val endAt = if (endTime.isBlank()) null else parseTodayTimeMs(endTime)
-        val stage =
-            clockStage(startAt = startAt, endAt = endAt, nowMs = nowMs, labels = STATUS_LABELS)
-        val timeRange = if (endTime.isBlank()) time else "$time | $endTime"
-        val ticker =
-            buildString {
-                if (location.isNotBlank()) append(location).append("｜")
-                append(if (stage.label.isBlank()) rangeOrTime(time, endTime) else "${time}上课")
-            }
-        val shareContent =
-            buildString {
-                appendLine(name)
-                if (location.isNotBlank()) appendLine(location)
-                append(rangeOrTime(time, endTime))
-            }
-
-        ReminderNotifier.notify(
-            context = context,
-            presentation =
-                ReminderPresentation(
-                    kind = ReminderKind.Course,
-                    notificationId = notificationId,
-                    channelId = CHANNEL_ID,
-                    category = Notification.CATEGORY_ALARM,
-                    cardTitle = CARD_TITLE,
-                    contentTitle = name,
-                    contentText = descText,
-                    startText = time,
-                    endText = endTime,
-                    detailTitle = name,
-                    detailText = location,
-                    placeLabel = PLACE_LABEL,
-                    muteLabel = ISLAND_MUTE_LABEL,
-                    timeoutMs = reminderTimeoutMs(startAt),
-                    timeRange = timeRange,
-                    statusLabel = stage.label,
-                    timerType = stage.timerType,
-                    timerWhenMs = stage.timerWhenMs,
-                    ticker = ticker,
-                    shareContent = shareContent,
-                ),
-            nowMs = nowMs,
-        )
+        val courseId = intent.getLongExtra(CourseDayAlarmScheduler.EXTRA_COURSE_ID, 0L)
 
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
+                NotificationChannels.ensureAll(context)
                 val deps = Deps()
-                deps.rescheduleNextReminderIfEnabled()
+                val nowMs = System.currentTimeMillis()
+                val slot = CourseDayAlarmScheduler.resolveSlotById(courseId, nowMs)
+                // 与 Nexio 的 onAlarmProcessed 一致：闹钟在调度时已一次性注册，
+                // 正常触发只做轻量收尾；只有课程已删除/改时间才整批重排清理过期闹钟。
+                var fullReschedule = false
+                when {
+                    slot != null -> {
+                        if (!CourseDayAlarmScheduler.wasPreClassSent(deps.bookkeeping, slot)) {
+                            postCourseReminderNotification(
+                                context = context,
+                                name = slot.name,
+                                location = slot.place,
+                                time = slot.timeStart,
+                                endTime = slot.timeEnd,
+                            )
+                            CourseDayAlarmScheduler.markPreClassSent(deps.bookkeeping, slot)
+                        }
+                    }
+
+                    courseId <= 0L -> {
+                        // 旧版闹钟没有 courseId：按快照照发一次
+                        val name = intent.getStringExtra(CourseDayAlarmScheduler.EXTRA_NAME)
+                        if (!name.isNullOrBlank()) {
+                            postCourseReminderNotification(
+                                context = context,
+                                name = name,
+                                location =
+                                    intent.getStringExtra(CourseDayAlarmScheduler.EXTRA_PLACE)
+                                        .orEmpty(),
+                                time =
+                                    intent.getStringExtra(CourseDayAlarmScheduler.EXTRA_START)
+                                        .orEmpty(),
+                                endTime =
+                                    intent.getStringExtra(CourseDayAlarmScheduler.EXTRA_END)
+                                        .orEmpty(),
+                            )
+                        }
+                        fullReschedule = true
+                    }
+
+                    else -> fullReschedule = true
+                }
+                if (fullReschedule) {
+                    deps.rescheduleNextReminderIfEnabled()
+                } else {
+                    ReminderTickScheduler.scheduleNext(context, nowMs)
+                    ClassDndController.applyCurrentState(context, nowMs)
+                }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("Reminder", "重新调度下次提醒失败", e)
+                android.util.Log.w("CourseReminder", "处理课前提醒失败 courseId=$courseId", e)
             } finally {
                 result.finish()
             }
@@ -109,44 +97,48 @@ class CourseReminderReceiver : BroadcastReceiver() {
     }
 
     private class Deps : KoinComponent {
+        val bookkeeping: ObservableSettings by inject(named("reminder_codes"))
         val rescheduleNextReminderIfEnabled: RescheduleNextCourseReminderIfEnabledUseCase by inject()
     }
+}
 
-    private fun reminderNotificationId(nowMs: Long, name: String, time: String): Int {
-        val calendar = Calendar.getInstance().apply { timeInMillis = nowMs }
-        return "$name|$time|${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.DAY_OF_YEAR)}"
-            .hashCode() and 0x7FFFFFFF
-    }
+/**
+ * 课前提醒：与 Nexio 的 sendPreClassNotification 一致，只由超级岛或实况承载，
+ * 不再发旧的静态提醒卡（静音按钮一并废弃，改用岛/实况上的「上课勿扰」）。
+ */
+internal fun postCourseReminderNotification(
+    context: Context,
+    name: String,
+    location: String,
+    time: String,
+    endTime: String,
+) {
+    val startAt = parseTodayTimeMs(time) ?: return
+    val endAt = if (endTime.isBlank()) null else parseTodayTimeMs(endTime)
+    PreClassLiveDispatcher.dispatch(
+        context = context,
+        courseName = name,
+        classroom = location,
+        startTime = time,
+        endTime = endTime,
+        startMillis = startAt,
+        endMillis = endAt ?: 0L,
+    )
+}
 
-    private fun rangeOrTime(time: String, endTime: String): String =
-        if (endTime.isBlank()) time else "$time-$endTime"
+/** "HH:mm" → 今天该时刻的毫秒值。 */
+internal fun parseTodayTimeMs(time: String): Long? {
+    val parts = time.split(":")
+    if (parts.size != 2) return null
+    val hour = parts[0].trim().toIntOrNull() ?: return null
+    val minute = parts[1].trim().toIntOrNull() ?: return null
 
-    private fun reminderTimeoutMs(startAt: Long?): Long {
-        if (startAt == null) return REMINDER_TIMEOUT_FALLBACK_MS
-        return (startAt + TIMEOUT_AFTER_CLASS_START_MS - System.currentTimeMillis())
-            .coerceAtLeast(MIN_TIMEOUT_MS)
-    }
-
-    companion object {
-
-        const val CHANNEL_ID = "course_reminder_high"
-
-        private const val TIMEOUT_AFTER_CLASS_START_MS = 10 * 60 * 1000L
-        private const val REMINDER_TIMEOUT_FALLBACK_MS = 60 * 60 * 1000L
-        private const val MIN_TIMEOUT_MS = 5 * 60 * 1000L
-
-        private const val ISLAND_MUTE_LABEL = "上课静音"
-
-        private const val CARD_TITLE = "上课提醒"
-
-        private const val PLACE_LABEL = "地点"
-
-        private val STATUS_LABELS =
-            ReminderStatusLabels(
-                beforeStart = "即将上课",
-                beforeEnd = "距离下课",
-                noEnd = "已经上课",
-                afterEnd = "已经下课",
-            )
-    }
+    val calendar =
+        Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    return calendar.timeInMillis
 }
