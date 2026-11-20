@@ -22,7 +22,6 @@ import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.uniqueKeys
 import restarhalf.stellar.schedule.core.time.ClockTime
 import restarhalf.stellar.schedule.domain.model.Examination
@@ -132,7 +131,6 @@ class ExaminationViewModel(
             runCatching { loader() }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Exams", "加载考试数据失败", e)
                     _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadExaminations)
                 }
             _loading.value = false
@@ -147,7 +145,6 @@ class ExaminationViewModel(
                 }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Reminder", "考试提醒刷新失败", e)
             }
         }
     }
@@ -162,7 +159,6 @@ class ExaminationViewModel(
         val timePart = exam.time.substringAfter(" ", "").ifBlank { "待定" }
         val weekday = datePart.takeIf { it.isNotBlank() && it != "待定" }
             ?.let { try { LocalDate.parse(it) } catch (e: Exception) {
-                AppLogger.log("Exam", "日期解析失败: $it", e)
                 null
             } }
             ?.let { weekdayText(it.dayOfWeek) }

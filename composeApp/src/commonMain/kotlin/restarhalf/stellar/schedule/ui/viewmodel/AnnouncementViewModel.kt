@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.AdConfig
 import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.usecase.FetchAdConfigUseCase
@@ -60,7 +59,6 @@ class AnnouncementViewModel(
                 .onSuccess { ad -> _uiState.update { it.copy(adConfig = ad) } }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Announcement", "加载广告配置失败", e)
                 }
         }
     }
@@ -84,7 +82,6 @@ class AnnouncementViewModel(
                 }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Announcement", "加载公告失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
         }
@@ -120,7 +117,6 @@ class AnnouncementViewModel(
                     _uiState.update { it.copy(loading = false, selectedAnnouncement = a) }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Announcement", "加载公告详情失败 id=$id", e)
                     _uiState.update {
                         it.copy(
                             loading = false,

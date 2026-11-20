@@ -5,7 +5,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.CredentialsRejectedException
 import restarhalf.stellar.schedule.core.error.isCredentialRejection
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.PEAuthStore
 import restarhalf.stellar.schedule.domain.port.PEGateway
 import restarhalf.stellar.schedule.domain.repository.PERepository
@@ -84,7 +83,6 @@ class PEAuthWorkflowPortImpl(
         authMutex.withLock {
             val credentials = authStore.getCredentials()
             if (credentials == null) {
-                AppLogger.log("PEAuth", "刷新会话失败，没有保存的凭据，清理本地会话")
                 authStore.clearSession()
                 return
             }
@@ -98,12 +96,10 @@ class PEAuthWorkflowPortImpl(
                 throw e
             } catch (e: Exception) {
                 if (isCredentialRejection(e.message.orEmpty())) {
-                    AppLogger.log("PEAuth", "刷新会话失败，账号或密码错误，退出登录", e)
                     authStore.clearSession()
                     authStore.clearCredentials()
                     return
                 }
-                AppLogger.log("PEAuth", "刷新会话失败，恢复旧Token", e)
                 if (tokenBefore != null) authStore.setToken(tokenBefore)
             }
         }

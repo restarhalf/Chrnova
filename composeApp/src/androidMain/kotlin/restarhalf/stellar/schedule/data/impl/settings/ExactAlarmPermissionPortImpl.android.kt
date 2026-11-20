@@ -8,7 +8,6 @@ import android.os.Build
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import com.russhwolf.settings.ObservableSettings
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 
 class ExactAlarmPermissionPortImpl(
@@ -33,8 +32,6 @@ class ExactAlarmPermissionPortImpl(
                 }
             )
             true
-        }.onFailure {
-            AppLogger.log("App", "申请精确闹钟权限失败", it)
         }.getOrDefault(false)
     }
 

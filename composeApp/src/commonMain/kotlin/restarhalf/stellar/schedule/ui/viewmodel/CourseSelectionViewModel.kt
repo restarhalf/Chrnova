@@ -17,7 +17,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
@@ -144,7 +143,6 @@ class CourseSelectionViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "加载选课轮次失败", e)
                 _uiState.update {
                     it.copy(loading = false, loadingMessage = "", error = e.message ?: "加载失败")
                 }
@@ -181,7 +179,6 @@ class CourseSelectionViewModel(
                 loadSelectedCourses()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "初始化选课会话失败", e)
                 _uiState.update { it.copy(error = e.message ?: "进入选课失败") }
             }
         }
@@ -229,7 +226,6 @@ class CourseSelectionViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "加载课程列表失败", e)
                 _uiState.update {
                     it.copy(loading = false, loadingMessage = "", error = e.message ?: "加载课程列表失败")
                 }
@@ -285,7 +281,6 @@ class CourseSelectionViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "加入目标试探失败", e)
                 handleAddCheckFailure(course, classificationCode, e.message ?: "请求异常")
             }
         }
@@ -442,7 +437,6 @@ class CourseSelectionViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "加载已选课程失败", e)
                 _uiState.update { it.copy(loadingSelected = false) }
             }
         }
@@ -468,7 +462,6 @@ class CourseSelectionViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "退课失败", e)
                 appendLog(SelectionLog(now(), "退课异常：${course.courseName} - ${e.message}", SelectionLog.LogLevel.ERROR))
             }
         }
@@ -500,12 +493,9 @@ class CourseSelectionViewModel(
 
                     if (result is JwxtSelectionOperResult.Success) {
                         markTargetSucceeded(target.key)
-                    } else if (result is JwxtSelectionOperResult.NeedConfirm) {
-
                     }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    AppLogger.log("CourseSelection", "抢课请求异常", e)
                     val msg = e.message ?: "请求异常"
                     updateTargetMessage(target.key, msg)
                     appendLog(SelectionLog(now(), "${target.course.courseName}：$msg", SelectionLog.LogLevel.ERROR))
@@ -516,7 +506,6 @@ class CourseSelectionViewModel(
                             useCase.refreshSession(ctx.rotationId)
                         } catch (refreshErr: Exception) {
                             if (refreshErr is CancellationException) throw refreshErr
-                            AppLogger.log("CourseSelection", "刷新会话失败", refreshErr)
                             appendLog(
                                 SelectionLog(now(), "刷新会话失败：${refreshErr.message}", SelectionLog.LogLevel.ERROR),
                             )

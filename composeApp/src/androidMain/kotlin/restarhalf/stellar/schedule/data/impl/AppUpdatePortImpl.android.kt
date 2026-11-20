@@ -8,7 +8,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import restarhalf.stellar.schedule.R
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 
@@ -42,11 +41,8 @@ class AppUpdatePortImpl(
                     .use { input -> input.copyTo(output) }
             } ?: error("openOutputStream returned null")
             true
-        }.onFailure {
-            AppLogger.log("Update", "保存微信支付图片失败", it)
         }.getOrElse {
             runCatching { resolver.delete(uri, null, null) }
-                .onFailure { AppLogger.log("Update", "清理微信支付图片URI失败", it) }
             false
         }
     }
@@ -61,8 +57,6 @@ class AppUpdatePortImpl(
         return runCatching {
             context.startActivity(intent)
             true
-        }.onFailure {
-            AppLogger.log("Update", "加入QQ群失败", it)
         }.getOrDefault(false)
     }
 
@@ -77,8 +71,6 @@ class AppUpdatePortImpl(
                 }
             context.startActivity(intent)
             true
-        }.onFailure {
-            AppLogger.log("Update", "打开微信扫一扫失败", it)
         }.getOrDefault(false)
     }
 }

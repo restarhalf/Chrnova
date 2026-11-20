@@ -7,7 +7,6 @@ import kotlinx.cinterop.toKString
 import platform.Foundation.NSNumber
 import platform.Foundation.NSString
 import platform.Foundation.NSUserDefaults
-import restarhalf.stellar.schedule.core.log.AppLogger
 
 object MmkvIosBootstrap {
     private const val TAG = "MmkvMigration"
@@ -57,6 +56,5 @@ object MmkvIosBootstrap {
             }
         }
         kv.encodeBool(MmkvStores.MIGRATION_FLAG, true)
-        AppLogger.log(TAG, "migrated store=$name keys=$copied from NSUserDefaults")
     }
 }

@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 
@@ -17,7 +16,6 @@ class RepairExaminationSemestersUseCase(
             }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            AppLogger.log("Repair", "修复考试学期ID失败", e)
         }
     }
 }

@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 
 class JwxtLoginUseCase(
@@ -23,7 +22,6 @@ class JwxtLoginUseCase(
                 p = p
             )
         } catch (e: Exception) {
-            AppLogger.log("Auth", "登录失败 userNo=$userNo", e)
             throw e
         }
     }

@@ -20,7 +20,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.PEAppointmentDetail
 import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
 import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
@@ -83,7 +82,6 @@ class PEAppointmentViewModel(
         .map { token -> token.isNotBlank() }
         .catch { e ->
             if (e is CancellationException) throw e
-            AppLogger.log("PEAppoint", "观察token变化异常", e)
             emit(false)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -125,7 +123,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载我的预约失败", ex)
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -159,7 +156,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载可预约列表失败", ex)
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -195,7 +191,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载更多我的预约失败", ex)
                 _uiState.update { it.copy(loadingMore = false) }
             }
         }
@@ -225,7 +220,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载更多可预约失败", ex)
                 _uiState.update { it.copy(loadingMore = false) }
             }
         }
@@ -280,7 +274,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载预约详情失败", ex)
                 _uiState.update { s ->
                     val booking = s.booking ?: return@update s
                     s.copy(
@@ -350,7 +343,6 @@ class PEAppointmentViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "加载时段失败", ex)
                 _uiState.update { s ->
                     val booking = s.booking ?: return@update s
                     s.copy(
@@ -392,7 +384,6 @@ class PEAppointmentViewModel(
                 loadAvailableAppointments()
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEAppoint", "取消预约失败", ex)
                 _uiState.update {
                     it.copy(
                         cancelTarget = null,
@@ -448,7 +439,6 @@ class PEAppointmentViewModel(
                         loadAvailableAppointments()
                     } catch (ex: Exception) {
                         if (ex is CancellationException) throw ex
-                        AppLogger.log("PEAppoint", "提交预约失败", ex)
                         _uiState.update { s ->
                             s.copy(
                                 actionInFlight = false,

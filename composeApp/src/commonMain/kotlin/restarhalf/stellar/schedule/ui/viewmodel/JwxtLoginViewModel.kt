@@ -13,7 +13,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.JwxtLoginUseCase
 
 class JwxtLoginViewModel(
@@ -63,7 +62,6 @@ class JwxtLoginViewModel(
                     }
                     .onFailure { throwable ->
                         if (throwable is CancellationException) throw throwable
-                        AppLogger.log("Auth", "登录失败 userNo=$userNo", throwable)
                         _uiState.update { state ->
                             state.copy(
                                 loading = false,

@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.domain.policy.buildCourseNames
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -193,10 +192,8 @@ class ExamEditViewModel(
                 val saved = runCatching { withContext(AppIoDispatcher) { saveExaminationUseCase(examination, semesterId) } }
                     .onFailure { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("ExamEdit", "保存考试失败", e)
                     }
                     .isSuccess
-                // 存完立刻按新数据重排一次，不用等下次打开考试页
                 if (saved) rescheduleReminderQuietly()
                 onResult(saved)
             } finally {
@@ -223,7 +220,6 @@ class ExamEditViewModel(
             val deleted = runCatching { withContext(AppIoDispatcher) { deleteExaminationUseCase(id) } }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("ExamEdit", "删除考试失败", e)
                 }
                 .isSuccess
             if (deleted) rescheduleReminderQuietly()
@@ -231,12 +227,10 @@ class ExamEditViewModel(
         }
     }
 
-    /** 重排失败不影响保存结果，只记日志 */
     private suspend fun rescheduleReminderQuietly() {
         runCatching { withContext(AppIoDispatcher) { rescheduleNextExamReminderIfEnabled() } }
             .onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("ExamEdit", "保存后重排考试提醒失败", e)
             }
     }
 }

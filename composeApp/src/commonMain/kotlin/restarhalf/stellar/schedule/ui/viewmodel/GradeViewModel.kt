@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.text.DecimalFormatter
 import restarhalf.stellar.schedule.core.text.uniqueKeys
 import restarhalf.stellar.schedule.core.time.SemesterUtils
@@ -219,7 +218,6 @@ class GradeViewModel(
                 .onSuccess { _summary.value = SummarySnapshot(userNo, it) }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Grades", "加载成绩数据失败", e)
 
                     _error.value = e.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
                 }

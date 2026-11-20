@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.VerifyGitHubStarUseCase
 
@@ -69,7 +68,6 @@ class StarVerificationHolder(
                 )
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("StarVerification", "验证 star 失败", e)
                 _state.value = _state.value.copy(
                     isVerifying = false,
                     error = e.message ?: "验证失败"

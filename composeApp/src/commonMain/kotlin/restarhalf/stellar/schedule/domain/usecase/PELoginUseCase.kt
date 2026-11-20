@@ -1,6 +1,5 @@
 package restarhalf.stellar.schedule.domain.usecase
 
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.PEAuthWorkflowPort
 
 class PELoginUseCase(
@@ -16,7 +15,6 @@ class PELoginUseCase(
                 password = password,
             )
         } catch (e: Exception) {
-            AppLogger.log("PEAuth", "登录失败 username=$username", e)
             throw e
         }
     }

@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.DEFAULT_QQ_GROUP_KEY
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
@@ -110,7 +109,6 @@ class AboutViewModel(
             }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Update", "检查更新失败", e)
                     _updateSummary.value = e.toUserFacingMessage(UserFacingErrorKind.CheckUpdate)
                 }
 

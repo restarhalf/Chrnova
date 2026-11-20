@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.core.error.isNetworkError
 import restarhalf.stellar.schedule.core.time.SemesterUtils
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -60,7 +59,6 @@ class FetchGradesUseCase(
             if (e is kotlinx.coroutines.CancellationException) throw e
             if (e.isNetworkError()) throw e
             if (e is ParseFailureException) throw e
-            AppLogger.log("Fetch", "获取成绩失败，刷新会话重试", e)
             authWorkflow.refreshSession()
             val resolvedSemester = resolveSemester()
             fetchWithFallback(resolvedSemester)

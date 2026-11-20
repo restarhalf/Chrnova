@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -20,22 +19,14 @@ class TimetableSettings(private val settings: ObservableSettings) {
 
     fun getCampus(): Campus {
         val raw = settings.getString(KEY_CAMPUS, Campus.Development.name)
-        return runCatching { Campus.valueOf(raw) }
-            .onFailure {
-                AppLogger.log("Settings", "解析校区失败: raw=$raw", it)
-            }
-            .getOrElse { Campus.Development }
+        return runCatching { Campus.valueOf(raw) }.getOrElse { Campus.Development }
     }
 
     @OptIn(ExperimentalSettingsApi::class)
     fun observeCampus(): Flow<Campus> {
         return settings.getStringFlow(KEY_CAMPUS, Campus.Development.name)
             .map { raw ->
-                runCatching { Campus.valueOf(raw) }
-                    .onFailure {
-                        AppLogger.log("Settings", "解析校区失败: raw=$raw", it)
-                    }
-                    .getOrElse { Campus.Development }
+                runCatching { Campus.valueOf(raw) }.getOrElse { Campus.Development }
             }
     }
 

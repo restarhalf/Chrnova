@@ -42,7 +42,6 @@ class TransCourseUseCase {
                 weeks = listOf(originWeek),
             )
 
-        // 只有“原本就有这一周、且时间地点都没变”才算空操作；换到新周次是有效的换周。
         val isNoOp =
             originWeek == targetWeek &&
                 originCourse.weeks.contains(originWeek) &&
@@ -66,7 +65,6 @@ class TransCourseUseCase {
                 .asSequence()
                 .filter { it.dayOfWeek == overrideCourse.dayOfWeek }
                 .filter { isCourseActiveInWeek(it, targetWeek) }
-                // 自己、以及这门课之前的调课记录都不算冲突。
                 .filterNot { it.id != 0L && it.id == originCourse.id }
                 .filterNot { it.belongsToFamily(familyKey) }
                 .filter { other ->

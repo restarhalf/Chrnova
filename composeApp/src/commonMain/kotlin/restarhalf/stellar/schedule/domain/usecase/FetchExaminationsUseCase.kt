@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.core.error.isNetworkError
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.policy.distinctExaminations
 import restarhalf.stellar.schedule.domain.port.AcademicPort
@@ -40,7 +39,6 @@ class FetchExaminationsUseCase(
             if (e is kotlinx.coroutines.CancellationException) throw e
             if (e.isNetworkError()) throw e
             if (e is ParseFailureException) throw e
-            AppLogger.log("Fetch", "获取考试安排失败，刷新会话重试", e)
             authWorkflow.refreshSession()
             academic.fetchExaminations(
                 semester = resolvedSemester,

@@ -6,7 +6,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Announcement
 import restarhalf.stellar.schedule.domain.port.AnnouncementCachePort
 
@@ -22,7 +21,6 @@ class AnnouncementStore(
         return try {
             Json.decodeFromString(ListSerializer(Announcement.serializer()), raw)
         } catch (e: Exception) {
-            AppLogger.log("Announcement", "解析公告缓存失败", e)
             null
         }
     }
@@ -40,7 +38,6 @@ class AnnouncementStore(
         return try {
             Json.decodeFromString(ListSerializer(String.serializer()), raw).toSet()
         } catch (e: Exception) {
-            AppLogger.log("Announcement", "解析已读公告失败", e)
             emptySet()
         }
     }

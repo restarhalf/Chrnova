@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
@@ -64,7 +63,6 @@ class CourseEnrollViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "加载选课轮次失败", e)
                 _uiState.update {
                     it.copy(loading = false, error = e.message ?: "加载失败")
                 }
@@ -102,7 +100,6 @@ class CourseEnrollViewModel(
                 loadSelectedCourses()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "初始化选课会话失败", e)
                 _uiState.update { it.copy(error = e.message ?: "进入选课失败") }
             }
         }
@@ -149,7 +146,6 @@ class CourseEnrollViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "加载课程列表失败", e)
                 _uiState.update {
                     it.copy(loading = false, error = e.message ?: "加载课程列表失败")
                 }
@@ -209,7 +205,6 @@ class CourseEnrollViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "选课失败", e)
                 _uiState.update {
                     it.copy(submitting = false, error = e.message ?: "选课请求失败")
                 }
@@ -229,7 +224,6 @@ class CourseEnrollViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "加载已选课程失败", e)
                 _uiState.update { it.copy(loadingSelected = false) }
             }
         }
@@ -267,7 +261,6 @@ class CourseEnrollViewModel(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseEnroll", "退课失败", e)
                 _uiState.update {
                     it.copy(submitting = false, error = e.message ?: "退课请求失败")
                 }

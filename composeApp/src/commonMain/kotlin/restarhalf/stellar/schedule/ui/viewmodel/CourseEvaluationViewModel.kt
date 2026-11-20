@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.model.CourseEvaluationSummary
 import restarhalf.stellar.schedule.domain.model.Evaluation
@@ -137,7 +136,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure {
                     if (it is CancellationException) throw it
-                    AppLogger.log("Evaluation", "加载已选课程失败", it)
                 }
         }
     }
@@ -169,7 +167,6 @@ class CourseEvaluationViewModel(
                 }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Evaluation", "加载评价列表失败", e)
                 updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
         }
@@ -194,7 +191,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "加载课程聚合列表失败", e)
                     updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
         }
@@ -209,7 +205,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "加载评价详情失败", e)
                     updateState { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
         }
@@ -228,7 +223,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "提交评价失败", e)
                     updateState { it.copy(submitting = false, error = e.message ?: "提交失败") }
                 }
         }
@@ -255,7 +249,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "删除评价失败", e)
                     updateState { it.copy(loading = false, error = e.message ?: "删除失败") }
                     onResult(false)
                 }
@@ -284,7 +277,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "点赞操作失败", e)
                     updateState { it.copy(error = e.message ?: "操作失败") }
                 }
         }
@@ -320,7 +312,6 @@ class CourseEvaluationViewModel(
                 }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Evaluation", "编辑评价失败", e)
                     updateState { it.copy(submitting = false, error = e.message ?: "编辑失败") }
                 }
         }

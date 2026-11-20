@@ -78,8 +78,6 @@ fun getCoursePaletteIndex(courseName: String): Int {
     return courseName.hashCode().absoluteValue % courseColorPaletteLight.size
 }
 
-// 小组件在后台线程也会取色，因此缓存改成写时复制：读侧永远看到完整不可变快照，
-// 并发写最多丢一条缓存，不会破坏表结构。
 private const val COLOR_CACHE_MAX = 128
 @Volatile
 private var colorCache: Map<Pair<String, Boolean>, CourseColor> = emptyMap()

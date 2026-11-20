@@ -19,7 +19,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.PEDetailData
 import restarhalf.stellar.schedule.domain.model.PESubjectHistoryItem
 import restarhalf.stellar.schedule.domain.model.PEYearScore
@@ -71,7 +70,6 @@ class PEViewModel(
         .map { token -> token.isNotBlank() }
         .catch { e ->
             if (e is CancellationException) throw e
-            AppLogger.log("PE", "观察token变化异常", e)
             emit(false)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -89,7 +87,6 @@ class PEViewModel(
                 peScoreListUseCase.observeScoreList()
                     .catch { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("PE", "缓存成绩Flow异常", e)
                     }
                     .collect { scores ->
                         _uiState.update { state ->
@@ -101,7 +98,6 @@ class PEViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLogger.log("PE", "读取缓存成绩失败", e)
             }
         }
     }
@@ -112,7 +108,6 @@ class PEViewModel(
                 peAuth.observeProfile()
                     .catch { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("PE", "观察用户档案Flow异常", e)
                     }
                     .collect { profile ->
                         _uiState.update { state ->
@@ -124,7 +119,6 @@ class PEViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLogger.log("PE", "读取用户档案失败", e)
             }
         }
     }
@@ -135,7 +129,6 @@ class PEViewModel(
                 peScoreDetailUseCase.observeDetailData(schoolYear)
                     .catch { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("PE", "缓存详情Flow异常", e)
                     }
                     .collect { detail ->
                         _uiState.update { state ->
@@ -147,7 +140,6 @@ class PEViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLogger.log("PE", "读取缓存详情失败", e)
             }
         }
     }
@@ -175,7 +167,6 @@ class PEViewModel(
             onSuccess(action())
         } catch (ex: Exception) {
             if (ex is CancellationException) throw ex
-            AppLogger.log(logTag, "加载失败", ex)
             _uiState.update { s -> s.copy(error = ex.toUserFacingMessage(errorKind)) }
         }
     }
@@ -297,7 +288,6 @@ class PEViewModel(
             runCatching { peAuthWorkflow.logout() }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("PE", "退出登录清理失败", e)
                 }
         }
     }

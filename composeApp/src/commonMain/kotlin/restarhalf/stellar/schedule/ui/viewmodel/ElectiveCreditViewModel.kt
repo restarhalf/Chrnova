@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.GradeCourse
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
@@ -81,7 +80,6 @@ class ElectiveCreditViewModel(
                     academic.fetchGuidanceTeachingCourses(kcxz = "54")
                 }.getOrElse { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
-                    AppLogger.log("ElectiveCredit", "获取创新创业专业融合选修课程失败", e)
                     emptyList()
                 }
 
@@ -89,7 +87,6 @@ class ElectiveCreditViewModel(
                     academic.fetchGuidanceTeachingCourses(kcxz = "61")
                 }.getOrElse { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
-                    AppLogger.log("ElectiveCredit", "获取专业选修课程失败", e)
                     emptyList()
                 }
 
@@ -105,7 +102,6 @@ class ElectiveCreditViewModel(
                 )
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("ElectiveCredit", "加载选修课学分数据失败", e)
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     error = e.toUserFacingMessage(UserFacingErrorKind.LoadGrades)
@@ -123,7 +119,6 @@ class ElectiveCreditViewModel(
                         report.achievements
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
-                        AppLogger.log("ElectiveCredit", "获取学期$semesterId 成绩失败，尝试本地回退", e)
                         try {
                             val userNo = auth.observeProfile().first().userNo
                             if (userNo.isNotBlank()) {
@@ -134,7 +129,6 @@ class ElectiveCreditViewModel(
                             }
                         } catch (fallback: Exception) {
                             if (fallback is kotlinx.coroutines.CancellationException) throw fallback
-                            AppLogger.log("ElectiveCredit", "本地回退也失败", fallback)
                             emptyList()
                         }
                     }

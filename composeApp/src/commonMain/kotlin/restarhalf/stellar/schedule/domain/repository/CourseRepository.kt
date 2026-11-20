@@ -15,7 +15,6 @@ interface CourseRepository {
 
     suspend fun deleteCourse(course: Course)
 
-    /** 在同一个事务里删掉 [toDelete]、再插入 [toInsert]，避免删完没插进去丢数据。 */
     suspend fun replaceCourses(toDelete: List<Course>, toInsert: List<Course>)
 
     suspend fun getAllCoursesOnce(): List<Course>

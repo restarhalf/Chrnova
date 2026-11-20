@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.usecase.PELoginUseCase
 
 class PELoginViewModel(
@@ -55,7 +54,6 @@ class PELoginViewModel(
                 }.onFailure { throwable ->
                     if (throwable is CancellationException) throw throwable
                     val errorMsg = throwable.message ?: "登录失败"
-                    AppLogger.log("PEAuth", "体育系统登录失败", throwable)
                     _uiState.update { it.copy(loading = false, error = errorMsg) }
                 }
             }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Paper
 import restarhalf.stellar.schedule.domain.port.PapersPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
@@ -64,7 +63,6 @@ class PapersViewModel(
                     _uiState.update { it.copy(allPapers = papers.toPersistentList(), loading = false) }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("Papers", "加载课件列表失败", e)
                     _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
                 }
             }
@@ -79,7 +77,6 @@ class PapersViewModel(
                 _uiState.update { it.copy(folders = folders.toPersistentList()) }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Papers", "加载文件夹列表失败", e)
             }
         }
     }
@@ -94,7 +91,6 @@ class PapersViewModel(
                 _uiState.update { it.copy(selectedPaper = paper, loading = false) }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Papers", "加载课件详情失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "加载失败") }
             }
         }
@@ -110,7 +106,6 @@ class PapersViewModel(
                 _uiState.update { it.copy(loading = false, downloadUrl = url) }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Papers", "下载课件失败", e)
                 _uiState.update { it.copy(loading = false, error = e.message ?: "下载失败") }
             }
         }
@@ -143,7 +138,6 @@ class PapersViewModel(
                 loadFolders()
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Papers", "上传课件失败", e)
                 _uiState.update { it.copy(uploading = false, error = e.message ?: "上传失败") }
             }
         }

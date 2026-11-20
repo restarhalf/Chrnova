@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.CancellationException
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Course
 import restarhalf.stellar.schedule.domain.policy.familyKey
 import restarhalf.stellar.schedule.domain.policy.isTransOverrideOf
@@ -24,7 +23,6 @@ class SaveTransCoursesUseCase(private val repository: CourseRepository) {
                 } else {
                     val replacedOriginWeeks =
                         overrideCourses.flatMap { it.weeks }.toSet() + clearedWeeks
-                    // 同一个目标周也要顶掉旧记录，否则换周后会叠出两节课。
                     val replacedTargetWeeks = overrideCourses.map { it.targetWeek }.toSet()
                     repository
                         .getAllCoursesOnce()
@@ -38,7 +36,6 @@ class SaveTransCoursesUseCase(private val repository: CourseRepository) {
         }
             .onFailure { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("Course", "保存调课失败", e)
             }
             .isSuccess
     }

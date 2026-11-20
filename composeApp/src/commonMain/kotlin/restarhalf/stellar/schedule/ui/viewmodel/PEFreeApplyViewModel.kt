@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.PECodeItem
 import restarhalf.stellar.schedule.domain.model.PEFreeApplyItem
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
@@ -64,7 +63,6 @@ class PEFreeApplyViewModel(
         .map { token -> token.isNotBlank() }
         .catch { e ->
             if (e is CancellationException) throw e
-            AppLogger.log("PEFree", "观察token异常", e)
             emit(false)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -99,7 +97,6 @@ class PEFreeApplyViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEFree", "加载免测列表失败", ex)
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -142,7 +139,6 @@ class PEFreeApplyViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEFree", "加载免测详情失败", ex)
                 _uiState.update {
                     it.copy(
                         detailLoading = false,
@@ -172,7 +168,6 @@ class PEFreeApplyViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEFree", "下载附件预览失败 $attId", ex)
                 _uiState.update {
                     it.copy(detailAttLoading = it.detailAttLoading - attId)
                 }
@@ -239,7 +234,6 @@ class PEFreeApplyViewModel(
                 }
             } catch (ex: Exception) {
                 if (ex is CancellationException) throw ex
-                AppLogger.log("PEFree", "上传附件失败", ex)
                 _uiState.update {
                     it.copy(
                         uploading = false,
@@ -298,7 +292,6 @@ class PEFreeApplyViewModel(
                         refresh()
                     } catch (ex: Exception) {
                         if (ex is CancellationException) throw ex
-                        AppLogger.log("PEFree", "提交免测申请失败", ex)
                         _uiState.update {
                             it.copy(
                                 submitting = false,

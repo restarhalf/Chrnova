@@ -13,13 +13,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.core.error.UserFacingErrorKind
 import restarhalf.stellar.schedule.core.error.toUserFacingMessage
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.Examination
 import restarhalf.stellar.schedule.domain.model.TermGradeReport
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
 import restarhalf.stellar.schedule.domain.usecase.RepairExaminationSemestersUseCase
 import restarhalf.stellar.schedule.domain.usecase.FetchExaminationsSimpleUseCase
@@ -31,7 +29,6 @@ import restarhalf.stellar.schedule.ui.sync.SyncUiState
 class AppViewModel(
     private val auth: JwxtAuthPort,
     private val timetable: TimetablePort,
-    private val settings: LogSettingsPort,
     private val fetchExaminations: FetchExaminationsSimpleUseCase,
     private val fetchGrades: FetchGradesSimpleUseCase,
     private val jwxtLoginUseCase: JwxtLoginUseCase,
@@ -42,15 +39,9 @@ class AppViewModel(
 
     init {
         viewModelScope.launch {
-            settings.observeLogEnabled().collect { enabled ->
-                AppLogger.setEnabled(enabled)
-            }
-        }
-        viewModelScope.launch {
             runCatching { repairExaminationSemesters() }
                 .onFailure { e ->
                     if (e is CancellationException) throw e
-                    AppLogger.log("AppViewModel", "考试学期修复失败", e)
                 }
         }
     }
@@ -106,7 +97,6 @@ class AppViewModel(
                     },
                     onFailure = { e ->
                         if (e is CancellationException) throw e
-                        AppLogger.log("Sync", "同步失败", e)
                         SyncUiState.Error(e.toUserFacingMessage(UserFacingErrorKind.Sync))
                     },
                 )
@@ -114,7 +104,6 @@ class AppViewModel(
 
     fun logout() {
         runCatching { courseSelectionService.stop() }
-            .onFailure { AppLogger.log("AppViewModel", "退出登录停止抢课服务失败", it) }
         auth.clear()
     }
 

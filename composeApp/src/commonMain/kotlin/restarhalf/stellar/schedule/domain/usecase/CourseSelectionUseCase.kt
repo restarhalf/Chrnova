@@ -1,7 +1,6 @@
 package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.CancellationException
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionClassification
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
@@ -77,24 +76,15 @@ class CourseSelectionUseCase(
         while (result is JwxtSelectionOperResult.NeedConfirm && depth < MAX_NEEDCF_DEPTH) {
             depth++
             val relatedNoticeId = result.yxjx0404id
-            AppLogger.log(
-                "CourseSelection",
-                "needcf: yxcfbs=${result.yxcfbs}, cfbs=${result.cfbs}, xkkcid=${result.xkkcid}, yxjx0404id=$relatedNoticeId, msg=${result.message}",
-            )
 
             val courses = runCatching {
                 loadCourses(ctx, classificationCode)
             }.getOrElse { e ->
                 if (e is CancellationException) throw e
-                AppLogger.log("CourseSelection", "needcf: 重新加载课程列表失败", e)
                 emptyList()
             }
             val next = courses.firstOrNull { it.noticeId == relatedNoticeId }
             if (next == null) {
-                AppLogger.log(
-                    "CourseSelection",
-                    "needcf: 未在课程列表中找到关联教学班 noticeId=$relatedNoticeId，放弃自动选关联课",
-                )
                 return result
             }
 

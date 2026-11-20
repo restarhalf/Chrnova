@@ -19,7 +19,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
@@ -420,14 +419,12 @@ class JwxtClient(
                     data.toString(),
                 )
             }.getOrElse {
-                AppLogger.log("JwxtClient", "解析关联课程数组失败", it)
                 emptyList()
             }
 
             is JsonObject -> runCatching {
                 listOf(json.decodeFromString(JwxtSelectionCourse.serializer(), data.toString()))
             }.getOrElse {
-                AppLogger.log("JwxtClient", "解析关联课程对象失败", it)
                 emptyList()
             }
 

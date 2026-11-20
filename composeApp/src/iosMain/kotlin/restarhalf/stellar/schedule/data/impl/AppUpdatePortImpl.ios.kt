@@ -11,7 +11,6 @@ import platform.darwin.dispatch_semaphore_signal
 import platform.darwin.dispatch_semaphore_wait
 import platform.darwin.dispatch_sync
 import platform.darwin.dispatch_time
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.core.update.buildQqGroupIosUrl
@@ -55,9 +54,7 @@ class AppUpdatePortImpl : AppUpdatePort {
             UIApplication.sharedApplication.openURL(
                 url = url,
                 options = emptyMap<Any?, Any>(),
-            ) { success ->
-                if (!success) AppLogger.log("AppUpdate", "打开链接失败")
-            }
+            ) {}
             return true
         }
         val semaphore = dispatch_semaphore_create(0)

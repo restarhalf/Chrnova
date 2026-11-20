@@ -2,11 +2,8 @@ package restarhalf.stellar.schedule.data.local.mmkv
 
 import android.content.Context
 import com.tencent.mmkv.kmp.MMKV
-import restarhalf.stellar.schedule.core.log.AppLogger
 
 object MmkvLegacyMigrator {
-    private const val TAG = "MmkvMigration"
-
     fun migrateAll(context: Context) {
         MmkvStores.ALL.forEach { migrateSharedPreferences(context, it) }
     }
@@ -17,7 +14,6 @@ object MmkvLegacyMigrator {
 
         val sp = context.getSharedPreferences(name, Context.MODE_PRIVATE)
         val all = sp.all
-        var copied = 0
         for ((key, value) in all) {
             when (value) {
                 is Boolean -> kv.encodeBool(key, value)
@@ -26,20 +22,9 @@ object MmkvLegacyMigrator {
                 is Float -> kv.encodeFloat(key, value)
                 is Double -> kv.encodeDouble(key, value)
                 is String -> kv.encodeString(key, value)
-                is Set<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val strings = value as? Set<String>
-
-                    if (strings != null) {
-                        AppLogger.log(TAG, "skip string-set key=$key in $name size=${strings.size}")
-                    }
-                }
-                null -> Unit
-                else -> AppLogger.log(TAG, "skip unsupported type ${value::class} key=$key in $name")
+                else -> Unit
             }
-            copied++
         }
         kv.encodeBool(MmkvStores.MIGRATION_FLAG, true)
-        AppLogger.log(TAG, "migrated store=$name keys=$copied from SharedPreferences")
     }
 }

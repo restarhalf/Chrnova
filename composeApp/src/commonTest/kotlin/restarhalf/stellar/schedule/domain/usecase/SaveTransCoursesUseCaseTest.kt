@@ -72,7 +72,6 @@ class SaveTransCoursesUseCaseTest {
 
         assertTrue(useCase(origin, overrides))
 
-        // 旧记录和插入在同一个事务里完成，不单独调用 deleteCourse
         verifySuspend { repository.replaceCourses(listOf(oldWeek1), overrides) }
         verifySuspend(dev.mokkery.verify.VerifyMode.exactly(0)) { repository.deleteCourse(any()) }
     }
@@ -80,12 +79,10 @@ class SaveTransCoursesUseCaseTest {
     @Test
     fun `换到已被旧记录占用的目标周时删掉旧记录`() = runTest {
         val origin = course("高数", weeks = listOf(1, 2, 3, 4), type = 0, remoteKey = "k1")
-        // 上次第 3 周换到第 7 周
         val oldMove =
             course("高数", weeks = listOf(3), originRemoteKey = "k1", targetWeek = 7, id = 11)
         everySuspend { repository.getAllCoursesOnce() } returns listOf(origin, oldMove)
 
-        // 这次第 4 周换到第 7 周
         val overrides =
             listOf(course("高数", weeks = listOf(4), originRemoteKey = "k1", targetWeek = 7))
 

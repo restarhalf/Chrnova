@@ -24,7 +24,6 @@ import org.koin.core.context.GlobalContext
 import restarhalf.stellar.schedule.CourseSelectionService.Companion.latestLogFlow
 import restarhalf.stellar.schedule.CourseSelectionService.Companion.pendingConfig
 import restarhalf.stellar.schedule.CourseSelectionService.Companion.runningFlow
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionOperResult
 import restarhalf.stellar.schedule.domain.port.ServiceLogEntry
@@ -134,7 +133,6 @@ class CourseSelectionService : Service() {
                         }
                     } catch (e: Exception) {
                         if (e is CancellationException) throw e
-                        AppLogger.log("CourseSelectionService", "抢课请求异常", e)
                         emitLog("${target.courseName}：${e.message ?: "请求异常"}", ServiceLogEntry.LEVEL_ERROR)
 
                         if (cfg.refreshSessionOnAuthError && isAuthError(e)) {
@@ -185,7 +183,6 @@ class CourseSelectionService : Service() {
         val ts = now()
         val line = "[$ts] $msg"
         latestLogFlow.value = ServiceLogEntry(message = line, level = level)
-        AppLogger.log("CourseSelectionService", msg)
     }
 
     private fun now(): String {

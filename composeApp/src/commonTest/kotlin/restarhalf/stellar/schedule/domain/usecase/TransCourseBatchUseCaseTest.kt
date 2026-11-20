@@ -236,7 +236,6 @@ class TransCourseBatchUseCaseTest {
             weeks = listOf(1, 2, 3),
             remoteKey = "k1",
         )
-        // 上次整门课调到了周三
         val oldOverrides = listOf(1, 2, 3).map { week ->
             origin.copy(
                 id = (10 + week).toLong(),

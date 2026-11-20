@@ -5,7 +5,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import restarhalf.stellar.schedule.core.error.CredentialsRejectedException
 import restarhalf.stellar.schedule.core.error.isCredentialRejection
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.remote.JwxtAuthStore
 import restarhalf.stellar.schedule.data.remote.JwxtGateway
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
@@ -121,11 +120,9 @@ class JwxtAuthWorkflowPortImpl(
             } catch (e: Exception) {
                 if (authStore.getSessionGeneration() != generation) return
                 if (isCredentialRejection(e.message.orEmpty())) {
-                    AppLogger.log("Auth", "刷新会话失败，账号或密码错误，退出登录", e)
                     authStore.clear()
                     return
                 }
-                AppLogger.log("Auth", "刷新会话失败，恢复旧Token", e)
                 if (tokenBefore != null) authStore.setToken(tokenBefore)
             }
         }
