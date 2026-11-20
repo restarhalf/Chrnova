@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 壁纸层的圆角裁切：背景本身透明，只用来给 ImageView 提供圆角 outline，
+     配合 setClipToOutline 把照片裁成组件圆角。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#00000000" />
+    <corners android:radius="24dp" />
+</shape>

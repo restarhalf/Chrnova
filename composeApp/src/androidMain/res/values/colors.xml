@@ -8,29 +8,18 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="widget_bg">#FFF6F8FC</color>
-    <color name="widget_bg_small">#FFFFFFFF</color>
-    <color name="widget_divider">#FFFFFFFF</color>
-    <color name="widget_header_text">#80000000</color>
-    <color name="widget_empty_text">#80000000</color>
-    <color name="widget_time_text">#80000000</color>
-    <color name="widget_time_sub_text">#4D000000</color>
-    <color name="widget_title_text">#E6000000</color>
-    <color name="widget_subtitle_text">#4D000000</color>
-    <color name="widget_subtle_text">#4D000000</color>
-    <color name="widget_dot">#5B8BFF</color>
-    <color name="widget_status_ongoing">#FF0D84FF</color>
-    <color name="widget_status_upcoming">#FFF66161</color>
-    <color name="widget_status_done">#9AA0A6</color>
-    <color name="widget_bar_default">#4D6BFE</color>
-    <color name="widget_row_bg_neutral">#FFFFFFFF</color>
-    <color name="widget_row_bg_upcoming">#FFFEEFEF</color>
-    <color name="widget_row_bg_ongoing">#FFE7F3FF</color>
+    <!-- 桌面小组件（照 Nexio 的配色） -->
+    <color name="widget_title_color">#77000000</color>
+    <color name="widget_name_color">#FF1A1A1A</color>
+    <color name="widget_time_start_color">#88000000</color>
+    <color name="widget_time_end_color">#55000000</color>
+    <color name="widget_now_color">#FF2196F3</color>
+    <color name="widget_empty_color">#99000000</color>
 
     <color name="notify_title_text">#FFFFFFFF</color>
     <color name="notify_desc_text">#E6FFFFFF</color>
     <color name="notify_time_text">#CCFFFFFF</color>
-    
+
     <color name="notify_time_sub_text">#99FFFFFF</color>
     <color name="notify_time_stamp_text">#FFFFFFFF</color>
     <color name="notify_button_text">#FFFFFFFF</color>

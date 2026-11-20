@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">Chrnova</string>
-    <string name="widget_label_today">今日课程</string>
-    <string name="widget_desc_today_large">今日课程（大卡）</string>
-    <string name="widget_desc_today_small">今日课程（小卡）</string>
-    <string name="widget_desc_next_class">下节课</string>
+    <string name="widget_no_classes_today">今日无课</string>
+    <string name="widget_course_reminder">课程表</string>
+    <string name="widget_today_tomorrow">今明课程</string>
+    <string name="widget_today_course">今日课程</string>
+    <string name="widget_course_reminder_pad">课程表（Pad）</string>
+    <string name="widget_today_course_pad">今日课程（Pad）</string>
 </resources>

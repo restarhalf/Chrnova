@@ -13,7 +13,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import restarhalf.stellar.schedule.core.log.AppLogger
 
 internal object WidgetRefreshController {
     const val ACTION_WIDGET_FALLBACK_TICK =
@@ -36,7 +35,6 @@ internal object WidgetRefreshController {
                 scheduleFallback(appContext)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("Widget", "刷新小部件失败", e)
             }
         }
     }
@@ -62,12 +60,14 @@ internal object WidgetRefreshController {
 
     fun hasAnyPlacedWidget(context: Context): Boolean {
         val manager = AppWidgetManager.getInstance(context)
-        val smallIds =
-            manager.getAppWidgetIds(ComponentName(context, TodaySmallWidgetReceiver::class.java))
-        if (smallIds.isNotEmpty()) return true
-        val largeIds =
-            manager.getAppWidgetIds(ComponentName(context, TodayLargeWidgetReceiver::class.java))
-        return largeIds.isNotEmpty()
+        val providers = listOf(
+            CourseWidgetProviderStandard::class.java,
+            TodayTomorrowCourseWidgetProvider::class.java,
+            TodayCourseWidgetProviderStandard::class.java,
+            CourseWidgetProviderPad::class.java,
+            TodayCourseWidgetProviderPad::class.java,
+        )
+        return providers.any { manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty() }
     }
 
     fun scheduleFallback(context: Context) {
@@ -76,9 +76,6 @@ internal object WidgetRefreshController {
             return
         }
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        // 非唤醒型：小组件只在屏幕亮着时才有意义，没必要每 30 分钟把设备从
-        // 睡眠里叫醒一次（一天 48 次）。睡着时这次 tick 会等到下次醒来再补，
-        // 亮屏/解锁本来也有 ScreenStateReceiver 兜着。
         alarmManager.setInexactRepeating(
             AlarmManager.ELAPSED_REALTIME,
             SystemClock.elapsedRealtime() + 1_000L,
@@ -114,9 +111,15 @@ internal object WidgetRefreshController {
 }
 
 class WidgetRefreshReceiver : BroadcastReceiver() {
+
+    companion object {
+        const val ACTION_REFRESH_WIDGET = "restarhalf.stellar.schedule.ACTION_REFRESH_WIDGET"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         val isFallbackTick = action == WidgetRefreshController.ACTION_WIDGET_FALLBACK_TICK
+        val isRefreshNow = action == ACTION_REFRESH_WIDGET
         val isSystemRefresh =
             action == Intent.ACTION_TIME_CHANGED ||
                 action == Intent.ACTION_TIMEZONE_CHANGED ||
@@ -124,7 +127,7 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
                 action == Intent.ACTION_BOOT_COMPLETED ||
                 action == Intent.ACTION_MY_PACKAGE_REPLACED
 
-        if (!isFallbackTick && !isSystemRefresh) return
+        if (!isFallbackTick && !isRefreshNow && !isSystemRefresh) return
 
         val result = goAsync()
         val appContext = context.applicationContext
@@ -134,7 +137,6 @@ class WidgetRefreshReceiver : BroadcastReceiver() {
                 WidgetRefreshController.scheduleFallback(appContext)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("Widget", "刷新小部件失败", e)
             } finally {
                 result.finish()
             }

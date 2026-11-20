@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 有壁纸时的课程卡片底色：固定 60% 不透明，让壁纸透出来。
+     真机 RemoteViews 改不了 drawable 的 alpha，所以只能做成静态资源。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#99D6ECFD" />
+    <corners android:radius="14dp" />
+</shape>

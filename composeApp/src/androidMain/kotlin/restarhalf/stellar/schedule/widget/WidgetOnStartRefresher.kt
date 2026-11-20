@@ -13,10 +13,10 @@ internal object WidgetOnStartRefresher {
     @Volatile
     private var lastWidgetRefreshAtMs: Long = 0L
 
-    fun refreshIfNeeded(appContext: Context, scope: CoroutineScope) {
+    fun refreshIfNeeded(appContext: Context, scope: CoroutineScope, force: Boolean = false) {
         scope.launch {
             val now = SystemClock.elapsedRealtime()
-            if (now - lastWidgetRefreshAtMs < WIDGET_REFRESH_THROTTLE_MS) return@launch
+            if (!force && now - lastWidgetRefreshAtMs < WIDGET_REFRESH_THROTTLE_MS) return@launch
             lastWidgetRefreshAtMs = now
 
             WidgetUpdater.refreshAll(appContext)
