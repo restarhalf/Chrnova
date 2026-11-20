@@ -3,7 +3,6 @@ package restarhalf.stellar.schedule.domain.usecase
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import restarhalf.stellar.schedule.core.log.AppLogger
 import kotlin.time.ExperimentalTime
 
 class IsExamNotEndedUseCase {
@@ -19,11 +18,7 @@ class IsExamNotEndedUseCase {
             Regex("[~-]\\s*(\\d{1,2}:\\d{2})").find(rawTime)?.groupValues?.getOrNull(1)
                 ?: return true
         val normalized = "${date}T${end.padStart(5, '0')}"
-        val endDateTime = runCatching { LocalDateTime.parse(normalized) }
-            .onFailure {
-                AppLogger.log("Exams", "解析考试结束时间失败: raw=$rawTime", it)
-            }
-            .getOrNull() ?: return true
+        val endDateTime = runCatching { LocalDateTime.parse(normalized) }.getOrNull() ?: return true
         val endMs = endDateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
         return nowMs <= endMs
     }

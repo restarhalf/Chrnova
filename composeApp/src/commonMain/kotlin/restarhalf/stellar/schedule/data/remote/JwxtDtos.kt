@@ -3,10 +3,14 @@ package restarhalf.stellar.schedule.data.remote
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
@@ -109,24 +113,39 @@ data class JwxtCampusResponse(
 
 @Serializable
 data class JwxtCurriculumResponse(
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("Msg") val msg: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("code") val code: String = "",
     @SerialName("data") val data: List<JwxtCurriculumDayBlock>? = null,
-    @SerialName("nowWeek") val nowWeek: String = "",
-    @SerialName("jcdatalist") val jcDataList: List<JwxtJcDataItem> = emptyList(),
-    @SerialName("nkbList") val nkbList: List<JwxtNkbItem> = emptyList()
+    @Serializable(with = FlexibleStringSerializer::class)
+    @SerialName("nowWeek") val nowWeek: String = ""
 ) {
     fun isSuccess(): Boolean = code == "1"
 }
 
-private object WeekAsStringSerializer : KSerializer<String> {
-    override val descriptor = buildClassSerialDescriptor("WeekAsString")
+private object FlexibleStringSerializer : KSerializer<String> {
+    override val descriptor = PrimitiveSerialDescriptor("FlexibleString", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: String) = encoder.encodeString(value)
 
     override fun deserialize(decoder: Decoder): String {
-        val element = (decoder as kotlinx.serialization.json.JsonDecoder).decodeJsonElement()
-        return element.jsonPrimitive.content
+        val element = (decoder as? JsonDecoder)?.decodeJsonElement()
+            ?: return decoder.decodeString()
+        return if (element is JsonNull) "" else element.jsonPrimitive.contentOrNull.orEmpty()
+    }
+}
+
+private object FlexibleIntSerializer : KSerializer<Int> {
+    override val descriptor = PrimitiveSerialDescriptor("FlexibleInt", PrimitiveKind.INT)
+
+    override fun serialize(encoder: Encoder, value: Int) = encoder.encodeInt(value)
+
+    override fun deserialize(decoder: Decoder): Int {
+        val element = (decoder as? JsonDecoder)?.decodeJsonElement()
+            ?: return decoder.decodeInt()
+        val content = if (element is JsonNull) null else element.jsonPrimitive.contentOrNull
+        return content?.toIntOrNull() ?: content?.toDoubleOrNull()?.toInt() ?: 0
     }
 }
 
@@ -134,41 +153,40 @@ private object WeekAsStringSerializer : KSerializer<String> {
 data class JwxtCurriculumDayBlock(
     @SerialName("date") val date: List<JwxtDateItem> = emptyList(),
     @SerialName("item") val item: List<JwxtCurriculumItem> = emptyList(),
-    @Serializable(with = WeekAsStringSerializer::class) @SerialName("week") val week: String = "",
-    @SerialName("weekday") val weekday: String = ""
+    @Serializable(with = FlexibleStringSerializer::class)
+    @SerialName("week") val week: String = ""
 )
 
 @Serializable
 data class JwxtDateItem(
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("xqmc") val xqmc: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("mxrq") val mxrq: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("zc") val zc: String = "",
+    @Serializable(with = FlexibleIntSerializer::class)
     @SerialName("xqid") val xqid: Int = 0
 )
 
 @Serializable
 data class JwxtCurriculumItem(
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("classWeek") val classWeek: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("teacherName") val teacherName: String = "",
-    @SerialName("xqName") val xqName: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("weekNoteDetail") val weekNoteDetail: String = "",
-    @SerialName("buttonCode") val buttonCode: String = "",
-    @SerialName("xqNumber") val xqNumber: String = "",
-    @SerialName("ktmc") val ktmc: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("classTime") val classTime: String = "",
-    @SerialName("jx0408id") val jx0408id: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("kch") val kch: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("courseName") val courseName: String = "",
-    @SerialName("isRepeatCode") val isRepeatCode: String = "",
-    @SerialName("zxs") val zxs: Int = 0,
-    @SerialName("peopleNumber") val peopleNumber: Int = 0,
-    @SerialName("maxClassTime") val maxClassTime: String = "",
-    @SerialName("khfs") val khfs: String = "",
-    @SerialName("startTime") val startTime: String = "",
-    @SerialName("endTIme") val endTime: String = "",
+    @Serializable(with = FlexibleStringSerializer::class)
     @SerialName("location") val location: String = "",
-    @SerialName("classWeekDetails") val classWeekDetails: String = "",
-    @SerialName("coursesNote") val coursesNote: Int = 0
+    @Serializable(with = FlexibleStringSerializer::class)
+    @SerialName("classWeekDetails") val classWeekDetails: String = ""
 )
 
 @Serializable

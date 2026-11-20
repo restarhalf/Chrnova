@@ -2,7 +2,6 @@ package restarhalf.stellar.schedule.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.isNetworkError
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
@@ -44,14 +43,10 @@ class FetchSemesterIdsUseCase(
 
         val ex = firstAttempt.exceptionOrNull()
         if (ex?.isNetworkError() == true) {
-            AppLogger.log("Fetch", "获取学期列表网络错误", ex)
             return emptyList()
         }
 
-        ex?.let { AppLogger.log("Fetch", "获取学期列表失败，刷新会话重试", it) }
         authWorkflow.refreshSession()
-        return runCatching { academic.fetchSemesterIds() }
-            .onFailure { AppLogger.log("Fetch", "获取学期列表重试失败", it) }
-            .getOrElse { emptyList() }
+        return runCatching { academic.fetchSemesterIds() }.getOrElse { emptyList() }
     }
 }

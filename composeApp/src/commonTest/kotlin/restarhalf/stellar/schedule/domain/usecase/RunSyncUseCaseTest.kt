@@ -18,11 +18,16 @@ import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
+import restarhalf.stellar.schedule.domain.port.CourseReminderPort
+import restarhalf.stellar.schedule.domain.port.ExamReminderPort
+import restarhalf.stellar.schedule.domain.port.JwxtAuthPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
+import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
+import restarhalf.stellar.schedule.domain.repository.CourseRepository
+import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -34,7 +39,32 @@ class RunSyncUseCaseTest {
     private val timetable = mock<TimetablePort>(MockMode.autofill)
     private val settings = mock<TermSettingsPort>(MockMode.autofill)
     private val sync = mock<SyncPort>(MockMode.autofill)
-    private val reminderScheduler = mock<ReminderSchedulerPort>(MockMode.autofill)
+    private val reminderSettings = mock<ReminderSettingsPort>(MockMode.autofill)
+    private val courseRepository = mock<CourseRepository>(MockMode.autofill)
+    private val courseReminder = mock<CourseReminderPort>(MockMode.autofill)
+    private val examReminder = mock<ExamReminderPort>(MockMode.autofill)
+    private val examinationRepository = mock<ExaminationRepository>(MockMode.autofill)
+    private val auth = mock<JwxtAuthPort>(MockMode.autofill)
+
+    private val rescheduleAllReminders = RescheduleAllRemindersUseCase(
+        settings = reminderSettings,
+        courseRepository = courseRepository,
+        timetable = timetable,
+        courseReminder = courseReminder,
+        examReminder = examReminder,
+        collectReminderExaminations = CollectReminderExaminationsUseCase(
+            fetchExaminations = FetchExaminationsUseCase(
+                authWorkflow = authWorkflow,
+                academic = academic,
+                repository = examinationRepository,
+                auth = auth,
+                settings = settings,
+            ),
+            repository = examinationRepository,
+        ),
+        cancelAllCourseReminders = CancelAllCourseRemindersUseCase(courseReminder),
+        cancelAllExamReminders = CancelAllExamRemindersUseCase(examReminder),
+    )
 
     private val useCase = RunSyncUseCase(
         authWorkflow = authWorkflow,
@@ -42,7 +72,7 @@ class RunSyncUseCaseTest {
         timetable = timetable,
         settings = settings,
         sync = sync,
-        reminderScheduler = reminderScheduler,
+        rescheduleAllReminders = rescheduleAllReminders,
     )
 
     private val jinshitan = RemoteCampus(id = "c-js", name = "金石滩校区", isDefault = false)
@@ -58,6 +88,8 @@ class RunSyncUseCaseTest {
 
     private fun stubHappyPath() {
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan, development)
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(5, "c-js")
@@ -77,12 +109,15 @@ class RunSyncUseCaseTest {
         verify(VerifyMode.exactly(1)) { timetable.setTermStartMs(1000L) }
         verify(VerifyMode.exactly(1)) { timetable.setTotalWeeks(20) }
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.ensureLoggedIn() }
-        verify(VerifyMode.exactly(1)) { reminderScheduler.scheduleNow() }
+        verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
+        verify(VerifyMode.exactly(1)) { examReminder.cancelAll() }
     }
 
     @Test
     fun `无选中学期时回退教务当前学期`() = runTest {
         every { settings.observeSelectedTerm() } returns flowOf("")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         everySuspend { academic.fetchCurrentTermId() } returns "2026-2"
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan)
@@ -100,17 +135,21 @@ class RunSyncUseCaseTest {
     @Test
     fun `校区列表为空时抛出IllegalStateException`() = runTest {
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns emptyList()
 
         assertFailsWith<IllegalStateException> { useCase() }
         verifySuspend(VerifyMode.not) { sync.sync(any(), any(), any()) }
-        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
+        verify(VerifyMode.not) { courseReminder.cancelAll() }
     }
 
     @Test
     fun `名称不匹配时回退默认校区`() = runTest {
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         val mainCampus = RemoteCampus(id = "c-main", name = "主校区", isDefault = true)
         everySuspend { academic.fetchCampuses() } returns listOf(mainCampus, development)
@@ -127,6 +166,8 @@ class RunSyncUseCaseTest {
     @Test
     fun `主校区0课程时切备用校区成功并切换本地校区`() = runTest {
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan, development)
         var attempts = 0
@@ -148,6 +189,8 @@ class RunSyncUseCaseTest {
     @Test
     fun `备用校区也为0课程时保留原校区`() = runTest {
         every { settings.observeSelectedTerm() } returns flowOf("2026-1")
+        every { reminderSettings.observeCourseReminderEnabled() } returns flowOf(false)
+        every { reminderSettings.observeExamReminderEnabled() } returns flowOf(false)
         every { timetable.getCampus() } returns Campus.Jinshitan
         everySuspend { academic.fetchCampuses() } returns listOf(jinshitan, development)
         everySuspend { sync.sync(any(), any(), any()) } returns syncResult(0, "c-js")
@@ -168,7 +211,7 @@ class RunSyncUseCaseTest {
 
         assertFailsWith<RuntimeException> { useCase() }
         verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
-        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
+        verify(VerifyMode.not) { courseReminder.cancelAll() }
     }
 
     @Test
@@ -179,7 +222,7 @@ class RunSyncUseCaseTest {
 
         assertFailsWith<ParseFailureException> { useCase() }
         verifySuspend(VerifyMode.not) { authWorkflow.refreshSession() }
-        verify(VerifyMode.not) { reminderScheduler.scheduleNow() }
+        verify(VerifyMode.not) { courseReminder.cancelAll() }
     }
 
     @Test
@@ -197,6 +240,25 @@ class RunSyncUseCaseTest {
         assertEquals(4, result.inserted)
         assertEquals(2, attempts)
         verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
-        verify(VerifyMode.exactly(1)) { reminderScheduler.scheduleNow() }
+        verify(VerifyMode.exactly(1)) { courseReminder.cancelAll() }
+        verify(VerifyMode.exactly(1)) { examReminder.cancelAll() }
+    }
+
+    @Test
+    fun `前置接口登录过期时刷新会话并重试整段同步`() = runTest {
+        stubHappyPath()
+        var campusAttempts = 0
+        everySuspend { academic.fetchCampuses() } calls {
+            campusAttempts++
+            if (campusAttempts == 1) throw IllegalStateException("登录已过期，请刷新重试")
+            listOf(jinshitan, development)
+        }
+
+        val result = useCase()
+
+        assertEquals(5, result.inserted)
+        assertEquals(2, campusAttempts)
+        verifySuspend(VerifyMode.exactly(1)) { authWorkflow.refreshSession() }
+        verifySuspend(VerifyMode.exactly(1)) { sync.sync("2026-1", "c-js", "all") }
     }
 }

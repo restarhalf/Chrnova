@@ -1,15 +1,14 @@
 package restarhalf.stellar.schedule.domain.usecase
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import restarhalf.stellar.schedule.core.error.ParseFailureException
 import restarhalf.stellar.schedule.core.error.isNetworkError
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.Campus
 import restarhalf.stellar.schedule.domain.model.RemoteCampus
 import restarhalf.stellar.schedule.domain.model.SyncResult
 import restarhalf.stellar.schedule.domain.port.AcademicPort
 import restarhalf.stellar.schedule.domain.port.JwxtAuthWorkflowPort
-import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
@@ -20,12 +19,32 @@ class RunSyncUseCase(
     private val timetable: TimetablePort,
     private val settings: TermSettingsPort,
     private val sync: SyncPort,
-    private val reminderScheduler: ReminderSchedulerPort,
+    private val rescheduleAllReminders: RescheduleAllRemindersUseCase,
 ) {
 
     suspend operator fun invoke(): SyncResult {
         authWorkflow.ensureLoggedIn()
 
+        // token 过期可能在 fetchCampuses 等前置请求上就暴露，刷新会话的重试必须包住整段同步，
+        // 不能只包住最后的 sync 请求。
+        val result =
+            try {
+                runSync()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                if (e.isNetworkError()) throw e
+                if (e is ParseFailureException) throw e
+                authWorkflow.refreshSession()
+                runSync()
+            }
+
+        // 课表/考试刚更新：按新数据整批重排（取消旧闹钟 → 重排，幂等自愈）
+        rescheduleAllReminders()
+
+        return result
+    }
+
+    private suspend fun runSync(): SyncResult {
         val selectedTerm = settings.observeSelectedTerm().first()
         val semesterId =
             selectedTerm.ifBlank { academic.fetchCurrentTermId() }
@@ -34,7 +53,6 @@ class RunSyncUseCase(
 
         val campuses = academic.fetchCampuses()
         if (campuses.isEmpty()) {
-            AppLogger.log("Sync", "同步失败: 校区列表为空", level = AppLogger.Level.ERROR)
             throw IllegalStateException("校区列表为空")
         }
 
@@ -44,7 +62,6 @@ class RunSyncUseCase(
                 ?: campuses.firstOrNull()
 
         if (campus == null || campus.id.isBlank() || campus.name.isBlank()) {
-            AppLogger.log("Sync", "同步失败: 获取校区失败", level = AppLogger.Level.ERROR)
             throw IllegalStateException("获取校区失败")
         }
 
@@ -60,8 +77,6 @@ class RunSyncUseCase(
             timetable.setTotalWeeks(teachingWeekTotal)
         }
 
-        reminderScheduler.scheduleNow()
-
         return result
     }
 
@@ -75,20 +90,14 @@ class RunSyncUseCase(
         if (result.inserted == 0 && allCampuses.size > 1) {
             val fallback = allCampuses.firstOrNull { it.id != campus.id && it.id.isNotBlank() }
             if (fallback != null) {
-                AppLogger.log(
-                    "Sync",
-                    "当前校区「${campus.name}」课程数为 0，切换到「${fallback.name}」重试"
-                )
                 val fallbackResult = doSync(semesterId, fallback)
                 if (fallbackResult.inserted > 0) {
                     val targetCampus = matchLocalCampus(fallback.name)
                     if (targetCampus != null) {
                         timetable.setCampus(targetCampus)
-                        AppLogger.log("Sync", "已自动切换校区至「${fallback.name}」")
                     }
                     return fallbackResult.copy(campusName = fallback.name)
                 }
-                AppLogger.log("Sync", "备用校区「${fallback.name}」课程数也为 0，保留原校区")
             }
         }
 
@@ -98,25 +107,8 @@ class RunSyncUseCase(
     private suspend fun doSync(
         semesterId: String,
         campus: RemoteCampus,
-    ): SyncResult {
-        val firstAttempt =
-            runCatching { sync.sync(semesterId = semesterId, campusId = campus.id, week = "all") }
-        return if (firstAttempt.isSuccess) {
-            firstAttempt.getOrThrow()
-        } else {
-            val ex = firstAttempt.exceptionOrNull()
-            if (ex != null) {
-                if (ex.isNetworkError()) {
-                    AppLogger.log("Sync", "同步网络错误", ex)
-                    throw ex
-                }
-                if (ex is ParseFailureException) throw ex
-                AppLogger.log("Sync", "同步失败，刷新会话重试", ex)
-            }
-            authWorkflow.refreshSession()
-            sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
-        }
-    }
+    ): SyncResult =
+        sync.sync(semesterId = semesterId, campusId = campus.id, week = "all")
 
     private fun matchLocalCampus(remoteName: String): Campus? {
         val name = remoteName.trim()
