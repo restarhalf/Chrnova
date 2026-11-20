@@ -14,7 +14,6 @@
     native <methods>;
 }
 
--keep class androidx.work.impl.WorkDatabase_Impl$* { *; }
 -keep class restarhalf.stellar.schedule.AndroidApp { *; }
 -keep class restarhalf.stellar.schedule.widget.TodaySmallWidgetReceiver { *; }
 -keep class restarhalf.stellar.schedule.widget.TodayLargeWidgetReceiver { *; }

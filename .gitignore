@@ -29,3 +29,13 @@ dlnusche.jks
 example/
 docs/
 workers/
+/miuix/UPSTREAM.md
+/miuix/upstream-report.md
+/miuix/patches/
+/miuix/tools/
+
+# 柔光玻璃源码（HaoZai000/softglass，独立仓库，本地复合构建用）
+/softglass/
+
+# 根目录调试截图
+/*.png
