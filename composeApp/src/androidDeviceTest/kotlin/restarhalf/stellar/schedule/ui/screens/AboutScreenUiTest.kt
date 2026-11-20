@@ -19,7 +19,7 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
-import restarhalf.stellar.schedule.ui.blur.LocalBlurEnabled
+import top.yukonga.miuix.kmp.material.LocalMaterialNoneEnabled
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import restarhalf.stellar.schedule.ui.viewmodel.AboutViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -64,7 +64,7 @@ class AboutScreenUiTest {
         setContent {
             MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
 
-                CompositionLocalProvider(LocalBlurEnabled provides false) {
+                CompositionLocalProvider(LocalMaterialNoneEnabled provides true) {
                     AboutScreen(vm = vm, onBack = {})
                 }
             }
@@ -80,23 +80,4 @@ class AboutScreenUiTest {
         onNodeWithText("github.com/restarhalf/Chrnova").assertExists()
     }
 
-    @Test
-    fun 应用版本五连击触发彩蛋回调() = runUltronUiTest {
-        ensureKoin()
-        val vm = AboutViewModel(checkAppUpdate = CheckAppUpdateUseCase(appUpdate))
-        var iconTaps = 0
-        setContent {
-            MiuixTheme(controller = ThemeController(ColorSchemeMode.Light)) {
-                CompositionLocalProvider(LocalBlurEnabled provides false) {
-                    AboutScreen(vm = vm, onBack = {}, onIconTap = { iconTaps++ })
-                }
-            }
-        }
-        waitText("应用信息")
-        repeat(5) {
-            onNodeWithText("应用版本").performSemanticsAction(SemanticsActions.OnClick)
-        }
-        waitUntil(timeoutMillis = 3_000) { iconTaps == 1 }
-        assertEquals(1, iconTaps)
-    }
 }

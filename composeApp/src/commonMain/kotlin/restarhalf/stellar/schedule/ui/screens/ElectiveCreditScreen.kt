@@ -44,18 +44,17 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.ElectiveCreditViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -66,7 +65,6 @@ fun ElectiveCreditScreen(
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
 
@@ -81,44 +79,28 @@ fun ElectiveCreditScreen(
         if (!showGradeDetailsDialog.value) selectedGrade = null
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Column {
-                AppPageTopBar(
-                    title = "选修课学分统计",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBack
-                        ) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = ""
-                            )
-                        }
-                    }
-                )
-                AnimatedVisibility(
-                    visible = uiState.error.isNotBlank(),
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+    AppPageScaffold(
+        title = "选修课学分统计",
+        onBack = onBack,
+        topBarExtra = {
+            AnimatedVisibility(
+                visible = uiState.error.isNotBlank(),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(28.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().height(28.dp),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.clip(CircleShape)
+                            .background(colors.surfaceContainerHigh)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Box(
-                            modifier = Modifier.clip(CircleShape)
-                                .background(colors.surfaceContainerHigh)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error)
-                        }
+                        Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error)
                     }
                 }
             }
-
         },
         popupHost = {
             if (showGradeDetailsDialog.value) {
@@ -131,27 +113,20 @@ fun ElectiveCreditScreen(
                     )
                 }
             }
-        }
-    ) { paddingValues ->
+        },
+    ) { scrollBehavior, paddingValues ->
         PullToRefresh(
             isRefreshing = uiState.loading,
             onRefresh = { vm.load() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp
-                )
-            )
+            modifier = Modifier.fillMaxSize().collapsibleTopInset(scrollBehavior)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
                 contentPadding = appPageContentPadding(
-                    innerPadding = PaddingValues(),
+                    innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
                     extraStart = 12.dp,

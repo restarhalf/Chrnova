@@ -22,10 +22,13 @@ sealed interface Screen : NavKey {
     data object Settings : Screen
 
     @Serializable
-    data object ChangeBackground : Screen
+    data object About : Screen
 
     @Serializable
-    data object About : Screen
+    data object ReminderSettings : Screen
+
+    @Serializable
+    data object WidgetIntro : Screen
 
     @Serializable
     data object PEScore : Screen
@@ -41,9 +44,6 @@ sealed interface Screen : NavKey {
         val unit: String = "",
         val currentResult: String? = null,
     ) : Screen
-
-    @Serializable
-    data object Log : Screen
 
     @Serializable
     data class ClassEdit(val courseId: Long? = null, val dayOfWeek: Int = 1, val startSection: Int = 1, val selectedWeek: Int = 1) : Screen

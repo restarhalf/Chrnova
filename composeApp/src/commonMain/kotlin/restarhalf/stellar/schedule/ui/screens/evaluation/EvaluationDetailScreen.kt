@@ -7,10 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,34 +20,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Delete
 import restarhalf.stellar.schedule.ui.icons.Edit
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.AppTopBarActionContainer
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun EvaluationDetailScreen(
@@ -60,7 +55,6 @@ fun EvaluationDetailScreen(
     onEditEvaluation: (String) -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
@@ -71,55 +65,45 @@ fun EvaluationDetailScreen(
     val evaluation = uiState.selectedEvaluation
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Column {
-                AppPageTopBar(
-                    title = "评价详情",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                                tint = colors.onBackground,
-                            )
-                        }
-                    },
-                    actions = {
-                        if (evaluation != null && uiState.canDeleteSelected) {
-                            IconButton(onClick = { onEditEvaluation(evaluation.id) }) {
-                                Icon(
-                                    imageVector = Edit,
-                                    contentDescription = "编辑",
-                                    tint = colors.onBackground,
-                                )
-                            }
-                            IconButton(onClick = { showDeleteConfirm = true }) {
-                                Icon(
-                                    imageVector = Delete,
-                                    contentDescription = "删除",
-                                    tint = colors.onBackground,
-                                )
-                            }
-                        }
-                    },
-                )
-
-                AnimatedVisibility(
-                    visible = uiState.error != null,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    EvaluationStatusPill(text = uiState.error)
+    AppPageScaffold(
+        title = "评价详情",
+        onBack = onBack,
+        actions = {
+            if (evaluation != null && uiState.canDeleteSelected) {
+                AppTopBarActionContainer {
+                    IconButton(onClick = { onEditEvaluation(evaluation.id) }) {
+                        Icon(
+                            imageVector = Edit,
+                            contentDescription = "编辑",
+                            tint = colors.onBackground,
+                        )
+                    }
                 }
+                AppTopBarActionContainer {
+                    IconButton(onClick = { showDeleteConfirm = true }) {
+                        Icon(
+                            imageVector = Delete,
+                            contentDescription = "删除",
+                            tint = colors.onBackground,
+                        )
+                    }
+                }
+            }
+        },
+        topBarExtra = {
+            AnimatedVisibility(
+                visible = uiState.error != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                EvaluationStatusPill(text = uiState.error)
             }
         },
         popupHost = {
             if (showDeleteConfirm && evaluation != null) {
-                WindowDialog(
+                OverlayDialog(
                     show = showDeleteConfirm,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "删除评价",
                     summary = "删除后不可恢复，确定继续吗？",
                     onDismissRequest = { showDeleteConfirm = false },
@@ -177,21 +161,14 @@ fun EvaluationDetailScreen(
                 }
             }
         }
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = paddingValues.calculateBottomPadding(),
-                    )
-                )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                innerPadding = paddingValues,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,

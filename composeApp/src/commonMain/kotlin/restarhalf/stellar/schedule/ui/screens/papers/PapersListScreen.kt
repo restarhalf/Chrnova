@@ -34,10 +34,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.StarVerificationDialog
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
@@ -45,10 +44,10 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -58,7 +57,6 @@ fun PapersListScreen(
     onPaperDetail: (String) -> Unit,
     onUploadClick: () -> Unit,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val expandedFolders = remember { mutableStateSetOf<String>() }
@@ -89,39 +87,25 @@ fun PapersListScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            Column {
-                AppPageTopBar(
-                    title = "试卷共享", scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBack
-                        ) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回"
-                            )
-                        }
-                    }
-                )
-                AnimatedVisibility(
-                    visible = uiState.error != null && starState.showDialog.not(),
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+    AppPageScaffold(
+        title = "试卷共享",
+        onBack = onBack,
+        topBarExtra = {
+            AnimatedVisibility(
+                visible = uiState.error != null && starState.showDialog.not(),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(28.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().height(28.dp),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.clip(CircleShape)
+                            .background(colors.surfaceContainerHigh)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Box(
-                            modifier = Modifier.clip(CircleShape)
-                                .background(colors.surfaceContainerHigh)
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error ?: "")
-                        }
+                        Text(style = MiuixTheme.textStyles.footnote1, text = uiState.error ?: "")
                     }
                 }
             }
@@ -135,27 +119,20 @@ fun PapersListScreen(
             ) {
                 Text(text = "上传试卷", color = colors.onPrimary)
             }
-        }
-    ) { paddingValues ->
+        },
+    ) { scrollBehavior, paddingValues ->
         PullToRefresh(
             isRefreshing = uiState.loading,
             onRefresh = { vm.refresh() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp
-                )
-            )
+            modifier = Modifier.fillMaxSize().collapsibleTopInset(scrollBehavior)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,

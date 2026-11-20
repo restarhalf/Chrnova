@@ -50,26 +50,27 @@ import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.LocalTopBarBackdrop
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEnrollViewModel
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.PullToRefreshState
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.layout.SharedScrollBehavior
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import restarhalf.stellar.schedule.ui.components.CapsuleSegmentedControl
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -78,7 +79,6 @@ fun CourseEnrollScreen(
     onBack: () -> Unit,
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val colors = MiuixTheme.colorScheme
     val coroutineScope = rememberCoroutineScope()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -89,34 +89,27 @@ fun CourseEnrollScreen(
 
     val pagerState = rememberPagerState(pageCount = { 2 })
     val statusText = buildEnrollStatusText(uiState)
-    val scrollBehavior = topAppBarScrollBehavior
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "选课",
+        onBack = onBack,
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "选课",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(imageVector = Back, contentDescription = "返回")
-                        }
-                    },
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TabRowWithContour(
-                        tabs = listOf(
+                    CapsuleSegmentedControl(
+                        options = listOf(
                             "可选",
                             "已选(${uiState.selectedCourses.size})",
                         ),
-                        selectedTabIndex = pagerState.currentPage,
-                        onTabSelected = { index ->
+                        selectedIndex = pagerState.currentPage,
+                        onSelect = { index ->
                             coroutineScope.launch { pagerState.animateScrollToPage(index) }
                         },
+                        backdrop = LocalTopBarBackdrop.current,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 AnimatedVisibility(
@@ -147,19 +140,12 @@ fun CourseEnrollScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp,
-                    ),
-                ),
+                .collapsibleTopInset(scrollBehavior),
         ) { pageIndex ->
             when (pageIndex) {
                 0 -> AvailableTab(
@@ -199,7 +185,7 @@ private fun AvailableTab(
     vm: CourseEnrollViewModel,
     paddingValues: PaddingValues,
     pullToRefreshState: PullToRefreshState,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
 ) {
     PullToRefresh(
         isRefreshing = uiState.loading,
@@ -213,7 +199,7 @@ private fun AvailableTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -224,7 +210,7 @@ private fun AvailableTab(
             item {
                 SmallTitle(text = "选课轮次")
                 AppCard {
-                    OverlayDropdownPreference(
+                    GlassDropdownPreference(
                         title = "选课轮次",
                         items = uiState.rotations.map { it.rotationName.ifBlank { it.rotationId } },
                         selectedIndex = uiState.rotations
@@ -241,7 +227,7 @@ private fun AvailableTab(
                 item {
                     SmallTitle(text = "课程分类")
                     AppCard {
-                        OverlayDropdownPreference(
+                        GlassDropdownPreference(
                             title = "课程分类",
                             summary = uiState.classifications
                                 .firstOrNull { it.classificationCode == uiState.selectedClassificationCode }
@@ -307,7 +293,7 @@ private fun EnrolledTab(
     vm: CourseEnrollViewModel,
     paddingValues: PaddingValues,
     pullToRefreshState: PullToRefreshState,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
 ) {
     var pendingDrop by remember { mutableStateOf<JwxtSelectedCourse?>(null) }
 
@@ -323,7 +309,7 @@ private fun EnrolledTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -353,8 +339,9 @@ private fun EnrolledTab(
 
     val dropTarget = pendingDrop
     if (dropTarget != null) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = "确认退课",
             summary = "确定要退选「${dropTarget.courseName.ifBlank { "未命名课程" }}」（班次 ${dropTarget.kxh}）吗？退课后如需重选可能受人数限制。",
             onDismissRequest = { pendingDrop = null },

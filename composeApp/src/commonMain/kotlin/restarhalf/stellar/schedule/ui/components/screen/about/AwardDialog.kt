@@ -9,16 +9,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun AwardDialog(show: Boolean, onDismissRequest: () -> Unit, onWxpay: () -> Unit, onAlipay: () -> Unit) {
-    WindowDialog(
+    OverlayDialog(
         show = show,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         modifier = Modifier,
         title = "赞赏作者",
         titleColor = DialogDefaults.titleColor(),

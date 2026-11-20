@@ -2,10 +2,7 @@ package restarhalf.stellar.schedule.ui.screens.pe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,9 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -34,22 +29,20 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Eye
 import restarhalf.stellar.schedule.ui.icons.EyeOff
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PELoginViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -60,7 +53,6 @@ fun PELoginScreen(
     inWel: Boolean,
     next: () -> Unit
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
@@ -78,26 +70,9 @@ fun PELoginScreen(
         vm.submitLogin(onSuccess = onLoginSuccess)
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "登录体测系统",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    if (!inWel) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                                tint = colors.onBackground
-                            )
-                        }
-                    }
-
-                },
-            )
-        },
+    AppPageScaffold(
+        title = "登录体测系统",
+        onBack = if (!inWel) onBack else null,
         bottomBar = {
             Column {
                 if (inWel) {
@@ -130,21 +105,14 @@ fun PELoginScreen(
                 }
             }
         }
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = paddingValues.calculateBottomPadding()
-                    )
-                )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                innerPadding = paddingValues,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,

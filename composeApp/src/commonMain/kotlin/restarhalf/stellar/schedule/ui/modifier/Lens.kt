@@ -3,11 +3,11 @@ package restarhalf.stellar.schedule.ui.modifier
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.fastCoerceAtMost
-import top.yukonga.miuix.kmp.blur.BackdropEffectScope
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.runtimeShaderEffect
+import com.haooz.softglass.backdrop.GlassEffectScope
+import com.haooz.softglass.backdrop.effects.runtimeShaderEffect
+import com.haooz.softglass.platform.isRuntimeShaderSupported
 
-fun BackdropEffectScope.lens(
+fun GlassEffectScope.lens(
     refractionHeight: Float,
     refractionAmount: Float,
     depthEffect: Boolean = false,
@@ -31,7 +31,7 @@ fun BackdropEffectScope.lens(
         }
     val key = if (dispersionEnabled) "LiquidGlassLensDispersion" else "LiquidGlassLens"
 
-    val sf = downscaleFactor.coerceAtLeast(1).toFloat()
+    val sf = downsampleScale.coerceAtLeast(1f)
     val scaledSizeW = size.width / sf
     val scaledSizeH = size.height / sf
     val scaledPadding = padding / sf
@@ -56,7 +56,7 @@ fun BackdropEffectScope.lens(
     }
 }
 
-private fun BackdropEffectScope.roundedRectCornerRadii(): FloatArray? {
+private fun GlassEffectScope.roundedRectCornerRadii(): FloatArray? {
     val cornerShape = shape as? CornerBasedShape ?: return null
     val sizePx = size
     val maxRadius = sizePx.minDimension / 2f

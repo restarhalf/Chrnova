@@ -8,15 +8,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun JwxtWebDialog(show: Boolean, onDismissRequest: () -> Unit, onPc: () -> Unit, onMobile: () -> Unit) {
-    WindowDialog(
+    OverlayDialog(
         show = show,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         modifier = Modifier,
         title = "打开教务系统",
         titleColor = DialogDefaults.titleColor(),

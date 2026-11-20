@@ -26,21 +26,20 @@ import kotlinx.coroutines.delay
 import restarhalf.stellar.schedule.papers.isPaperDocument
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -55,7 +54,6 @@ fun PapersUploadScreen(
     ) -> Unit = { _, _ -> },
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     var title by remember { mutableStateOf("") }
@@ -78,22 +76,9 @@ fun PapersUploadScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "上传试卷",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = { IconButton(
-                    onClick = onBack
-                ){
-                    Icon(
-                        imageVector = Back,
-                        contentDescription = "返回"
-                    )
-                } }
-            )
-        },
+    AppPageScaffold(
+        title = "上传试卷",
+        onBack = onBack,
         bottomBar = {
             Button(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -114,22 +99,15 @@ fun PapersUploadScreen(
                     color = colors.onPrimary,
                 )
             }
-        }
-    ) { paddingValues ->
+        },
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp,
-                    )
-                )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                innerPadding = paddingValues,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,

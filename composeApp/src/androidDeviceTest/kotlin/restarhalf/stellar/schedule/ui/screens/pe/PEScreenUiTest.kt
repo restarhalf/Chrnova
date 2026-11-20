@@ -3,7 +3,6 @@
 package restarhalf.stellar.schedule.ui.screens.pe
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -132,7 +131,9 @@ class PEScreenUiTest {
         onNodeWithText("95.0分").assertIsDisplayed()
         onNodeWithText("免测").assertIsDisplayed()
 
-        onNode(hasContentDescription("二维码")).assertIsDisplayed()
+        onNodeWithContentDescription("更多").performClick()
+        waitText("二维码")
+        onNodeWithText("二维码").assertIsDisplayed()
     }
 
     @Test

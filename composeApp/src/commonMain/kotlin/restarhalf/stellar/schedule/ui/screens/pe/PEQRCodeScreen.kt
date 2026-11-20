@@ -35,16 +35,12 @@ import io.ktor.http.encodeURLParameter
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.port.ScreenTunerPort
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -54,7 +50,6 @@ fun PEQRCodeScreen(
     jwxtAuthProfile: JwxtAuthProfile?,
     onBack: () -> Unit,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val peAuthProfile = uiState.authProfile
 
@@ -68,27 +63,14 @@ fun PEQRCodeScreen(
         onDispose { screenTuner.exitScanPresentation() }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "体测二维码",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回",
-                            tint = colors.onBackground,
-                        )
-                    }
-                },
-            )
-        },
-    ) { paddingValues ->
+    AppPageScaffold(
+        title = "体测二维码",
+        onBack = onBack,
+    ) { scrollBehavior, paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .collapsibleTopInset(scrollBehavior)
                 .padding(
                     PaddingValues(
                         top = paddingValues.calculateTopPadding(),
@@ -97,7 +79,7 @@ fun PEQRCodeScreen(
                         bottom = 0.dp,
                     )
                 )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {

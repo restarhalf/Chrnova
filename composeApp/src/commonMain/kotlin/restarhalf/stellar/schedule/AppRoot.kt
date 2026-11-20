@@ -1,22 +1,32 @@
 package restarhalf.stellar.schedule
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalDensity
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
-import kotlinx.coroutines.flow.combine
+import com.haooz.softglass.GlassEnvironment
+import com.haooz.softglass.GlassPreset
+import com.haooz.softglass.backdrop.backdrops.rememberCombinedBackdrop
+import com.haooz.softglass.backdrop.backdrops.rememberLayerBackdrop as rememberGlassLayerBackdrop
+import com.haooz.softglass.glass.BarFill
+import com.haooz.softglass.glass.BrightLargeTone
+import com.haooz.softglass.glass.BrightTone
+import com.haooz.softglass.glass.ThemeFill
+import com.haooz.softglass.glass.applySoftGlass
 import kotlinx.coroutines.flow.first
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.data.impl.DauReporter
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
 import restarhalf.stellar.schedule.core.update.AppUpdatePort
@@ -25,12 +35,25 @@ import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.usecase.CheckAppUpdateUseCase
+import restarhalf.stellar.schedule.ui.chrome.LocalSystemBarsDarkOverride
+import restarhalf.stellar.schedule.ui.components.EDGE_SAFE_SOFT_GLASS_LIVE_SHADER
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import restarhalf.stellar.schedule.ui.theme.AppMaterialSettings
+import top.yukonga.miuix.kmp.material.GlassSurfaceAlphaDrop
+import top.yukonga.miuix.kmp.material.SoftGlassLayer
+import top.yukonga.miuix.kmp.material.LocalGlassBlurDp
+import top.yukonga.miuix.kmp.material.LocalGlassDialogBlurDp
+import top.yukonga.miuix.kmp.material.LocalGlassPanelBlurDp
+import top.yukonga.miuix.kmp.material.LocalGlassSurfaceAlphaDrop
+import top.yukonga.miuix.kmp.material.LocalMaterialNoneEnabled
+import top.yukonga.miuix.kmp.material.LocalSoftGlassLayer
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.LocalAppSettingDark
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 
@@ -49,16 +72,17 @@ fun AppRoot(
     ) -> Unit = { _, _ -> },
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
     ensureExactAlarmPermission: () -> Unit = {},
+    onRequestDndPolicyPermission: () -> Unit = {},
     openUri: (String) -> Boolean = { false },
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
     saveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
-    saveLog: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     saveCsv: suspend (fileName: String, content: String) -> String? = { _, _ -> null },
     canSaveImage: Boolean = false,
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     exitApp: () -> Unit = {},
-    onThemeModeChange: (Int) -> Unit = {},
+    onEffectiveDarkChange: (Boolean) -> Unit = {},
+    onRequestWidgetRefresh: () -> Unit = {},
 ) {
 
     setSingletonImageLoaderFactory { context ->
@@ -77,10 +101,6 @@ fun AppRoot(
     val reminderSettings: ReminderSettingsPort = koinInject()
     val exactAlarmPermission: ExactAlarmPermissionPort = koinInject()
 
-    // 提醒开着却没给精确闹钟授权，闹钟会被系统塞进模糊窗口、到点不响。
-    // 启动时补一次申请，用户从旧版本升上来也能修好。
-    // 只问一次：Android 14 起这个权限默认不给，用户不点头就会每次冷启动都被
-    // 拉去系统设置页。问过就记下来，之后想再要可以去设置页关掉提醒再打开。
     LaunchedEffect(Unit) {
         val enabled =
             reminderSettings.observeCourseReminderEnabled().first() ||
@@ -91,30 +111,30 @@ fun AppRoot(
     }
 
     var appState by remember {
-        mutableStateOf(
-            AppState(
-                themeMode = displaySettings.getThemeMode(),
-                barMode = displaySettings.getFloatingBar(),
-            ),
-        )
+        mutableStateOf(AppState(themeMode = displaySettings.getThemeMode()))
     }
-
     LaunchedEffect(displaySettings) {
-        combine(
-            displaySettings.observeThemeMode(),
-            displaySettings.observeFloatingBar(),
-        ) { themeMode, barMode -> themeMode to barMode }
-            .collect { (themeMode, barMode) ->
-                val updated = appState.copy(themeMode = themeMode, barMode = barMode)
-                if (updated != appState) {
-                    appState = updated
-                }
+        displaySettings.observeThemeMode().collect { themeMode ->
+            val updated = appState.copy(themeMode = themeMode)
+            if (updated != appState) {
+                appState = updated
             }
+        }
     }
 
-    val currentOnThemeModeChange by rememberUpdatedState(onThemeModeChange)
-    LaunchedEffect(Unit) {
-        snapshotFlow { appState.themeMode }.collect { currentOnThemeModeChange(it) }
+    val bgUiState by bgVm.uiState.collectAsStateWithLifecycle()
+    val systemDark = isSystemInDarkTheme()
+    val effectiveDark =
+        when (appState.themeMode) {
+            DisplaySettingsPort.THEME_MODE_LIGHT -> false
+            DisplaySettingsPort.THEME_MODE_DARK -> true
+            DisplaySettingsPort.THEME_MODE_FOLLOW_WALLPAPER -> bgUiState.wallpaperIsDark ?: systemDark
+            else -> systemDark
+        }
+    val systemBarsDarkOverride = remember { mutableStateOf<Boolean?>(null) }
+    val currentOnEffectiveDarkChange by rememberUpdatedState(onEffectiveDarkChange)
+    LaunchedEffect(effectiveDark, systemBarsDarkOverride.value) {
+        currentOnEffectiveDarkChange(systemBarsDarkOverride.value ?: effectiveDark)
     }
 
     val runSync = remember(vm) {
@@ -141,52 +161,114 @@ fun AppRoot(
                     showUpdateDialog = true
                 }
             }
-            .onFailure {
-                AppLogger.log("Update", "自动检查更新失败", it)
-            }
     }
 
     LaunchedEffect(Unit) {
 
         runCatching { DauReporter.pingTodayIfDue(deviceSettings = deviceSettings) }
-            .onFailure {
-                AppLogger.log("Dau", "日活上报失败", it)
-            }
     }
 
     val themeController =
-        remember(appState.themeMode) {
+        remember(appState.themeMode, effectiveDark) {
             ThemeController(
                 colorSchemeMode =
                     when (appState.themeMode) {
-                        1 -> ColorSchemeMode.Light
-                        2 -> ColorSchemeMode.Dark
+                        DisplaySettingsPort.THEME_MODE_LIGHT -> ColorSchemeMode.Light
+                        DisplaySettingsPort.THEME_MODE_DARK -> ColorSchemeMode.Dark
+                        DisplaySettingsPort.THEME_MODE_FOLLOW_WALLPAPER ->
+                            if (effectiveDark) ColorSchemeMode.Dark else ColorSchemeMode.Light
                         else -> ColorSchemeMode.System
                     },
             )
         }
 
     MiuixTheme(controller = themeController) {
+        // 玻璃采样层在 AppContent 里挂载，但 UpdateConfirmDialog / CustomizeOverlay 等
+        // 渲染在 AppScaffoldBody 之外，backdrop 提升到根部统一供给
+        //
+        // GlassEnvironment 是绘制期只读镜像（:miuix 的 SearchBar / SmallTitle /
+        // InteractiveHighlight 读它）：这里是全应用唯一的 isDark 写入点，
+        // 不写的话它们会一直读到默认的 false，浅色分支永远生效。
+        val density = LocalDensity.current
+        SideEffect { GlassEnvironment.update(isDark = effectiveDark, density = density.density) }
+        // 不传自定义 onDraw（contentOnlyCapture = true），背景层（壁纸 + surface）与前景层各自独立录制，
+        // 避免滚屏/翻页时陪着重录壁纸，也不重复重绘整屏。
+        val wallpaperBackdrop = rememberGlassLayerBackdrop()
+        val foregroundBackdrop = rememberGlassLayerBackdrop()
+        val glassBackdrop = rememberCombinedBackdrop(wallpaperBackdrop, foregroundBackdrop)
+        val softGlassLayer = remember(effectiveDark) {
+            if (!AppMaterialSettings.glassEffectsEnabled()) {
+                null
+            } else {
+                val small = AppMaterialSettings.chromeGlassStyle(
+                    base = GlassPreset.Default.style,
+                    isDark = effectiveDark,
+                    fill = ThemeFill,
+                    tone = BrightTone,
+                )
+                val large = AppMaterialSettings.chromeGlassStyle(
+                    base = GlassPreset.Default.style,
+                    isDark = effectiveDark,
+                    fill = ThemeFill,
+                    tone = BrightLargeTone,
+                )
+                val dialog = AppMaterialSettings.chromeGlassStyle(
+                    base = GlassPreset.Default.style,
+                    isDark = effectiveDark,
+                    fill = BarFill,
+                    tone = BrightLargeTone,
+                )
+                SoftGlassLayer(
+                    shaderString = EDGE_SAFE_SOFT_GLASS_LIVE_SHADER,
+                    applyUniforms = { width, height, radiusPx ->
+                        applySoftGlass(small, width, height, radiusPx)
+                    },
+                    applyLargeUniforms = { width, height, radiusPx ->
+                        applySoftGlass(large, width, height, radiusPx)
+                    },
+                    applyDialogUniforms = { width, height, radiusPx ->
+                        applySoftGlass(dialog, width, height, radiusPx)
+                    },
+                )
+            }
+        }
         CompositionLocalProvider(
             LocalAppState provides appState,
+            LocalSystemBarsDarkOverride provides systemBarsDarkOverride,
+            LocalAppSettingDark provides effectiveDark,
+            LocalLiquidGlassBackdrop provides glassBackdrop,
+            LocalMaterialNoneEnabled provides !AppMaterialSettings.glassAvailable(),
+            LocalGlassBlurDp provides AppMaterialSettings.glassBlurDp(),
+            LocalGlassPanelBlurDp provides AppMaterialSettings.glassPanelBlurDp(),
+            LocalGlassDialogBlurDp provides AppMaterialSettings.glassDialogBlurDp(),
+            LocalGlassSurfaceAlphaDrop provides
+                GlassSurfaceAlphaDrop(
+                    light = AppMaterialSettings.glassSurfaceAlphaDrop(isLight = true),
+                    dark = AppMaterialSettings.glassSurfaceAlphaDrop(isLight = false),
+                ),
+            LocalSoftGlassLayer provides softGlassLayer,
         ) {
             AppContent(
                 vm = vm,
                 bgVm = bgVm,
                 appUpdate = appUpdate,
+                wallpaperBackdrop = wallpaperBackdrop,
+                foregroundBackdrop = foregroundBackdrop,
+                combinedBackdrop = glassBackdrop,
                 pictureSelectorHost = pictureSelectorHost,
                 pdfFilePickerHost = pdfFilePickerHost,
                 ensureNotificationPermission = ensureNotificationPermission,
                 ensureExactAlarmPermission = ensureExactAlarmPermission,
+                onRequestDndPolicyPermission = onRequestDndPolicyPermission,
                 openUri = openUri,
                 showMessage = showMessage,
                 canSaveAwardPicture = canSaveAwardPicture,
                 saveAwardPicture = saveAwardPicture,
-                saveLog = saveLog,
                 saveCsv = saveCsv,
                 canSaveImage = canSaveImage,
                 saveImage = saveImage,
                 runSync = runSync,
+                onRequestWidgetRefresh = onRequestWidgetRefresh,
             )
 
             if (showUpdateDialog) {

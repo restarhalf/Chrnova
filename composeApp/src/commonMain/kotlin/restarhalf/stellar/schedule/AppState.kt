@@ -6,7 +6,6 @@ import androidx.compose.runtime.compositionLocalOf
 @Stable
 data class AppState(
     val themeMode: Int = 0,
-    val barMode: Int = 0,
 )
 
 val LocalAppState = compositionLocalOf<AppState> {

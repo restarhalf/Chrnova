@@ -57,19 +57,19 @@ import restarhalf.stellar.schedule.ui.components.screen.ems.ExamItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeDetailsDialog
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeItemCard
 import restarhalf.stellar.schedule.ui.components.screen.ems.GradeSummaryCard
+import restarhalf.stellar.schedule.ui.icons.Background
 import restarhalf.stellar.schedule.ui.icons.Credit
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.LocalTopBarBackdrop
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.components.topbar.AppMoreMenuItem
 import restarhalf.stellar.schedule.ui.viewmodel.ExaminationViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.GradeViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import restarhalf.stellar.schedule.ui.components.CapsuleSegmentedControl
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -88,6 +88,7 @@ fun EMSScreen(
     onAddExam: () -> Unit = {},
     onEditExam: (Long) -> Unit = {},
     onNavigateToElectiveCredit: () -> Unit = {},
+    onCustomize: () -> Unit = {},
 ) {
     val examUiState by examVm.uiState.collectAsStateWithLifecycle()
     val gradeUiState by gradeVm.uiState.collectAsStateWithLifecycle()
@@ -99,7 +100,6 @@ fun EMSScreen(
     var selectedGrade by remember { mutableStateOf<GradeCourse?>(null) }
 
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val colors = MiuixTheme.colorScheme
 
@@ -128,34 +128,35 @@ fun EMSScreen(
     val selectedTab by remember { derivedStateOf { pagerState.currentPage } }
     val statusText = if (selectedTab == 0) examScreenUi.statusText else gradeScreenUi.statusText
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "考务",
+        moreMenuItems =
+            listOf(
+                AppMoreMenuItem(
+                    text = "选修学分",
+                    icon = Credit,
+                    onClick = onNavigateToElectiveCredit,
+                ),
+                AppMoreMenuItem(
+                    text = "软件外观",
+                    icon = Background,
+                    onClick = onCustomize,
+                ),
+            ),
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "考务",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    actions = {
-                        IconButton(
-                            onClick = onNavigateToElectiveCredit
-                        ) {
-                            Icon(
-                                imageVector = Credit,
-                                contentDescription = "选修学分"
-                            )
-                        }
-                    }
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TabRowWithContour(
-                        tabs = listOf("考试", "成绩"),
-                        selectedTabIndex = selectedTab,
-                        onTabSelected = { index ->
+                    CapsuleSegmentedControl(
+                        options = listOf("考试", "成绩"),
+                        selectedIndex = selectedTab,
+                        onSelect = { index ->
                             coroutineScope.launch { pagerState.animateScrollToPage(index) }
-                        }
+                        },
+                        backdrop = LocalTopBarBackdrop.current,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
@@ -191,18 +192,11 @@ fun EMSScreen(
                 }
             }
         }
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp
-                    )
-                )
+                .collapsibleTopInset(scrollBehavior)
         ) { pageIndex ->
             val isPageLoading = if (pageIndex == 0) examUiState.loading else gradeUiState.loading
             PullToRefresh(
@@ -214,9 +208,9 @@ fun EMSScreen(
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
-                        .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                        .pageScrollModifiers(scrollBehavior = scrollBehavior),
                     contentPadding = appPageContentPadding(
-                        innerPadding = PaddingValues(),
+                        innerPadding = paddingValues,
                         outerPadding = appScaffoldPadding,
                         extraTop = 12.dp,
                         extraStart = 12.dp,

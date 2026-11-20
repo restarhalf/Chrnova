@@ -9,10 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,26 +22,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
-import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private fun formatHistoryResult(result: String?, unit: String): String {
@@ -65,7 +56,6 @@ fun PESubjectHistoryScreen(
     currentResult: String?,
     onBack: () -> Unit,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -91,24 +81,11 @@ fun PESubjectHistoryScreen(
         ?.takeIf { it.isNotBlank() }
         ?.let { result -> history?.records?.firstOrNull { it.result == result }?.sourceScoreId }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "${subjectName}成绩记录",
+        onBack = onBack,
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "${subjectName}成绩记录",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBack,
-                        ) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回"
-                            )
-                        }
-                    }
-                )
                 AnimatedVisibility(
                     visible = statusText != null,
                     enter = fadeIn() + expandVertically(),
@@ -131,7 +108,7 @@ fun PESubjectHistoryScreen(
         },
         popupHost = {
         }
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         PullToRefresh(
             isRefreshing = history?.loading == true,
             onRefresh = {
@@ -145,20 +122,14 @@ fun PESubjectHistoryScreen(
             },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp
-                )
-            )
+            modifier = Modifier.fillMaxSize()
+                .collapsibleTopInset(scrollBehavior)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
                 contentPadding = appPageContentPadding(
-                    innerPadding = PaddingValues(),
+                    innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
                     extraStart = 12.dp,

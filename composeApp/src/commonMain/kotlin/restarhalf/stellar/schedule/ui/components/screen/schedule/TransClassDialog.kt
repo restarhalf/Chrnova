@@ -17,12 +17,13 @@ import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.ui.components.SectionRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekdayPickerBottomSheet
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -62,8 +63,9 @@ fun TransClassDialog(
             }
         }
 
-    WindowDialog(
+    OverlayDialog(
         show = show,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         modifier = Modifier,
         title = "调课",
         titleColor = DialogDefaults.titleColor(),

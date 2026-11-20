@@ -37,19 +37,18 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Eye
 import restarhalf.stellar.schedule.ui.icons.EyeOff
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.JwxtLoginViewModel
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -60,7 +59,6 @@ fun JwxtLoginScreen(
     inWel: Boolean,
     next: () -> Unit
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
@@ -78,26 +76,9 @@ fun JwxtLoginScreen(
         vm.submitLogin(onSuccess = onLoginSuccess)
     }
     
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "登录教务系统账号",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    if (!inWel) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                                tint = colors.onBackground
-                            )
-                        }
-                    }
-
-                },
-            )
-        },
+    AppPageScaffold(
+        title = "登录教务系统账号",
+        onBack = if (!inWel) onBack else null,
         bottomBar = {
             Column {
                 if (inWel) {
@@ -131,22 +112,15 @@ fun JwxtLoginScreen(
                     )
                 }
             }
-        }
-    ) { paddingValues ->
+        },
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp
-                    )
-                )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                innerPadding = paddingValues,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,

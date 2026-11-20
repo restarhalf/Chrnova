@@ -27,7 +27,6 @@ val RootTabs: List<Screen> =
         Screen.Schedule,
         Screen.EMS,
         Screen.PEScore,
-        Screen.Settings,
     )
 
 fun Screen.rootTabIndex(): Int = RootTabs.indexOf(this).takeIf { it >= 0 } ?: 0

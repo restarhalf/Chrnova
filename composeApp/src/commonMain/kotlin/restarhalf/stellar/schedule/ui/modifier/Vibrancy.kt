@@ -1,9 +1,9 @@
 package restarhalf.stellar.schedule.ui.modifier
 
-import top.yukonga.miuix.kmp.blur.BackdropEffectScope
-import top.yukonga.miuix.kmp.blur.colorControls
+import com.haooz.softglass.backdrop.GlassEffectScope
+import com.haooz.softglass.backdrop.effects.colorControls
 
-fun BackdropEffectScope.vibrancy() {
+fun GlassEffectScope.vibrancy() {
     colorControls(
         brightness = 0f,
         contrast = 1f,

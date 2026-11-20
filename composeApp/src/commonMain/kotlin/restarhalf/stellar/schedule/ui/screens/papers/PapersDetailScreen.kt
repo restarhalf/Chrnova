@@ -20,20 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PapersViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -44,7 +43,6 @@ fun PapersDetailScreen(
     onDownload: (url: String, title: String) -> Unit,
 ) {
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(paperId) {
@@ -63,21 +61,9 @@ fun PapersDetailScreen(
     val paper = uiState.selectedPaper
     val colors = MiuixTheme.colorScheme
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(title = "试卷详情", scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack
-                    ) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回"
-                        )
-                    }
-                })
-        },
+    AppPageScaffold(
+        title = "试卷详情",
+        onBack = onBack,
         bottomBar = {
             if (paper!=null)
             {
@@ -90,22 +76,15 @@ fun PapersDetailScreen(
                     Text(text = if (uiState.loading) "获取下载链接中..." else "下载", color = colors.onPrimary)
                 }
             }
-        }
-    ) { paddingValues ->
+        },
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = paddingValues.calculateBottomPadding(),
-                    )
-                )
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
-                outerPadding = appScaffoldPadding,
+                innerPadding = paddingValues,
+                outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,

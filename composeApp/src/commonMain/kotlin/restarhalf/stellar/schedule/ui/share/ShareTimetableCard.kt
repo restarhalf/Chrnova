@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -27,6 +28,8 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -96,6 +99,7 @@ fun ShareTimetableCard(
     backgroundImageUri: String? = null,
     backgroundAlpha: Float = 1f,
     backgroundBlur: Float = 0f,
+    backgroundBrightness: Float = 0f,
 ) {
     val showSharer = !nickname.isNullOrBlank()
     val rowHeight = ShareTimetableGeometry.rowHeight
@@ -122,10 +126,29 @@ fun ShareTimetableCard(
                 .background(colors.surface)
         )
         if (backgroundImageUri != null) {
+            val brightnessFilter =
+                remember(backgroundBrightness) {
+                    if (backgroundBrightness == 0f) {
+                        null
+                    } else {
+                        val b = (1f + backgroundBrightness / 50f).coerceIn(0f, 2f)
+                        ColorFilter.colorMatrix(
+                            ColorMatrix(
+                                floatArrayOf(
+                                    b, 0f, 0f, 0f, 0f,
+                                    0f, b, 0f, 0f, 0f,
+                                    0f, 0f, b, 0f, 0f,
+                                    0f, 0f, 0f, 1f, 0f,
+                                ),
+                            ),
+                        )
+                    }
+                }
             AsyncImage(
                 model = toAsyncImageModel(backgroundImageUri),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                colorFilter = brightnessFilter,
                 modifier = Modifier
                     .matchParentSize()
                     .blur(25.dp * backgroundBlur)

@@ -8,12 +8,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -26,15 +30,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import restarhalf.stellar.schedule.core.image.encodeImageBitmapToJpeg
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.model.TimetableSlot
-import restarhalf.stellar.schedule.ui.icons.Close
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
+import restarhalf.stellar.schedule.ui.components.SheetCloseButton
+import restarhalf.stellar.schedule.ui.components.SheetGlassButton
+import restarhalf.stellar.schedule.ui.components.sheetContentBottomInset
 import restarhalf.stellar.schedule.ui.icons.Save
 import restarhalf.stellar.schedule.ui.mapper.DayRenderData
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.overlay.BlurBottomSheet
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import kotlin.time.Clock
 
 @Composable
@@ -53,6 +58,7 @@ fun ShareTimetableDialog(
     backgroundImageUri: String? = null,
     backgroundAlpha: Float = 1f,
     backgroundBlur: Float = 0f,
+    backgroundBrightness: Float = 0f,
 ) {
     if (!show) return
     val scope = rememberCoroutineScope()
@@ -61,61 +67,63 @@ fun ShareTimetableDialog(
     val cardWidth = ShareCardWidth
     val cardHeight = shareCardHeight(showSharer)
 
-    OverlayBottomSheet(
-        show = show,
-        modifier = Modifier,
-        title = "分享课表",
-        startAction = {
-            IconButton(onClick = onDismiss){
-                Icon(imageVector = Close, contentDescription = "关闭")
-            }
-        },
-        endAction = {
-            IconButton(
-                onClick = {
-                scope.launch {
-                    val result = runCatching {
-                        val bitmap = withContext(Dispatchers.Default) {
-                            layer.toImageBitmap()
+    val saveAction: (@Composable () -> Unit)? =
+        if (canSaveImage) {
+            {
+                SheetGlassButton(
+                    icon = Save,
+                    contentDescription = "保存",
+                    onClick = {
+                        scope.launch {
+                            val result = runCatching {
+                                val bitmap = withContext(Dispatchers.Default) {
+                                    layer.toImageBitmap()
+                                }
+                                val bytes = encodeImageBitmapToJpeg(bitmap, quality = 92)
+                                onSaveImage("Chrnova_Schedule_${Clock.System.now().toEpochMilliseconds()}.jpg", bytes)
+                            }
+                            result.fold(
+                                onSuccess = { saved ->
+                                    showMessage(if (saved) "图片已保存" else "保存失败，请重试")
+                                    if (saved) onDismiss()
+                                },
+                                onFailure = {
+                                    showMessage("导出失败，请重试")
+                                },
+                            )
                         }
-                        val bytes = encodeImageBitmapToJpeg(bitmap, quality = 92)
-                        onSaveImage("Chrnova_Schedule_${Clock.System.now().toEpochMilliseconds()}.jpg", bytes)
-                    }
-                    result.onFailure {
-                        AppLogger.log("Share", "导出课表分享图失败", it)
-                    }.fold(
-                        onSuccess = { saved ->
-                            showMessage(if (saved) "图片已保存" else "保存失败，请重试")
-                            if (saved) onDismiss()
-                        },
-                        onFailure = {
-                            showMessage("导出失败，请重试")
-                        },
-                    )
-                }
-            },
-                enabled = canSaveImage
-            ){
-                Icon(imageVector = Save, contentDescription = "保存")
+                    },
+                    modifier = Modifier.padding(end = 18.dp),
+                )
             }
-        },
-        backgroundColor = BottomSheetDefaults.backgroundColor(),
-        enableWindowDim = true,
-        cornerRadius = BottomSheetDefaults.cornerRadius,
-        sheetMaxWidth = BottomSheetDefaults.maxWidth,
+        } else {
+            null
+        }
+
+    BlurBottomSheet(
+        show = show,
+        title = "分享课表",
+        dimBackground = true,
+        glassBackdrop = LocalLiquidGlassBackdrop.current,
         onDismissRequest = onDismiss,
-        onDismissFinished = null,
-        outsideMargin = BottomSheetDefaults.outsideMargin,
-        insideMargin = BottomSheetDefaults.insideMargin,
-        defaultWindowInsetsPadding = true,
-        renderInRootScaffold = true,
-        content = {
+        startAction = { SheetCloseButton(onDismissRequest = onDismiss) },
+        endAction = saveAction,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .overScrollVertical()
+                    .scrollEndHaptic(HapticFeedbackType.TextHandleMove)
+                    .verticalScroll(rememberScrollState()),
+        ) {
+            Spacer(Modifier.height(58.dp))
             val density = LocalDensity.current
             val screenHeight =
                 with(density) { LocalWindowInfo.current.containerSize.height.toDp() }
-            val previewMaxHeight = (screenHeight * 0.8f).coerceIn(280.dp, 640.dp)
+            val previewMaxHeight = (screenHeight - 260.dp).coerceIn(280.dp, 600.dp)
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                 BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -144,6 +152,7 @@ fun ShareTimetableDialog(
                                 backgroundImageUri = backgroundImageUri,
                                 backgroundAlpha = backgroundAlpha,
                                 backgroundBlur = backgroundBlur,
+                                backgroundBrightness = backgroundBrightness,
                                 modifier = Modifier
                                     .requiredWidth(cardWidth)
                                     .requiredHeight(cardHeight),
@@ -152,9 +161,9 @@ fun ShareTimetableDialog(
                     }
                 }
             }
-            Spacer(Modifier.height(36.dp))
-        },
-    )
+            Spacer(Modifier.height(sheetContentBottomInset()))
+        }
+    }
 }
 
 @Composable

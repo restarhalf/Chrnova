@@ -29,22 +29,23 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.PersonalInfoEditCard
 import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Logout
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PersonalInfoViewModel
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -63,7 +64,6 @@ fun ProfileScreen(
     ) -> Unit = { _, _, _, _, _ -> },
     personalInfoViewModel: PersonalInfoViewModel,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
 
     val isLoggedIn = jwxtAuthProfile?.userNo?.isNotBlank() == true
@@ -82,28 +82,15 @@ fun ProfileScreen(
     val personalInfoUiState by personalInfoViewModel.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "个人资料",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回",
-                            tint = colors.onBackground,
-                        )
-                    }
-                },
-            )
-        },
+    AppPageScaffold(
+        title = "个人资料",
+        onBack = onBack,
         popupHost = {
 
             if (showLogoutJwxtConfirm) {
-                WindowDialog(
+                OverlayDialog(
                     show = showLogoutJwxtConfirm,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "确认退出教务系统",
                     summary = "退出后需要重新登录才能同步课表和考务",
                     onDismissRequest = { showLogoutJwxtConfirm = false }
@@ -133,8 +120,9 @@ fun ProfileScreen(
             }
 
             if (showLogoutPEConfirm) {
-                WindowDialog(
+                OverlayDialog(
                     show = showLogoutPEConfirm,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "确认退出体测平台",
                     summary = "退出后需要重新登录才能查看体测成绩",
                     onDismissRequest = { showLogoutPEConfirm = false }
@@ -174,11 +162,12 @@ fun ProfileScreen(
                 512,
             )
         }
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
                 innerPadding = paddingValues,
                 outerPadding = appScaffoldPadding,

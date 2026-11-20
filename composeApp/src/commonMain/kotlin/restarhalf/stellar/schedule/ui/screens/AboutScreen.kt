@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -53,31 +52,25 @@ import chrnova.composeapp.generated.resources.wxpay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.koin.compose.koinInject
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
-import restarhalf.stellar.schedule.ui.blur.BlurredBar
 import restarhalf.stellar.schedule.ui.blur.ColorBlendToken
-import restarhalf.stellar.schedule.ui.blur.rememberBlurBackdrop
-import restarhalf.stellar.schedule.ui.blur.rememberBlurEnabled
+import top.yukonga.miuix.kmp.material.LocalMaterialNoneEnabled
 import restarhalf.stellar.schedule.ui.components.screen.about.AwardDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.AwardPictureDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.JwxtWebDialog
 import restarhalf.stellar.schedule.ui.components.screen.about.UpdateConfirmDialog
 import restarhalf.stellar.schedule.ui.effect.BgEffectBackground
 import restarhalf.stellar.schedule.ui.icons.AppIcon
-import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.SharedScrollBehavior
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
@@ -88,9 +81,7 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
-import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.platform
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun AboutScreen(
@@ -101,10 +92,8 @@ fun AboutScreen(
     showMessage: (String) -> Unit = {},
     canSaveAwardPicture: Boolean = false,
     onSaveAwardPicture: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
-    onIconTap: () -> Unit = {},
 ) {
     val appInfo: AppInfoPort = koinInject()
-    val scrollBehavior = MiuixScrollBehavior()
     val lazyListState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val showUpdateConfirm = remember { mutableStateOf(false) }
@@ -156,37 +145,12 @@ fun AboutScreen(
         }
     }
 
-    val backdrop = rememberBlurBackdrop()
-    val blurActive = backdrop != null && scrollProgress == 1f
-    val barColor = if (blurActive) {
-        Color.Transparent
-    } else {
-        if (scrollProgress == 1f) colors.surface else Color.Transparent
-    }
-
-    Scaffold(
-        topBar = {
-            BlurredBar(backdrop = backdrop, blurEnabled = blurActive) {
-                AppPageTopBar(
-                    title = "关于",
-                    scrollBehavior = scrollBehavior,
-                    color = barColor,
-                    titleColor = colors.onSurface.copy(
-                        alpha = ((scrollProgress - 0.35f) / 0.65f).coerceIn(0f, 1f),
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                                tint = colors.onSurface,
-                            )
-                        }
-                    },
-                )
-            }
-        },
-        containerColor = Color.Transparent,
+    AppPageScaffold(
+        title = "关于",
+        onBack = onBack,
+        showLargeTitle = false,
+        showSmallTitle = scrollProgress > 0.5f,
+        showShadow = scrollProgress >= 1f,
         popupHost = {
             if (showUpdateConfirm.value && aboutUiState.pendingUpdate != null) {
                 UpdateConfirmDialog(
@@ -251,12 +215,7 @@ fun AboutScreen(
                                     } else {
                                         val fileName = path.substringAfterLast('/')
                                         scope.launch {
-                                            val bytes =
-                                                runCatching { Res.readBytes(path) }
-                                                    .onFailure {
-                                                        AppLogger.log("About", "读取奖励图片失败: path=$path", it)
-                                                    }
-                                                    .getOrNull()
+                                            val bytes = runCatching { Res.readBytes(path) }.getOrNull()
                                             if (bytes == null) {
                                                 showMessage("读取图片失败，请重试")
                                                 return@launch
@@ -264,8 +223,6 @@ fun AboutScreen(
                                             val saved =
                                                 runCatching {
                                                     onSaveAwardPicture(fileName, bytes)
-                                                }.onFailure {
-                                                    AppLogger.log("About", "保存奖励图片失败: fileName=$fileName", it)
                                                 }.getOrDefault(false)
                                             showAwardPicture.value = false
                                             showMessage(
@@ -295,35 +252,31 @@ fun AboutScreen(
                 )
             }
         },
-    ) { innerPadding ->
-        Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-            AboutContent(
-                innerPadding = innerPadding,
-                scrollBehavior = scrollBehavior,
-                lazyListState = lazyListState,
-                scrollProgress = scrollProgress,
-                appName = appInfo.appName,
-                screenUi = screenUi,
-                isDark = isDark,
-                onIconTap = onIconTap,
-                showAward = showAward,
-                showJwxt = showJwxt,
-                vm = vm,
-            )
-        }
+    ) { scrollBehavior, paddingValues ->
+        AboutContent(
+            innerPadding = paddingValues,
+            scrollBehavior = scrollBehavior,
+            lazyListState = lazyListState,
+            scrollProgress = scrollProgress,
+            appName = appInfo.appName,
+            screenUi = screenUi,
+            isDark = isDark,
+            showAward = showAward,
+            showJwxt = showJwxt,
+            vm = vm,
+        )
     }
 }
 
 @Composable
 private fun AboutContent(
     innerPadding: PaddingValues,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     lazyListState: LazyListState,
     scrollProgress: Float,
     appName: String,
     screenUi: AboutScreenUi,
     isDark: Boolean,
-    onIconTap: () -> Unit,
     showAward: MutableState<Boolean>,
     showJwxt: MutableState<Boolean>,
     vm: AboutViewModel,
@@ -333,8 +286,9 @@ private fun AboutContent(
     val colors = MiuixTheme.colorScheme
     val backdropLayer = rememberLayerBackdrop()
 
-    val blurEnabled by rememberBlurEnabled()
-    val effectBackground = remember(blurEnabled) { isRuntimeShaderSupported() && blurEnabled }
+    // 无材质档 / 平台没有 runtime shader 时，关于页整块退回实色面
+    val blurEnabled = !LocalMaterialNoneEnabled.current && isRuntimeShaderSupported()
+    val effectBackground = blurEnabled
 
     val cardBlendColors = remember(isDark) {
         if (isDark) ColorBlendToken.Overlay_Thin_Light
@@ -464,9 +418,8 @@ private fun AboutContent(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxSize()
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = PaddingValues(
                 top = topPadding,
                 start = startPadding,
@@ -513,17 +466,9 @@ private fun AboutContent(
                                 Color.Transparent,
                             ),
                         ) {
-                            var versionTapCount by remember { mutableStateOf(0) }
                             BasicComponent(
                                 title = "应用版本",
                                 summary = screenUi.versionDisplay,
-                                onClick = {
-                                    versionTapCount++
-                                    if (versionTapCount >= 5) {
-                                        versionTapCount = 0
-                                        onIconTap()
-                                    }
-                                },
                             )
                             BasicComponent(
                                 title = "检查更新",

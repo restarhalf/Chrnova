@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,25 +35,22 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import restarhalf.stellar.schedule.domain.model.PECodeItem
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.image.attachmentBadgeLabel
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.FreeApplyTypes
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun PEFreeApplyEditScreen(
@@ -67,7 +63,6 @@ fun PEFreeApplyEditScreen(
         onPicked: (List<restarhalf.stellar.schedule.papers.PickedAttachment>) -> Unit,
     ) -> Unit = { _, _ -> },
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val colors = MiuixTheme.colorScheme
@@ -94,22 +89,9 @@ fun PEFreeApplyEditScreen(
     val typeSelectedIndex = FreeApplyTypes.indexOfFirst { it.code == uiState.freeApplyType }
         .coerceAtLeast(0)
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "我要申请",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回",
-                        )
-                    }
-                },
-            )
-        },
+    AppPageScaffold(
+        title = "我要申请",
+        onBack = onBack,
         bottomBar = {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -135,13 +117,14 @@ fun PEFreeApplyEditScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                .collapsibleTopInset(scrollBehavior)
+                .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
                 innerPadding = paddingValues,
-                outerPadding = appScaffoldPadding,
+                outerPadding = paddingValues,
                 extraTop = 4.dp,
                 extraStart = 12.dp,
                 extraEnd = 12.dp,
@@ -153,7 +136,7 @@ fun PEFreeApplyEditScreen(
             }
             item {
                 AppCard {
-                    OverlayDropdownPreference(
+                    GlassDropdownPreference(
                         title = "申请学年",
                         summary = if (uiState.selectedYearLabel.isBlank()) {
                             "请选择申请学年"
@@ -163,11 +146,11 @@ fun PEFreeApplyEditScreen(
                         items = yearItems,
                         selectedIndex = yearSelectedIndex,
                         onSelectedIndexChange = { index ->
-                            val item = years.getOrNull(index) ?: return@OverlayDropdownPreference
+                            val item = years.getOrNull(index) ?: return@GlassDropdownPreference
                             vm.selectYear(item.code, item.label)
                         },
                     )
-                    OverlayDropdownPreference(
+                    GlassDropdownPreference(
                         title = "申请类型",
                         summary = if (uiState.freeApplyTypeLabel.isBlank()) {
                             "仅支持免测"
@@ -178,7 +161,7 @@ fun PEFreeApplyEditScreen(
                         selectedIndex = typeSelectedIndex,
                         onSelectedIndexChange = { index ->
                             val item = FreeApplyTypes.getOrNull(index)
-                                ?: return@OverlayDropdownPreference
+                                ?: return@GlassDropdownPreference
                             vm.selectApplyType(item.code, item.label)
                         },
                     )
@@ -270,8 +253,9 @@ fun PEFreeApplyEditScreen(
 
     val actionMessage = uiState.actionMessage
     if (actionMessage != null) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = "提示",
             summary = actionMessage,
             onDismissRequest = {

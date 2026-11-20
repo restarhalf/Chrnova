@@ -135,7 +135,9 @@ class EMSScreenUiTest {
         waitText("考试")
         waitText("考务")
         onNodeWithText("成绩").assertExists()
-        onNode(hasContentDescription("选修学分")).assertExists()
+        onNode(hasContentDescription("更多")).performClick()
+        waitText("选修学分")
+        onNodeWithText("选修学分").assertExists()
 
         waitText("大学物理", timeoutMs = 10_000)
         onNodeWithText("地点：A101").assertExists()

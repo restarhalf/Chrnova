@@ -13,11 +13,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun AwardPictureDialog(
@@ -27,8 +28,9 @@ fun AwardPictureDialog(
     onDismissRequest: () -> Unit,
     onSavePicture: (() -> Unit)? = null,
 ) {
-    WindowDialog(
+    OverlayDialog(
         show = show,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         modifier = Modifier,
         title = title,
         titleColor = DialogDefaults.titleColor(),

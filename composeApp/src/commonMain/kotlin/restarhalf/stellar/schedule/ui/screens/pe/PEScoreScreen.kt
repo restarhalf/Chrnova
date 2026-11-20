@@ -37,19 +37,18 @@ import restarhalf.stellar.schedule.domain.model.JwxtAuthProfile
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
 import restarhalf.stellar.schedule.ui.icons.Appointment
+import restarhalf.stellar.schedule.ui.icons.Background
 import restarhalf.stellar.schedule.ui.icons.Free
 import restarhalf.stellar.schedule.ui.icons.QrCode
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
+import restarhalf.stellar.schedule.ui.components.topbar.AppMoreMenuItem
 import restarhalf.stellar.schedule.ui.viewmodel.PEViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -63,9 +62,9 @@ fun PEScoreScreen(
     onQRCode: () -> Unit = {},
     onAppointment: () -> Unit = {},
     onFreeApply: () -> Unit = {},
+    onCustomize: () -> Unit = {},
     jwxtAuthProfile: JwxtAuthProfile? = null,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -83,27 +82,19 @@ fun PEScoreScreen(
     val statusText = vm.buildStatusText()
     val colors = MiuixTheme.colorScheme
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "体测",
+        moreMenuItems =
+            buildList {
+                add(AppMoreMenuItem(text = "体测预约", icon = Appointment, onClick = onAppointment))
+                add(AppMoreMenuItem(text = "申请免修", icon = Free, onClick = onFreeApply))
+                if (hasQRCodeInfo) {
+                    add(AppMoreMenuItem(text = "体测二维码", icon = QrCode, onClick = onQRCode))
+                }
+                add(AppMoreMenuItem(text = "软件外观", icon = Background, onClick = onCustomize))
+            },
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "体测",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    actions = {
-                        IconButton(onClick = onFreeApply){
-                            Icon(imageVector = Free, contentDescription = "免修")
-                        }
-                        IconButton(onClick = onAppointment){
-                            Icon(imageVector = Appointment, contentDescription = "预约")
-                        }
-                        if (hasQRCodeInfo) {
-                            IconButton(onClick = onQRCode) {
-                                Icon(imageVector = QrCode, contentDescription = "二维码")
-                            }
-                        }
-                    },
-                )
                 AnimatedVisibility(
                     visible = statusText != null,
                     enter = fadeIn() + expandVertically(),
@@ -124,26 +115,20 @@ fun PEScoreScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         PullToRefresh(
             isRefreshing = loading,
             onRefresh = { vm.loadScoreList() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp
-                )
-            )
+            modifier = Modifier.fillMaxSize()
+                .collapsibleTopInset(scrollBehavior)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
                 contentPadding = appPageContentPadding(
-                    innerPadding = PaddingValues(),
+                    innerPadding = paddingValues,
                     outerPadding = appScaffoldPadding,
                     extraTop = 12.dp,
                     extraStart = 12.dp,

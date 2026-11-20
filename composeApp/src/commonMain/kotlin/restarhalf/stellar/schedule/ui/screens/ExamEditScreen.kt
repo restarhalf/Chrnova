@@ -24,19 +24,18 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.DatePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.TimeRangePickerBottomSheet
-import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Check
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.AppTopBarActionContainer
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.ExamEditViewModel
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -45,9 +44,10 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -66,7 +66,6 @@ fun ExamEditScreen(
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val examEditUiState by vm.uiState.collectAsStateWithLifecycle()
     val isSaving by vm.isSaving.collectAsStateWithLifecycle()
 
@@ -120,7 +119,6 @@ fun ExamEditScreen(
                 pickerDate = LocalDate.parse(formState.datePart)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("ExamEdit", "日期解析失败: ${formState.datePart}", e)
             }
         }
         if (formState.timePart.isNotBlank()) {
@@ -141,65 +139,54 @@ fun ExamEditScreen(
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                AppLogger.log("ExamEdit", "时间解析失败: ${formState.timePart}", e)
             }
         }
     }
 
-    Scaffold(
-        topBar = {
-            AppPageTopBar(
-                title = "编辑考试",
-                scrollBehavior = topAppBarScrollBehavior,
-                actions = {
-                    IconButton(
-                        onClick = {
-                            val selectedName = if (changeToSelect.value) {
-                                courseNames.getOrNull(selectedIndex).orEmpty()
-                            } else {
-                                inputCourseName.value
-                            }
-                            if (selectedName.isBlank()) {
-                                courseNameError = true
-                                showMessage("请输入课程名")
-                                return@IconButton
-                            }
-                            val toSave = vm.buildExaminationToSave(
-                                courseName = selectedName,
-                                datePart = datePartValue.value,
-                                timePart = timePartValue.value,
-                                examinationPlace = examinationPlaceValue.value,
-                                zwh = zwhValue.value,
-                                ksbz = ksbzValue.value,
-                                courses = courses,
-                                existing = editingExamination,
-                            )
-                            if (toSave == null) {
-                                showMessage("请输入课程名")
-                                return@IconButton
-                            }
-                            vm.saveExamination(toSave) { saved ->
-                                if (saved) {
-                                    onBack()
+    AppPageScaffold(
+        title = "编辑考试",
+        onBack = onBack,
+        actions = {
+                    AppTopBarActionContainer {
+                        IconButton(
+                            onClick = {
+                                val selectedName = if (changeToSelect.value) {
+                                    courseNames.getOrNull(selectedIndex).orEmpty()
                                 } else {
-                                    showMessage("保存失败，请重试")
+                                    inputCourseName.value
                                 }
-                            }
-                        },
-                        enabled = !isSaving
-                    ) {
-                        Icon(imageVector = Check, contentDescription = "确定")
+                                if (selectedName.isBlank()) {
+                                    courseNameError = true
+                                    showMessage("请输入课程名")
+                                    return@IconButton
+                                }
+                                val toSave = vm.buildExaminationToSave(
+                                    courseName = selectedName,
+                                    datePart = datePartValue.value,
+                                    timePart = timePartValue.value,
+                                    examinationPlace = examinationPlaceValue.value,
+                                    zwh = zwhValue.value,
+                                    ksbz = ksbzValue.value,
+                                    courses = courses,
+                                    existing = editingExamination,
+                                )
+                                if (toSave == null) {
+                                    showMessage("请输入课程名")
+                                    return@IconButton
+                                }
+                                vm.saveExamination(toSave) { saved ->
+                                    if (saved) {
+                                        onBack()
+                                    } else {
+                                        showMessage("保存失败，请重试")
+                                    }
+                                }
+                            },
+                            enabled = !isSaving
+                        ) {
+                            Icon(imageVector = Check, contentDescription = "确定")
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回"
-                        )
-                    }
-                },
-            )
         },
         popupHost = {
             if (showDatePicker.value) {
@@ -236,8 +223,9 @@ fun ExamEditScreen(
             }
 
             if (showDeleteConfirm) {
-                WindowDialog(
+                OverlayDialog(
                     show = showDeleteConfirm,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "确认删除",
                     summary = "删除后不可恢复，确定要删除这条考试记录吗？",
                     onDismissRequest = { showDeleteConfirm = false }
@@ -291,17 +279,17 @@ fun ExamEditScreen(
                 }
             }
         },
-        containerColor = Color.Transparent,
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .collapsibleTopInset(scrollBehavior)
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding =
                 appPageContentPadding(
                     innerPadding = paddingValues,
-                    outerPadding = appScaffoldPadding,
+                    outerPadding = paddingValues,
                     extraTop = 12.dp,
                     extraStart = 12.dp,
                     extraEnd = 12.dp,
@@ -314,7 +302,7 @@ fun ExamEditScreen(
                 AppCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (changeToSelect.value) {
-                            OverlayDropdownPreference(
+                            GlassDropdownPreference(
                                 title = "课程名",
                                 items = courseNames,
                                 selectedIndex = selectedIndex.coerceIn(

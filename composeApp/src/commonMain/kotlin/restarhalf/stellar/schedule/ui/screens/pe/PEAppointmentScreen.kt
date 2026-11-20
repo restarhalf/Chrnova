@@ -35,7 +35,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,31 +44,29 @@ import restarhalf.stellar.schedule.domain.model.PEAppointmentItem
 import restarhalf.stellar.schedule.domain.model.PEAppointmentTimeSlot
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.itemsWithUniqueKeys
-import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
+import restarhalf.stellar.schedule.ui.chrome.LocalTopBarBackdrop
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.PEAppointmentViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.appointmentStatusText
 import restarhalf.stellar.schedule.ui.viewmodel.canCancelAppointment
 import restarhalf.stellar.schedule.ui.viewmodel.canEnterAppointment
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.layout.SharedScrollBehavior
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import restarhalf.stellar.schedule.ui.components.CapsuleSegmentedControl
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun PEAppointmentScreen(
@@ -78,7 +75,6 @@ fun PEAppointmentScreen(
     onOpenWeb: () -> Unit = {},
     onBack: () -> Unit,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     val appScaffoldPadding = LocalAppScaffoldPadding.current
     val uiState by vm.uiState.collectAsStateWithLifecycle()
@@ -108,30 +104,24 @@ fun PEAppointmentScreen(
         else -> null
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "体测预约",
+        onBack = onBack,
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "体测预约",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(imageVector = Back, contentDescription = "返回")
-                        }
-                    },
-                )
                 if (loggedIn) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        TabRowWithContour(
-                            tabs = listOf("我的预约", "可预约"),
-                            selectedTabIndex = pagerState.currentPage,
-                            onTabSelected = { index ->
+                        CapsuleSegmentedControl(
+                            options = listOf("我的预约", "可预约"),
+                            selectedIndex = pagerState.currentPage,
+                            onSelect = { index ->
                                 coroutineScope.launch { pagerState.animateScrollToPage(index) }
                             },
+                            backdrop = LocalTopBarBackdrop.current,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
@@ -155,27 +145,21 @@ fun PEAppointmentScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         PullToRefresh(
             isRefreshing = uiState.loading,
             onRefresh = { vm.refreshCurrent() },
             pullToRefreshState = pullToRefreshState,
             refreshTexts = listOf("下拉刷新", "释放刷新", "正在刷新...", "刷新成功"),
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp,
-                ),
-            ),
+            modifier = Modifier.fillMaxSize()
+                .collapsibleTopInset(scrollBehavior),
         ) {
             if (!loggedIn) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
-                        .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                        .pageScrollModifiers(scrollBehavior = scrollBehavior),
                     contentPadding = appPageContentPadding(
-                        innerPadding = PaddingValues(),
+                        innerPadding = paddingValues,
                         outerPadding = appScaffoldPadding,
                         extraTop = 12.dp,
                         extraStart = 12.dp,
@@ -211,8 +195,9 @@ fun PEAppointmentScreen(
                             isMy = true,
                             loadingMore = uiState.loadingMore,
                             hasMore = uiState.myHasMore,
-                            scrollBehavior = topAppBarScrollBehavior,
+                            scrollBehavior = scrollBehavior,
                             outerPadding = appScaffoldPadding,
+                            paddingValues = paddingValues,
                             onLoadMore = { vm.loadMoreMy() },
                             onItemClick = { onOpenWeb() },
                             onPrimaryAction = { item ->
@@ -225,8 +210,9 @@ fun PEAppointmentScreen(
                             isMy = false,
                             loadingMore = uiState.loadingMore,
                             hasMore = uiState.availableHasMore,
-                            scrollBehavior = topAppBarScrollBehavior,
+                            scrollBehavior = scrollBehavior,
                             outerPadding = appScaffoldPadding,
+                            paddingValues = paddingValues,
                             onLoadMore = { vm.loadMoreAvailable() },
                             onItemClick = { item ->
                                 if (canEnterAppointment(item)) vm.openBooking(item)
@@ -244,8 +230,9 @@ fun PEAppointmentScreen(
 
     val cancelTarget = uiState.cancelTarget
     if (cancelTarget != null) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = "取消预约",
             summary = "确认要取消「${cancelTarget.appointmentName.ifBlank { "该场次" }}」吗？",
             onDismissRequest = { vm.dismissCancel() },
@@ -285,8 +272,9 @@ fun PEAppointmentScreen(
 
     val actionMessage = uiState.actionMessage
     if (actionMessage != null) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = if (uiState.actionMessageIsSuccess) "预约成功" else "提示",
             summary = actionMessage,
             onDismissRequest = { vm.consumeActionMessage() },
@@ -341,8 +329,9 @@ private fun BookingSheet(
         listOfNotNull(state.selectedDate)
     }
 
-    WindowDialog(
+    OverlayDialog(
         show = true,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         title = "预约体测",
         summary = state.item.appointmentName.ifBlank { "选择日期与时段" },
         onDismissRequest = { if (!actionInFlight) onDismiss() },
@@ -518,8 +507,9 @@ private fun AppointmentListPage(
     isMy: Boolean,
     loadingMore: Boolean,
     hasMore: Boolean,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     outerPadding: PaddingValues,
+    paddingValues: PaddingValues,
     onLoadMore: () -> Unit,
     onItemClick: (PEAppointmentItem) -> Unit,
     onOpenWeb: () -> Unit = {},
@@ -535,7 +525,7 @@ private fun AppointmentListPage(
         modifier = Modifier.fillMaxSize()
             .pageScrollModifiers(scrollBehavior = scrollBehavior),
         contentPadding = appPageContentPadding(
-            innerPadding = PaddingValues(),
+            innerPadding = paddingValues,
             outerPadding = outerPadding,
             extraTop = 12.dp,
             extraStart = 12.dp,

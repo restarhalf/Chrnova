@@ -9,20 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
 import restarhalf.stellar.schedule.domain.port.PEAuthPort
 import restarhalf.stellar.schedule.ui.components.AppCard
-import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -30,31 +25,16 @@ fun PEAppointmentWebScreen(
     onBack: () -> Unit,
     peAuth: PEAuthPort = koinInject(),
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val token by peAuth.observeToken().collectAsStateWithLifecycle(
         initialValue = peAuth.getToken().orEmpty(),
     )
     val userId = peAuth.getUserId()
     val canAutoLogin = token.isNotBlank() && !userId.isNullOrBlank()
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            AppPageTopBar(
-                title = "体测预约",
-                scrollBehavior = topAppBarScrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground,
-                        )
-                    }
-                },
-            )
-        },
-    ) { paddingValues ->
+    AppPageScaffold(
+        title = "体测预约",
+        onBack = onBack,
+    ) { scrollBehavior, paddingValues ->
         if (canAutoLogin) {
             PEWebView(
                 targetUrl = PEWebAuth.APPOINTMENT_URL,
@@ -64,6 +44,7 @@ fun PEAppointmentWebScreen(
                 ),
                 modifier = Modifier
                     .fillMaxSize()
+                    .collapsibleTopInset(scrollBehavior)
                     .padding(
                         PaddingValues(
                             top = paddingValues.calculateTopPadding(),
@@ -77,6 +58,7 @@ fun PEAppointmentWebScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .collapsibleTopInset(scrollBehavior)
                     .padding(24.dp),
             ) {
                 AppCard(modifier = Modifier.fillMaxSize()) {

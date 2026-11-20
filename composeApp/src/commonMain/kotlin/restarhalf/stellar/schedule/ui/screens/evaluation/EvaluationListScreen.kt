@@ -38,17 +38,18 @@ import kotlinx.coroutines.launch
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Add
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.AppTopBarActionContainer
+import restarhalf.stellar.schedule.ui.chrome.LocalTopBarBackdrop
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEvaluationViewModel
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import top.yukonga.miuix.kmp.layout.SharedScrollBehavior
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
+import restarhalf.stellar.schedule.ui.components.CapsuleSegmentedControl
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -62,7 +63,6 @@ fun EvaluationListScreen(
     onEvaluationDetail: (String) -> Unit,
     onSubmitClick: () -> Unit,
 ) {
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
@@ -78,45 +78,36 @@ fun EvaluationListScreen(
         vm.loadEvaluations()
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "课程评价",
+        onBack = onBack,
+        actions = {
+            AppTopBarActionContainer {
+                IconButton(onClick = onSubmitClick) {
+                    Icon(
+                        imageVector = Add,
+                        contentDescription = "写评价",
+                        tint = colors.onBackground,
+                    )
+                }
+            }
+        },
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "课程评价",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Back,
-                                contentDescription = "返回",
-                                tint = colors.onBackground,
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = onSubmitClick) {
-                            Icon(
-                                imageVector = Add,
-                                contentDescription = "写评价",
-                                tint = colors.onBackground,
-                            )
-                        }
-                    },
-                )
-
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TabRowWithContour(
-                        tabs = listOf("全部评价", "我的评价"),
-                        selectedTabIndex = selectedTab,
-                        onTabSelected = { index ->
+                    CapsuleSegmentedControl(
+                        options = listOf("全部评价", "我的评价"),
+                        selectedIndex = selectedTab,
+                        onSelect = { index ->
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(index)
                             }
                         },
+                        backdrop = LocalTopBarBackdrop.current,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
@@ -129,28 +120,21 @@ fun EvaluationListScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize().padding(
-                PaddingValues(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = 0.dp,
-                )
-            ),
+            modifier = Modifier.fillMaxSize().collapsibleTopInset(scrollBehavior),
         ) { pageIndex ->
             when (pageIndex) {
                 0 -> AllEvaluationsPage(
                     vm = vm,
-                    topAppBarScrollBehavior = topAppBarScrollBehavior,
+                    topAppBarScrollBehavior = scrollBehavior,
                     onCourseClick = onCourseClick,
                     outerPadding = paddingValues,
                 )
                 1 -> MyEvaluationsPage(
                     vm = vm,
-                    topAppBarScrollBehavior = topAppBarScrollBehavior,
+                    topAppBarScrollBehavior = scrollBehavior,
                     onEvaluationDetail = onEvaluationDetail,
                     outerPadding = paddingValues,
                 )
@@ -163,7 +147,7 @@ fun EvaluationListScreen(
 @Composable
 private fun AllEvaluationsPage(
     vm: CourseEvaluationViewModel,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: SharedScrollBehavior,
     onCourseClick: (courseName: String, teacher: String) -> Unit,
     outerPadding: PaddingValues,
 ) {
@@ -183,7 +167,7 @@ private fun AllEvaluationsPage(
         LazyColumn(
             modifier = Modifier.fillMaxSize().pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = outerPadding,
                 outerPadding = outerPadding,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -225,7 +209,7 @@ private fun AllEvaluationsPage(
 @Composable
 private fun MyEvaluationsPage(
     vm: CourseEvaluationViewModel,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: SharedScrollBehavior,
     onEvaluationDetail: (String) -> Unit,
     outerPadding: PaddingValues,
 ) {
@@ -246,7 +230,7 @@ private fun MyEvaluationsPage(
         LazyColumn(
             modifier = Modifier.fillMaxSize().pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = outerPadding,
                 outerPadding = outerPadding,
                 extraTop = 12.dp,
                 extraStart = 12.dp,

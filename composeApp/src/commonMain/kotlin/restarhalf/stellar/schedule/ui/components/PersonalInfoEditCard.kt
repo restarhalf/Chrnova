@@ -19,7 +19,7 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -97,8 +97,9 @@ fun PersonalInfoEditCard(
     }
 
     if (showClearAvatarDialog) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = "清除头像",
             summary = "确定要清除头像吗？",
             onDismissRequest = { showClearAvatarDialog = false }
@@ -137,8 +138,9 @@ private fun NicknameEditDialog(
     var nickname by remember { mutableStateOf(initialNickname) }
     val colors = MiuixTheme.colorScheme
     
-    WindowDialog(
+    OverlayDialog(
         show = true,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         title = "设置昵称",
         onDismissRequest = onDismiss,
     ) {

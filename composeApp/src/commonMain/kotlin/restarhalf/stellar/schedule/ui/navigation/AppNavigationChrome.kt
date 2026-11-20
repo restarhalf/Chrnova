@@ -6,40 +6,26 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.haooz.softglass.backdrop.GlassBackdrop
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.components.LocalComponentsAlpha
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
+import restarhalf.stellar.schedule.ui.components.LocalWallpaperBackdrop
+import restarhalf.stellar.schedule.ui.components.bottombar.LiquidBottomBarFocusState
+import restarhalf.stellar.schedule.ui.components.bottombar.LiquidBottomTrailing
 import restarhalf.stellar.schedule.ui.icons.Examination
 import restarhalf.stellar.schedule.ui.icons.Home
 import restarhalf.stellar.schedule.ui.icons.PE
 import restarhalf.stellar.schedule.ui.icons.Schedule
 import restarhalf.stellar.schedule.ui.icons.Settings
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.shader.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private data class TabSpec(
@@ -59,14 +45,18 @@ private val appTabSpecs =
 
 @Composable
 fun AppBottomBar(
-    backdrop: LayerBackdrop?,
+    glassBackdrop: GlassBackdrop,
+    focusState: LiquidBottomBarFocusState? = null,
 ) {
     val chromeState = LocalAppChromeState.current
     val mainPagerState = LocalMainPagerState.current
-
+    val navigator = LocalNavigator.current
     val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
 
-    val blurActive = isRuntimeShaderSupported() && backdrop != null
+    val primaryTabs = appTabSpecs.dropLast(1)
+    val settingsSpec = appTabSpecs.last()
+    val selectedIndex =
+        primaryTabs.indexOfFirst { it.screen == chromeState.currentScreen }.coerceAtLeast(0)
 
     AnimatedVisibility(
         visible = chromeState.showNavigationChrome,
@@ -75,102 +65,21 @@ fun AppBottomBar(
             slideOutVertically(targetOffsetY = { it }) +
                 fadeOut(animationSpec = tween(200)),
     ) {
-        when (chromeState.barMode) {
-
-            0 -> {
-                val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
-                Box(
-                    modifier =
-                        Modifier
-                            .then(
-                                if (blurActive) {
-                                    Modifier.textureBlur(
-                                        backdrop = backdrop,
-                                        shape = RectangleShape,
-                                        blurRadius = 25f,
-                                        colors =
-                                            BlurDefaults.blurColors(
-                                                blendColors = listOf(
-                                                    BlendColorEntry(color = MiuixTheme.colorScheme.surface.copy(0.8f)),
-                                                ),
-                                            ),
-                                    )
-                                } else {
-                                    Modifier
-                                },
-                            )
-                            .background(barColor)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {},
-                            ),
-                ) {
-                    NavigationBar(color = barColor) {
-                        appTabSpecs.forEach { tab ->
-                            NavigationBarItem(
-                                selected = chromeState.currentScreen == tab.screen,
-                                onClick = { mainPagerState.animateTo(tab.screen) },
-                                icon = tab.icon,
-                                label = tab.label,
-                            )
-                        }
-                    }
-                }
-            }
-
-            1 -> {
-                val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
-                val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
-                val floatingHighlight = remember(isDark) {
-                    if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
-                }
-                FloatingNavigationBar(
-                    modifier =
-                        if (blurActive) {
-                            Modifier.textureBlur(
-                                backdrop = backdrop,
-                                shape = floatingBarShape,
-                                blurRadius = 25f,
-                                colors =
-                                    BlurDefaults.blurColors(
-                                        blendColors = listOf(
-                                            BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.6f)),
-                                        ),
-                                    ),
-                                highlight = floatingHighlight,
-                            )
-                        } else {
-                            Modifier
-                        },
-                    color = floatingBarColor,
-                ) {
-                    appTabSpecs.forEach { tab ->
-                        FloatingNavigationBarItem(
-                            selected = chromeState.currentScreen == tab.screen,
-                            onClick = { mainPagerState.animateTo(tab.screen) },
-                            icon = tab.icon,
-                            label = tab.label,
-                        )
-                    }
-                }
-            }
-
-            else -> {
-                GlassNavigationBar(
-                    items = appTabSpecs.map { tab ->
-                        NavigationItem(
-                            icon = tab.icon,
-                            label = tab.label,
-                        )
-                    },
-                    selectedIndex = appTabSpecs.indexOfFirst { it.screen == chromeState.currentScreen }.coerceAtLeast(0),
-                    onItemClick = { index -> mainPagerState.animateTo(appTabSpecs[index].screen) },
-                    backdrop = backdrop,
-                    isBlurActive = blurActive,
-                )
-            }
-        }
+        LiquidGlassNavigationBar(
+            tabs = primaryTabs.map { tab -> LiquidBarTab(icon = tab.icon, label = tab.label) },
+            selectedIndex = selectedIndex,
+            onTabSelected = { index -> mainPagerState.animateTo(primaryTabs[index].screen) },
+            backdrop = glassBackdrop,
+            isExpanded = focusState?.isExpanded ?: true,
+            onExpandedChange = focusState?.let { state -> state::updateExpanded },
+            trailing =
+                LiquidBottomTrailing(
+                    icon = settingsSpec.icon,
+                    contentDescription = settingsSpec.label,
+                    onClick = { navigator.push(Screen.Settings) },
+                    iconTint = liquidTrailingTint(isDark),
+                ),
+        )
     }
 }
 
@@ -178,18 +87,22 @@ fun AppBottomBar(
 fun AppScaffoldBody(
     innerPadding: PaddingValues,
     componentsAlpha: Float,
+    wallpaperBackdrop: GlassBackdrop? = null,
+    liquidGlassBackdrop: GlassBackdrop? = null,
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
         LocalComponentsAlpha provides componentsAlpha,
+        LocalWallpaperBackdrop provides wallpaperBackdrop,
+        LocalLiquidGlassBackdrop provides liquidGlassBackdrop,
         LocalAppScaffoldPadding provides innerPadding,
     ) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-            ) {
-                content()
-            }
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+        ) {
+            content()
         }
+    }
 }

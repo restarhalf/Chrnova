@@ -22,7 +22,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -32,27 +31,27 @@ import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.components.SectionRangePickerBottomSheet
 import restarhalf.stellar.schedule.ui.components.WeekPalette
 import restarhalf.stellar.schedule.ui.components.WeekdayPickerBottomSheet
-import restarhalf.stellar.schedule.ui.icons.Back
 import restarhalf.stellar.schedule.ui.icons.Change
 import restarhalf.stellar.schedule.ui.icons.Check
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.AppTopBarActionContainer
 import restarhalf.stellar.schedule.ui.chrome.LocalAppScaffoldPadding
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.viewmodel.CourseEditViewModel
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -71,7 +70,6 @@ fun CourseEditScreen(
 ) {
     val changeToSelect = remember { mutableStateOf(true) }
     val appScaffoldPadding = LocalAppScaffoldPadding.current
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val courseEditUiState by vm.uiState.collectAsStateWithLifecycle()
     val isSaving by vm.isSaving.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -191,112 +189,102 @@ fun CourseEditScreen(
                 )
             }
         }
-    Scaffold(
-        topBar = {
-            AppPageTopBar(
-                title = if (transMode) "整门课调课" else "编辑实验课",
-                scrollBehavior = topAppBarScrollBehavior,
-                actions = {
-                    IconButton(
-                        onClick = {
-                            if (transMode) {
-                                val origin = editingCourse
-                                if (origin == null) {
-                                    showMessage("课程信息未加载")
-                                    return@IconButton
-                                }
-                                if (selectedWeeks.isEmpty()) {
-                                    showMessage("请至少选择一个调课周")
-                                    return@IconButton
-                                }
-                                if (savingTrans) return@IconButton
-                                savingTrans = true
-                                scope.launch {
-                                    try {
-                                        val result =
-                                            vm.buildTransBatch(
-                                                originCourse = origin,
-                                                weeks = selectedWeeks,
-                                                classRoom = classRoomValue.value,
-                                                dayOfWeek = dayOfWeek,
-                                                startSection = startSection,
-                                                endSection = endSection,
+    AppPageScaffold(
+        title = if (transMode) "整门课调课" else "编辑实验课",
+        onBack = onBack,
+        actions = {
+                    AppTopBarActionContainer {
+                        IconButton(
+                            onClick = {
+                                if (transMode) {
+                                    val origin = editingCourse
+                                    if (origin == null) {
+                                        showMessage("课程信息未加载")
+                                        return@IconButton
+                                    }
+                                    if (selectedWeeks.isEmpty()) {
+                                        showMessage("请至少选择一个调课周")
+                                        return@IconButton
+                                    }
+                                    if (savingTrans) return@IconButton
+                                    savingTrans = true
+                                    scope.launch {
+                                        try {
+                                            val result =
+                                                vm.buildTransBatch(
+                                                    originCourse = origin,
+                                                    weeks = selectedWeeks,
+                                                    classRoom = classRoomValue.value,
+                                                    dayOfWeek = dayOfWeek,
+                                                    startSection = startSection,
+                                                    endSection = endSection,
+                                                )
+                                            if (result == null) {
+                                                showMessage("调课失败，请重试")
+                                                return@launch
+                                            }
+                                            if (!result.hasChanges) {
+                                                showMessage("时间和教室都没变，无需调课")
+                                                return@launch
+                                            }
+                                            if (result.hasConflicts) {
+                                                conflictWeeks = result.weekConflicts
+                                                pendingOverrides = result.overrideCourses
+                                                pendingClearedWeeks = result.clearedWeeks
+                                                showTransConflict = true
+                                                return@launch
+                                            }
+                                            val saved = vm.saveTransBatch(
+                                                origin,
+                                                result.overrideCourses,
+                                                result.clearedWeeks,
                                             )
-                                        if (result == null) {
-                                            showMessage("调课失败，请重试")
-                                            return@launch
+                                            if (saved) {
+                                                onBack()
+                                            } else {
+                                                showMessage("保存失败，请重试")
+                                            }
+                                        } finally {
+                                            savingTrans = false
                                         }
-                                        if (!result.hasChanges) {
-                                            showMessage("时间和教室都没变，无需调课")
-                                            return@launch
-                                        }
-                                        if (result.hasConflicts) {
-                                            conflictWeeks = result.weekConflicts
-                                            pendingOverrides = result.overrideCourses
-                                            pendingClearedWeeks = result.clearedWeeks
-                                            showTransConflict = true
-                                            return@launch
-                                        }
-                                        val saved = vm.saveTransBatch(
-                                            origin,
-                                            result.overrideCourses,
-                                            result.clearedWeeks,
-                                        )
-                                        if (saved) {
-                                            onBack()
-                                        } else {
-                                            showMessage("保存失败，请重试")
-                                        }
-                                    } finally {
-                                        savingTrans = false
+                                    }
+                                    return@IconButton
+                                }
+                                val selectedName = if(changeToSelect.value){courseNames.getOrNull(selectedIndex).orEmpty()}else{inputCourseName.value}
+                                if (selectedName.isBlank()) {
+                                    courseNameError = true
+                                    showMessage("请输入课程名")
+                                    return@IconButton
+                                }
+                                val toSave =
+                                    vm.buildLabCourseToSave(
+                                        selectedName = selectedName,
+                                        selectedWeeks = selectedWeeks,
+                                        classRoom = classRoomValue.value,
+                                        teacher = teacherValue.value,
+                                        dayOfWeek = dayOfWeek,
+                                        startSection = startSection,
+                                        endSection = endSection,
+                                        existing = editingCourse,
+                                        courses = courseEditUiState.courses
+                                    )
+                                if (toSave == null) {
+                                    showMessage("请至少选择一个上课周")
+                                    return@IconButton
+                                }
+                                vm.saveLabCourse(toSave) { saved ->
+                                    if (saved) {
+                                        onBack()
+                                    } else {
+                                        showMessage("保存失败，请重试")
                                     }
                                 }
-                                return@IconButton
-                            }
-                            val selectedName = if(changeToSelect.value){courseNames.getOrNull(selectedIndex).orEmpty()}else{inputCourseName.value}
-                            if (selectedName.isBlank()) {
-                                courseNameError = true
-                                showMessage("请输入课程名")
-                                return@IconButton
-                            }
-                            val toSave =
-                                vm.buildLabCourseToSave(
-                                    selectedName = selectedName,
-                                    selectedWeeks = selectedWeeks,
-                                    classRoom = classRoomValue.value,
-                                    teacher = teacherValue.value,
-                                    dayOfWeek = dayOfWeek,
-                                    startSection = startSection,
-                                    endSection = endSection,
-                                    existing = editingCourse,
-                                    courses = courseEditUiState.courses
-                                )
-                            if (toSave == null) {
-                                showMessage("请至少选择一个上课周")
-                                return@IconButton
-                            }
-                            vm.saveLabCourse(toSave) { saved ->
-                                if (saved) {
-                                    onBack()
-                                } else {
-                                    showMessage("保存失败，请重试")
-                                }
-                            }
-                        },
-                        enabled = !isSaving && !savingTrans
-                    ) {
-                        Icon(imageVector = Check, contentDescription = "确定")
+                            },
+                            enabled = !isSaving && !savingTrans
+                        ) {
+                            Icon(imageVector = Check, contentDescription = "确定")
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Back,
-                            contentDescription = "返回"
-                        )
-                    }
-                },
-            )
         },
         popupHost = {
             if (showWeekdayPicker.value) {
@@ -328,8 +316,9 @@ fun CourseEditScreen(
             }
 
             if (showTransConflict) {
-                WindowDialog(
+                OverlayDialog(
                     show = showTransConflict,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "调课冲突",
                     summary = "以下周次的目标时间段已有课程",
                     onDismissRequest = {
@@ -395,8 +384,9 @@ fun CourseEditScreen(
             }
 
             if (showDeleteConfirm) {
-                WindowDialog(
+                OverlayDialog(
                     show = showDeleteConfirm,
+                    liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
                     title = "确认删除",
                     summary = "删除后不可恢复，确定要删除这门课程吗？",
                     onDismissRequest = { showDeleteConfirm = false }
@@ -449,17 +439,17 @@ fun CourseEditScreen(
                 }
             }
         },
-        containerColor = Color.Transparent,
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         LazyColumn(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .pageScrollModifiers(scrollBehavior = topAppBarScrollBehavior),
+                    .collapsibleTopInset(scrollBehavior)
+                    .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding =
                 appPageContentPadding(
                     innerPadding = paddingValues,
-                    outerPadding = appScaffoldPadding,
+                    outerPadding = paddingValues,
                     extraTop = 12.dp,
                     extraStart = 12.dp,
                     extraEnd = 12.dp,
@@ -485,7 +475,7 @@ fun CourseEditScreen(
                     AppCard {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             if (changeToSelect.value) {
-                                OverlayDropdownPreference(
+                                GlassDropdownPreference(
                                     title = "课程名",
                                     items = courseNames,
                                     selectedIndex = selectedIndex.coerceIn(

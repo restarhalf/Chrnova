@@ -55,15 +55,16 @@ import restarhalf.stellar.schedule.domain.model.JwxtSelectedCourse
 import restarhalf.stellar.schedule.domain.model.JwxtSelectionCourse
 import restarhalf.stellar.schedule.ui.components.AppCard
 import restarhalf.stellar.schedule.ui.icons.Back
-import restarhalf.stellar.schedule.ui.chrome.AppPageTopBar
+import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
+import restarhalf.stellar.schedule.ui.chrome.LocalTopBarBackdrop
 import restarhalf.stellar.schedule.ui.chrome.appPageContentPadding
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
-import restarhalf.stellar.schedule.ui.chrome.rememberAppPageScrollBehavior
 import restarhalf.stellar.schedule.ui.theme.StatusColors
 import restarhalf.stellar.schedule.ui.theme.pickCourseSubColor
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel.SelectionLog
 import restarhalf.stellar.schedule.ui.viewmodel.CourseSelectionViewModel.SelectionTarget
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -71,16 +72,16 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.PullToRefreshState
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.layout.SharedScrollBehavior
+import top.yukonga.miuix.kmp.layout.collapsibleTopInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import restarhalf.stellar.schedule.ui.components.CapsuleSegmentedControl
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import restarhalf.stellar.schedule.ui.components.GlassDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -90,7 +91,6 @@ fun CourseSelectionScreen(
     ensureNotificationPermission: (onGranted: () -> Unit) -> Unit = { onGranted -> onGranted() },
 ) {
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val topAppBarScrollBehavior = rememberAppPageScrollBehavior()
     val colors = MiuixTheme.colorScheme
     val coroutineScope = rememberCoroutineScope()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -102,34 +102,28 @@ fun CourseSelectionScreen(
     val tabCount = 4
     val pagerState = rememberPagerState(pageCount = { tabCount })
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
+    AppPageScaffold(
+        title = "自动抢课",
+        onBack = onBack,
+        topBarExtra = {
             Column {
-                AppPageTopBar(
-                    title = "自动抢课",
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(imageVector = Back, contentDescription = "")
-                        }
-                    },
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TabRowWithContour(
-                        tabs = listOf(
+                    CapsuleSegmentedControl(
+                        options = listOf(
                             "选课",
                             "目标(${uiState.targets.size})",
                             "已选(${uiState.selectedCourses.size})",
                             "日志(${uiState.logs.size})",
                         ),
-                        selectedTabIndex = pagerState.currentPage,
-                        onTabSelected = { index ->
+                        selectedIndex = pagerState.currentPage,
+                        onSelect = { index ->
                             coroutineScope.launch { pagerState.animateScrollToPage(index) }
                         },
+                        backdrop = LocalTopBarBackdrop.current,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
@@ -199,26 +193,19 @@ fun CourseSelectionScreen(
                 }
             }
         },
-    ) { paddingValues ->
+    ) { scrollBehavior, paddingValues ->
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        bottom = 0.dp
-                    ),
-                ),
+                .collapsibleTopInset(scrollBehavior),
         ) { pageIndex ->
             when (pageIndex) {
                 0 -> SelectTab(
                     uiState = uiState,
                     vm = vm,
                     paddingValues = paddingValues,
-                    scrollBehavior = topAppBarScrollBehavior,
+                    scrollBehavior = scrollBehavior,
                     isRefreshing = uiState.loading,
                     onRefresh = { vm.loadRotations() },
                     pullToRefreshState = pullToRefreshState,
@@ -227,7 +214,7 @@ fun CourseSelectionScreen(
                     uiState = uiState,
                     vm = vm,
                     paddingValues = paddingValues,
-                    scrollBehavior = topAppBarScrollBehavior,
+                    scrollBehavior = scrollBehavior,
                     isRefreshing = uiState.loading,
                     onRefresh = { vm.loadRotations() },
                     pullToRefreshState = pullToRefreshState,
@@ -236,7 +223,7 @@ fun CourseSelectionScreen(
                     uiState = uiState,
                     vm = vm,
                     paddingValues = paddingValues,
-                    scrollBehavior = topAppBarScrollBehavior,
+                    scrollBehavior = scrollBehavior,
                     isRefreshing = uiState.loadingSelected,
                     onRefresh = { vm.loadSelectedCourses() },
                     pullToRefreshState = pullToRefreshState,
@@ -245,7 +232,7 @@ fun CourseSelectionScreen(
                     uiState = uiState,
                     vm = vm,
                     paddingValues = paddingValues,
-                    scrollBehavior = topAppBarScrollBehavior,
+                    scrollBehavior = scrollBehavior,
                     isRefreshing = false,
                     onRefresh = { },
                     pullToRefreshState = pullToRefreshState,
@@ -295,7 +282,7 @@ private fun SelectTab(
     uiState: CourseSelectionViewModel.CourseSelectionUiState,
     vm: CourseSelectionViewModel,
     paddingValues: PaddingValues,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
@@ -312,7 +299,7 @@ private fun SelectTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -324,7 +311,7 @@ private fun SelectTab(
         item {
             SmallTitle(text = "选课轮次")
             AppCard {
-                OverlayDropdownPreference(
+                GlassDropdownPreference(
                     title = "选课轮次",
                     items = uiState.rotations.map { it.rotationName.ifBlank { it.rotationId } },
                     selectedIndex = uiState.rotations.indexOfFirst { it.rotationId == uiState.selectedRotationId }.coerceAtLeast(0),
@@ -339,7 +326,7 @@ private fun SelectTab(
             item {
                 SmallTitle(text = "选课分类")
                 AppCard {
-                    OverlayDropdownPreference(
+                    GlassDropdownPreference(
                         title = "课程分类",
                         summary = uiState.classifications.firstOrNull { it.classificationCode == uiState.selectedClassificationCode }?.classificationName ?: "请选择",
                         items = uiState.classifications.map { it.classificationName },
@@ -396,7 +383,7 @@ private fun TargetTab(
     uiState: CourseSelectionViewModel.CourseSelectionUiState,
     vm: CourseSelectionViewModel,
     paddingValues: PaddingValues,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
@@ -413,7 +400,7 @@ private fun TargetTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -464,7 +451,7 @@ private fun SelectedTab(
     uiState: CourseSelectionViewModel.CourseSelectionUiState,
     vm: CourseSelectionViewModel,
     paddingValues: PaddingValues,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
@@ -484,7 +471,7 @@ private fun SelectedTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,
@@ -513,8 +500,9 @@ private fun SelectedTab(
 
     val dropTarget = pendingDropCourse
     if (dropTarget != null) {
-        WindowDialog(
+        OverlayDialog(
             show = true,
+            liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
             title = "确认退课",
             summary = "确定要退选「${dropTarget.courseName.ifBlank { "未命名课程" }}」（班次 ${dropTarget.kxh}）吗？退课后如需重选可能受选课人数限制。",
             onDismissRequest = { pendingDropCourse = null },
@@ -550,7 +538,7 @@ private fun LogTab(
     uiState: CourseSelectionViewModel.CourseSelectionUiState,
     vm: CourseSelectionViewModel,
     paddingValues: PaddingValues,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: SharedScrollBehavior,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     pullToRefreshState: PullToRefreshState,
@@ -567,7 +555,7 @@ private fun LogTab(
                 .fillMaxSize()
                 .pageScrollModifiers(scrollBehavior = scrollBehavior),
             contentPadding = appPageContentPadding(
-                innerPadding = PaddingValues(),
+                innerPadding = paddingValues,
                 outerPadding = paddingValues,
                 extraTop = 12.dp,
                 extraStart = 12.dp,

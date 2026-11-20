@@ -10,11 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import restarhalf.stellar.schedule.core.update.AppUpdateInfo
+import restarhalf.stellar.schedule.ui.components.LocalLiquidGlassBackdrop
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.layout.DialogDefaults
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun UpdateConfirmDialog(
@@ -24,8 +25,9 @@ fun UpdateConfirmDialog(
     onStartDownload: (AppUpdateInfo) -> Unit,
     onLater: (() -> Unit)? = null,
 ) {
-    WindowDialog(
+    OverlayDialog(
         show = show,
+        liquidGlassBackdrop = LocalLiquidGlassBackdrop.current,
         modifier = Modifier,
         title = "发现新版本 ${pendingUpdate?.latestVersion.orEmpty()}",
         titleColor = DialogDefaults.titleColor(),
