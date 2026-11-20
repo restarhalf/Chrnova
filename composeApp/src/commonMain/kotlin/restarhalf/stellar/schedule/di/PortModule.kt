@@ -16,13 +16,13 @@ import restarhalf.stellar.schedule.data.impl.AcademicPortImpl
 import restarhalf.stellar.schedule.data.impl.JwxtAuthPortImpl
 import restarhalf.stellar.schedule.data.impl.JwxtAuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.BackgroundSettingsPortImpl
+import restarhalf.stellar.schedule.data.impl.WallpaperPortImpl
 import restarhalf.stellar.schedule.data.impl.PEAuthPortImpl
 import restarhalf.stellar.schedule.data.impl.PEAuthWorkflowPortImpl
 import restarhalf.stellar.schedule.data.impl.PEPasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.JwxtPasswordEncryptionPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.DeviceSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.DisplaySettingsPortImpl
-import restarhalf.stellar.schedule.data.impl.settings.LogSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.ReminderSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.TermSettingsPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.UserProfilePortImpl
@@ -65,12 +65,12 @@ import restarhalf.stellar.schedule.domain.port.ScheduleSnapshotPort
 import restarhalf.stellar.schedule.domain.port.JwxtPasswordEncryptionPort
 import restarhalf.stellar.schedule.domain.port.DeviceSettingsPort
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
-import restarhalf.stellar.schedule.domain.port.LogSettingsPort
 import restarhalf.stellar.schedule.domain.port.ReminderSettingsPort
 import restarhalf.stellar.schedule.domain.port.TermSettingsPort
 import restarhalf.stellar.schedule.domain.port.UserProfilePort
 import restarhalf.stellar.schedule.domain.port.SyncPort
 import restarhalf.stellar.schedule.domain.port.TimetablePort
+import restarhalf.stellar.schedule.domain.port.WallpaperPort
 import restarhalf.stellar.schedule.domain.repository.CourseRepository
 import restarhalf.stellar.schedule.domain.repository.ExaminationRepository
 import restarhalf.stellar.schedule.domain.repository.GradeRepository
@@ -164,13 +164,13 @@ val portModule = module {
     single<ReminderSettingsPort> { ReminderSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<TermSettingsPort> { TermSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<DeviceSettingsPort> { DeviceSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
-    single<LogSettingsPort> { LogSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<UserProfilePort> { UserProfilePortImpl(settings = get(named(SettingsKeys.PREFS_NAME))) }
     single<JwxtPasswordEncryptionPort> { JwxtPasswordEncryptionPortImpl() }
     single<PEPasswordEncryptionPort> { PEPasswordEncryptionPortImpl() }
     single<BackgroundSettingsPort> {
         BackgroundSettingsPortImpl(settings = get(named(SettingsKeys.PREFS_NAME)))
     }
+    single<WallpaperPort> { WallpaperPortImpl() }
     single<JwxtAuthPort> { JwxtAuthPortImpl(authStore = get()) }
     single<AcademicPort> { AcademicPortImpl(gateway = get(), settings = get()) }
     single<JwxtAuthWorkflowPort> {

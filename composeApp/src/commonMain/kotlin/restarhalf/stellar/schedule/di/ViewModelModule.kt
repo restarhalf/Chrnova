@@ -30,7 +30,6 @@ val viewModelModule = module {
         AppViewModel(
             auth = get(),
             timetable = get(),
-            settings = get(),
             fetchExaminations = get(),
             fetchGrades = get(),
             jwxtLoginUseCase = get(),
@@ -42,6 +41,7 @@ val viewModelModule = module {
     viewModel {
         BackgroundViewModel(
             backgroundSettings = get(),
+            wallpaper = get(),
         )
     }
     viewModel {
@@ -74,8 +74,8 @@ val viewModelModule = module {
             displaySettings = get(),
             reminderSettings = get(),
             exactAlarmPermission = get(),
+            reminderPermission = get(),
             termSettings = get(),
-            logSettings = get(),
             userProfile = get(),
             deviceSettings = get(),
             cancelAllCourseReminders = get(),
@@ -83,9 +83,8 @@ val viewModelModule = module {
             fetchSemesterIds = get(),
             scheduleNextCourseReminder = get(),
             scheduleNextExamReminder = get(),
-            rescheduleAllReminders = get(),
             courseReminderPort = get(),
-            examReminderPort = get(),
+            loadLabelPreview = get(),
             verifyGitHubStar = get(),
         )
     }

@@ -8,6 +8,7 @@ import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
 import org.koin.core.context.startKoin
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSData
@@ -52,19 +53,26 @@ import platform.darwin.dispatch_semaphore_signal
 import platform.darwin.dispatch_semaphore_wait
 import platform.darwin.dispatch_sync
 import platform.darwin.dispatch_time
-import restarhalf.stellar.schedule.core.log.AppLogger
+import restarhalf.stellar.schedule.data.platform.AppFiles
+import restarhalf.stellar.schedule.data.platform.NsFileAppFile
+import restarhalf.stellar.schedule.data.platform.defaultDocumentsDir
+import restarhalf.stellar.schedule.data.wallpaper.IosWallpaperBackend
+import restarhalf.stellar.schedule.data.wallpaper.WallpaperStore
 import restarhalf.stellar.schedule.di.appModule
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
+import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
 fun AppRoot(): UIViewController {
+    ensureWallpaperStorage()
     ensureKoinStarted()
     lateinit var hostViewController: UIViewController
     hostViewController = ComposeUIViewController {
         AppRoot(
             pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
+                val pictureSelectorPort: PictureSelectorPort = koinInject()
                 PictureSelectorHost(
                     hostViewController = hostViewController,
                     show = show,
@@ -72,6 +80,7 @@ fun AppRoot(): UIViewController {
                     onPicked = onPicked,
                     outputWidthPx = outputWidthPx,
                     outputHeightPx = outputHeightPx,
+                    port = pictureSelectorPort,
                 )
             },
             pdfFilePickerHost = { multiple, onPicked ->
@@ -94,11 +103,8 @@ fun AppRoot(): UIViewController {
                     bytes = bytes,
                 )
             },
-            saveLog = { fileName, content ->
-                saveLogToFile(fileName, content)
-            },
             saveCsv = { fileName, content ->
-                saveLogToFile(fileName, content)
+                saveTextToDocuments(fileName, content)
             },
             canSaveImage = true,
             saveImage = { _, bytes ->
@@ -116,17 +122,23 @@ fun AppRoot(): UIViewController {
     return hostViewController
 }
 
+private fun ensureWallpaperStorage() {
+    if (!AppFiles.isReady) {
+        AppFiles.init(NsFileAppFile(defaultDocumentsDir()))
+    }
+    if (WallpaperStore.backend == null) {
+        val backend = IosWallpaperBackend()
+        WallpaperStore.backend = backend
+        WallpaperStore.synchronousLoader = { runCatching { backend.loadNow() }.getOrNull() }
+    }
+}
+
 private fun ensureKoinStarted() {
     if (KoinPlatform.getKoinOrNull() != null) return
     restarhalf.stellar.schedule.data.local.mmkv.MmkvIosBootstrap.initializeAndMigrate()
     startKoin {
         modules(appModule)
     }
-    AppLogger.init()
-    @OptIn(kotlin.experimental.ExperimentalNativeApi::class)
-    (setUnhandledExceptionHook { throwable ->
-        AppLogger.logFatal("main", throwable)
-    })
 }
 
 private fun openUri(uriString: String): Boolean {
@@ -154,9 +166,7 @@ private fun openUrlWithOptionsOnMain(url: NSURL): Boolean {
         UIApplication.sharedApplication.openURL(
             url = url,
             options = emptyMap<Any?, Any>(),
-        ) { success ->
-            if (!success) AppLogger.log("AppRoot", "打开链接失败")
-        }
+        ) {}
         return true
     }
     val semaphore = dispatch_semaphore_create(0)
@@ -242,7 +252,7 @@ private fun openAppSettings(): Boolean {
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun saveLogToFile(fileName: String, content: String): String? {
+private fun saveTextToDocuments(fileName: String, content: String): String? {
     return runCatching {
         val dirPath = NSSearchPathForDirectoriesInDomains(
             NSDocumentDirectory, NSUserDomainMask, true
@@ -258,8 +268,6 @@ private fun saveLogToFile(fileName: String, content: String): String? {
         }
         nsData.writeToURL(fileUrl, atomically = true)
         "$dirPath/Chrnova/$fileName"
-    }.onFailure {
-        AppLogger.log("App", "保存日志文件失败: fileName=$fileName", it)
     }.getOrDefault(null)
 }
 

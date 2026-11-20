@@ -20,7 +20,7 @@ import restarhalf.stellar.schedule.domain.port.CourseReminderPort
 import restarhalf.stellar.schedule.domain.port.CourseSelectionServicePort
 import restarhalf.stellar.schedule.domain.port.ExamReminderPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
-import restarhalf.stellar.schedule.domain.port.ReminderSchedulerPort
+import restarhalf.stellar.schedule.domain.port.ReminderPermissionPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorPortImpl
 import restarhalf.stellar.schedule.reminder.CourseReminderScheduler
@@ -28,7 +28,7 @@ import restarhalf.stellar.schedule.reminder.ExamReminderScheduler
 import restarhalf.stellar.schedule.reminder.impl.CourseReminderPortImpl
 import restarhalf.stellar.schedule.reminder.impl.ExamReminderPortImpl
 import restarhalf.stellar.schedule.data.impl.settings.ExactAlarmPermissionPortImpl
-import restarhalf.stellar.schedule.reminder.impl.WorkManagerReminderSchedulerPortImpl
+import restarhalf.stellar.schedule.data.impl.settings.ReminderPermissionPortImpl
 import restarhalf.stellar.schedule.ui.impl.AppInfoPortImpl
 import restarhalf.stellar.schedule.ui.impl.ScreenTunerPortImpl
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
@@ -46,8 +46,20 @@ private val androidPlatformModule = module {
     single<PEYearScoreDao> { get<AppDatabase>().peYearScoreDao() }
     single<PEDetailDao> { get<AppDatabase>().peDetailDao() }
 
-    single { CourseReminderScheduler(androidContext(), get(named("reminder_codes"))) }
-    single { ExamReminderScheduler(androidContext(), get(named("reminder_codes"))) }
+    single {
+        CourseReminderScheduler(
+            context = androidContext(),
+            settings = get(named("reminder_codes")),
+            reminderPrefs = get(named(SettingsKeys.PREFS_NAME)),
+        )
+    }
+    single {
+        ExamReminderScheduler(
+            context = androidContext(),
+            settings = get(named("reminder_codes")),
+            reminderPrefs = get(named(SettingsKeys.PREFS_NAME)),
+        )
+    }
 
     single { MmkvSettingsFactory() }
 
@@ -69,9 +81,14 @@ private val androidPlatformModule = module {
 
     single<CourseReminderPort> { CourseReminderPortImpl(scheduler = get()) }
     single<ExamReminderPort> { ExamReminderPortImpl(scheduler = get()) }
-    single<ReminderSchedulerPort> { WorkManagerReminderSchedulerPortImpl(context = androidContext()) }
     single<ExactAlarmPermissionPort> {
         ExactAlarmPermissionPortImpl(
+            context = androidContext(),
+            settings = get(named(SettingsKeys.PREFS_NAME)),
+        )
+    }
+    single<ReminderPermissionPort> {
+        ReminderPermissionPortImpl(
             context = androidContext(),
             settings = get(named(SettingsKeys.PREFS_NAME)),
         )

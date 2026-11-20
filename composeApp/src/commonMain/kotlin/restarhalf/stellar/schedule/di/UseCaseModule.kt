@@ -56,7 +56,7 @@ import restarhalf.stellar.schedule.domain.usecase.RefreshCourseRemindersIfEnable
 import restarhalf.stellar.schedule.domain.usecase.RescheduleAllRemindersUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextCourseReminderIfEnabledUseCase
 import restarhalf.stellar.schedule.domain.usecase.RescheduleNextExamReminderIfEnabledUseCase
-import restarhalf.stellar.schedule.domain.usecase.RescheduleRemindersUseCase
+import restarhalf.stellar.schedule.domain.usecase.LoadClassroomLabelPreviewUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextCourseReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.ScheduleNextExamReminderUseCase
 import restarhalf.stellar.schedule.domain.usecase.SyncExactAlarmPermissionUseCase
@@ -77,7 +77,7 @@ val useCaseModule = module {
             timetable = get(),
             settings = get(),
             sync = get(),
-            reminderScheduler = get(),
+            rescheduleAllReminders = get(),
         )
     }
     factory {
@@ -138,6 +138,7 @@ val useCaseModule = module {
         )
     }
     factory { ScheduleNextCourseReminderUseCase(courseRepository = get(), courseReminder = get()) }
+    factory { LoadClassroomLabelPreviewUseCase(courseRepository = get()) }
     factory {
         CollectReminderExaminationsUseCase(
             fetchExaminations = get(),
@@ -185,16 +186,6 @@ val useCaseModule = module {
             settings = get(),
             collectReminderExaminations = get(),
             examReminder = get(),
-        )
-    }
-    factory {
-        RescheduleRemindersUseCase(
-            settings = get(),
-            courseRepository = get(),
-            timetable = get(),
-            courseReminder = get(),
-            examReminder = get(),
-            collectReminderExaminations = get(),
         )
     }
     factory { IsExamNotEndedUseCase() }

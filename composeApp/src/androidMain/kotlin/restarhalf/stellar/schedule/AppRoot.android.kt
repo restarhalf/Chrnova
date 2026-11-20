@@ -1,6 +1,7 @@
 package restarhalf.stellar.schedule
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,6 +9,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -19,34 +21,35 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import org.koin.compose.koinInject
-import restarhalf.stellar.schedule.core.log.AppLogger
 import restarhalf.stellar.schedule.domain.port.DisplaySettingsPort
 import restarhalf.stellar.schedule.domain.port.ExactAlarmPermissionPort
 import restarhalf.stellar.schedule.papers.PdfFilePickerHost
 import restarhalf.stellar.schedule.pictureselector.PictureSelectorHost
+import restarhalf.stellar.schedule.pictureselector.PictureSelectorPort
+import restarhalf.stellar.schedule.widget.WidgetUpdateCache
 
 @RequiresApi(Build.VERSION_CODES.Q)
 fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
-    AppLogger.init(filesDir.absolutePath + "/logs")
-    installCrashHandler()
     setContent {
 
         val exactAlarmPermission: ExactAlarmPermissionPort = koinInject()
 
-        var themeMode by remember { mutableIntStateOf(displaySettings.getThemeMode()) }
-        val darkMode =
-            when (themeMode) {
-                1 -> false
-                2 -> true
-                else -> isSystemInDarkTheme()
-            }
+        val systemDark = isSystemInDarkTheme()
+        var darkMode by remember {
+            mutableStateOf(
+                when (displaySettings.getThemeMode()) {
+                    DisplaySettingsPort.THEME_MODE_LIGHT -> false
+                    DisplaySettingsPort.THEME_MODE_DARK -> true
+                    else -> systemDark
+                },
+            )
+        }
 
         DisposableEffect(darkMode) {
             enableEdgeToEdge(
@@ -77,14 +80,16 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
             }
 
         AppRoot(
-            onThemeModeChange = { themeMode = it },
+            onEffectiveDarkChange = { darkMode = it },
             pictureSelectorHost = { show, onDismissRequest, onPicked, outputWidthPx, outputHeightPx ->
+                val pictureSelectorPort: PictureSelectorPort = koinInject()
                 PictureSelectorHost(
                     show = show,
                     onDismissRequest = onDismissRequest,
                     onPicked = onPicked,
                     outputWidthPx = outputWidthPx,
                     outputHeightPx = outputHeightPx,
+                    port = pictureSelectorPort,
                 )
             },
             pdfFilePickerHost = { multiple, onPicked ->
@@ -107,10 +112,6 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                     notificationPermissionLauncher.launch(permsArray)
                 }
             },
-            // SCHEDULE_EXACT_ALARM 走的是「特殊权限」，不是运行时权限，
-            // 必须弹系统设置页让用户开。不开的话 setExact 会被降级成
-            // setAndAllowWhileIdle，闹钟被塞进最长 1 小时的模糊窗口，
-            // 表现就是「排上了但到点不响」。
             ensureExactAlarmPermission = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     exactAlarmPermission.openExactAlarmSettings()
@@ -118,36 +119,22 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                     exactAlarmPermission.markAsked()
                 }
             },
+            onRequestDndPolicyPermission = {
+                val manager = getSystemService(NotificationManager::class.java)
+                if (manager?.isNotificationPolicyAccessGranted != true) {
+                    runCatching {
+                        startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                    }
+                }
+            },
             openUri = { uri ->
                 runCatching {
                     startActivity(Intent(Intent.ACTION_VIEW, uri.toUri()))
                     true
-                }.onFailure {
-                    AppLogger.log("App", "打开URI失败", it)
                 }.getOrDefault(false)
             },
             showMessage = { message ->
                 Toast.makeText(this@AppRoot, message, Toast.LENGTH_SHORT).show()
-            },
-            saveLog = { fileName, content ->
-                runCatching {
-                    val collection =
-                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                    val values = ContentValues().apply {
-                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                        put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + "/Chrnova")
-                    }
-                    val uri = contentResolver.insert(collection, values)
-                    uri?.let {
-                        contentResolver.openOutputStream(it)?.use { os ->
-                            os.write(content.toByteArray(Charsets.UTF_8))
-                        }
-                    }
-                    if (uri != null) "${Environment.DIRECTORY_DOCUMENTS}/Chrnova/$fileName" else null
-                }.onFailure {
-                    AppLogger.log("App", "保存日志文件失败: fileName=$fileName", it)
-                }.getOrDefault(null)
             },
             saveCsv = { fileName, content ->
                 runCatching {
@@ -170,8 +157,6 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                         }
                     }
                     if (uri != null) "${Environment.DIRECTORY_DOCUMENTS}/Chrnova/$fileName" else null
-                }.onFailure {
-                    AppLogger.log("App", "保存CSV文件失败: fileName=$fileName", it)
                 }.getOrDefault(null)
             },
             canSaveImage = true,
@@ -191,24 +176,15 @@ fun ComponentActivity.AppRoot(displaySettings: DisplaySettingsPort) {
                     contentResolver.openOutputStream(uri)?.use { os -> os.write(bytes) }
                         ?: return@runCatching false
                     true
-                }.onFailure {
-                    AppLogger.log("App", "保存图片失败: fileName=$fileName", it)
                 }.getOrDefault(false)
             },
             exitApp = { finishAffinity() },
+            // 小组件外观「应用」后：清签名并现场重绘所有已放置的小组件
+            onRequestWidgetRefresh = {
+                WidgetUpdateCache.clear()
+                WidgetUpdateCache.updateInstalledWidgets(this@AppRoot)
+            },
         )
     }
 }
 
-
-private var crashHandlerInstalled = false
-
-private fun installCrashHandler() {
-    if (crashHandlerInstalled) return
-    crashHandlerInstalled = true
-    val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-        runCatching { AppLogger.logFatal(thread.name, throwable) }
-        defaultHandler?.uncaughtException(thread, throwable)
-    }
-}
