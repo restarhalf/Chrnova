@@ -269,18 +269,19 @@ fun AppRoot(
                 saveImage = saveImage,
                 runSync = runSync,
                 onRequestWidgetRefresh = onRequestWidgetRefresh,
+                rootOverlayContent = {
+                    if (showUpdateDialog) {
+                        UpdateConfirmDialog(
+                            show = showUpdateDialog,
+                            onDismissRequest = { showUpdateDialog = false },
+                            pendingUpdate = pendingUpdate,
+                            onStartDownload = { info ->
+                                appUpdate.startDirectDownload(info)
+                            },
+                        )
+                    }
+                },
             )
-
-            if (showUpdateDialog) {
-                UpdateConfirmDialog(
-                    show = showUpdateDialog,
-                    onDismissRequest = { showUpdateDialog = false },
-                    pendingUpdate = pendingUpdate,
-                    onStartDownload = { info ->
-                        appUpdate.startDirectDownload(info)
-                    },
-                )
-            }
 
             if (showWelcome.value) {
                 val welcomePagerState = rememberPagerState(pageCount = { 6 })

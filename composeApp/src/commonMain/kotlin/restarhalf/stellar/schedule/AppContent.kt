@@ -148,6 +148,7 @@ fun AppContent(
     canSaveImage: Boolean = false,
     saveImage: suspend (fileName: String, bytes: ByteArray) -> Boolean = { _, _ -> false },
     onRequestWidgetRefresh: () -> Unit = {},
+    rootOverlayContent: @Composable () -> Unit = {},
 ) {
     val appState = LocalAppState.current
     val appUiState by vm.uiState.collectAsStateWithLifecycle()
@@ -665,6 +666,7 @@ fun AppContent(
                                 }
                             }
                         }
+                        rootOverlayContent()
                     }
                 }
                 val warmupBlurPx = with(density) { AppMaterialSettings.glassBlurDp().dp.toPx() }
