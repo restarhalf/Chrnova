@@ -29,6 +29,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Checkout softglass
+        uses: actions/checkout@v6
+        with:
+          repository: HaoZai000/softglass
+          path: softglass
+
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
