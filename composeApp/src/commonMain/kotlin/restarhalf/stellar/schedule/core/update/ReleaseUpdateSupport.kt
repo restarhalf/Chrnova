@@ -11,7 +11,20 @@ internal data class VersionJsonResponse(
     val version: String = "",
     val url: String = DEFAULT_QUARK_SHARE_URL,
     val changelog: String = "",
+    val forceUpdate: Boolean = false,
+    val minVersion: String = "",
 )
+
+internal fun isForceUpdateRequired(
+    forceUpdate: Boolean,
+    minVersion: String,
+    currentVersionName: String,
+): Boolean {
+    if (forceUpdate) return true
+    val normalizedMin = minVersion.trim()
+    if (normalizedMin.isEmpty()) return false
+    return isNewerVersion(normalizedMin, currentVersionName)
+}
 
 internal fun normalizeVersion(version: String): List<Int> {
     val pure = version.trim().removePrefix("v").removePrefix("V")

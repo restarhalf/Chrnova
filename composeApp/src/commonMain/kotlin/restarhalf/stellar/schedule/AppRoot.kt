@@ -49,6 +49,7 @@ import top.yukonga.miuix.kmp.material.LocalGlassPanelBlurDp
 import top.yukonga.miuix.kmp.material.LocalGlassSurfaceAlphaDrop
 import top.yukonga.miuix.kmp.material.LocalMaterialNoneEnabled
 import top.yukonga.miuix.kmp.material.LocalSoftGlassLayer
+import restarhalf.stellar.schedule.ui.screens.exclusion.ForceUpdateScreen
 import restarhalf.stellar.schedule.ui.screens.exclusion.WelcomeScreen
 import restarhalf.stellar.schedule.ui.viewmodel.AppViewModel
 import restarhalf.stellar.schedule.ui.viewmodel.BackgroundViewModel
@@ -143,6 +144,7 @@ fun AppRoot(
 
     var pendingUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var forceUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
     val showWelcome = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -157,8 +159,12 @@ fun AppRoot(
         runCatching { checkAppUpdate(currentVersionName = appInfo.versionName) }
             .onSuccess { latest ->
                 if (latest != null) {
-                    pendingUpdate = latest
-                    showUpdateDialog = true
+                    if (latest.isForceUpdate) {
+                        forceUpdateInfo = latest
+                    } else {
+                        pendingUpdate = latest
+                        showUpdateDialog = true
+                    }
                 }
             }
     }
@@ -290,6 +296,15 @@ fun AppRoot(
                     pagerState = welcomePagerState,
                     exitApp = exitApp,
                     openUri = { openUri(it) },
+                )
+            }
+
+            forceUpdateInfo?.let { info ->
+                ForceUpdateScreen(
+                    currentVersionName = appInfo.versionName,
+                    updateInfo = info,
+                    onStartDownload = { appUpdate.startDirectDownload(it) },
+                    onDismiss = { forceUpdateInfo = null },
                 )
             }
         }

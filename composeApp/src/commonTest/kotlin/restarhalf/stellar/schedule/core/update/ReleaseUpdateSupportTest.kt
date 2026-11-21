@@ -102,6 +102,25 @@ class ReleaseUpdateSupportTest {
         assertEquals("", resp.version)
         assertEquals(DEFAULT_QUARK_SHARE_URL, resp.url)
         assertEquals("", resp.changelog)
+        assertFalse(resp.forceUpdate)
+        assertEquals("", resp.minVersion)
+    }
+
+    @Test
+    fun forceUpdateRequiredWhenFlagIsTrue() {
+        assertTrue(isForceUpdateRequired(forceUpdate = true, minVersion = "", currentVersionName = "1.0.0"))
+    }
+
+    @Test
+    fun forceUpdateRequiredWhenCurrentBelowMinVersion() {
+        assertTrue(isForceUpdateRequired(forceUpdate = false, minVersion = "1.2.0", currentVersionName = "1.1.9"))
+    }
+
+    @Test
+    fun forceUpdateNotRequiredWhenCurrentMeetsOrExceedsMinVersion() {
+        assertFalse(isForceUpdateRequired(forceUpdate = false, minVersion = "1.2.0", currentVersionName = "1.2.0"))
+        assertFalse(isForceUpdateRequired(forceUpdate = false, minVersion = "1.2.0", currentVersionName = "1.3.0"))
+        assertFalse(isForceUpdateRequired(forceUpdate = false, minVersion = "   ", currentVersionName = "1.0.0"))
     }
 
     @Test

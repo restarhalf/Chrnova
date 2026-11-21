@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -99,5 +100,51 @@ class AppUpdateCheckHelperTest {
         val client = mockClient(HttpStatusCode.OK, """{"version":"1.0.0"}""", captured)
         checkUpdateFromWorker(currentVersionName = "1.0.0", grayUid = "abc123", client = client)
         assertEquals("$VERSION_WORKER_URL/version.json?uid=abc123", captured.single())
+    }
+
+    @Test
+    fun forceUpdateFlagSetsIsForceUpdate() = runTest {
+        val client = mockClient(
+            HttpStatusCode.OK,
+            """{"version":"2.0.0","url":"https://example.com/app.apk","changelog":"重要修复","forceUpdate":true}""",
+            mutableListOf(),
+        )
+        val info = checkUpdateFromWorker(currentVersionName = "1.0.0", client = client)
+        assertTrue(info?.isForceUpdate == true)
+    }
+
+    @Test
+    fun minVersionHigherThanCurrentTriggersForceUpdate() = runTest {
+        val client = mockClient(
+            HttpStatusCode.OK,
+            """{"version":"2.0.0","forceUpdate":false,"minVersion":"1.5.0"}""",
+            mutableListOf(),
+        )
+        val info = checkUpdateFromWorker(currentVersionName = "1.4.0", client = client)
+        assertTrue(info?.isForceUpdate == true)
+    }
+
+    @Test
+    fun minVersionEqualOrLowerDoesNotTriggerForceUpdate() = runTest {
+        val client = mockClient(
+            HttpStatusCode.OK,
+            """{"version":"2.0.0","forceUpdate":false,"minVersion":"1.5.0"}""",
+            mutableListOf(),
+        )
+        val infoEqual = checkUpdateFromWorker(currentVersionName = "1.5.0", client = client)
+        val infoHigher = checkUpdateFromWorker(currentVersionName = "1.6.0", client = client)
+        assertFalse(infoEqual!!.isForceUpdate)
+        assertFalse(infoHigher!!.isForceUpdate)
+    }
+
+    @Test
+    fun sameOrNewerVersionReturnsNullEvenWhenForceUpdateTrue() = runTest {
+        val client = mockClient(
+            HttpStatusCode.OK,
+            """{"version":"2.0.0","forceUpdate":true,"minVersion":"2.0.0"}""",
+            mutableListOf(),
+        )
+        assertNull(checkUpdateFromWorker(currentVersionName = "2.0.0", client = client))
+        assertNull(checkUpdateFromWorker(currentVersionName = "2.1.0", client = client))
     }
 }

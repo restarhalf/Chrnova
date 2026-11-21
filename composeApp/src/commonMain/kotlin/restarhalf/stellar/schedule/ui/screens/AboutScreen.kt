@@ -64,6 +64,7 @@ import restarhalf.stellar.schedule.ui.icons.AppIcon
 import restarhalf.stellar.schedule.ui.chrome.AppPageScaffold
 import restarhalf.stellar.schedule.ui.chrome.pageScrollModifiers
 import restarhalf.stellar.schedule.ui.port.AppInfoPort
+import restarhalf.stellar.schedule.ui.screens.exclusion.ForceUpdateScreen
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -152,11 +153,22 @@ fun AboutScreen(
         showSmallTitle = scrollProgress > 0.5f,
         showShadow = scrollProgress >= 1f,
         popupHost = {
-            if (showUpdateConfirm.value && aboutUiState.pendingUpdate != null) {
+            val pending = aboutUiState.pendingUpdate
+            if (pending != null && pending.isForceUpdate) {
+                ForceUpdateScreen(
+                    currentVersionName = appInfo.versionName,
+                    updateInfo = pending,
+                    onStartDownload = onStartDownload,
+                    onDismiss = {
+                        showUpdateConfirm.value = false
+                        vm.clearPendingUpdate()
+                    },
+                )
+            } else if (showUpdateConfirm.value && pending != null) {
                 UpdateConfirmDialog(
                     show = showUpdateConfirm.value,
                     onDismissRequest = { showUpdateConfirm.value = false },
-                    pendingUpdate = aboutUiState.pendingUpdate,
+                    pendingUpdate = pending,
                     onStartDownload = { info ->
                         onStartDownload(info)
                         vm.clearPendingUpdate()

@@ -40,10 +40,16 @@ internal suspend fun checkUpdateFromWorker(
     }
 
     val downloadUrl = versionInfo.url.ifBlank { DEFAULT_QUARK_SHARE_URL }
+    val isForceUpdate = isForceUpdateRequired(
+        forceUpdate = versionInfo.forceUpdate,
+        minVersion = versionInfo.minVersion,
+        currentVersionName = currentVersionName,
+    )
     return AppUpdateInfo(
         latestVersion = latestVersion,
         releasePageUrl = downloadUrl,
         downloadUrl = downloadUrl,
         changelog = versionInfo.changelog,
+        isForceUpdate = isForceUpdate,
     )
 }
